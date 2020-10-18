@@ -1,0 +1,14 @@
+[package]
+name = "megra_core_rs"
+version = "0.0.1"
+authors = ["nik <nik@parkellipsen.de>"]
+edition = "2018"
+license = "GPL-3.0+"
+
+[lib]
+crate-type = ["rlib", "cdylib"]
+
+[dependencies]
+decorum = "0.3"
+vom_rs = { git = "https://gitlab.com/ellipsenpark/vom.rs" }
+ruffbox_synth = { path = "../ruffbox/ruffbox-synth"}
