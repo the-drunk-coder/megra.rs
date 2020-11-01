@@ -6,7 +6,7 @@ pub struct MarkovSequenceGenerator {
     pub name: String,
     pub generator: pfa::Pfa<char>,
     pub event_mapping: HashMap<char, Vec<Event>>,
-    pub duration_mapping: HashMap<(char, char), u64>,
+    pub duration_mapping: HashMap<(char, char), Event>,
     pub modified: bool,    
     pub symbol_ages: HashMap<char, u64>,
     pub default_duration: u64,
@@ -34,7 +34,18 @@ impl MarkovSequenceGenerator {
 	static_events
     }
     pub fn current_transition(&mut self) -> StaticEvent {
-	Event::with_name("transition".to_string()).to_static()
-	// needs duration
+	if let Some(trans) = &self.last_transition {
+	    if let Some(dur) = self.duration_mapping.get_mut(&(trans.last_symbol, trans.next_symbol)) {
+		dur.to_static()		
+	    } else {
+		let mut t = Event::with_name("transition".to_string()).to_static();
+		t.params.insert("duration".to_string(), self.default_duration as f32);
+		t
+	    }
+	} else {
+	    let mut t = Event::with_name("transition".to_string()).to_static();
+	    t.params.insert("duration".to_string(), self.default_duration as f32);
+	    t
+	}	
     }
 }
