@@ -10,12 +10,17 @@ use nom::{
     IResult, Parser,
 };
 
+use parking_lot::Mutex;
+use std::collections::HashMap;
 use vom_rs::pfa::Pfa;
+use crate::markov_sequence_generator::MarkovSequenceGenerator;
 
 /// We start by defining the types that define the shape of data that we want.
 /// In this case, we want something tree-like
 
 /// Starting from the most basic, we define some built-in functions that our lisp has.
+
+
 /// As this doesn't strive to be a turing-complete lisp, we'll start with the basic
 /// megra operations, learning and inferring.
 
@@ -34,7 +39,7 @@ pub enum Atom {
     Keyword(String),
     Boolean(bool),
     BuiltIn(BuiltIn),
-    Pfa(Pfa::<char>)
+    MarkovSequenceGenerator(MarkovSequenceGenerator)
 }
 
 /// The remaining half is Lists. We implement these as recursive Expressions.
@@ -103,7 +108,6 @@ fn parse_num<'a>(i: &'a str) -> IResult<&'a str, Atom, VerboseError<&'a str>> {
 pub fn valid_char(chr: char) -> bool {
     return chr == '~' || is_alphanumeric(chr as u8) || is_space(chr as u8)
 }
-
 
 fn parse_string<'a>(i: &'a str) -> IResult<&'a str, Atom, VerboseError<&'a str>> {
     map(delimited(
@@ -224,9 +228,28 @@ fn eval_expression(e: Expr) -> Option<Expr> {
 		    BuiltIn::Learn => {
 			let s: String = get_string_from_expr(&reduced_tail[0]).unwrap();
 			let s_v: std::vec::Vec<char> = s.chars().collect();
-			Atom::Pfa(Pfa::<char>::learn(&s_v, 3, 0.01, 30))
-		    }
-		    BuiltIn::Infer => Atom::Pfa(Pfa::<char>::new()),		   
+			let pfa = Pfa::<char>::learn(&s_v, 3, 0.01, 30);
+			Atom::MarkovSequenceGenerator (MarkovSequenceGenerator {
+			    name: "hulli".to_string(),
+			    generator: pfa,
+			    event_mapping: HashMap::new(),
+			    duration_mapping: HashMap::new(),
+			    modified: false,
+			    symbol_ages: HashMap::new(),
+			    default_duration: 200,
+			    last_transition: None,			    
+			})
+		    },
+		    BuiltIn::Infer => Atom::MarkovSequenceGenerator (MarkovSequenceGenerator {
+			name: "hulli".to_string(),
+			generator: Pfa::<char>::new(),
+			event_mapping: HashMap::new(),
+			duration_mapping: HashMap::new(),
+			modified: false,
+			symbol_ages: HashMap::new(),
+			default_duration: 200,
+			last_transition: None,			    
+		    }),		   
 		}))}
 	    else {
 		None

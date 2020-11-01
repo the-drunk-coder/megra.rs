@@ -5,4 +5,4 @@ pub mod event_processor;
 pub mod generator;
 pub mod session;
 pub mod scheduler;
-
+pub mod parser;

@@ -1,5 +1,5 @@
 [package]
-name = "megra_core_rs"
+name = "megra_rs"
 version = "0.0.1"
 authors = ["nik <nik@parkellipsen.de>"]
 edition = "2018"
@@ -9,6 +9,11 @@ license = "GPL-3.0+"
 crate-type = ["rlib", "cdylib"]
 
 [dependencies]
-decorum = "0.3"
-vom_rs = { git = "https://gitlab.com/ellipsenpark/vom.rs" }
+cpal = { path = "../thirdparty/cpal", features = ["jack"]}
+anyhow = "1.0"
+lazy_static = "1.4.0"
+crossbeam = "0.7.3"
+parking_lot = "0.11.0"
 ruffbox_synth = { path = "../ruffbox/ruffbox-synth"}
+nom = "6.0.0-alpha1"
+vom_rs = { git = "https://gitlab.com/ellipsenpark/vom.rs" }

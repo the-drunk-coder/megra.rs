@@ -1,6 +1,9 @@
 use crate::scheduler::{Scheduler, SchedulerData};
 use crate::generator::Generator;
 use std::collections::HashMap;
+use std::sync;
+use ruffbox_synth::ruffbox::Ruffbox;
+use parking_lot::Mutex;
 
 pub struct Session {
     schedulers: HashMap<String, Scheduler>,
@@ -8,7 +11,7 @@ pub struct Session {
 
 impl Session {
 
-    pub fn start_generator(&mut self, gen: Box<Generator>) {
+    pub fn start_generator(&mut self, gen: Box<Generator>, ruffbox: sync::Arc<Mutex<Ruffbox<512>>>) {
 	self.schedulers.insert(gen.name.clone(), Scheduler::new());	
 
 	let every_half = |data: &mut SchedulerData| -> f64 {
@@ -25,7 +28,7 @@ impl Session {
 
 	// start scheduler if it exists ...
 	if let Some(sched) = self.schedulers.get_mut(&gen.name) {
-	    sched.start(every_half, gen);
+	    sched.start(every_half, gen, ruffbox);
 	}		
     }
 }

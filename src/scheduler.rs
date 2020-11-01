@@ -2,6 +2,8 @@ use std::time::{Instant, Duration};
 use std::{sync, thread};
 use std::sync::atomic::{AtomicBool, Ordering};
 use crate::generator::Generator;
+use ruffbox_synth::ruffbox::Ruffbox;
+use parking_lot::Mutex;
 
 /// A simple time-recursion event scheduler running at a fixed time interval.
 pub struct Scheduler {
@@ -14,15 +16,17 @@ pub struct SchedulerData {
     pub logical_time: f64,
     pub last_diff: f64,
     pub generator: Box<Generator>,
+    pub ruffbox: sync::Arc<Mutex<Ruffbox<512>>>,
 }
 
 impl SchedulerData {
-    pub fn from_data(data: Box<Generator>) -> Self {
+    pub fn from_data(data: Box<Generator>, ruffbox: sync::Arc<Mutex<Ruffbox<512>>>) -> Self {
 	SchedulerData {
 	    start_time: Instant::now(),
 	    logical_time: 0.0,
 	    last_diff: 0.0,
 	    generator: data,
+	    ruffbox: ruffbox,
 	}
     }
 }
@@ -36,19 +40,20 @@ impl Scheduler {
     }
     
     /// Start this scheduler.
-    pub fn start(&mut self, fun: fn(&mut SchedulerData) -> f64, data: Box<Generator>) {
+    pub fn start(&mut self, fun: fn(&mut SchedulerData) -> f64, data: Box<Generator>, ruffbox: sync::Arc<Mutex<Ruffbox<512>>>) {
 	self.running.store(true, Ordering::SeqCst);
 	let running = self.running.clone();
         self.handle = Some(thread::spawn(move || {
             
-	    let mut sched_data:SchedulerData = SchedulerData::from_data(data);
+	    let mut sched_data:SchedulerData = SchedulerData::from_data(data, ruffbox);
 	    
 	    while running.load(Ordering::SeqCst) {
 		let cur = sched_data.start_time.elapsed().as_secs_f64();
                 sched_data.last_diff = cur - sched_data.logical_time;
 		let next = (fun)(&mut sched_data);		
 		sched_data.logical_time += next;
-		thread::sleep(Duration::from_secs_f64(next - sched_data.last_diff)); // compensate for eventual lateness ...
+		// compensate for eventual lateness ...
+		thread::sleep(Duration::from_secs_f64(next - sched_data.last_diff)); 
             }
         }));
     }

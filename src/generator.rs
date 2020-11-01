@@ -6,7 +6,7 @@ use crate::{event::Event,
 pub struct Generator {
     pub name: String,
     pub root_generator: MarkovSequenceGenerator,
-    processors: Vec<Box<dyn EventProcessor + Send>>,
+    pub processors: Vec<Box<dyn EventProcessor + Send>>,
 }
 
 impl Generator {
