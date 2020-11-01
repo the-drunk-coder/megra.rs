@@ -9,6 +9,12 @@ pub struct Event {
     pub tags: Vec<String>,
 }
 
+pub struct StaticEvent {
+    pub name: String,
+    pub params: HashMap<String, f32>,
+    pub tags: Vec<String>,
+}
+
 impl Event {
     pub fn with_name(name: String) -> Self {
 	let mut tags = Vec::new();
@@ -28,6 +34,14 @@ impl Event {
 	}
 	
 	map
+    }
+
+    pub fn to_static(&mut self) -> StaticEvent {
+	StaticEvent {
+	    name: self.name.clone(),
+	    params: self.evaluate_parameters(),
+	    tags: self.tags.clone(),
+	}		    
     }
 }
 

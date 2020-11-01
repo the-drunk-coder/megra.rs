@@ -96,8 +96,7 @@ where
 						
 		sched.start(move |data: &mut SchedulerData| -> f64 {
 		    
-		    //println!{"diff: {0}", data.last_diff};
-		    
+		    //println!{"diff: {0}", data.last_diff};		    
 		    match data.generator.root_generator.generator.next_symbol() {
 			Some(sym) => {
 			    let freq = match sym {
