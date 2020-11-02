@@ -18,7 +18,7 @@ impl Generator {
 	}
 	events
     }
-
+    
     pub fn current_transition(&mut self) -> StaticEvent {
 	let mut trans = self.root_generator.current_transition();
 	for proc in self.processors.iter_mut() {

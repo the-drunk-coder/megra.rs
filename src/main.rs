@@ -1,6 +1,7 @@
 pub mod parser;
 pub mod parameter;
 pub mod event;
+pub mod event_helpers;
 pub mod markov_sequence_generator;
 pub mod event_processor;
 pub mod generator;
@@ -23,6 +24,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::io;
 use crate::scheduler::{Scheduler, SchedulerData};
 use crate::generator::Generator;
+use crate::session::Session;
 
 fn main() -> Result<(), anyhow::Error> {
     
@@ -76,57 +78,25 @@ where
         err_fn,
     )?;
     stream.play()?;
-
-    let mut input = String::new();
+    
+    let mut session = Session::new();
 
     loop {
+	let mut input = String::new();
 	io::stdin().read_line(&mut input)?;
 
 	let mut pfa_in = parser::eval_from_str(&input).unwrap();
 
 	match pfa_in {
 	    parser::Expr::Constant(parser::Atom::MarkovSequenceGenerator(p)) => {
-
-		let mut sched = Scheduler::new();
+		
 		let mut gen = Box::new(Generator {
 		    name: "ho".to_string(),
 		    root_generator: p,
 		    processors: Vec::new()		
 		});
-						
-		sched.start(move |data: &mut SchedulerData| -> f64 {
-		    
-		    //println!{"diff: {0}", data.last_diff};		    
-		    match data.generator.root_generator.generator.next_symbol() {
-			Some(sym) => {
-			    let freq = match sym {
-				'a' => 330.0,
-				'b' => 440.0,
-				'c' => 550.0,
-				'd' => 660.0,
-				'f' => 2.0 * 334.0,
-				'r' => 2.0 * 444.0,
-				't' => 2.0 * 554.0,
-				'v' => 2.0 * 664.0,
-				_ => 1000.0
-			    };
-			    
-			    let mut ruff = data.ruffbox.lock();
-			    let inst = ruff.prepare_instance(SourceType::LFSawSynth, 2.0, 0);
-			    ruff.set_instance_parameter(inst, SynthParameter::PitchFrequency, freq);
-			    ruff.set_instance_parameter(inst, SynthParameter::StereoPosition, -1.0);
-			    ruff.set_instance_parameter(inst, SynthParameter::Level, 1.0);
-			    ruff.set_instance_parameter(inst, SynthParameter::Attack, 0.01);
-			    ruff.set_instance_parameter(inst, SynthParameter::Sustain, 0.1);
-			    ruff.set_instance_parameter(inst, SynthParameter::Release, 0.89);
-			    
-			    ruff.trigger(inst);						    
-			},
-			None => println!(" NIL"),
-		    };
-		    
-		    1.0
-		}, gen, Arc::clone(&ruffbox));		
+
+		session.start_generator(gen, Arc::clone(&ruffbox))
 	    },
 	    _ => println!("unknown")		
 	}

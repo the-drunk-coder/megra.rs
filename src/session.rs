@@ -1,34 +1,45 @@
 use crate::scheduler::{Scheduler, SchedulerData};
 use crate::generator::Generator;
+use crate::event_helpers::*;
 use std::collections::HashMap;
 use std::sync;
 use ruffbox_synth::ruffbox::Ruffbox;
 use parking_lot::Mutex;
 
 pub struct Session {
-    schedulers: HashMap<String, Scheduler>,
+    schedulers: HashMap<String, Scheduler>,    
 }
 
 impl Session {
 
+    pub fn new() -> Self {
+	Session {
+	    schedulers: HashMap::new()
+	}
+    }
+    
     pub fn start_generator(&mut self, gen: Box<Generator>, ruffbox: sync::Arc<Mutex<Ruffbox<512>>>) {
 	self.schedulers.insert(gen.name.clone(), Scheduler::new());	
 
-	let every_half = |data: &mut SchedulerData| -> f64 {
+	let eval_loop = |data: &mut SchedulerData| -> f64 {
 	    
-	    println!{"diff: {0}", data.last_diff};
+	    let events = data.generator.current_events();
 	    
-	    match data.generator.root_generator.generator.next_symbol() {
-		Some(sym) => println!(" {}", sym),
-		None => println!(" NIL"),
-	    };
+	    for ev in events.iter() {
+		let mut ruff = data.ruffbox.lock();
+		let inst = ruff.prepare_instance(map_name(&ev.name), 2.0, 0);
+		for (k,v) in ev.params.iter() {
+		    ruff.set_instance_parameter(inst, map_parameter(k), *v);
+		}
+		ruff.trigger(inst);
+	    }
 	    
-	    0.5
+	    (data.generator.current_transition().params["duration"] / 1000.0) as f64
 	};
 
 	// start scheduler if it exists ...
 	if let Some(sched) = self.schedulers.get_mut(&gen.name) {
-	    sched.start(every_half, gen, ruffbox);
+	    sched.start(eval_loop, gen, ruffbox);
 	}		
     }
 }
