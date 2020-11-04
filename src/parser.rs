@@ -14,44 +14,28 @@ use parking_lot::Mutex;
 use std::collections::HashMap;
 use vom_rs::pfa::Pfa;
 use crate::markov_sequence_generator::MarkovSequenceGenerator;
-
-/// We start by defining the types that define the shape of data that we want.
-/// In this case, we want something tree-like
-
-/// Starting from the most basic, we define some built-in functions that our lisp has.
-
+use crate::event::*;
+use crate::parameter::*;
 
 /// As this doesn't strive to be a turing-complete lisp, we'll start with the basic
-/// megra operations, learning and inferring.
-
+/// megra operations, learning and inferring, plus the built-in events
 pub enum BuiltIn {
     Learn,
     Infer,
+    Sine,
+    Saw,
 }
-
-/// We now wrap this type and a few other primitives into our Atom type.
-/// Remember from before that Atoms form one half of our language.
-
 
 pub enum Atom {
     Num(i32),
     Description(String), // pfa descriptions
     Keyword(String),
+    Symbol(String),
     Boolean(bool),
     BuiltIn(BuiltIn),
-    MarkovSequenceGenerator(MarkovSequenceGenerator)
+    MarkovSequenceGenerator(MarkovSequenceGenerator),
+    Event(Event)
 }
-
-/// The remaining half is Lists. We implement these as recursive Expressions.
-/// For a list of numbers, we have `'(1 2 3)`, which we'll parse to:
-/// ```
-/// Expr::Quote(vec![Expr::Constant(Atom::Num(1)),
-///                  Expr::Constant(Atom::Num(2)),
-///                  Expr::Constant(Atom::Num(3))])
-/// Quote takes an S-expression and prevents evaluation of it, making it a data
-/// structure that we can deal with programmatically. Thus any valid expression
-/// is also a valid data structure in Lisp itself.
-
 
 pub enum Expr {
     Constant(Atom),
@@ -68,6 +52,8 @@ fn parse_builtin<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<&'a s
 	// so we ignore the input and return the BuiltIn directly
 	map(tag("learn"), |_| BuiltIn::Learn),
 	map(tag("infer"), |_| BuiltIn::Infer),
+	map(tag("sine"), |_| BuiltIn::Sine),
+	map(tag("saw"), |_| BuiltIn::Saw),
     ))(i)
 }
 
@@ -79,12 +65,6 @@ fn parse_bool<'a>(i: &'a str) -> IResult<&'a str, Atom, VerboseError<&'a str>> {
     ))(i)
 }
 
-/// The next easiest thing to parse are keywords.
-/// We introduce some error handling combinators: `context` for human readable errors
-/// and `cut` to prevent back-tracking.
-///
-/// Put plainly: `preceded(tag(":"), cut(alpha1))` means that once we see the `:`
-/// character, we have to see one or more alphabetic chararcters or the input is invalid.
 fn parse_keyword<'a>(i: &'a str) -> IResult<&'a str, Atom, VerboseError<&'a str>> {
     map(
 	context("keyword", preceded(tag(":"), cut(alpha1))),
@@ -92,8 +72,13 @@ fn parse_keyword<'a>(i: &'a str) -> IResult<&'a str, Atom, VerboseError<&'a str>
     )(i)
 }
 
-/// Next up is number parsing. We're keeping it simple here by accepting any number (> 1)
-/// of digits but ending the program if it doesn't fit into an i32.
+fn parse_symbol<'a>(i: &'a str) -> IResult<&'a str, Atom, VerboseError<&'a str>> {
+    map(
+	context("symbol", preceded(tag("'"), cut(alpha1))),
+	|sym_str: &str| Atom::Symbol(sym_str.to_string()),
+    )(i)
+}
+
 fn parse_num<'a>(i: &'a str) -> IResult<&'a str, Atom, VerboseError<&'a str>> {
     alt((
 	map_res(digit1, |digit_str: &str| {
@@ -118,14 +103,13 @@ fn parse_string<'a>(i: &'a str) -> IResult<&'a str, Atom, VerboseError<&'a str>>
     })(i)
 }
 
-/// Now we take all these simple parsers and connect them.
-/// We can now parse half of our language!
 fn parse_atom<'a>(i: &'a str) -> IResult<&'a str, Atom, VerboseError<&'a str>> {
     alt((
 	parse_num,
 	parse_bool,
 	map(parse_builtin, Atom::BuiltIn),
 	parse_keyword,
+	parse_symbol,
 	parse_string
     ))(i)
 }
@@ -186,17 +170,17 @@ fn parse_expr<'a>(i: &'a str) -> IResult<&'a str, Expr, VerboseError<&'a str>> {
 /// and give us something back
 
 /// To start we define a couple of helper functions
-fn get_num_from_expr(e: Expr) -> Option<i32> {
+fn get_num_from_expr(e: &Expr) -> Option<i32> {
     if let Expr::Constant(Atom::Num(n)) = e {
-	Some(n)
+	Some(*n)
     } else {
 	None
     }
 }
 
-fn get_bool_from_expr(e: Expr) -> Option<bool> {
+fn get_bool_from_expr(e: &Expr) -> Option<bool> {
     if let Expr::Constant(Atom::Boolean(b)) = e {
-	Some(b)
+	Some(*b)
     } else {
 	None
     }
@@ -204,6 +188,8 @@ fn get_bool_from_expr(e: Expr) -> Option<bool> {
 
 fn get_string_from_expr(e: &Expr) -> Option<String> {
     if let Expr::Constant(Atom::Description(s)) = e {
+	Some(s.to_string())
+    } else if let Expr::Constant(Atom::Symbol(s)) = e {
 	Some(s.to_string())
     } else {
 	None
@@ -219,24 +205,73 @@ fn eval_expression(e: Expr) -> Option<Expr> {
 	Expr::Constant(_) => Some(e),	
 	Expr::Application(head, tail) => {
 	    let reduced_head = eval_expression(*head)?;
-	    let reduced_tail = tail
+	    let mut reduced_tail = tail
 		.into_iter()
 		.map(|expr| eval_expression(expr))
 		.collect::<Option<Vec<Expr>>>()?;
+
+	    let mut tail_drain = reduced_tail.drain(..);
+	    
 	    if let Expr::Constant(Atom::BuiltIn(bi)) = reduced_head {
 		Some(Expr::Constant(match bi {
 		    BuiltIn::Learn => {
-			let s: String = get_string_from_expr(&reduced_tail[0]).unwrap();
-			let s_v: std::vec::Vec<char> = s.chars().collect();
+						
+			// name is the first symbol
+			let name: String = get_string_from_expr(&tail_drain.next().unwrap()).unwrap();
+			
+			let mut sample:String = "".to_string();
+			let mut event_mapping = HashMap::<char, Vec<Event>>::new();
+			
+			let mut collect_events = false;
+			let mut skip = false;
+			let mut dur = 0;
+
+			while let Some(Expr::Constant(c)) = tail_drain.next() {
+
+			    if collect_events {
+				if let Atom::Symbol(ref s) = c {
+				    let mut ev_vec = Vec::new();
+				    if let Expr::Constant(Atom::Event(e)) = tail_drain.next().unwrap() {
+					ev_vec.push(e);
+				    }
+				    event_mapping.insert(s.chars().next().unwrap(), ev_vec);
+				}				
+			    }
+			    
+			    match c {
+				Atom::Keyword(k) => {
+				    match k.as_str() {
+					"sample" => {
+					    if let Expr::Constant(Atom::Description(desc)) = tail_drain.next().unwrap() {
+						sample = desc.to_string();
+					    }	
+					},
+					"events" => {
+					    collect_events = true;
+					    continue;
+					},
+					"dur" => {
+					    if let Expr::Constant(Atom::Num(n)) = tail_drain.next().unwrap() {
+						dur = n;
+					    }
+					},
+					_ => println!("{}", k)
+				    }
+				}
+				_ => println!{"ignored"}
+			    }
+			}
+						    					
+			let s_v: std::vec::Vec<char> = sample.chars().collect();
 			let pfa = Pfa::<char>::learn(&s_v, 3, 0.01, 30);
 			Atom::MarkovSequenceGenerator (MarkovSequenceGenerator {
-			    name: "hulli".to_string(),
+			    name: name,
 			    generator: pfa,
-			    event_mapping: HashMap::new(),
+			    event_mapping: event_mapping,
 			    duration_mapping: HashMap::new(),
 			    modified: false,
 			    symbol_ages: HashMap::new(),
-			    default_duration: 200,
+			    default_duration: dur as u64,
 			    last_transition: None,			    
 			})
 		    },
@@ -249,9 +284,29 @@ fn eval_expression(e: Expr) -> Option<Expr> {
 			symbol_ages: HashMap::new(),
 			default_duration: 200,
 			last_transition: None,			    
-		    }),		   
-		}))}
-	    else {
+		    }),
+		    BuiltIn::Sine => {
+			let mut ev = Event::with_name("sine".to_string());
+			ev.tags.push("sine".to_string());
+			ev.params.insert("freq".to_string(),Box::new(Parameter::with_value(get_num_from_expr(&tail_drain.next().unwrap()).unwrap() as f32)));
+			ev.params.insert("lvl".to_string(), Box::new(Parameter::with_value(1.0)));
+			ev.params.insert("atk".to_string(), Box::new(Parameter::with_value(0.01)));
+			ev.params.insert("sus".to_string(), Box::new(Parameter::with_value(0.1)));
+			ev.params.insert("rel".to_string(), Box::new(Parameter::with_value(0.01)));
+			Atom::Event (ev)
+		    },
+		    BuiltIn::Saw => {
+			let mut ev = Event::with_name("saw".to_string());
+			ev.tags.push("sine".to_string());
+			ev.params.insert("freq".to_string(), Box::new(Parameter::with_value(get_num_from_expr(&tail_drain.next().unwrap()).unwrap() as f32)));
+			ev.params.insert("lvl".to_string(), Box::new(Parameter::with_value(1.0)));
+			ev.params.insert("atk".to_string(), Box::new(Parameter::with_value(0.01)));
+			ev.params.insert("sus".to_string(), Box::new(Parameter::with_value(0.1)));
+			ev.params.insert("rel".to_string(), Box::new(Parameter::with_value(0.01)));
+			Atom::Event (ev)
+		    },		    
+		}))
+	    } else {
 		None
 	    }
 	}

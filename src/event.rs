@@ -45,17 +45,3 @@ impl Event {
     }
 }
 
-macro_rules! sine {
-    (freq: f32) => {
-	let mut ev = Event::with_name("sine");
-	ev.tags.push("sine".to_string());
-	ev.params.insert("freq", Parameter::with_value(freq));
-	ev.params.insert("lvl", Parameter::with_value(1.0));
-	ev.params.insert("atk", Parameter::with_value(0.01));
-	ev.params.insert("sus", Parameter::with_value(0.1));
-	ev.params.insert("rel", Parameter::with_value(0.01));
-	ev
-    }
-}
-
-
