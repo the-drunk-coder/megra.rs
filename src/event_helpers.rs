@@ -11,7 +11,12 @@ pub fn map_name(name: &str) -> SourceType {
 
 pub fn map_parameter(name: &str) -> SynthParameter {
     match name {
-	"freq" => SynthParameter::PitchFrequency,	
+	"freq" => SynthParameter::PitchFrequency,
+	"atk" => SynthParameter::Attack,
+	"rel" => SynthParameter::Release,
+	"sus" => SynthParameter::Sustain,
+	"pos" => SynthParameter::StereoPosition,
+	"lvl" => SynthParameter::Level,	
 	_ => SynthParameter::PitchFrequency,	    
     }
 }

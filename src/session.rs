@@ -30,7 +30,9 @@ impl Session {
 		//println!("event log time: {}",  data.logical_time);
 		// latency, should be made configurable later ...
 		let inst = ruff.prepare_instance(map_name(&ev.name), 2.0, 0);
+		
 		for (k,v) in ev.params.iter() {
+		  //  println!("{} {}",k,v);
 		    ruff.set_instance_parameter(inst, map_parameter(k), *v);
 		}
 		ruff.trigger(inst);

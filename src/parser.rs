@@ -301,7 +301,7 @@ fn eval_expression(e: Expr) -> Option<Expr> {
 		    },
 		    BuiltIn::Saw => {
 			let mut ev = Event::with_name("saw".to_string());
-			ev.tags.push("sine".to_string());
+			ev.tags.push("saw".to_string());
 			ev.params.insert("freq".to_string(), Box::new(Parameter::with_value(get_num_from_expr(&tail_drain.next().unwrap()).unwrap() as f32)));
 			ev.params.insert("lvl".to_string(), Box::new(Parameter::with_value(1.0)));
 			ev.params.insert("atk".to_string(), Box::new(Parameter::with_value(0.01)));
