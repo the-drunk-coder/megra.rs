@@ -224,7 +224,7 @@ fn eval_expression(e: Expr) -> Option<Expr> {
 			
 			let mut collect_events = false;
 			let mut skip = false;
-			let mut dur = 0;
+			let mut dur = 200;
 
 			while let Some(Expr::Constant(c)) = tail_drain.next() {
 
@@ -235,7 +235,11 @@ fn eval_expression(e: Expr) -> Option<Expr> {
 					ev_vec.push(e);
 				    }
 				    event_mapping.insert(s.chars().next().unwrap(), ev_vec);
-				}				
+				    continue;
+				} else {
+				    collect_events = false;
+				}
+				    
 			    }
 			    
 			    match c {
