@@ -27,8 +27,9 @@ impl Session {
 	    let events = data.generator.current_events();
 	    let mut ruff = data.ruffbox.lock();
 	    for ev in events.iter() {
+		//println!("event log time: {}",  data.logical_time);
 		// latency, should be made configurable later ...
-		let inst = ruff.prepare_instance(map_name(&ev.name), data.logical_time + 1.0, 0);
+		let inst = ruff.prepare_instance(map_name(&ev.name), 2.0, 0);
 		for (k,v) in ev.params.iter() {
 		    ruff.set_instance_parameter(inst, map_parameter(k), *v);
 		}

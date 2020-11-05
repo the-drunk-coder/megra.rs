@@ -60,7 +60,7 @@ where
     
     let err_fn = |err| eprintln!("an error occurred on stream: {}", err);
 
-    let ruffbox = Arc::new(Mutex::new(Ruffbox::new()));
+    let ruffbox = Arc::new(Mutex::new(Ruffbox::<512>::new()));
 
     let ruffbox2 = Arc::clone(&ruffbox);
     let stream = device.build_output_stream(
