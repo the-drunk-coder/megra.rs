@@ -215,7 +215,7 @@ fn eval_expression(e: Expr) -> Option<Expr> {
 	    if let Expr::Constant(Atom::BuiltIn(bi)) = reduced_head {
 		Some(Expr::Constant(match bi {
 		    BuiltIn::Learn => {
-						
+			
 			// name is the first symbol
 			let name: String = get_string_from_expr(&tail_drain.next().unwrap()).unwrap();
 			
@@ -238,8 +238,7 @@ fn eval_expression(e: Expr) -> Option<Expr> {
 				    continue;
 				} else {
 				    collect_events = false;
-				}
-				    
+				}				    
 			    }
 			    
 			    match c {
@@ -265,7 +264,7 @@ fn eval_expression(e: Expr) -> Option<Expr> {
 				_ => println!{"ignored"}
 			    }
 			}
-						    					
+			
 			let s_v: std::vec::Vec<char> = sample.chars().collect();
 			let pfa = Pfa::<char>::learn(&s_v, 3, 0.01, 30);
 			Atom::MarkovSequenceGenerator (MarkovSequenceGenerator {
