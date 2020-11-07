@@ -291,21 +291,37 @@ fn eval_expression(e: Expr) -> Option<Expr> {
 		    BuiltIn::Sine => {
 			let mut ev = Event::with_name("sine".to_string());
 			ev.tags.push("sine".to_string());
+
+			// first arg is always freq ...
 			ev.params.insert("freq".to_string(),Box::new(Parameter::with_value(get_num_from_expr(&tail_drain.next().unwrap()).unwrap() as f32)));
+
+			// set some defaults 2
 			ev.params.insert("lvl".to_string(), Box::new(Parameter::with_value(1.0)));
 			ev.params.insert("atk".to_string(), Box::new(Parameter::with_value(0.01)));
 			ev.params.insert("sus".to_string(), Box::new(Parameter::with_value(0.1)));
 			ev.params.insert("rel".to_string(), Box::new(Parameter::with_value(0.01)));
+			
+			while let Some(Expr::Constant(Atom::Keyword(k))) = tail_drain.next() {			    
+			    ev.params.insert(k, Box::new(Parameter::with_value(get_num_from_expr(&tail_drain.next().unwrap()).unwrap() as f32)));
+			}
+			
 			Atom::Event (ev)
 		    },
 		    BuiltIn::Saw => {
 			let mut ev = Event::with_name("saw".to_string());
 			ev.tags.push("saw".to_string());
 			ev.params.insert("freq".to_string(), Box::new(Parameter::with_value(get_num_from_expr(&tail_drain.next().unwrap()).unwrap() as f32)));
+			
+			// set some defaults 2
 			ev.params.insert("lvl".to_string(), Box::new(Parameter::with_value(1.0)));
 			ev.params.insert("atk".to_string(), Box::new(Parameter::with_value(0.01)));
 			ev.params.insert("sus".to_string(), Box::new(Parameter::with_value(0.1)));
 			ev.params.insert("rel".to_string(), Box::new(Parameter::with_value(0.01)));
+			
+			while let Some(Expr::Constant(Atom::Keyword(k))) = tail_drain.next() {			    
+			    ev.params.insert(k, Box::new(Parameter::with_value(get_num_from_expr(&tail_drain.next().unwrap()).unwrap() as f32)));
+			}
+			
 			Atom::Event (ev)
 		    },		    
 		}))
