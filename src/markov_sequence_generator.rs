@@ -2,6 +2,23 @@ use crate::event::{Event, StaticEvent};
 use vom_rs::pfa;
 use std::collections::HashMap;
 
+pub struct Rule {
+    pub source: Vec<char>,
+    pub symbol: char,
+    pub probability: f32,
+    pub duration: u64
+}
+
+impl Rule {
+    pub fn to_pfa_rule(&self) -> pfa::Rule<char> {
+	pfa::Rule {
+	    source: self.source.clone(),
+	    symbol: self.symbol,
+	    probability: self.probability
+	}
+    }
+}
+
 pub struct MarkovSequenceGenerator {
     pub name: String,
     pub generator: pfa::Pfa<char>,

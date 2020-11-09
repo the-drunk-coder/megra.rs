@@ -10,10 +10,9 @@ use nom::{
     IResult, Parser,
 };
 
-use parking_lot::Mutex;
 use std::collections::HashMap;
 use vom_rs::pfa::Pfa;
-use crate::markov_sequence_generator::MarkovSequenceGenerator;
+use crate::markov_sequence_generator::{Rule, MarkovSequenceGenerator};
 use crate::event::*;
 use crate::parameter::*;
 
@@ -24,6 +23,7 @@ pub enum BuiltIn {
     Infer,
     Sine,
     Saw,
+    Rule,
 }
 
 pub enum Atom {
@@ -34,7 +34,8 @@ pub enum Atom {
     Boolean(bool),
     BuiltIn(BuiltIn),
     MarkovSequenceGenerator(MarkovSequenceGenerator),
-    Event(Event)
+    Event(Event),
+    Rule(Rule)
 }
 
 pub enum Expr {
@@ -52,6 +53,7 @@ fn parse_builtin<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<&'a s
 	// so we ignore the input and return the BuiltIn directly
 	map(tag("learn"), |_| BuiltIn::Learn),
 	map(tag("infer"), |_| BuiltIn::Infer),
+	map(tag("rule"), |_| BuiltIn::Rule),
 	map(tag("sine"), |_| BuiltIn::Sine),
 	map(tag("saw"), |_| BuiltIn::Saw),
     ))(i)
@@ -222,8 +224,7 @@ fn eval_expression(e: Expr) -> Option<Expr> {
 			let mut sample:String = "".to_string();
 			let mut event_mapping = HashMap::<char, Vec<Event>>::new();
 			
-			let mut collect_events = false;
-			let mut skip = false;
+			let mut collect_events = false;			
 			let mut dur = 200;
 
 			while let Some(Expr::Constant(c)) = tail_drain.next() {
@@ -240,7 +241,7 @@ fn eval_expression(e: Expr) -> Option<Expr> {
 				    collect_events = false;
 				}				    
 			    }
-			    
+			    			    
 			    match c {
 				Atom::Keyword(k) => {
 				    match k.as_str() {
@@ -278,16 +279,76 @@ fn eval_expression(e: Expr) -> Option<Expr> {
 			    last_transition: None,			    
 			})
 		    },
-		    BuiltIn::Infer => Atom::MarkovSequenceGenerator (MarkovSequenceGenerator {
-			name: "hulli".to_string(),
-			generator: Pfa::<char>::new(),
-			event_mapping: HashMap::new(),
-			duration_mapping: HashMap::new(),
-			modified: false,
-			symbol_ages: HashMap::new(),
-			default_duration: 200,
-			last_transition: None,			    
-		    }),
+		    BuiltIn::Infer => {
+
+			// name is the first symbol
+			let name: String = get_string_from_expr(&tail_drain.next().unwrap()).unwrap();
+						
+			let mut event_mapping = HashMap::<char, Vec<Event>>::new();
+			let mut rules = Vec::new();
+			
+			let mut collect_events = false;
+			let mut collect_rules = false;
+			let mut dur = 200;
+
+			while let Some(Expr::Constant(c)) = tail_drain.next() {
+
+			    if collect_events {
+				if let Atom::Symbol(ref s) = c {
+				    let mut ev_vec = Vec::new();
+				    if let Expr::Constant(Atom::Event(e)) = tail_drain.next().unwrap() {
+					ev_vec.push(e);
+				    }
+				    event_mapping.insert(s.chars().next().unwrap(), ev_vec);
+				    continue;
+				} else {
+				    collect_events = false;
+				}				    
+			    }
+
+			    if collect_rules {
+				if let Atom::Rule(s) = c {
+				    rules.push(s.to_pfa_rule());
+				    continue;
+				} else {
+				    collect_rules = false;
+				}				    
+			    }
+			    
+			    match c {
+				Atom::Keyword(k) => {
+				    match k.as_str() {
+					"rules" => {
+					    collect_rules = true;
+					    continue;	
+					},
+					"events" => {
+					    collect_events = true;
+					    continue;
+					},
+					"dur" => {
+					    if let Expr::Constant(Atom::Num(n)) = tail_drain.next().unwrap() {
+						dur = n;
+					    }
+					},
+					_ => println!("{}", k)
+				    }
+				}
+				_ => println!{"ignored"}
+			    }
+			}
+			let pfa = Pfa::<char>::infer_from_rules(&mut rules);
+			Atom::MarkovSequenceGenerator (MarkovSequenceGenerator {
+			    name: name,
+			    generator: pfa,
+			    event_mapping: event_mapping,
+			    duration_mapping: HashMap::new(),
+			    modified: false,
+			    symbol_ages: HashMap::new(),
+			    default_duration: dur as u64,
+			    last_transition: None,			    
+			})
+		    },
 		    BuiltIn::Sine => {
 			let mut ev = Event::with_name("sine".to_string());
 			ev.tags.push("sine".to_string());
@@ -323,7 +384,17 @@ fn eval_expression(e: Expr) -> Option<Expr> {
 			}
 			
 			Atom::Event (ev)
-		    },		    
+		    },
+		    BuiltIn::Rule => {
+			let source_vec:Vec<char> = get_string_from_expr(&tail_drain.next().unwrap()).unwrap().chars().collect();
+			let sym_vec:Vec<char> = get_string_from_expr(&tail_drain.next().unwrap()).unwrap().chars().collect();
+			Atom::Rule(Rule {
+			    source: source_vec,
+			    symbol: sym_vec[0],
+			    probability: get_num_from_expr(&tail_drain.next().unwrap()).unwrap() as f32 / 100.0,
+			    duration: get_num_from_expr(&tail_drain.next().unwrap()).unwrap() as u64				
+			})
+		    }
 		}))
 	    } else {
 		None
