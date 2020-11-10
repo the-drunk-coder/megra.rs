@@ -19,6 +19,13 @@ impl Session {
     }
     
     pub fn start_generator(&mut self, gen: Box<Generator>, ruffbox: sync::Arc<Mutex<Ruffbox<512>>>) {
+
+	// start scheduler if it exists ...
+	if let Some(sched) = self.schedulers.get_mut(&gen.name) {
+	    sched.stop();
+	}
+
+	// replace old scheduler (this will be where state handover needs to happen)
 	self.schedulers.insert(gen.name.clone(), Scheduler::new());	
 
 	// the evaluation function ...
