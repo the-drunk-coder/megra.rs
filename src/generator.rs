@@ -1,5 +1,5 @@
 use std::boxed::Box;
-use crate::{event::{Event, StaticEvent},
+use crate::{event::StaticEvent,
 	    event_processor::EventProcessor,
 	    markov_sequence_generator::MarkovSequenceGenerator};
 

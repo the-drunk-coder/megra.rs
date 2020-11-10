@@ -15,14 +15,7 @@ extern crate ruffbox_synth;
 use std::sync::Arc;
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use parking_lot::Mutex;
-use std::time::{Instant, Duration};
-use vom_rs::pfa::Pfa;
 use ruffbox_synth::ruffbox::Ruffbox;
-use ruffbox_synth::ruffbox::synth::{SynthParameter, SourceType};
-use std::{sync, thread};
-use std::sync::atomic::{AtomicBool, Ordering};
-use std::io;
-use crate::scheduler::{Scheduler, SchedulerData};
 use crate::generator::Generator;
 use crate::session::Session;
 use rustyline::error::ReadlineError;
@@ -57,7 +50,7 @@ fn run<T>(device: &cpal::Device, config: &cpal::StreamConfig) -> Result<(), anyh
 where
     T: cpal::Sample,
 {
-    let sample_rate = config.sample_rate.0 as f32;
+    let _sample_rate = config.sample_rate.0 as f32;
     let channels = config.channels as usize;
 
     let err_fn = |err| eprintln!("an error occurred on stream: {}", err);
@@ -93,13 +86,13 @@ where
         let readline = rl.readline("megra>> ");
         match readline {
             Ok(line) => {
-		let mut pfa_in = parser::eval_from_str(&line.as_str()).unwrap();
+		let pfa_in = parser::eval_from_str(&line.as_str()).unwrap();
 
 		match pfa_in {
 		    parser::Expr::Constant(parser::Atom::MarkovSequenceGenerator(p)) => {
 			
-			let mut gen = Box::new(Generator {
-			    name: "ho".to_string(),
+			let gen = Box::new(Generator {
+			    name: p.name.clone(),
 			    root_generator: p,
 			    processors: Vec::new()
 			});

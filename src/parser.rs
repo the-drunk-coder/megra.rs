@@ -1,12 +1,12 @@
 use nom::{
     branch::alt,
     bytes::complete::{tag, take_while},
-    character::complete::{alpha1, char, digit1, multispace0, multispace1, one_of},
+    character::complete::{alpha1, char, digit1, multispace0},
     character::{is_alphanumeric, is_space},
-    combinator::{cut, map, map_res, opt},
+    combinator::{cut, map, map_res},
     error::{context, VerboseError},
     multi::many0,
-    sequence::{delimited, preceded, terminated, tuple},
+    sequence::{delimited, preceded, tuple},
     IResult, Parser,
 };
 
