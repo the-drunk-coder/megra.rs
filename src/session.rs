@@ -46,4 +46,17 @@ impl Session {
 	    sched.start(eval_loop, gen, ruffbox);
 	}		
     }
+
+    pub fn stop_generator(&mut self, gen_name: &String) {
+	if let Some(sched) = self.schedulers.get_mut(gen_name) {
+	    sched.stop();
+	}
+    }
+
+    pub fn clear_session(&mut self) {
+	for (k,v) in self.schedulers.iter_mut() {
+	    v.stop();
+	}
+	self.schedulers = HashMap::new();
+    }
 }

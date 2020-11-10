@@ -99,6 +99,13 @@ where
 		
 			session.start_generator(gen, Arc::clone(&ruffbox))
 		    },
+		    parser::Expr::Constant(parser::Atom::Command(c)) => {
+			match c {
+			    parser::Command::Clear => {
+				session.clear_session();				
+			    }
+			}
+		    },
 		    _ => println!("unknown")
 		}
 		

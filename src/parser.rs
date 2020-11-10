@@ -24,6 +24,11 @@ pub enum BuiltIn {
     Sine,
     Saw,
     Rule,
+    Clear,
+}
+
+pub enum Command {
+    Clear,    
 }
 
 pub enum Atom {
@@ -35,7 +40,8 @@ pub enum Atom {
     BuiltIn(BuiltIn),
     MarkovSequenceGenerator(MarkovSequenceGenerator),
     Event(Event),
-    Rule(Rule)
+    Rule(Rule),
+    Command(Command)	
 }
 
 pub enum Expr {
@@ -56,6 +62,7 @@ fn parse_builtin<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<&'a s
 	map(tag("rule"), |_| BuiltIn::Rule),
 	map(tag("sine"), |_| BuiltIn::Sine),
 	map(tag("saw"), |_| BuiltIn::Saw),
+	map(tag("clear"), |_| BuiltIn::Clear),
     ))(i)
 }
 
@@ -216,6 +223,9 @@ fn eval_expression(e: Expr) -> Option<Expr> {
 	    
 	    if let Expr::Constant(Atom::BuiltIn(bi)) = reduced_head {
 		Some(Expr::Constant(match bi {
+		    BuiltIn::Clear => {
+			Atom::Command(Command::Clear)
+		    },
 		    BuiltIn::Learn => {
 			
 			// name is the first symbol
@@ -228,7 +238,7 @@ fn eval_expression(e: Expr) -> Option<Expr> {
 			let mut dur = 200;
 
 			while let Some(Expr::Constant(c)) = tail_drain.next() {
-
+			    
 			    if collect_events {
 				if let Atom::Symbol(ref s) = c {
 				    let mut ev_vec = Vec::new();
