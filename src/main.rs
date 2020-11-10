@@ -90,28 +90,28 @@ where
 
 		match pfa_in {
 		    parser::Expr::Constant(parser::Atom::MarkovSequenceGenerator(p)) => {
-			
+			let name = p.name.clone();
 			let gen = Box::new(Generator {
 			    name: p.name.clone(),
 			    root_generator: p,
 			    processors: Vec::new()
 			});
 		
-			session.start_generator(gen, Arc::clone(&ruffbox))
+			session.start_generator(gen, Arc::clone(&ruffbox));
+			println!("a generator called \'{}\'", name);
 		    },
 		    parser::Expr::Constant(parser::Atom::Command(c)) => {
 			match c {
 			    parser::Command::Clear => {
 				session.clear_session();				
 			    }
-			}
+			};
+			println!("a command (stop session)");
 		    },
 		    _ => println!("unknown")
 		}
 		
-		rl.add_history_entry(line.as_str());
-				
-		println!("Line: {}", line);
+		rl.add_history_entry(line.as_str());						
             },
             Err(ReadlineError::Interrupted) => {
                 println!("CTRL-C");

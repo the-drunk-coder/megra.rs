@@ -55,6 +55,7 @@ impl Session {
 
     pub fn clear_session(&mut self) {
 	for (k,v) in self.schedulers.iter_mut() {
+	    println!("stop generator \'{}\'", k);
 	    v.stop();
 	}
 	self.schedulers = HashMap::new();

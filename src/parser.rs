@@ -367,7 +367,7 @@ fn eval_expression(e: Expr) -> Option<Expr> {
 			ev.params.insert("freq".to_string(),Box::new(Parameter::with_value(get_num_from_expr(&tail_drain.next().unwrap()).unwrap() as f32)));
 
 			// set some defaults 2
-			ev.params.insert("lvl".to_string(), Box::new(Parameter::with_value(1.0)));
+			ev.params.insert("lvl".to_string(), Box::new(Parameter::with_value(0.3)));
 			ev.params.insert("atk".to_string(), Box::new(Parameter::with_value(0.01)));
 			ev.params.insert("sus".to_string(), Box::new(Parameter::with_value(0.1)));
 			ev.params.insert("rel".to_string(), Box::new(Parameter::with_value(0.01)));
@@ -384,7 +384,7 @@ fn eval_expression(e: Expr) -> Option<Expr> {
 			ev.params.insert("freq".to_string(), Box::new(Parameter::with_value(get_num_from_expr(&tail_drain.next().unwrap()).unwrap() as f32)));
 			
 			// set some defaults 2
-			ev.params.insert("lvl".to_string(), Box::new(Parameter::with_value(1.0)));
+			ev.params.insert("lvl".to_string(), Box::new(Parameter::with_value(0.3)));
 			ev.params.insert("atk".to_string(), Box::new(Parameter::with_value(0.01)));
 			ev.params.insert("sus".to_string(), Box::new(Parameter::with_value(0.1)));
 			ev.params.insert("rel".to_string(), Box::new(Parameter::with_value(0.01)));
