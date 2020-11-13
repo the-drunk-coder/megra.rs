@@ -113,7 +113,9 @@ where
 			    parser::Command::LoadSample((set, mut keywords, path)) => {
 				
 				let mut sample_buffer:Vec<f32> = Vec::new();
-				let mut reader = claxon::FlacReader::open(path).unwrap();
+				let mut reader = claxon::FlacReader::open(path.clone()).unwrap();
+
+				println!("sample path: {} channels: {}", path, reader.streaminfo().channels);
 				
 				for sample in reader.samples() {
 				    let s = sample.unwrap() as f32;

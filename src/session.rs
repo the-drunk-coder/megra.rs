@@ -34,12 +34,12 @@ impl Session {
 	    let events = data.generator.current_events();
 	    let mut ruff = data.ruffbox.lock();
 	    for ev in events.iter() {
-		//println!("event log time: {}",  data.logical_time);
+		//println!("event: {}",  ev.name);
 		// latency, should be made configurable later ...
-		let inst = ruff.prepare_instance(map_name(&ev.name), 2.0, 0);
+		let inst = ruff.prepare_instance(map_name(&ev.name), 2.0, ev.params["bufnum"] as usize);
 		
 		for (k,v) in ev.params.iter() {
-		    // println!("{} {}",k,v);
+		    //println!("{} {}",k,v);
 		    ruff.set_instance_parameter(inst, map_parameter(k), *v);
 		}
 		ruff.trigger(inst);
