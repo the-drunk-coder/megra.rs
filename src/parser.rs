@@ -25,10 +25,12 @@ pub enum BuiltIn {
     Saw,
     Rule,
     Clear,
+    LoadSample,
 }
 
 pub enum Command {
-    Clear,    
+    Clear,
+    LoadSample((String, Vec<String>, String)) // set (events), keyword, path
 }
 
 pub enum Atom {
@@ -64,6 +66,7 @@ fn parse_builtin<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<&'a s
 	map(tag("sine"), |_| BuiltIn::Sine),
 	map(tag("saw"), |_| BuiltIn::Saw),
 	map(tag("clear"), |_| BuiltIn::Clear),
+	map(tag("load-sample"), |_| BuiltIn::LoadSample),
     ))(i)
 }
 
@@ -108,7 +111,14 @@ fn parse_num<'a>(i: &'a str) -> IResult<&'a str, Atom, VerboseError<&'a str>> {
 }
 
 pub fn valid_char(chr: char) -> bool {
-    return chr == '~' || is_alphanumeric(chr as u8) || is_space(chr as u8)
+    return
+	chr == '~' ||
+	chr == '.' ||
+	chr == '_' ||
+	chr == '/' ||
+	chr == '-' ||
+	is_alphanumeric(chr as u8) ||
+	is_space(chr as u8)
 }
 
 fn parse_string<'a>(i: &'a str) -> IResult<&'a str, Atom, VerboseError<&'a str>> {
@@ -292,7 +302,7 @@ fn handle_infer(tail: &mut Vec<Expr>) -> Atom {
     let mut dur = 200;
 
     while let Some(Expr::Constant(c)) = tail_drain.next() {
-
+	
 	if collect_events {
 	    if let Atom::Symbol(ref s) = c {
 		let mut ev_vec = Vec::new();
@@ -305,7 +315,7 @@ fn handle_infer(tail: &mut Vec<Expr>) -> Atom {
 		collect_events = false;
 	    }				    
 	}
-
+	
 	if collect_rules {
 	    if let Atom::Rule(s) = c {
 		rules.push(s.to_pfa_rule());
@@ -351,7 +361,9 @@ fn handle_infer(tail: &mut Vec<Expr>) -> Atom {
 }
 
 fn handle_saw(tail: &mut Vec<Expr>) -> Atom {
+
     let mut tail_drain = tail.drain(..);
+    
     let mut ev = Event::with_name("saw".to_string());
     ev.tags.push("saw".to_string());
     ev.params.insert("freq".to_string(), Box::new(Parameter::with_value(get_num_from_expr(&tail_drain.next().unwrap()).unwrap() as f32)));
@@ -367,6 +379,54 @@ fn handle_saw(tail: &mut Vec<Expr>) -> Atom {
     }
     
     Atom::Event (ev)
+}
+
+fn handle_load_sample(tail: &mut Vec<Expr>) -> Atom {
+
+    let mut tail_drain = tail.drain(..);
+    
+    let mut collect_keywords = false;
+    
+    let mut keywords:Vec<String> = Vec::new();
+    let mut path:String = "".to_string();
+    let mut set:String = "".to_string();
+    
+    while let Some(Expr::Constant(c)) = tail_drain.next() {
+
+	if collect_keywords {
+	    if let Atom::Symbol(ref s) = c {
+		keywords.push(s.to_string());
+		continue;
+	    } else {
+		collect_keywords = false;
+	    }				    
+	}
+	
+	match c {
+	    Atom::Keyword(k) => {
+		match k.as_str() {
+		    "keywords" => {
+			collect_keywords = true;
+			continue;	
+		    },
+		    "set" => {
+			if let Expr::Constant(Atom::Symbol(n)) = tail_drain.next().unwrap() {
+			    set = n.to_string();
+			}
+		    },
+		    "path" => {
+			if let Expr::Constant(Atom::Description(n)) = tail_drain.next().unwrap() {
+			    path = n.to_string();
+			}
+		    },
+		    _ => println!("{}", k)
+		}
+	    }
+	    _ => println!{"ignored"}
+	}
+    }
+    
+    Atom::Command(Command::LoadSample((set, keywords, path)))
 }
 
 fn handle_sine(tail: &mut Vec<Expr>) -> Atom {
@@ -425,6 +485,7 @@ fn eval_expression(e: Expr) -> Option<Expr> {
 		Expr::Constant(Atom::BuiltIn(bi)) => {
 		    Some(Expr::Constant(match bi {
 			BuiltIn::Clear => Atom::Command(Command::Clear),
+			BuiltIn::LoadSample => handle_load_sample(&mut reduced_tail),
 			BuiltIn::Learn => handle_learn(&mut reduced_tail),
 			BuiltIn::Infer => handle_infer(&mut reduced_tail),
 			BuiltIn::Sine => handle_sine(&mut reduced_tail),

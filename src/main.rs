@@ -10,6 +10,7 @@ pub mod scheduler;
 
 extern crate anyhow;
 extern crate cpal;
+extern crate claxon;
 extern crate ruffbox_synth;
 
 use std::sync::Arc;
@@ -23,7 +24,7 @@ use rustyline::error::ReadlineError;
 use rustyline::Editor;
 
 /// maps an event type (like "bd") to a mapping between keywords and buffer number ...
-type SampleSet = HashMap<String, HashMap<HashSet<String>, usize>>;
+type SampleSet = HashMap<String, Vec<(HashSet<String>, usize)>>;
 
 fn main() -> Result<(), anyhow::Error> {
 
@@ -79,7 +80,8 @@ where
     stream.play()?;
 
     let mut session = Session::new();
-
+    let mut sample_set = SampleSet::new();
+    
     // `()` can be used when no completer is required
     let mut rl = Editor::<()>::new();
     if rl.load_history("history.txt").is_err() {
@@ -107,13 +109,33 @@ where
 		    parser::Expr::Constant(parser::Atom::Command(c)) => {
 			match c {
 			    parser::Command::Clear => {
-				session.clear_session();				
+				session.clear_session();
+				println!("a command (stop session)");
+			    },
+			    parser::Command::LoadSample((set, mut keywords, path)) => {
+				
+				let mut sample_buffer:Vec<f32> = Vec::new();
+				let mut reader = claxon::FlacReader::open(path).unwrap();
+				
+				for sample in reader.samples() {
+				    let s = sample.unwrap() as f32;
+				    sample_buffer.push(s);
+				}
+				
+				let mut ruff = ruffbox.lock();
+				let bufnum = ruff.load_sample(&sample_buffer);
+
+				let mut keyword_set = HashSet::new();
+				for k in keywords.drain(..) {
+				    keyword_set.insert(k);
+				}
+				
+				sample_set.entry(set).or_insert(Vec::new()).push((keyword_set, bufnum));
+				
+				println!("a command (load sample {})", path);
 			    }
 			};
-			println!("a command (stop session)");
-		    },
-		    parser::Expr::Custom(c) => {
-			println!("custom function: {}", c)
+			
 		    }
 		    _ => println!("unknown")
 		}
