@@ -13,6 +13,7 @@ extern crate cpal;
 extern crate ruffbox_synth;
 
 use std::sync::Arc;
+use std::collections::{HashSet, HashMap};
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use parking_lot::Mutex;
 use ruffbox_synth::ruffbox::Ruffbox;
@@ -20,6 +21,9 @@ use crate::generator::Generator;
 use crate::session::Session;
 use rustyline::error::ReadlineError;
 use rustyline::Editor;
+
+/// maps an event type (like "bd") to a mapping between keywords and buffer number ...
+type SampleSet = HashMap<String, HashMap<HashSet<String>, usize>>;
 
 fn main() -> Result<(), anyhow::Error> {
 

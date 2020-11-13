@@ -7,14 +7,14 @@ use ruffbox_synth::ruffbox::Ruffbox;
 use parking_lot::Mutex;
 
 pub struct Session {
-    schedulers: HashMap<String, Scheduler>,
+    schedulers: HashMap<String, Scheduler>,    
 }
 
 impl Session {
 
     pub fn new() -> Self {
 	Session {
-	    schedulers: HashMap::new(),
+	    schedulers: HashMap::new(),	    
 	}
     }
     
@@ -39,7 +39,7 @@ impl Session {
 		let inst = ruff.prepare_instance(map_name(&ev.name), 2.0, 0);
 		
 		for (k,v) in ev.params.iter() {
-		  //  println!("{} {}",k,v);
+		    // println!("{} {}",k,v);
 		    ruff.set_instance_parameter(inst, map_parameter(k), *v);
 		}
 		ruff.trigger(inst);
