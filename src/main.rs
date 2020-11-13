@@ -112,6 +112,9 @@ where
 			};
 			println!("a command (stop session)");
 		    },
+		    parser::Expr::Custom(c) => {
+			println!("custom function: {}", c)
+		    }
 		    _ => println!("unknown")
 		}
 		

@@ -352,56 +352,56 @@ fn handle_infer(tail: &mut Vec<Expr>) -> Atom {
 
 fn handle_saw(tail: &mut Vec<Expr>) -> Atom {
     let mut tail_drain = tail.drain(..);
-			let mut ev = Event::with_name("saw".to_string());
-			ev.tags.push("saw".to_string());
-			ev.params.insert("freq".to_string(), Box::new(Parameter::with_value(get_num_from_expr(&tail_drain.next().unwrap()).unwrap() as f32)));
-			
-			// set some defaults 2
-			ev.params.insert("lvl".to_string(), Box::new(Parameter::with_value(0.3)));
-			ev.params.insert("atk".to_string(), Box::new(Parameter::with_value(0.01)));
-			ev.params.insert("sus".to_string(), Box::new(Parameter::with_value(0.1)));
-			ev.params.insert("rel".to_string(), Box::new(Parameter::with_value(0.01)));
-			
-			while let Some(Expr::Constant(Atom::Keyword(k))) = tail_drain.next() {			    
-			    ev.params.insert(k, Box::new(Parameter::with_value(get_num_from_expr(&tail_drain.next().unwrap()).unwrap() as f32)));
-			}
-			
-			Atom::Event (ev)
+    let mut ev = Event::with_name("saw".to_string());
+    ev.tags.push("saw".to_string());
+    ev.params.insert("freq".to_string(), Box::new(Parameter::with_value(get_num_from_expr(&tail_drain.next().unwrap()).unwrap() as f32)));
+    
+    // set some defaults 2
+    ev.params.insert("lvl".to_string(), Box::new(Parameter::with_value(0.3)));
+    ev.params.insert("atk".to_string(), Box::new(Parameter::with_value(0.01)));
+    ev.params.insert("sus".to_string(), Box::new(Parameter::with_value(0.1)));
+    ev.params.insert("rel".to_string(), Box::new(Parameter::with_value(0.01)));
+    
+    while let Some(Expr::Constant(Atom::Keyword(k))) = tail_drain.next() {			    
+	ev.params.insert(k, Box::new(Parameter::with_value(get_num_from_expr(&tail_drain.next().unwrap()).unwrap() as f32)));
+    }
+    
+    Atom::Event (ev)
 }
 
 fn handle_sine(tail: &mut Vec<Expr>) -> Atom {
     
-			let mut tail_drain = tail.drain(..);
-			
-			let mut ev = Event::with_name("sine".to_string());
-			ev.tags.push("sine".to_string());
+    let mut tail_drain = tail.drain(..);
+    
+    let mut ev = Event::with_name("sine".to_string());
+    ev.tags.push("sine".to_string());
 
-			// first arg is always freq ...
-			ev.params.insert("freq".to_string(),Box::new(Parameter::with_value(get_num_from_expr(&tail_drain.next().unwrap()).unwrap() as f32)));
+    // first arg is always freq ...
+    ev.params.insert("freq".to_string(),Box::new(Parameter::with_value(get_num_from_expr(&tail_drain.next().unwrap()).unwrap() as f32)));
 
-			// set some defaults 2
-			ev.params.insert("lvl".to_string(), Box::new(Parameter::with_value(0.3)));
-			ev.params.insert("atk".to_string(), Box::new(Parameter::with_value(0.01)));
-			ev.params.insert("sus".to_string(), Box::new(Parameter::with_value(0.1)));
-			ev.params.insert("rel".to_string(), Box::new(Parameter::with_value(0.01)));
-			
-			while let Some(Expr::Constant(Atom::Keyword(k))) = tail_drain.next() {			    
-			    ev.params.insert(k, Box::new(Parameter::with_value(get_num_from_expr(&tail_drain.next().unwrap()).unwrap() as f32)));
-			}
-			
-			Atom::Event (ev)
+    // set some defaults 2
+    ev.params.insert("lvl".to_string(), Box::new(Parameter::with_value(0.3)));
+    ev.params.insert("atk".to_string(), Box::new(Parameter::with_value(0.01)));
+    ev.params.insert("sus".to_string(), Box::new(Parameter::with_value(0.1)));
+    ev.params.insert("rel".to_string(), Box::new(Parameter::with_value(0.01)));
+    
+    while let Some(Expr::Constant(Atom::Keyword(k))) = tail_drain.next() {			    
+	ev.params.insert(k, Box::new(Parameter::with_value(get_num_from_expr(&tail_drain.next().unwrap()).unwrap() as f32)));
+    }
+    
+    Atom::Event (ev)
 }
 
 fn handle_rule(tail: &mut Vec<Expr>) -> Atom {
     let mut tail_drain = tail.drain(..);
-			let source_vec:Vec<char> = get_string_from_expr(&tail_drain.next().unwrap()).unwrap().chars().collect();
-			let sym_vec:Vec<char> = get_string_from_expr(&tail_drain.next().unwrap()).unwrap().chars().collect();
-			Atom::Rule(Rule {
-			    source: source_vec,
-			    symbol: sym_vec[0],
-			    probability: get_num_from_expr(&tail_drain.next().unwrap()).unwrap() as f32 / 100.0,
-			    duration: get_num_from_expr(&tail_drain.next().unwrap()).unwrap() as u64				
-			})
+    let source_vec:Vec<char> = get_string_from_expr(&tail_drain.next().unwrap()).unwrap().chars().collect();
+    let sym_vec:Vec<char> = get_string_from_expr(&tail_drain.next().unwrap()).unwrap().chars().collect();
+    Atom::Rule(Rule {
+	source: source_vec,
+	symbol: sym_vec[0],
+	probability: get_num_from_expr(&tail_drain.next().unwrap()).unwrap() as f32 / 100.0,
+	duration: get_num_from_expr(&tail_drain.next().unwrap()).unwrap() as u64				
+    })
 }
 
 /// This function tries to reduce the AST.
@@ -432,7 +432,7 @@ fn eval_expression(e: Expr) -> Option<Expr> {
 			BuiltIn::Rule => handle_rule(&mut reduced_tail)		    
 		    }))
 		},
-		Expr::Custom(_) => Some(reduced_head),
+		Expr::Custom(_) => Some(reduced_head), // return custom function
 		_ => {
 		    println!("something else");
 		    None
