@@ -14,17 +14,15 @@ extern crate claxon;
 extern crate ruffbox_synth;
 
 use std::sync::Arc;
-use std::collections::{HashSet, HashMap};
+use std::collections::HashSet;
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use parking_lot::Mutex;
 use ruffbox_synth::ruffbox::Ruffbox;
 use crate::generator::Generator;
 use crate::session::Session;
+use crate::parser::SampleSet;
 use rustyline::error::ReadlineError;
 use rustyline::Editor;
-
-/// maps an event type (like "bd") to a mapping between keywords and buffer number ...
-type SampleSet = HashMap<String, Vec<(HashSet<String>, usize)>>;
 
 fn main() -> Result<(), anyhow::Error> {
 
@@ -92,7 +90,7 @@ where
         let readline = rl.readline("megra>> ");
         match readline {
             Ok(line) => {
-		let pfa_in = parser::eval_from_str(&line.as_str()).unwrap();
+		let pfa_in = parser::eval_from_str(&line.as_str(), &sample_set).unwrap();
 
 		match pfa_in {
 		    parser::Expr::Constant(parser::Atom::MarkovSequenceGenerator(p)) => {
@@ -132,7 +130,7 @@ where
 				
 				sample_set.entry(set).or_insert(Vec::new()).push((keyword_set, bufnum));
 				
-				println!("a command (load sample {})", path);
+				println!("a command (load sample)");
 			    }
 			};
 			

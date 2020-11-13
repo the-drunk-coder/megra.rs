@@ -5,6 +5,7 @@ pub fn map_name(name: &str) -> SourceType {
     match name {
 	"sine" => SourceType::SineSynth,
 	"saw" => SourceType::LFSawSynth,
+	"sampler" => SourceType::Sampler,
 	_ => SourceType::SineSynth,	    
     }
 }
@@ -28,7 +29,8 @@ pub fn map_parameter(name: &str) -> SynthParameter {
 	"pw" => SynthParameter::Pulsewidth,
 	"rate" => SynthParameter::PlaybackRate,
 	"start" => SynthParameter::PlaybackStart,
-	"loop" => SynthParameter::PlaybackLoop,	
+	"loop" => SynthParameter::PlaybackLoop,
+	"bufnum" => SynthParameter::SampleBufferNumber,
 	_ => SynthParameter::PitchFrequency,	    
     }
 }

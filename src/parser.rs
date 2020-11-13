@@ -10,11 +10,14 @@ use nom::{
     IResult, Parser,
 };
 
-use std::collections::HashMap;
+use std::collections::{HashMap,HashSet};
 use vom_rs::pfa::Pfa;
 use crate::markov_sequence_generator::{Rule, MarkovSequenceGenerator};
 use crate::event::*;
 use crate::parameter::*;
+
+/// maps an event type (like "bd") to a mapping between keywords and buffer number ...
+pub type SampleSet = HashMap<String, Vec<(HashSet<String>, usize)>>;
 
 /// As this doesn't strive to be a turing-complete lisp, we'll start with the basic
 /// megra operations, learning and inferring, plus the built-in events
@@ -452,6 +455,28 @@ fn handle_sine(tail: &mut Vec<Expr>) -> Atom {
     Atom::Event (ev)
 }
 
+fn handle_sample(tail: &mut Vec<Expr>, bufnum: usize) -> Atom {
+    
+    let mut tail_drain = tail.drain(..);
+    
+    let mut ev = Event::with_name("sampler".to_string());
+    ev.tags.push("sampler".to_string());
+
+    ev.params.insert("bufnum".to_string(), Box::new(Parameter::with_value(bufnum as f32)));
+    
+    // set some defaults 2
+    ev.params.insert("lvl".to_string(), Box::new(Parameter::with_value(0.3)));
+    ev.params.insert("atk".to_string(), Box::new(Parameter::with_value(0.01)));
+    ev.params.insert("sus".to_string(), Box::new(Parameter::with_value(0.1)));
+    ev.params.insert("rel".to_string(), Box::new(Parameter::with_value(0.01)));
+    
+    while let Some(Expr::Constant(Atom::Keyword(k))) = tail_drain.next() {			    
+	ev.params.insert(k, Box::new(Parameter::with_value(get_num_from_expr(&tail_drain.next().unwrap()).unwrap() as f32)));
+    }
+    
+    Atom::Event (ev)
+}
+
 fn handle_rule(tail: &mut Vec<Expr>) -> Atom {
     let mut tail_drain = tail.drain(..);
     let source_vec:Vec<char> = get_string_from_expr(&tail_drain.next().unwrap()).unwrap().chars().collect();
@@ -467,18 +492,18 @@ fn handle_rule(tail: &mut Vec<Expr>) -> Atom {
 /// This function tries to reduce the AST.
 /// This has to return an Expression rather than an Atom because quoted s_expressions
 /// can't be reduced
-fn eval_expression(e: Expr) -> Option<Expr> {
+fn eval_expression(e: Expr, sample_set: &SampleSet) -> Option<Expr> {
     match e {
 	// Constants and quoted s-expressions are our base-case
 	Expr::Constant(_) => Some(e),
 	Expr::Custom(_) => Some(e),
 	Expr::Application(head, tail) => {
 
-	    let reduced_head = eval_expression(*head)?;
+	    let reduced_head = eval_expression(*head, sample_set)?;
 
 	    let mut reduced_tail = tail
 		.into_iter()
-		.map(|expr| eval_expression(expr))
+		.map(|expr| eval_expression(expr, sample_set))
 		.collect::<Option<Vec<Expr>>>()?;
 
 	    match reduced_head {
@@ -493,7 +518,14 @@ fn eval_expression(e: Expr) -> Option<Expr> {
 			BuiltIn::Rule => handle_rule(&mut reduced_tail)		    
 		    }))
 		},
-		Expr::Custom(_) => Some(reduced_head), // return custom function
+		Expr::Custom(s) => {
+		    if let Some(sample_info) = sample_set.get(&s) {
+			// just choose first sample for now ...
+			Some(Expr::Constant(handle_sample(&mut reduced_tail, sample_info[0].1)))
+		    } else {
+			None
+		    }
+		}, // return custom function
 		_ => {
 		    println!("something else");
 		    None
@@ -505,10 +537,10 @@ fn eval_expression(e: Expr) -> Option<Expr> {
 
 /// And we add one more top-level function to tie everything together, letting
 /// us call eval on a string directly
-pub fn eval_from_str(src: &str) -> Result<Expr, String> {
+pub fn eval_from_str(src: &str, sample_set: &SampleSet) -> Result<Expr, String> {
     parse_expr(src)
 	.map_err(|e: nom::Err<VerboseError<&str>>| format!("{:#?}", e))
-	.and_then(|(_, exp)| eval_expression(exp).ok_or("Eval failed".to_string()))
+	.and_then(|(_, exp)| eval_expression(exp, sample_set).ok_or("Eval failed".to_string()))
 }
 
 
