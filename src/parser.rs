@@ -16,6 +16,8 @@ use vom_rs::pfa::Pfa;
 use crate::markov_sequence_generator::{Rule, MarkovSequenceGenerator};
 use crate::event::*;
 use crate::parameter::*;
+use crate::session::SyncContext;
+use crate::generator::Generator;
 
 /// maps an event type (like "bd") to a mapping between keywords and buffer number ...
 pub type SampleSet = HashMap<String, Vec<(HashSet<String>, usize)>>;
@@ -30,6 +32,7 @@ pub enum BuiltIn {
     Rule,
     Clear,
     LoadSample,
+    SyncContext
 }
 
 pub enum Command {
@@ -48,6 +51,8 @@ pub enum Atom {
     Event(Event),
     Rule(Rule),
     Command(Command),
+    SyncContext(SyncContext),
+    Generator(Generator)
 }
 
 pub enum Expr {
@@ -71,6 +76,7 @@ fn parse_builtin<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<&'a s
 	map(tag("saw"), |_| BuiltIn::Saw),
 	map(tag("clear"), |_| BuiltIn::Clear),
 	map(tag("load-sample"), |_| BuiltIn::LoadSample),
+	map(tag("sx"), |_| BuiltIn::SyncContext),
     ))(i)
 }
 
@@ -275,16 +281,21 @@ fn handle_learn(tail: &mut Vec<Expr>) -> Atom {
     
     let s_v: std::vec::Vec<char> = sample.chars().collect();
     let pfa = Pfa::<char>::learn(&s_v, 3, 0.01, 30);
-    Atom::MarkovSequenceGenerator (MarkovSequenceGenerator {
-	name: name,
-	generator: pfa,
-	event_mapping: event_mapping,
-	duration_mapping: HashMap::new(),
-	modified: false,
-	symbol_ages: HashMap::new(),
-	default_duration: dur as u64,
-	last_transition: None,			    
-    })
+
+    Atom::Generator(Generator {
+	name: name.clone(),
+	root_generator: MarkovSequenceGenerator {
+	    name: name,
+	    generator: pfa,
+	    event_mapping: event_mapping,
+	    duration_mapping: HashMap::new(),
+	    modified: false,
+	    symbol_ages: HashMap::new(),
+	    default_duration: dur as u64,
+	    last_transition: None,			    
+	},
+	processors: Vec::new()
+    })  
 }
 
 fn handle_infer(tail: &mut Vec<Expr>) -> Atom {
@@ -347,16 +358,21 @@ fn handle_infer(tail: &mut Vec<Expr>) -> Atom {
 	}
     }
     let pfa = Pfa::<char>::infer_from_rules(&mut rules);
-    Atom::MarkovSequenceGenerator (MarkovSequenceGenerator {
-	name: name,
-	generator: pfa,
-	event_mapping: event_mapping,
-	duration_mapping: HashMap::new(),
-	modified: false,
-	symbol_ages: HashMap::new(),
-	default_duration: dur as u64,
-	last_transition: None,			    
-    })
+
+    Atom::Generator(Generator {
+	name: name.clone(),
+	root_generator: MarkovSequenceGenerator {
+	    name: name,
+	    generator: pfa,
+	    event_mapping: event_mapping,
+	    duration_mapping: HashMap::new(),
+	    modified: false,
+	    symbol_ages: HashMap::new(),
+	    default_duration: dur as u64,
+	    last_transition: None,			    
+	},
+	processors: Vec::new()
+    })        
 }
 
 fn handle_saw(tail: &mut Vec<Expr>) -> Atom {
@@ -488,6 +504,31 @@ fn handle_rule(tail: &mut Vec<Expr>) -> Atom {
     })
 }
 
+fn handle_sync_context(tail: &mut Vec<Expr>) -> Atom {
+    let mut tail_drain = tail.drain(..);
+    
+    // name is the first symbol
+    let name: String = get_string_from_expr(&tail_drain.next().unwrap()).unwrap();
+    let active = get_bool_from_expr(&tail_drain.next().unwrap()).unwrap();
+    let mut gens: Vec<Generator> = Vec::new();
+    let mut syncs: Vec<String> = Vec::new();
+
+    while let Some(Expr::Constant(c)) = tail_drain.next() {		
+	match c {
+	    Atom::Generator(k) => {
+		gens.push(k);
+	    }
+	    _ => println!{"ignored"}
+	}
+    }
+    
+    Atom::SyncContext(SyncContext {
+	name: name,
+	generators: gens,
+	synced: syncs
+    })
+}
+
 /// This function tries to reduce the AST.
 /// This has to return an Expression rather than an Atom because quoted s_expressions
 /// can't be reduced
@@ -514,7 +555,8 @@ fn eval_expression(e: Expr, sample_set: &SampleSet) -> Option<Expr> {
 			BuiltIn::Infer => handle_infer(&mut reduced_tail),
 			BuiltIn::Sine => handle_sine(&mut reduced_tail),
 			BuiltIn::Saw => handle_saw(&mut reduced_tail),
-			BuiltIn::Rule => handle_rule(&mut reduced_tail)		    
+			BuiltIn::Rule => handle_rule(&mut reduced_tail),
+			BuiltIn::SyncContext => handle_sync_context(&mut reduced_tail)		  
 		    }))
 		},
 		Expr::Custom(s) => {

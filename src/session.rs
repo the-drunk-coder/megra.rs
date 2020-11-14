@@ -6,6 +6,12 @@ use std::sync;
 use ruffbox_synth::ruffbox::Ruffbox;
 use parking_lot::Mutex;
 
+pub struct SyncContext {
+    pub name: String,
+    pub synced: Vec<String>,
+    pub generators: Vec<Generator>
+}
+
 pub struct Session {
     schedulers: HashMap<String, Scheduler>,    
 }

@@ -99,16 +99,17 @@ where
 		    },
 		    Ok(pfa) => {
 			match pfa {
-			    parser::Expr::Constant(parser::Atom::MarkovSequenceGenerator(p)) => {
-				let name = p.name.clone();
-				let gen = Box::new(Generator {
-				    name: p.name.clone(),
-				    root_generator: p,
-				    processors: Vec::new()
-				});
-				
-				session.start_generator(gen, Arc::clone(&ruffbox));
+			    parser::Expr::Constant(parser::Atom::Generator(g)) => {
+				let name = g.name.clone();
+				session.start_generator(Box::new(g), Arc::clone(&ruffbox));
 				println!("a generator called \'{}\'", name);
+			    },
+			    parser::Expr::Constant(parser::Atom::SyncContext(mut s)) => {
+				let name = s.name.clone();
+				for c in s.generators.drain(..){
+				    session.start_generator(Box::new(c), Arc::clone(&ruffbox));
+				}				
+				println!("a context called \'{}\'", name);
 			    },
 			    parser::Expr::Constant(parser::Atom::Command(c)) => {
 				match c {
