@@ -31,6 +31,8 @@ pub fn map_parameter(name: &str) -> SynthParameter {
 	"start" => SynthParameter::PlaybackStart,
 	"loop" => SynthParameter::PlaybackLoop,
 	"bufnum" => SynthParameter::SampleBufferNumber,
+	"rev" => SynthParameter::ReverbMix,
+	"del" => SynthParameter::DelayMix,
 	_ => SynthParameter::PitchFrequency,	    
     }
 }
