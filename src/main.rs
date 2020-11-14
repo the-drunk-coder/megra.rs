@@ -90,6 +90,10 @@ where
         let readline = rl.readline("megra>> ");
         match readline {
             Ok(line) => {
+
+		if line.len() == 0 {
+		    continue;
+		}
 		
 		let pfa_in = parser::eval_from_str(&line.as_str(), &sample_set);
 
