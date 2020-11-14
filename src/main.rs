@@ -8,11 +8,6 @@ pub mod generator;
 pub mod session;
 pub mod scheduler;
 
-extern crate anyhow;
-extern crate cpal;
-extern crate claxon;
-extern crate ruffbox_synth;
-
 use std::sync::Arc;
 use std::collections::HashSet;
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
@@ -91,6 +86,7 @@ where
         match readline {
             Ok(line) => {
 
+		// ignore empty lines ...
 		if line.len() == 0 {
 		    continue;
 		}
