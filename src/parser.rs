@@ -130,10 +130,10 @@ fn parse_string<'a>(i: &'a str) -> IResult<&'a str, Atom, VerboseError<&'a str>>
 }
 
 fn parse_atom<'a>(i: &'a str) -> IResult<&'a str, Atom, VerboseError<&'a str>> {
-    alt((
-	parse_float,	
+    alt((	
 	parse_bool,
-	map(parse_builtin, Atom::BuiltIn),	
+	map(parse_builtin, Atom::BuiltIn),
+	parse_float, // parse after builtin, otherwise the beginning of "infer" would be parsed as "inf" (the float val)
 	parse_keyword,
 	parse_symbol,
 	parse_string,
@@ -298,7 +298,7 @@ fn handle_infer(tail: &mut Vec<Expr>) -> Atom {
     
     let mut collect_events = false;
     let mut collect_rules = false;
-    let mut dur = 200;
+    let mut dur:f32 = 200.0;
 
     while let Some(Expr::Constant(c)) = tail_drain.next() {
 	
@@ -337,7 +337,7 @@ fn handle_infer(tail: &mut Vec<Expr>) -> Atom {
 		    },
 		    "dur" => {
 			if let Expr::Constant(Atom::Float(n)) = tail_drain.next().unwrap() {
-			    dur = n as i32;
+			    dur = n;
 			}
 		    },
 		    _ => println!("{}", k)

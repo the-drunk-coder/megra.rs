@@ -90,63 +90,71 @@ where
         let readline = rl.readline("megra>> ");
         match readline {
             Ok(line) => {
-		let pfa_in = parser::eval_from_str(&line.as_str(), &sample_set).unwrap();
+		
+		let pfa_in = parser::eval_from_str(&line.as_str(), &sample_set);
 
 		match pfa_in {
-		    parser::Expr::Constant(parser::Atom::MarkovSequenceGenerator(p)) => {
-			let name = p.name.clone();
-			let gen = Box::new(Generator {
-			    name: p.name.clone(),
-			    root_generator: p,
-			    processors: Vec::new()
-			});
-		
-			session.start_generator(gen, Arc::clone(&ruffbox));
-			println!("a generator called \'{}\'", name);
+		    Err(e) => {
+			println!("parser error {}", e);
 		    },
-		    parser::Expr::Constant(parser::Atom::Command(c)) => {
-			match c {
-			    parser::Command::Clear => {
-				session.clear_session();
-				println!("a command (stop session)");
+		    Ok(pfa) => {
+			match pfa {
+			    parser::Expr::Constant(parser::Atom::MarkovSequenceGenerator(p)) => {
+				let name = p.name.clone();
+				let gen = Box::new(Generator {
+				    name: p.name.clone(),
+				    root_generator: p,
+				    processors: Vec::new()
+				});
+				
+				session.start_generator(gen, Arc::clone(&ruffbox));
+				println!("a generator called \'{}\'", name);
 			    },
-			    parser::Command::LoadSample((set, mut keywords, path)) => {
-				
-				let mut sample_buffer:Vec<f32> = Vec::new();
-				let mut reader = claxon::FlacReader::open(path.clone()).unwrap();
+			    parser::Expr::Constant(parser::Atom::Command(c)) => {
+				match c {
+				    parser::Command::Clear => {
+					session.clear_session();
+					println!("a command (stop session)");
+				    },
+				    parser::Command::LoadSample((set, mut keywords, path)) => {
+					
+					let mut sample_buffer:Vec<f32> = Vec::new();
+					let mut reader = claxon::FlacReader::open(path.clone()).unwrap();
 
-				println!("sample path: {} channels: {}", path, reader.streaminfo().channels);
+					println!("sample path: {} channels: {}", path, reader.streaminfo().channels);
 
-				// decode to f32
-				let max_val = (i32::MAX >> (32 - reader.streaminfo().bits_per_sample)) as f32;
-				for sample in reader.samples() {
-				    let s = sample.unwrap() as f32 / max_val;
-				    sample_buffer.push(s);				    
-				}
-				
-				let mut ruff = ruffbox.lock();
-				let bufnum = ruff.load_sample(&sample_buffer);
+					// decode to f32
+					let max_val = (i32::MAX >> (32 - reader.streaminfo().bits_per_sample)) as f32;
+					for sample in reader.samples() {
+					    let s = sample.unwrap() as f32 / max_val;
+					    sample_buffer.push(s);				    
+					}
+					
+					let mut ruff = ruffbox.lock();
+					let bufnum = ruff.load_sample(&sample_buffer);
 
-				let mut keyword_set = HashSet::new();
-				for k in keywords.drain(..) {
-				    keyword_set.insert(k);
-				}
+					let mut keyword_set = HashSet::new();
+					for k in keywords.drain(..) {
+					    keyword_set.insert(k);
+					}
+					
+					sample_set.entry(set).or_insert(Vec::new()).push((keyword_set, bufnum));
+					
+					println!("a command (load sample)");
+				    }
+				};
 				
-				sample_set.entry(set).or_insert(Vec::new()).push((keyword_set, bufnum));
-				
-				println!("a command (load sample)");
-			    }
-			};
+			    },
+			    parser::Expr::Constant(parser::Atom::Float(f)) => {
+				println!("a number: {}", f)
+			    },		    
+			    _ => println!("unknown")
+			}
 			
-		    },
-		    parser::Expr::Constant(parser::Atom::Float(f)) => {
-			println!("a number: {}", f)
-		    },		    
-		    _ => println!("unknown")
+			rl.add_history_entry(line.as_str());						
+		    }
 		}
-		
-		rl.add_history_entry(line.as_str());						
-            },
+	    },
             Err(ReadlineError::Interrupted) => {
                 println!("CTRL-C");
                 break
