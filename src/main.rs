@@ -123,8 +123,6 @@ where
 				    let s = sample.unwrap() as f32 / max_val;
 				    sample_buffer.push(s);				    
 				}
-
-				println!("done");
 				
 				let mut ruff = ruffbox.lock();
 				let bufnum = ruff.load_sample(&sample_buffer);
@@ -140,7 +138,10 @@ where
 			    }
 			};
 			
-		    }
+		    },
+		    parser::Expr::Constant(parser::Atom::Float(f)) => {
+			println!("a number: {}", f)
+		    },		    
 		    _ => println!("unknown")
 		}
 		

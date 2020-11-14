@@ -1,9 +1,10 @@
 use nom::{
     branch::alt,
     bytes::complete::{tag, take_while},
-    character::complete::{alpha1, alphanumeric1, char, digit1, multispace0},
+    character::complete::{alpha1, alphanumeric1, char, multispace0},
+    number::complete::float,
     character::{is_alphanumeric, is_space},
-    combinator::{cut, map, map_res},
+    combinator::{cut, map, map_res, recognize},
     error::{context, VerboseError},
     multi::many0,
     sequence::{delimited, preceded, tuple},
@@ -37,7 +38,7 @@ pub enum Command {
 }
 
 pub enum Atom {
-    Num(i32),
+    Float(f32),
     Description(String), // pfa descriptions
     Keyword(String),
     Symbol(String),
@@ -102,15 +103,10 @@ fn parse_symbol<'a>(i: &'a str) -> IResult<&'a str, Atom, VerboseError<&'a str>>
     )(i)
 }
 
-fn parse_num<'a>(i: &'a str) -> IResult<&'a str, Atom, VerboseError<&'a str>> {
-    alt((
-	map_res(digit1, |digit_str: &str| {
-	    digit_str.parse::<i32>().map(Atom::Num)
-	}),
-	map(preceded(tag("-"), digit1), |digit_str: &str| {
-	    Atom::Num(-1 * digit_str.parse::<i32>().unwrap())
-	}),
-    ))(i)
+fn parse_float<'a>(i: &'a str) -> IResult<&'a str, Atom, VerboseError<&'a str>> {
+    map_res(recognize(float), |digit_str: &str| {
+	digit_str.parse::<f32>().map(Atom::Float)
+    })(i)
 }
 
 pub fn valid_char(chr: char) -> bool {
@@ -135,7 +131,7 @@ fn parse_string<'a>(i: &'a str) -> IResult<&'a str, Atom, VerboseError<&'a str>>
 
 fn parse_atom<'a>(i: &'a str) -> IResult<&'a str, Atom, VerboseError<&'a str>> {
     alt((
-	parse_num,
+	parse_float,	
 	parse_bool,
 	map(parse_builtin, Atom::BuiltIn),	
 	parse_keyword,
@@ -200,8 +196,8 @@ fn parse_expr<'a>(i: &'a str) -> IResult<&'a str, Expr, VerboseError<&'a str>> {
 /// and give us something back
 
 /// To start we define a couple of helper functions
-fn get_num_from_expr(e: &Expr) -> Option<i32> {
-    if let Expr::Constant(Atom::Num(n)) = e {
+fn get_float_from_expr(e: &Expr) -> Option<f32> {
+    if let Expr::Constant(Atom::Float(n)) = e {
 	Some(*n)
     } else {
 	None
@@ -266,8 +262,8 @@ fn handle_learn(tail: &mut Vec<Expr>) -> Atom {
 			continue;
 		    },
 		    "dur" => {
-			if let Expr::Constant(Atom::Num(n)) = tail_drain.next().unwrap() {
-			    dur = n;
+			if let Expr::Constant(Atom::Float(n)) = tail_drain.next().unwrap() {
+			    dur = n as i32;
 			}
 		    },
 		    _ => println!("{}", k)
@@ -340,8 +336,8 @@ fn handle_infer(tail: &mut Vec<Expr>) -> Atom {
 			continue;
 		    },
 		    "dur" => {
-			if let Expr::Constant(Atom::Num(n)) = tail_drain.next().unwrap() {
-			    dur = n;
+			if let Expr::Constant(Atom::Float(n)) = tail_drain.next().unwrap() {
+			    dur = n as i32;
 			}
 		    },
 		    _ => println!("{}", k)
@@ -369,7 +365,7 @@ fn handle_saw(tail: &mut Vec<Expr>) -> Atom {
     
     let mut ev = Event::with_name("saw".to_string());
     ev.tags.push("saw".to_string());
-    ev.params.insert("freq".to_string(), Box::new(Parameter::with_value(get_num_from_expr(&tail_drain.next().unwrap()).unwrap() as f32)));
+    ev.params.insert("freq".to_string(), Box::new(Parameter::with_value(get_float_from_expr(&tail_drain.next().unwrap()).unwrap() as f32)));
     
     // set some defaults 2
     ev.params.insert("lvl".to_string(), Box::new(Parameter::with_value(0.3)));
@@ -378,7 +374,7 @@ fn handle_saw(tail: &mut Vec<Expr>) -> Atom {
     ev.params.insert("rel".to_string(), Box::new(Parameter::with_value(0.01)));
     
     while let Some(Expr::Constant(Atom::Keyword(k))) = tail_drain.next() {			    
-	ev.params.insert(k, Box::new(Parameter::with_value(get_num_from_expr(&tail_drain.next().unwrap()).unwrap() as f32)));
+	ev.params.insert(k, Box::new(Parameter::with_value(get_float_from_expr(&tail_drain.next().unwrap()).unwrap() as f32)));
     }
     
     Atom::Event (ev)
@@ -440,7 +436,7 @@ fn handle_sine(tail: &mut Vec<Expr>) -> Atom {
     ev.tags.push("sine".to_string());
 
     // first arg is always freq ...
-    ev.params.insert("freq".to_string(),Box::new(Parameter::with_value(get_num_from_expr(&tail_drain.next().unwrap()).unwrap() as f32)));
+    ev.params.insert("freq".to_string(),Box::new(Parameter::with_value(get_float_from_expr(&tail_drain.next().unwrap()).unwrap())));
 
     // set some defaults 2
     ev.params.insert("lvl".to_string(), Box::new(Parameter::with_value(0.3)));
@@ -449,7 +445,7 @@ fn handle_sine(tail: &mut Vec<Expr>) -> Atom {
     ev.params.insert("rel".to_string(), Box::new(Parameter::with_value(0.01)));
     
     while let Some(Expr::Constant(Atom::Keyword(k))) = tail_drain.next() {			    
-	ev.params.insert(k, Box::new(Parameter::with_value(get_num_from_expr(&tail_drain.next().unwrap()).unwrap() as f32)));
+	ev.params.insert(k, Box::new(Parameter::with_value(get_float_from_expr(&tail_drain.next().unwrap()).unwrap() as f32)));
     }
     
     Atom::Event (ev)
@@ -474,7 +470,7 @@ fn handle_sample(tail: &mut Vec<Expr>, bufnum: usize) -> Atom {
     ev.params.insert("start".to_string(), Box::new(Parameter::with_value(0.0)));
     
     while let Some(Expr::Constant(Atom::Keyword(k))) = tail_drain.next() {			    
-	ev.params.insert(k, Box::new(Parameter::with_value(get_num_from_expr(&tail_drain.next().unwrap()).unwrap() as f32)));
+	ev.params.insert(k, Box::new(Parameter::with_value(get_float_from_expr(&tail_drain.next().unwrap()).unwrap())));
     }
     
     Atom::Event (ev)
@@ -487,8 +483,8 @@ fn handle_rule(tail: &mut Vec<Expr>) -> Atom {
     Atom::Rule(Rule {
 	source: source_vec,
 	symbol: sym_vec[0],
-	probability: get_num_from_expr(&tail_drain.next().unwrap()).unwrap() as f32 / 100.0,
-	duration: get_num_from_expr(&tail_drain.next().unwrap()).unwrap() as u64				
+	probability: get_float_from_expr(&tail_drain.next().unwrap()).unwrap() as f32 / 100.0,
+	duration: get_float_from_expr(&tail_drain.next().unwrap()).unwrap() as u64				
     })
 }
 

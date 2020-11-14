@@ -35,8 +35,13 @@ impl Session {
 	    let mut ruff = data.ruffbox.lock();
 	    for ev in events.iter() {
 		//println!("event: {}",  ev.name);
+
+		let mut bufnum:usize = 0;
+		if let Some(b) = ev.params.get("bufnum") {
+		    bufnum = *b as usize;
+		}
 		// latency, should be made configurable later ...
-		let inst = ruff.prepare_instance(map_name(&ev.name), 2.0, ev.params["bufnum"] as usize);
+		let inst = ruff.prepare_instance(map_name(&ev.name), 2.0, bufnum);
 		
 		for (k,v) in ev.params.iter() {
 		    //println!("{} {}",k,v);
