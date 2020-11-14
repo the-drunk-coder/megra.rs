@@ -1,7 +1,7 @@
 use nom::{
     branch::alt,
     bytes::complete::{tag, take_while},
-    character::complete::{alpha1, char, digit1, multispace0},
+    character::complete::{alpha1, alphanumeric1, char, digit1, multispace0},
     character::{is_alphanumeric, is_space},
     combinator::{cut, map, map_res},
     error::{context, VerboseError},
@@ -90,14 +90,14 @@ fn parse_bool<'a>(i: &'a str) -> IResult<&'a str, Atom, VerboseError<&'a str>> {
 
 fn parse_keyword<'a>(i: &'a str) -> IResult<&'a str, Atom, VerboseError<&'a str>> {
     map(
-	context("keyword", preceded(tag(":"), cut(alpha1))),
+	context("keyword", preceded(tag(":"), cut(alphanumeric1))),
 	|sym_str: &str| Atom::Keyword(sym_str.to_string()),
     )(i)
 }
 
 fn parse_symbol<'a>(i: &'a str) -> IResult<&'a str, Atom, VerboseError<&'a str>> {
     map(
-	context("symbol", preceded(tag("'"), cut(alpha1))),
+	context("symbol", preceded(tag("'"), cut(alphanumeric1))),
 	|sym_str: &str| Atom::Symbol(sym_str.to_string()),
     )(i)
 }
