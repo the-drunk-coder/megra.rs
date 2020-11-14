@@ -469,6 +469,9 @@ fn handle_sample(tail: &mut Vec<Expr>, bufnum: usize) -> Atom {
     ev.params.insert("atk".to_string(), Box::new(Parameter::with_value(0.01)));
     ev.params.insert("sus".to_string(), Box::new(Parameter::with_value(0.1)));
     ev.params.insert("rel".to_string(), Box::new(Parameter::with_value(0.01)));
+    ev.params.insert("rate".to_string(), Box::new(Parameter::with_value(1.0)));
+    ev.params.insert("lp-dist".to_string(), Box::new(Parameter::with_value(0.0)));
+    ev.params.insert("start".to_string(), Box::new(Parameter::with_value(0.0)));
     
     while let Some(Expr::Constant(Atom::Keyword(k))) = tail_drain.next() {			    
 	ev.params.insert(k, Box::new(Parameter::with_value(get_num_from_expr(&tail_drain.next().unwrap()).unwrap() as f32)));
