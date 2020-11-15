@@ -31,6 +31,7 @@ pub enum BuiltIn {
     Saw,
     Rule,
     Clear,
+    Silence,
     LoadSample,
     SyncContext
 }
@@ -77,6 +78,8 @@ fn parse_builtin<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<&'a s
 	map(tag("clear"), |_| BuiltIn::Clear),
 	map(tag("load-sample"), |_| BuiltIn::LoadSample),
 	map(tag("sx"), |_| BuiltIn::SyncContext),
+	map(tag("silence"), |_| BuiltIn::Silence),
+	map(tag("~"), |_| BuiltIn::Silence),
     ))(i)
 }
 
@@ -306,6 +309,7 @@ fn handle_infer(tail: &mut Vec<Expr>) -> Atom {
     let name: String = get_string_from_expr(&tail_drain.next().unwrap()).unwrap();
     
     let mut event_mapping = HashMap::<char, Vec<Event>>::new();
+    let mut duration_mapping = HashMap::<(char,char), Event>::new();
     let mut rules = Vec::new();
     
     let mut collect_events = false;
@@ -314,9 +318,7 @@ fn handle_infer(tail: &mut Vec<Expr>) -> Atom {
     let mut init_sym:Option<char> = None;
     
     while let Some(Expr::Constant(c)) = tail_drain.next() {
-
-	
-	
+		
 	if collect_events {
 	    if let Atom::Symbol(ref s) = c {
 		let mut ev_vec = Vec::new();
@@ -336,6 +338,9 @@ fn handle_infer(tail: &mut Vec<Expr>) -> Atom {
 	
 	if collect_rules {
 	    if let Atom::Rule(s) = c {
+		let mut dur_ev =  Event::with_name("transition".to_string());
+		dur_ev.params.insert("duration".to_string(), Box::new(Parameter::with_value(s.duration as f32)));
+		duration_mapping.insert((*s.source.last().unwrap(), s.symbol), dur_ev);
 		rules.push(s.to_pfa_rule());
 		continue;
 	    } else {
@@ -374,7 +379,7 @@ fn handle_infer(tail: &mut Vec<Expr>) -> Atom {
 	    name: name,
 	    generator: pfa,
 	    event_mapping: event_mapping,
-	    duration_mapping: HashMap::new(),
+	    duration_mapping: duration_mapping,
 	    modified: false,
 	    symbol_ages: HashMap::new(),
 	    default_duration: dur as u64,
@@ -566,7 +571,8 @@ fn eval_expression(e: Expr, sample_set: &SampleSet) -> Option<Expr> {
 			BuiltIn::Sine => handle_sine(&mut reduced_tail),
 			BuiltIn::Saw => handle_saw(&mut reduced_tail),
 			BuiltIn::Rule => handle_rule(&mut reduced_tail),
-			BuiltIn::SyncContext => handle_sync_context(&mut reduced_tail)		  
+			BuiltIn::SyncContext => handle_sync_context(&mut reduced_tail),
+			BuiltIn::Silence => Atom::Event(Event::with_name("silence".to_string()))
 		    }))
 		},
 		Expr::Custom(s) => {

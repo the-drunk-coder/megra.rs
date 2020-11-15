@@ -42,6 +42,10 @@ impl Session {
 	    for ev in events.iter() {
 		//println!("event: {}",  ev.name);
 
+		if ev.name == "silence" {
+		    continue;
+		}
+		
 		let mut bufnum:usize = 0;
 		if let Some(b) = ev.params.get("bufnum") {
 		    bufnum = *b as usize;
