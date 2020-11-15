@@ -14,7 +14,7 @@ anyhow = "1.0"
 lazy_static = "1.4.0"
 crossbeam = "0.7.3"
 parking_lot = "0.11.0"
-ruffbox_synth = { path = "../ruffbox/ruffbox-synth"}
+ruffbox_synth = { git = "https://github.com/the-drunk-coder/ruffbox-synth"}
 nom = "6.0.0-alpha1"
 vom_rs = { git = "https://gitlab.com/ellipsenpark/vom.rs" }
 rustyline = "6.3.0"
