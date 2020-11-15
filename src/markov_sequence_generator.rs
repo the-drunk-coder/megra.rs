@@ -27,6 +27,7 @@ pub struct MarkovSequenceGenerator {
     pub modified: bool,    
     pub symbol_ages: HashMap<char, u64>,
     pub default_duration: u64,
+    pub init_symbol: char,
     pub last_transition: Option<pfa::PfaQueryResult<char>>,    
 }
 
@@ -34,9 +35,7 @@ impl MarkovSequenceGenerator {
     
     pub fn current_events(&mut self) -> Vec<StaticEvent> {
 	let mut static_events = Vec::new();
-
-	self.last_transition = self.generator.next_transition();
-
+	
 	if let Some(trans) = &self.last_transition {
 	    // increment symbol age ...
 	    *self.symbol_ages.entry(trans.next_symbol).or_insert(0) += 1;
@@ -46,19 +45,38 @@ impl MarkovSequenceGenerator {
 		    static_events.push(e.to_static());
 		}		
 	    }	    	 
+	} else {
+	    // increment symbol age ...
+	    *self.symbol_ages.entry(self.init_symbol).or_insert(0) += 1;
+	    // get static events ...
+	    if let Some(events) = self.event_mapping.get_mut(&self.init_symbol) {
+		for e in events.iter_mut() {
+		    static_events.push(e.to_static());
+		}		
+	    }	
 	}
+	    		
 	static_events
     }
 
     pub fn current_transition(&mut self) -> StaticEvent {
+	let mut transition = None;
+	
 	if let Some(trans) = &self.last_transition {
 	    if let Some(dur) = self.duration_mapping.get_mut(&(trans.last_symbol, trans.next_symbol)) {
-		dur.to_static()		
+		transition = Some(dur.to_static());
 	    } else {		
 		let mut t = Event::with_name("transition".to_string()).to_static();
 		t.params.insert("duration".to_string(), self.default_duration as f32);
-		t
+		transition = Some(t);
 	    }
+	}
+
+	// advance pfa ...
+	self.last_transition = self.generator.next_transition();
+	
+	if let Some(t) = transition {
+	    t
 	} else {
 	    let mut t = Event::with_name("transition".to_string()).to_static();
 	    t.params.insert("duration".to_string(), self.default_duration as f32);

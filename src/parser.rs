@@ -281,7 +281,7 @@ fn handle_learn(tail: &mut Vec<Expr>) -> Atom {
     
     let s_v: std::vec::Vec<char> = sample.chars().collect();
     let pfa = Pfa::<char>::learn(&s_v, 3, 0.01, 30);
-
+        
     Atom::Generator(Generator {
 	name: name.clone(),
 	root_generator: MarkovSequenceGenerator {
@@ -292,6 +292,7 @@ fn handle_learn(tail: &mut Vec<Expr>) -> Atom {
 	    modified: false,
 	    symbol_ages: HashMap::new(),
 	    default_duration: dur as u64,
+	    init_symbol: s_v[0],
 	    last_transition: None,			    
 	},
 	processors: Vec::new()
@@ -310,8 +311,11 @@ fn handle_infer(tail: &mut Vec<Expr>) -> Atom {
     let mut collect_events = false;
     let mut collect_rules = false;
     let mut dur:f32 = 200.0;
-
+    let mut init_sym:Option<char> = None;
+    
     while let Some(Expr::Constant(c)) = tail_drain.next() {
+
+	
 	
 	if collect_events {
 	    if let Atom::Symbol(ref s) = c {
@@ -319,7 +323,11 @@ fn handle_infer(tail: &mut Vec<Expr>) -> Atom {
 		if let Expr::Constant(Atom::Event(e)) = tail_drain.next().unwrap() {
 		    ev_vec.push(e);
 		}
-		event_mapping.insert(s.chars().next().unwrap(), ev_vec);
+		let sym = s.chars().next().unwrap();
+		event_mapping.insert(sym, ev_vec);
+		if init_sym == None {
+		    init_sym = Some(sym);
+		}
 		continue;
 	    } else {
 		collect_events = false;
@@ -357,8 +365,9 @@ fn handle_infer(tail: &mut Vec<Expr>) -> Atom {
 	    _ => println!{"ignored"}
 	}
     }
+    
     let pfa = Pfa::<char>::infer_from_rules(&mut rules);
-
+    
     Atom::Generator(Generator {
 	name: name.clone(),
 	root_generator: MarkovSequenceGenerator {
@@ -369,6 +378,7 @@ fn handle_infer(tail: &mut Vec<Expr>) -> Atom {
 	    modified: false,
 	    symbol_ages: HashMap::new(),
 	    default_duration: dur as u64,
+	    init_symbol: init_sym.unwrap(),
 	    last_transition: None,			    
 	},
 	processors: Vec::new()
