@@ -55,12 +55,15 @@ where
 
     let ruffbox = Arc::new(Mutex::new(Ruffbox::<512>::new()));
 
-    let ruffbox2 = Arc::clone(&ruffbox);
+    let ruffbox2 = Arc::clone(&ruffbox);    
     let stream = device.build_output_stream(
         config,
         move |data: &mut [f32], cbinfo: &cpal::OutputCallbackInfo| {
 	    let mut ruff = ruffbox2.lock();
-            let ruff_out = ruff.process(cbinfo.timestamp().playback.as_secs());
+
+	    // as the jack timing from cpal can't be trusted right now, the
+	    // ruffbox handles it's own logical time ...
+            let ruff_out = ruff.process(0.0, true);
 	    let mut frame_count = 0;
 	    for frame in data.chunks_mut(channels) {
 		frame[0] = ruff_out[0][frame_count];

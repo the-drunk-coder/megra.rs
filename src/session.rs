@@ -41,7 +41,7 @@ impl Session {
 	    let mut ruff = data.ruffbox.lock();
 	    for ev in events.iter() {
 		//println!("event: {}",  ev.name);
-
+		
 		if ev.name == "silence" {
 		    continue;
 		}
@@ -50,8 +50,13 @@ impl Session {
 		if let Some(b) = ev.params.get("bufnum") {
 		    bufnum = *b as usize;
 		}
+
+		let next = data.generator.current_transition().params["duration"] as f64 / 1000.0;
+
+		//println!("stream time: {} logical time: {} ruffbox time: {}", data.stream_time, data.logical_time, ruff.get_now());
+		// println!("next event scheduled at: {} next: {}", data.stream_time + 0.05, next);
 		// latency, should be made configurable later ...
-		let inst = ruff.prepare_instance(map_name(&ev.name), 2.0, bufnum);
+		let inst = ruff.prepare_instance(map_name(&ev.name), data.stream_time + 0.05, bufnum);
 		
 		for (k,v) in ev.params.iter() {
 		    //println!("{} {}",k,v);
