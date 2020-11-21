@@ -31,7 +31,7 @@ impl SchedulerData {
 	SchedulerData {
 	    start_time: Instant::now(),
 	    stream_time: stream_time,
-	    logical_time: 0.0,
+	    logical_time: 0.0, 
 	    last_diff: 0.0,
 	    generator: data,
 	    ruffbox: ruffbox,
@@ -59,8 +59,11 @@ impl Scheduler {
 		let cur = sched_data.start_time.elapsed().as_secs_f64();
 		
                 sched_data.last_diff = cur - sched_data.logical_time;
-		let next = (fun)(&mut sched_data);		
-		sched_data.logical_time += next - sched_data.last_diff;
+		let next = (fun)(&mut sched_data);
+		//println!("cur: {} should: {} next diff: {} stream_diff: {}", cur, sched_data.logical_time,
+		//next - sched_data.last_diff,
+		//	 sched_data.stream_time - sched_data.logical_time);
+		sched_data.logical_time += next;				
 		sched_data.stream_time += next;
 		// compensate for eventual lateness ...
 		thread::sleep(Duration::from_secs_f64(next - sched_data.last_diff)); 

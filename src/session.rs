@@ -51,9 +51,9 @@ impl Session {
 		    bufnum = *b as usize;
 		}
 
-		let next = data.generator.current_transition().params["duration"] as f64 / 1000.0;
-
-		//println!("stream time: {} logical time: {} ruffbox time: {}", data.stream_time, data.logical_time, ruff.get_now());
+		//let next = data.generator.current_transition().params["duration"] as f64 / 1000.0;
+		
+		//println!("stream time: {} logical time: {} ruffbox time: {} next: {}", data.stream_time, data.logical_time, ruff.get_now(), next);
 		// println!("next event scheduled at: {} next: {}", data.stream_time + 0.05, next);
 		// latency, should be made configurable later ...
 		let inst = ruff.prepare_instance(map_name(&ev.name), data.stream_time + 0.05, bufnum);
