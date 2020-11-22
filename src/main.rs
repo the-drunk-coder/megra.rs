@@ -1,4 +1,5 @@
 pub mod parser;
+pub mod interpreter;
 pub mod parameter;
 pub mod event;
 pub mod event_helpers;
@@ -7,17 +8,13 @@ pub mod event_processor;
 pub mod generator;
 pub mod session;
 pub mod scheduler;
+pub mod repl;
 
 use std::sync::Arc;
 use std::collections::HashSet;
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use parking_lot::Mutex;
 use ruffbox_synth::ruffbox::Ruffbox;
-use crate::generator::Generator;
-use crate::session::Session;
-use crate::parser::SampleSet;
-use rustyline::error::ReadlineError;
-use rustyline::Editor;
 
 fn main() -> Result<(), anyhow::Error> {
 
@@ -75,105 +72,6 @@ where
     )?;
     stream.play()?;
 
-    let mut session = Session::new();
-    let mut sample_set = SampleSet::new();
-    
-    // `()` can be used when no completer is required
-    let mut rl = Editor::<()>::new();
-    if rl.load_history("history.txt").is_err() {
-        println!("No previous history.");
-    }
-
-    loop {
-        let readline = rl.readline("megra>> ");
-        match readline {
-            Ok(line) => {
-
-		// ignore empty lines ...
-		if line.len() == 0 {
-		    continue;
-		}
-		
-		let pfa_in = parser::eval_from_str(&line.as_str(), &sample_set);
-
-		match pfa_in {
-		    Err(e) => {
-			println!("parser error {}", e);
-		    },
-		    Ok(pfa) => {
-			match pfa {
-			    parser::Expr::Constant(parser::Atom::Generator(g)) => {
-				let name = g.name.clone();
-				session.start_generator(Box::new(g), Arc::clone(&ruffbox));
-				println!("a generator called \'{}\'", name);
-			    },
-			    parser::Expr::Constant(parser::Atom::SyncContext(mut s)) => {
-				let name = s.name.clone();
-				for c in s.generators.drain(..){
-				    session.start_generator(Box::new(c), Arc::clone(&ruffbox));
-				}				
-				println!("a context called \'{}\'", name);
-			    },
-			    parser::Expr::Constant(parser::Atom::Command(c)) => {
-				match c {
-				    parser::Command::Clear => {
-					session.clear_session();
-					println!("a command (stop session)");
-				    },
-				    parser::Command::LoadSample((set, mut keywords, path)) => {
-					
-					let mut sample_buffer:Vec<f32> = Vec::new();
-					let mut reader = claxon::FlacReader::open(path.clone()).unwrap();
-
-					println!("sample path: {} channels: {}", path, reader.streaminfo().channels);
-
-					// decode to f32
-					let max_val = (i32::MAX >> (32 - reader.streaminfo().bits_per_sample)) as f32;
-					for sample in reader.samples() {
-					    let s = sample.unwrap() as f32 / max_val;
-					    sample_buffer.push(s);				    
-					}
-					
-					let mut ruff = ruffbox.lock();
-					let bufnum = ruff.load_sample(&sample_buffer);
-
-					let mut keyword_set = HashSet::new();
-					for k in keywords.drain(..) {
-					    keyword_set.insert(k);
-					}
-					
-					sample_set.entry(set).or_insert(Vec::new()).push((keyword_set, bufnum));
-					
-					println!("a command (load sample)");
-				    }
-				};
-				
-			    },
-			    parser::Expr::Constant(parser::Atom::Float(f)) => {
-				println!("a number: {}", f)
-			    },		    
-			    _ => println!("unknown")
-			}
-			
-			rl.add_history_entry(line.as_str());						
-		    }
-		}
-	    },
-            Err(ReadlineError::Interrupted) => {
-                println!("CTRL-C");
-                break
-            },
-            Err(ReadlineError::Eof) => {
-                println!("CTRL-D");
-                break
-            },
-            Err(err) => {
-                println!("Error: {:?}", err);
-                break
-            }
-        }
-    }
-
-    rl.save_history("history.txt").unwrap();
-    Ok(())
+    // start the megra repl
+    repl::start_repl(&ruffbox)
 }
