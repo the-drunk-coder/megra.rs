@@ -13,6 +13,7 @@ use nom::{
 
 use std::collections::{HashMap,HashSet};
 use vom_rs::pfa::Pfa;
+
 use crate::markov_sequence_generator::{Rule, MarkovSequenceGenerator};
 use crate::event::*;
 use crate::parameter::*;

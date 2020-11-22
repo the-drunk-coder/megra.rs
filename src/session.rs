@@ -1,10 +1,12 @@
+use std::collections::HashMap;
+use std::sync;
+use parking_lot::Mutex;
+
+use ruffbox_synth::ruffbox::Ruffbox;
+
 use crate::scheduler::{Scheduler, SchedulerData};
 use crate::generator::Generator;
 use crate::event_helpers::*;
-use std::collections::HashMap;
-use std::sync;
-use ruffbox_synth::ruffbox::Ruffbox;
-use parking_lot::Mutex;
 
 pub struct SyncContext {
     pub name: String,

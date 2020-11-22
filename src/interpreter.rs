@@ -1,9 +1,10 @@
-use std::sync;
-use ruffbox_synth::ruffbox::Ruffbox;
+use std::{sync, collections::HashSet};
 use parking_lot::Mutex;
+
+use ruffbox_synth::ruffbox::Ruffbox;
+
 use crate::parser;
 use crate::session::Session;
-use std::collections::HashSet;
 
 pub fn interpret(session: &mut Session, sample_set: &mut parser::SampleSet, parsed_in: parser::Expr, ruffbox: &sync::Arc<Mutex<Ruffbox<512>>>) {
     match parsed_in {
