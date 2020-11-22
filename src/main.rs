@@ -11,7 +11,6 @@ pub mod scheduler;
 pub mod repl;
 
 use std::sync::Arc;
-use std::collections::HashSet;
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use parking_lot::Mutex;
 use ruffbox_synth::ruffbox::Ruffbox;
@@ -55,7 +54,7 @@ where
     let ruffbox2 = Arc::clone(&ruffbox);    
     let stream = device.build_output_stream(
         config,
-        move |data: &mut [f32], cbinfo: &cpal::OutputCallbackInfo| {
+        move |data: &mut [f32], _: &cpal::OutputCallbackInfo| {
 	    let mut ruff = ruffbox2.lock();
 
 	    // as the jack timing from cpal can't be trusted right now, the

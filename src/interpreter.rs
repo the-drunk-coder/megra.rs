@@ -2,7 +2,6 @@ use std::sync;
 use ruffbox_synth::ruffbox::Ruffbox;
 use parking_lot::Mutex;
 use crate::parser;
-use crate::generator::Generator;
 use crate::session::Session;
 use std::collections::HashSet;
 

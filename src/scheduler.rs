@@ -23,7 +23,7 @@ pub struct SchedulerData {
 impl SchedulerData {
     pub fn from_data(data: Box<Generator>, ruffbox: sync::Arc<Mutex<Ruffbox<512>>>) -> Self {
 	// get logical time since start from ruffbox
-	let mut stream_time = 0.0;
+	let stream_time;
 	{
 	    let ruff = ruffbox.lock();
 	    stream_time = ruff.get_now();
