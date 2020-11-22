@@ -10,12 +10,52 @@ pub mod session;
 pub mod scheduler;
 pub mod repl;
 
-use std::sync::Arc;
+use getopts::Options;
+use std::{env, sync::Arc};
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use parking_lot::Mutex;
 use ruffbox_synth::ruffbox::Ruffbox;
 
+fn print_help(program: &str, opts: Options) {
+    let description = format!(
+        "{prog}: a markov-chain music language
+
+Mégra is a DSL to make music with markov chains.
+
+Usage:
+    {prog} [options] [FILES...]
+      ",
+        prog = program,
+    );
+    println!("{}", opts.usage(&description));
+}
+
 fn main() -> Result<(), anyhow::Error> {
+
+    let mut argv = env::args();
+    let program = argv.next().unwrap();
+
+    let mut opts = Options::new();
+    opts.optflag("v", "version", "Print version");
+    opts.optflag("h", "help", "Print this help");
+
+    let matches = match opts.parse(argv) {
+        Ok(m) => m,
+        Err(e) => {
+            eprintln!("Error: {}. Please see --help for more details", e);
+	    return Ok(());
+        }
+    };
+
+    if matches.opt_present("v") {
+        println!("{}", "0.0.1");
+        return Ok(());
+    }
+
+    if matches.opt_present("h") {
+        print_help(&program, opts);
+        return Ok(());
+    }
 
     let host = cpal::host_from_id(cpal::available_hosts()
 				  .into_iter()
