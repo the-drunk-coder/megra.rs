@@ -17,10 +17,7 @@ pub fn start_repl(ruffbox: &sync::Arc<Mutex<Ruffbox<512>>>) -> Result<(), anyhow
     if rl.load_history("history.txt").is_err() {
         println!("No previous history.");
     }
-
-    
-    
-    
+            
     loop {
         let readline = rl.readline("megra>> ");
         match readline {
@@ -34,7 +31,12 @@ pub fn start_repl(ruffbox: &sync::Arc<Mutex<Ruffbox<512>>>) -> Result<(), anyhow
 		match pfa_in {
 		    Err(e) => {
 
-			// this needs a more elegant way ...
+			// this needs a more elegant way ... like,
+			// retrieve the actual error from the parser, instead
+			// of looking for the string ...
+			// if the error is that a closing paren is missing,
+			// assume we're waiting for more lines.
+			// once a complete input is found, 
 			if e.contains("closing paren") {
 			    let mut line_buffer:String = "".to_string();
 			    line_buffer.push_str(&line.as_str());
@@ -51,6 +53,7 @@ pub fn start_repl(ruffbox: &sync::Arc<Mutex<Ruffbox<512>>>) -> Result<(), anyhow
 						break;
 					    },
 					    Err(_) => {
+						// wait for more input ...
 						continue;
 					    }
 					}
