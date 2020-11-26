@@ -34,7 +34,8 @@ pub enum BuiltIn {
     Clear,
     Silence,
     LoadSample,
-    SyncContext
+    SyncContext,
+    Parameter,
 }
 
 pub enum Command {
@@ -54,7 +55,8 @@ pub enum Atom {
     Rule(Rule),
     Command(Command),
     SyncContext(SyncContext),
-    Generator(Generator)
+    Generator(Generator),
+    Parameter(Parameter)	
 }
 
 pub enum Expr {
@@ -81,12 +83,13 @@ fn parse_builtin<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<&'a s
 	map(tag("sx"), |_| BuiltIn::SyncContext),
 	map(tag("silence"), |_| BuiltIn::Silence),
 	map(tag("~"), |_| BuiltIn::Silence),
+	map(tag("bounce"), |_| BuiltIn::Parameter),
     ))(i)
 }
 
 fn parse_custom<'a>(i: &'a str) -> IResult<&'a str, Expr, VerboseError<&'a str>> {    
     map(
-	context("custom_fun", cut(alpha1)),
+	context("custom_fun", cut(alphanumeric1)),
 	|fun_str: &str| Expr::Custom(fun_str.to_string()),
     )(i)
 }
@@ -285,7 +288,7 @@ fn handle_learn(tail: &mut Vec<Expr>) -> Atom {
     
     let s_v: std::vec::Vec<char> = sample.chars().collect();
     let pfa = Pfa::<char>::learn(&s_v, 3, 0.01, 30);
-        
+    
     Atom::Generator(Generator {
 	name: name.clone(),
 	root_generator: MarkovSequenceGenerator {
@@ -319,7 +322,7 @@ fn handle_infer(tail: &mut Vec<Expr>) -> Atom {
     let mut init_sym:Option<char> = None;
     
     while let Some(Expr::Constant(c)) = tail_drain.next() {
-		
+	
 	if collect_events {
 	    if let Atom::Symbol(ref s) = c {
 		let mut ev_vec = Vec::new();
@@ -404,10 +407,22 @@ fn handle_saw(tail: &mut Vec<Expr>) -> Atom {
     ev.params.insert("atk".to_string(), Box::new(Parameter::with_value(0.01)));
     ev.params.insert("sus".to_string(), Box::new(Parameter::with_value(0.1)));
     ev.params.insert("rel".to_string(), Box::new(Parameter::with_value(0.01)));
-    
-    while let Some(Expr::Constant(Atom::Keyword(k))) = tail_drain.next() {			    
-	ev.params.insert(k, Box::new(Parameter::with_value(get_float_from_expr(&tail_drain.next().unwrap()).unwrap() as f32)));
+
+
+    while let Some(Expr::Constant(Atom::Keyword(k))) = tail_drain.next() {
+	let pr = tail_drain.next();
+	let p = match pr {
+	    Some(Expr::Constant(Atom::Float(n))) => {
+		Parameter::with_value(n)
+	    },
+	    Some(Expr::Constant(Atom::Parameter(pl))) => {		
+		pl
+	    },
+	    _ => Parameter::with_value(0.0)
+	};
+	ev.params.insert(k, Box::new(p));
     }
+    
     
     Atom::Event (ev)
 }
@@ -476,8 +491,18 @@ fn handle_sine(tail: &mut Vec<Expr>) -> Atom {
     ev.params.insert("sus".to_string(), Box::new(Parameter::with_value(0.1)));
     ev.params.insert("rel".to_string(), Box::new(Parameter::with_value(0.01)));
     
-    while let Some(Expr::Constant(Atom::Keyword(k))) = tail_drain.next() {			    
-	ev.params.insert(k, Box::new(Parameter::with_value(get_float_from_expr(&tail_drain.next().unwrap()).unwrap() as f32)));
+    while let Some(Expr::Constant(Atom::Keyword(k))) = tail_drain.next() {
+	let pr = tail_drain.next();
+	let p = match pr {
+	    Some(Expr::Constant(Atom::Float(n))) => {
+		Parameter::with_value(n)
+	    },
+	    Some(Expr::Constant(Atom::Parameter(pl))) => {
+		pl
+	    },
+	    _ => Parameter::with_value(0.0)
+	};
+	ev.params.insert(k, Box::new(p));
     }
     
     Atom::Event (ev)
@@ -498,14 +523,36 @@ fn handle_sample(tail: &mut Vec<Expr>, bufnum: usize) -> Atom {
     ev.params.insert("sus".to_string(), Box::new(Parameter::with_value(0.1)));
     ev.params.insert("rel".to_string(), Box::new(Parameter::with_value(0.01)));
     ev.params.insert("rate".to_string(), Box::new(Parameter::with_value(1.0)));
-    ev.params.insert("lp-dist".to_string(), Box::new(Parameter::with_value(0.0)));
+    ev.params.insert("lpdist".to_string(), Box::new(Parameter::with_value(0.0)));
     ev.params.insert("start".to_string(), Box::new(Parameter::with_value(0.0)));
     
-    while let Some(Expr::Constant(Atom::Keyword(k))) = tail_drain.next() {			    
-	ev.params.insert(k, Box::new(Parameter::with_value(get_float_from_expr(&tail_drain.next().unwrap()).unwrap())));
+    while let Some(Expr::Constant(Atom::Keyword(k))) = tail_drain.next() {
+	let pr = tail_drain.next();
+	let p = match pr {
+	    Some(Expr::Constant(Atom::Float(n))) => {
+		Parameter::with_value(n)
+	    },
+	    Some(Expr::Constant(Atom::Parameter(pl))) => {
+		pl
+	    },
+	    _ => Parameter::with_value(0.0)
+	};
+	ev.params.insert(k, Box::new(p));
     }
     
     Atom::Event (ev)
+}
+
+fn handle_parameter(tail: &mut Vec<Expr>) -> Atom {
+    let mut tail_drain = tail.drain(..);
+    let min = get_float_from_expr(&tail_drain.next().unwrap()).unwrap();
+    let max = get_float_from_expr(&tail_drain.next().unwrap()).unwrap();
+    let steps = get_float_from_expr(&tail_drain.next().unwrap()).unwrap();
+
+    Atom::Parameter(Parameter {
+	val:0.0,
+	modifier: Some(Box::new(BounceModifier::from_params(min, max,steps)))
+    })
 }
 
 fn handle_rule(tail: &mut Vec<Expr>) -> Atom {
@@ -567,13 +614,14 @@ fn eval_expression(e: Expr, sample_set: &SampleSet) -> Option<Expr> {
 		    Some(Expr::Constant(match bi {
 			BuiltIn::Clear => Atom::Command(Command::Clear),
 			BuiltIn::LoadSample => handle_load_sample(&mut reduced_tail),
-			BuiltIn::Learn => handle_learn(&mut reduced_tail),
-			BuiltIn::Infer => handle_infer(&mut reduced_tail),
+			BuiltIn::Parameter => handle_parameter(&mut reduced_tail),
+			BuiltIn::Silence => Atom::Event(Event::with_name("silence".to_string())),
 			BuiltIn::Sine => handle_sine(&mut reduced_tail),
 			BuiltIn::Saw => handle_saw(&mut reduced_tail),
 			BuiltIn::Rule => handle_rule(&mut reduced_tail),
-			BuiltIn::SyncContext => handle_sync_context(&mut reduced_tail),
-			BuiltIn::Silence => Atom::Event(Event::with_name("silence".to_string()))
+			BuiltIn::Learn => handle_learn(&mut reduced_tail),
+			BuiltIn::Infer => handle_infer(&mut reduced_tail),			
+			BuiltIn::SyncContext => handle_sync_context(&mut reduced_tail)	
 		    }))
 		},
 		Expr::Custom(s) => {

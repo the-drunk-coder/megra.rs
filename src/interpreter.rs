@@ -9,9 +9,19 @@ use crate::session::Session;
 pub fn interpret(session: &mut Session, sample_set: &mut parser::SampleSet, parsed_in: parser::Expr, ruffbox: &sync::Arc<Mutex<Ruffbox<512>>>) {
     match parsed_in {
 	parser::Expr::Constant(parser::Atom::Generator(g)) => {
-	    let name = g.name.clone();
-	    session.start_generator(Box::new(g), sync::Arc::clone(&ruffbox));
-	    println!("a generator called \'{}\'", name);
+	    //let name = g.name.clone();
+	    //session.start_generator(Box::new(g), sync::Arc::clone(&ruffbox));
+	    println!("a generator called \'{}\'", g.name);
+	},
+	parser::Expr::Constant(parser::Atom::Parameter(_)) => {
+	    //let name = g.name.clone();
+	    //session.start_generator(Box::new(g), sync::Arc::clone(&ruffbox));
+	    println!("a parameter");
+	},
+	parser::Expr::Constant(parser::Atom::Event(_)) => {
+	    //let name = g.name.clone();
+	    //session.start_generator(Box::new(g), sync::Arc::clone(&ruffbox));
+	    println!("an event");
 	},
 	parser::Expr::Constant(parser::Atom::SyncContext(mut s)) => {
 	    let name = s.name.clone();
