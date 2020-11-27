@@ -1,7 +1,7 @@
 use nom::{
     branch::alt,
     bytes::complete::{tag, take_while},
-    character::complete::{alpha1, alphanumeric1, char, multispace0},
+    character::complete::{alphanumeric1, char, multispace0},
     number::complete::float,
     character::{is_alphanumeric, is_space},
     combinator::{cut, map, map_res, recognize},
@@ -408,7 +408,7 @@ fn handle_saw(tail: &mut Vec<Expr>) -> Atom {
     ev.params.insert("sus".to_string(), Box::new(Parameter::with_value(0.1)));
     ev.params.insert("rel".to_string(), Box::new(Parameter::with_value(0.01)));
 
-    get_params(&mut ev.params, &mut tail_drain);
+    get_keyword_params(&mut ev.params, &mut tail_drain);
         
     Atom::Event (ev)
 }
@@ -477,7 +477,7 @@ fn handle_sine(tail: &mut Vec<Expr>) -> Atom {
     ev.params.insert("sus".to_string(), Box::new(Parameter::with_value(0.1)));
     ev.params.insert("rel".to_string(), Box::new(Parameter::with_value(0.01)));
     
-    get_params(&mut ev.params, &mut tail_drain);
+    get_keyword_params(&mut ev.params, &mut tail_drain);
     
     Atom::Event (ev)
 }
@@ -500,59 +500,35 @@ fn handle_sample(tail: &mut Vec<Expr>, bufnum: usize) -> Atom {
     ev.params.insert("lpdist".to_string(), Box::new(Parameter::with_value(0.0)));
     ev.params.insert("start".to_string(), Box::new(Parameter::with_value(0.0)));
     
-    get_params(&mut ev.params, &mut tail_drain);
+    get_keyword_params(&mut ev.params, &mut tail_drain);
     
     Atom::Event (ev)
 }
 
-fn get_params(params: &mut HashMap<String, Box<Parameter>>, tail_drain: &mut std::vec::Drain<Expr> ) {
-    while let Some(Expr::Constant(Atom::Keyword(k))) = tail_drain.next() {
-	let pr = tail_drain.next();
-	let p = match pr {
-	    Some(Expr::Constant(Atom::Float(n))) => {
-		Parameter::with_value(n)
-	    },
-	    Some(Expr::Constant(Atom::Parameter(pl))) => {
-		pl
-	    },
-	    _ => Parameter::with_value(0.0)
-	};
-	params.insert(k, Box::new(p));
+fn get_keyword_params(params: &mut HashMap<String, Box<Parameter>>, tail_drain: &mut std::vec::Drain<Expr> ) {
+    while let Some(Expr::Constant(Atom::Keyword(k))) = tail_drain.next() {	
+	params.insert(k, Box::new(get_next_param(tail_drain, 0.0)));
+    }
+}
+
+fn get_next_param(tail_drain: &mut std::vec::Drain<Expr>, default: f32) -> Parameter{
+    match tail_drain.next() {
+	Some(Expr::Constant(Atom::Float(n))) => {
+	    Parameter::with_value(n)
+	},
+	Some(Expr::Constant(Atom::Parameter(pl))) => {
+	    pl
+	},
+	_ => Parameter::with_value(default)
     }
 }
 
 fn handle_bounce_parameter(tail: &mut Vec<Expr>) -> Atom {
     let mut tail_drain = tail.drain(..);
 
-    let min = match tail_drain.next() {
-	Some(Expr::Constant(Atom::Float(n))) => {
-	    Parameter::with_value(n)
-	},
-	Some(Expr::Constant(Atom::Parameter(pl))) => {
-	    pl
-	},
-	_ => Parameter::with_value(0.0)
-    };
-    
-    let max = match tail_drain.next() {
-	Some(Expr::Constant(Atom::Float(n))) => {
-	    Parameter::with_value(n)
-	},
-	Some(Expr::Constant(Atom::Parameter(pl))) => {
-	    pl
-	},
-	_ => Parameter::with_value(0.0)
-    };
-    
-    let steps = match tail_drain.next() {
-	Some(Expr::Constant(Atom::Float(n))) => {
-	    Parameter::with_value(n)
-	},
-	Some(Expr::Constant(Atom::Parameter(pl))) => {
-	    pl
-	},
-	_ => Parameter::with_value(0.0)
-    };
+    let min = get_next_param(&mut tail_drain, 0.0);    
+    let max = get_next_param(&mut tail_drain, 0.0);    
+    let steps = get_next_param(&mut tail_drain, 0.0);
         
     Atom::Parameter(Parameter {
 	val:0.0,
