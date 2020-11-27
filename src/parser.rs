@@ -35,7 +35,7 @@ pub enum BuiltIn {
     Silence,
     LoadSample,
     SyncContext,
-    Parameter,
+    BounceParameter,
 }
 
 pub enum Command {
@@ -83,7 +83,7 @@ fn parse_builtin<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<&'a s
 	map(tag("sx"), |_| BuiltIn::SyncContext),
 	map(tag("silence"), |_| BuiltIn::Silence),
 	map(tag("~"), |_| BuiltIn::Silence),
-	map(tag("bounce"), |_| BuiltIn::Parameter),
+	map(tag("bounce"), |_| BuiltIn::BounceParameter),
     ))(i)
 }
 
@@ -408,22 +408,8 @@ fn handle_saw(tail: &mut Vec<Expr>) -> Atom {
     ev.params.insert("sus".to_string(), Box::new(Parameter::with_value(0.1)));
     ev.params.insert("rel".to_string(), Box::new(Parameter::with_value(0.01)));
 
-
-    while let Some(Expr::Constant(Atom::Keyword(k))) = tail_drain.next() {
-	let pr = tail_drain.next();
-	let p = match pr {
-	    Some(Expr::Constant(Atom::Float(n))) => {
-		Parameter::with_value(n)
-	    },
-	    Some(Expr::Constant(Atom::Parameter(pl))) => {		
-		pl
-	    },
-	    _ => Parameter::with_value(0.0)
-	};
-	ev.params.insert(k, Box::new(p));
-    }
-    
-    
+    get_params(&mut ev.params, &mut tail_drain);
+        
     Atom::Event (ev)
 }
 
@@ -491,19 +477,7 @@ fn handle_sine(tail: &mut Vec<Expr>) -> Atom {
     ev.params.insert("sus".to_string(), Box::new(Parameter::with_value(0.1)));
     ev.params.insert("rel".to_string(), Box::new(Parameter::with_value(0.01)));
     
-    while let Some(Expr::Constant(Atom::Keyword(k))) = tail_drain.next() {
-	let pr = tail_drain.next();
-	let p = match pr {
-	    Some(Expr::Constant(Atom::Float(n))) => {
-		Parameter::with_value(n)
-	    },
-	    Some(Expr::Constant(Atom::Parameter(pl))) => {
-		pl
-	    },
-	    _ => Parameter::with_value(0.0)
-	};
-	ev.params.insert(k, Box::new(p));
-    }
+    get_params(&mut ev.params, &mut tail_drain);
     
     Atom::Event (ev)
 }
@@ -517,7 +491,7 @@ fn handle_sample(tail: &mut Vec<Expr>, bufnum: usize) -> Atom {
 
     ev.params.insert("bufnum".to_string(), Box::new(Parameter::with_value(bufnum as f32)));
     
-    // set some defaults 2
+    // set some defaults
     ev.params.insert("lvl".to_string(), Box::new(Parameter::with_value(0.3)));
     ev.params.insert("atk".to_string(), Box::new(Parameter::with_value(0.01)));
     ev.params.insert("sus".to_string(), Box::new(Parameter::with_value(0.1)));
@@ -526,6 +500,12 @@ fn handle_sample(tail: &mut Vec<Expr>, bufnum: usize) -> Atom {
     ev.params.insert("lpdist".to_string(), Box::new(Parameter::with_value(0.0)));
     ev.params.insert("start".to_string(), Box::new(Parameter::with_value(0.0)));
     
+    get_params(&mut ev.params, &mut tail_drain);
+    
+    Atom::Event (ev)
+}
+
+fn get_params(params: &mut HashMap<String, Box<Parameter>>, tail_drain: &mut std::vec::Drain<Expr> ) {
     while let Some(Expr::Constant(Atom::Keyword(k))) = tail_drain.next() {
 	let pr = tail_drain.next();
 	let p = match pr {
@@ -537,21 +517,51 @@ fn handle_sample(tail: &mut Vec<Expr>, bufnum: usize) -> Atom {
 	    },
 	    _ => Parameter::with_value(0.0)
 	};
-	ev.params.insert(k, Box::new(p));
+	params.insert(k, Box::new(p));
     }
-    
-    Atom::Event (ev)
 }
 
-fn handle_parameter(tail: &mut Vec<Expr>) -> Atom {
+fn handle_bounce_parameter(tail: &mut Vec<Expr>) -> Atom {
     let mut tail_drain = tail.drain(..);
-    let min = get_float_from_expr(&tail_drain.next().unwrap()).unwrap();
-    let max = get_float_from_expr(&tail_drain.next().unwrap()).unwrap();
-    let steps = get_float_from_expr(&tail_drain.next().unwrap()).unwrap();
 
+    let min = match tail_drain.next() {
+	Some(Expr::Constant(Atom::Float(n))) => {
+	    Parameter::with_value(n)
+	},
+	Some(Expr::Constant(Atom::Parameter(pl))) => {
+	    pl
+	},
+	_ => Parameter::with_value(0.0)
+    };
+    
+    let max = match tail_drain.next() {
+	Some(Expr::Constant(Atom::Float(n))) => {
+	    Parameter::with_value(n)
+	},
+	Some(Expr::Constant(Atom::Parameter(pl))) => {
+	    pl
+	},
+	_ => Parameter::with_value(0.0)
+    };
+    
+    let steps = match tail_drain.next() {
+	Some(Expr::Constant(Atom::Float(n))) => {
+	    Parameter::with_value(n)
+	},
+	Some(Expr::Constant(Atom::Parameter(pl))) => {
+	    pl
+	},
+	_ => Parameter::with_value(0.0)
+    };
+        
     Atom::Parameter(Parameter {
 	val:0.0,
-	modifier: Some(Box::new(BounceModifier::from_params(min, max,steps)))
+	modifier: Some(Box::new(BounceModifier {                        
+            min: min,
+            max: max,            
+            steps: steps,
+            step_count: (0.0).into(),
+        }))
     })
 }
 
@@ -614,7 +624,7 @@ fn eval_expression(e: Expr, sample_set: &SampleSet) -> Option<Expr> {
 		    Some(Expr::Constant(match bi {
 			BuiltIn::Clear => Atom::Command(Command::Clear),
 			BuiltIn::LoadSample => handle_load_sample(&mut reduced_tail),
-			BuiltIn::Parameter => handle_parameter(&mut reduced_tail),
+			BuiltIn::BounceParameter => handle_bounce_parameter(&mut reduced_tail),
 			BuiltIn::Silence => Atom::Event(Event::with_name("silence".to_string())),
 			BuiltIn::Sine => handle_sine(&mut reduced_tail),
 			BuiltIn::Saw => handle_saw(&mut reduced_tail),
