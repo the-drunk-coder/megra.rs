@@ -1,3 +1,5 @@
+#![feature(min_const_generics)]
+
 pub mod parser;
 pub mod interpreter;
 pub mod parameter;
@@ -30,6 +32,16 @@ Usage:
     println!("{}", opts.usage(&description));
 }
 
+enum OutputMode {
+    Stereo,
+    // AmbisonicsBinaural,
+    // Ambisonics
+    FourChannel,
+    EightChannel,
+    //SixteenChannel,
+    //TwentyFourChannel,           
+}
+
 fn main() -> Result<(), anyhow::Error> {
 
     let mut argv = env::args();
@@ -38,6 +50,7 @@ fn main() -> Result<(), anyhow::Error> {
     let mut opts = Options::new();
     opts.optflag("v", "version", "Print version");
     opts.optflag("h", "help", "Print this help");
+    opts.optopt("o", "output-mode", "output mode (stereo, 8ch)", "stereo");
 
     let matches = match opts.parse(argv) {
         Ok(m) => m,
@@ -57,6 +70,17 @@ fn main() -> Result<(), anyhow::Error> {
         return Ok(());
     }
 
+    let out_mode = match matches.opt_str("o").as_deref() {
+	Some("8ch") => OutputMode::EightChannel,
+	Some("4ch") => OutputMode::FourChannel,
+	Some("stereo") => OutputMode::Stereo,
+	_ => {
+	    println!("invalid output mode, assume stereo");
+	    OutputMode::Stereo
+	},
+    };
+
+
     let host = cpal::host_from_id(cpal::available_hosts()
 				  .into_iter()
 				  .find(|id| *id == cpal::HostId::Jack)
@@ -70,26 +94,50 @@ fn main() -> Result<(), anyhow::Error> {
 
     let config:cpal::SupportedStreamConfig = device.default_output_config().unwrap();
     let sample_format = config.sample_format();
-
-    match sample_format  {
-        cpal::SampleFormat::F32 => run::<f32>(&device, &config.into())?,
-        cpal::SampleFormat::I16 => run::<i16>(&device, &config.into())?,
-        cpal::SampleFormat::U16 => run::<u16>(&device, &config.into())?,
+        
+    match out_mode {
+	OutputMode::Stereo => {
+	    let mut conf: cpal::StreamConfig = config.into();
+	    conf.channels = 2;
+	    match sample_format  {		
+		cpal::SampleFormat::F32 => run::<f32, 2>(&device, &conf)?,
+		cpal::SampleFormat::I16 => run::<i16, 2>(&device, &conf)?,
+		cpal::SampleFormat::U16 => run::<u16, 2>(&device, &conf)?,
+	    }
+	},
+	OutputMode::FourChannel => {
+	    let mut conf: cpal::StreamConfig = config.into();
+	    conf.channels = 4;
+	    match sample_format  {
+		cpal::SampleFormat::F32 => run::<f32, 4>(&device, &conf)?,
+		cpal::SampleFormat::I16 => run::<i16, 4>(&device, &conf)?,
+		cpal::SampleFormat::U16 => run::<u16, 4>(&device, &conf)?,
+	    }
+	},
+	OutputMode::EightChannel => {
+	    let mut conf: cpal::StreamConfig = config.into();
+	    conf.channels = 8;
+	    match sample_format  {
+		cpal::SampleFormat::F32 => run::<f32, 8>(&device, &conf)?,
+		cpal::SampleFormat::I16 => run::<i16, 8>(&device, &conf)?,
+		cpal::SampleFormat::U16 => run::<u16, 8>(&device, &conf)?,
+	    }
+	}
     }
-
+    
     Ok(())
 }
 
-fn run<T>(device: &cpal::Device, config: &cpal::StreamConfig) -> Result<(), anyhow::Error>
+fn run<T, const NCHAN:usize>(device: &cpal::Device, config: &cpal::StreamConfig) -> Result<(), anyhow::Error>
 where
     T: cpal::Sample,
 {
     let _sample_rate = config.sample_rate.0 as f32;
     let channels = config.channels as usize;
-
+    
     let err_fn = |err| eprintln!("an error occurred on stream: {}", err);
 
-    let ruffbox = Arc::new(Mutex::new(Ruffbox::<512>::new()));
+    let ruffbox = Arc::new(Mutex::new(Ruffbox::<512, NCHAN>::new()));
 
     let ruffbox2 = Arc::clone(&ruffbox);    
     let stream = device.build_output_stream(
@@ -102,8 +150,11 @@ where
             let ruff_out = ruff.process(0.0, true);
 	    let mut frame_count = 0;
 	    for frame in data.chunks_mut(channels) {
-		frame[0] = ruff_out[0][frame_count];
-		frame[1] = ruff_out[1][frame_count];
+		for ch in 0..channels {
+		    frame[ch] = ruff_out[ch][frame_count];
+		}
+		
+		
 		frame_count = frame_count + 1;
 	    }
         },

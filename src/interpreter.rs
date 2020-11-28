@@ -6,21 +6,18 @@ use ruffbox_synth::ruffbox::Ruffbox;
 use crate::parser;
 use crate::session::Session;
 
-pub fn interpret(session: &mut Session, sample_set: &mut parser::SampleSet, parsed_in: parser::Expr, ruffbox: &sync::Arc<Mutex<Ruffbox<512>>>) {
+pub fn interpret<const BUFSIZE:usize, const NCHAN:usize>(session: &mut Session<BUFSIZE, NCHAN>,
+							 sample_set: &mut parser::SampleSet,
+							 parsed_in: parser::Expr,
+							 ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>) {
     match parsed_in {
-	parser::Expr::Constant(parser::Atom::Generator(g)) => {
-	    //let name = g.name.clone();
-	    //session.start_generator(Box::new(g), sync::Arc::clone(&ruffbox));
+	parser::Expr::Constant(parser::Atom::Generator(g)) => {	    
 	    println!("a generator called \'{}\'", g.name);
 	},
-	parser::Expr::Constant(parser::Atom::Parameter(_)) => {
-	    //let name = g.name.clone();
-	    //session.start_generator(Box::new(g), sync::Arc::clone(&ruffbox));
+	parser::Expr::Constant(parser::Atom::Parameter(_)) => {	    
 	    println!("a parameter");
 	},
-	parser::Expr::Constant(parser::Atom::Event(_)) => {
-	    //let name = g.name.clone();
-	    //session.start_generator(Box::new(g), sync::Arc::clone(&ruffbox));
+	parser::Expr::Constant(parser::Atom::Event(_)) => {	    
 	    println!("an event");
 	},
 	parser::Expr::Constant(parser::Atom::SyncContext(mut s)) => {

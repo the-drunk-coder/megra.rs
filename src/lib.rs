@@ -1,3 +1,5 @@
+#![feature(min_const_generics)]
+
 pub mod parameter;
 pub mod event;
 pub mod event_helpers;

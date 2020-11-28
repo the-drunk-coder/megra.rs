@@ -17,7 +17,7 @@ pub fn map_parameter(name: &str) -> SynthParameter {
 	"atk" => SynthParameter::Attack,
 	"rel" => SynthParameter::Release,
 	"sus" => SynthParameter::Sustain,
-	"pos" => SynthParameter::StereoPosition,
+	"pos" => SynthParameter::ChannelPosition,
 	"lvl" => SynthParameter::Level,
 	"dur" => SynthParameter::Duration,
 	"lpf" => SynthParameter::LowpassCutoffFrequency,

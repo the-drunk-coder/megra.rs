@@ -6,22 +6,22 @@ use ruffbox_synth::ruffbox::Ruffbox;
 use parking_lot::Mutex;
 
 /// A simple time-recursion event scheduler running at a fixed time interval.
-pub struct Scheduler {
+pub struct Scheduler<const BUFSIZE:usize, const NCHAN:usize> {
     pub handle: Option<thread::JoinHandle<()>>,
     pub running: sync::Arc<AtomicBool>,
 }
 
-pub struct SchedulerData {
+pub struct SchedulerData<const BUFSIZE:usize, const NCHAN:usize> {
     pub start_time: Instant,
     pub stream_time: f64,
     pub logical_time: f64,
     pub last_diff: f64,
     pub generator: Box<Generator>,
-    pub ruffbox: sync::Arc<Mutex<Ruffbox<512>>>,
+    pub ruffbox: sync::Arc<Mutex<Ruffbox<BUFSIZE,NCHAN>>>,
 }
 
-impl SchedulerData {
-    pub fn from_data(data: Box<Generator>, ruffbox: sync::Arc<Mutex<Ruffbox<512>>>) -> Self {
+impl <const BUFSIZE:usize, const NCHAN:usize> SchedulerData<BUFSIZE, NCHAN> {
+    pub fn from_data(data: Box<Generator>, ruffbox: sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>) -> Self {
 	// get logical time since start from ruffbox
 	let stream_time;
 	{
@@ -39,7 +39,7 @@ impl SchedulerData {
     }
 }
 
-impl Scheduler {
+impl <const BUFSIZE:usize, const NCHAN:usize> Scheduler<BUFSIZE, NCHAN> {
     pub fn new() -> Self {
         Scheduler {
             handle: None,
@@ -48,12 +48,12 @@ impl Scheduler {
     }
     
     /// Start this scheduler.
-    pub fn start(&mut self, fun: fn(&mut SchedulerData) -> f64, data: Box<Generator>, ruffbox: sync::Arc<Mutex<Ruffbox<512>>>) {
+    pub fn start(&mut self, fun: fn(&mut SchedulerData<BUFSIZE, NCHAN>) -> f64, data: Box<Generator>, ruffbox: sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>) {
 	self.running.store(true, Ordering::SeqCst);
 	let running = self.running.clone();
         self.handle = Some(thread::spawn(move || {
             
-	    let mut sched_data:SchedulerData = SchedulerData::from_data(data, ruffbox);	    
+	    let mut sched_data:SchedulerData<BUFSIZE, NCHAN> = SchedulerData::<BUFSIZE, NCHAN>::from_data(data, ruffbox);	    
 	    
 	    while running.load(Ordering::SeqCst) {
 		let cur = sched_data.start_time.elapsed().as_secs_f64();

@@ -14,11 +14,11 @@ pub struct SyncContext {
     pub generators: Vec<Generator>
 }
 
-pub struct Session {
-    schedulers: HashMap<String, Scheduler>,    
+pub struct Session <const BUFSIZE:usize, const NCHAN:usize> {
+    schedulers: HashMap<String, Scheduler<BUFSIZE, NCHAN>>,    
 }
 
-impl Session {
+impl <const BUFSIZE:usize, const NCHAN:usize> Session<BUFSIZE, NCHAN> {
 
     pub fn new() -> Self {
 	Session {
@@ -26,7 +26,7 @@ impl Session {
 	}
     }
     
-    pub fn start_generator(&mut self, gen: Box<Generator>, ruffbox: sync::Arc<Mutex<Ruffbox<512>>>) {
+    pub fn start_generator(&mut self, gen: Box<Generator>, ruffbox: sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>) {
 
 	// start scheduler if it exists ...
 	if let Some(sched) = self.schedulers.get_mut(&gen.name) {
@@ -34,10 +34,10 @@ impl Session {
 	}
 
 	// replace old scheduler (this will be where state handover needs to happen)
-	self.schedulers.insert(gen.name.clone(), Scheduler::new());	
+	self.schedulers.insert(gen.name.clone(), Scheduler::<BUFSIZE, NCHAN>::new());	
 
 	// the evaluation function ...
-	let eval_loop = |data: &mut SchedulerData| -> f64 {
+	let eval_loop = |data: &mut SchedulerData<BUFSIZE, NCHAN>| -> f64 {
 	    
 	    let events = data.generator.current_events();
 	    let mut ruff = data.ruffbox.lock();

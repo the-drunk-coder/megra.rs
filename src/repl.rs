@@ -8,7 +8,7 @@ use ruffbox_synth::ruffbox::Ruffbox;
 use std::sync;
 use parking_lot::Mutex;
 
-pub fn start_repl(ruffbox: &sync::Arc<Mutex<Ruffbox<512>>>) -> Result<(), anyhow::Error> {
+pub fn start_repl<const BUFSIZE:usize, const NCHAN:usize>(ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>) -> Result<(), anyhow::Error> {
     let mut session = Session::new();
     let mut sample_set = SampleSet::new();
     
