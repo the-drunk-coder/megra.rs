@@ -36,11 +36,17 @@ impl MarkovSequenceGenerator {
     pub fn current_events(&mut self) -> Vec<StaticEvent> {
 	let mut static_events = Vec::new();
 	
+	// try to get a transition if there wasn't one
+	// that'd mean it's probably the initial one, or there's something wrong ... 
+	if self.last_transition.is_none() {
+	    self.last_transition = self.generator.next_transition();
+	}
+	
 	if let Some(trans) = &self.last_transition {
 	    // increment symbol age ...
-	    *self.symbol_ages.entry(trans.next_symbol).or_insert(0) += 1;
+	    *self.symbol_ages.entry(trans.last_symbol).or_insert(0) += 1;
 	    // get static events ...
-	    if let Some(events) = self.event_mapping.get_mut(&trans.next_symbol) {
+	    if let Some(events) = self.event_mapping.get_mut(&trans.last_symbol) {
 		for e in events.iter_mut() {
 		    static_events.push(e.to_static());
 		}		
