@@ -75,7 +75,7 @@ impl <const BUFSIZE:usize, const NCHAN:usize> Session<BUFSIZE, NCHAN> {
 
 		    // special handling for stereo param
 		    if k == "pos" && data.mode == OutputMode::Stereo {			
-			let pos = (*v + 1.0) / 2.0;			
+			let pos = (*v + 1.0) * 0.5;			
 			ruff.set_instance_parameter(inst, map_parameter(k), pos);
 		    } else {
 			ruff.set_instance_parameter(inst, map_parameter(k), *v);
