@@ -8,6 +8,17 @@ use crate::scheduler::{Scheduler, SchedulerData};
 use crate::generator::Generator;
 use crate::event_helpers::*;
 
+#[derive(Clone,Copy,PartialEq)]
+pub enum OutputMode {
+    Stereo,
+    // AmbisonicsBinaural,
+    // Ambisonics
+    FourChannel,
+    EightChannel,
+    //SixteenChannel,
+    //TwentyFourChannel,           
+}
+
 pub struct SyncContext {
     pub name: String,
     pub synced: Vec<String>,
@@ -15,14 +26,16 @@ pub struct SyncContext {
 }
 
 pub struct Session <const BUFSIZE:usize, const NCHAN:usize> {
-    schedulers: HashMap<String, Scheduler<BUFSIZE, NCHAN>>,    
+    schedulers: HashMap<String, Scheduler<BUFSIZE, NCHAN>>,
+    output_mode: OutputMode,
 }
 
 impl <const BUFSIZE:usize, const NCHAN:usize> Session<BUFSIZE, NCHAN> {
 
-    pub fn new() -> Self {
+    pub fn with_mode(mode: OutputMode) -> Self {
 	Session {
-	    schedulers: HashMap::new(),	    
+	    schedulers: HashMap::new(),
+	    output_mode: mode,
 	}
     }
     
@@ -37,6 +50,7 @@ impl <const BUFSIZE:usize, const NCHAN:usize> Session<BUFSIZE, NCHAN> {
 	self.schedulers.insert(gen.name.clone(), Scheduler::<BUFSIZE, NCHAN>::new());	
 
 	// the evaluation function ...
+	// or better, the inside part of the time recursion
 	let eval_loop = |data: &mut SchedulerData<BUFSIZE, NCHAN>| -> f64 {
 	    
 	    let events = data.generator.current_events();
@@ -52,17 +66,20 @@ impl <const BUFSIZE:usize, const NCHAN:usize> Session<BUFSIZE, NCHAN> {
 		if let Some(b) = ev.params.get("bufnum") {
 		    bufnum = *b as usize;
 		}
-
-		//let next = data.generator.current_transition().params["duration"] as f64 / 1000.0;
 		
-		//println!("stream time: {} logical time: {} ruffbox time: {} next: {}", data.stream_time, data.logical_time, ruff.get_now(), next);
-		// println!("next event scheduled at: {} next: {}", data.stream_time + 0.05, next);
-		// latency, should be made configurable later ...
+		// latency 0.05, should be made configurable later ...
 		let inst = ruff.prepare_instance(map_name(&ev.name), data.stream_time + 0.05, bufnum);
 		
 		for (k,v) in ev.params.iter() {
 		    //println!("{} {}",k,v);
-		    ruff.set_instance_parameter(inst, map_parameter(k), *v);
+
+		    // special handling for stereo param
+		    if k == "pos" && data.mode == OutputMode::Stereo {			
+			let pos = (*v + 1.0) / 2.0;			
+			ruff.set_instance_parameter(inst, map_parameter(k), pos);
+		    } else {
+			ruff.set_instance_parameter(inst, map_parameter(k), *v);
+		    }
 		}
 		ruff.trigger(inst);
 	    }
@@ -72,7 +89,7 @@ impl <const BUFSIZE:usize, const NCHAN:usize> Session<BUFSIZE, NCHAN> {
 
 	// start scheduler if it exists ...
 	if let Some(sched) = self.schedulers.get_mut(&gen.name) {
-	    sched.start(eval_loop, gen, ruffbox);
+	    sched.start(self.output_mode, eval_loop, gen, ruffbox);
 	}		
     }
 

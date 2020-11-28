@@ -407,6 +407,7 @@ fn handle_saw(tail: &mut Vec<Expr>) -> Atom {
     ev.params.insert("atk".to_string(), Box::new(Parameter::with_value(0.01)));
     ev.params.insert("sus".to_string(), Box::new(Parameter::with_value(0.1)));
     ev.params.insert("rel".to_string(), Box::new(Parameter::with_value(0.01)));
+    ev.params.insert("pos".to_string(), Box::new(Parameter::with_value(0.00)));
 
     get_keyword_params(&mut ev.params, &mut tail_drain);
         
@@ -476,6 +477,7 @@ fn handle_sine(tail: &mut Vec<Expr>) -> Atom {
     ev.params.insert("atk".to_string(), Box::new(Parameter::with_value(0.01)));
     ev.params.insert("sus".to_string(), Box::new(Parameter::with_value(0.1)));
     ev.params.insert("rel".to_string(), Box::new(Parameter::with_value(0.01)));
+    ev.params.insert("pos".to_string(), Box::new(Parameter::with_value(0.00)));
     
     get_keyword_params(&mut ev.params, &mut tail_drain);
     
@@ -499,6 +501,7 @@ fn handle_sample(tail: &mut Vec<Expr>, bufnum: usize) -> Atom {
     ev.params.insert("rate".to_string(), Box::new(Parameter::with_value(1.0)));
     ev.params.insert("lpdist".to_string(), Box::new(Parameter::with_value(0.0)));
     ev.params.insert("start".to_string(), Box::new(Parameter::with_value(0.0)));
+    ev.params.insert("pos".to_string(), Box::new(Parameter::with_value(0.00)));
     
     get_keyword_params(&mut ev.params, &mut tail_drain);
     

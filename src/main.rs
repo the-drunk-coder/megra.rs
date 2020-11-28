@@ -17,6 +17,7 @@ use std::{env, sync::Arc};
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use parking_lot::Mutex;
 use ruffbox_synth::ruffbox::Ruffbox;
+use crate::session::OutputMode;
 
 fn print_help(program: &str, opts: Options) {
     let description = format!(
@@ -30,16 +31,6 @@ Usage:
         prog = program,
     );
     println!("{}", opts.usage(&description));
-}
-
-enum OutputMode {
-    Stereo,
-    // AmbisonicsBinaural,
-    // Ambisonics
-    FourChannel,
-    EightChannel,
-    //SixteenChannel,
-    //TwentyFourChannel,           
 }
 
 fn main() -> Result<(), anyhow::Error> {
@@ -100,27 +91,27 @@ fn main() -> Result<(), anyhow::Error> {
 	    let mut conf: cpal::StreamConfig = config.into();
 	    conf.channels = 2;
 	    match sample_format  {		
-		cpal::SampleFormat::F32 => run::<f32, 2>(&device, &conf)?,
-		cpal::SampleFormat::I16 => run::<i16, 2>(&device, &conf)?,
-		cpal::SampleFormat::U16 => run::<u16, 2>(&device, &conf)?,
+		cpal::SampleFormat::F32 => run::<f32, 2>(&device, &conf, out_mode)?,
+		cpal::SampleFormat::I16 => run::<i16, 2>(&device, &conf, out_mode)?,
+		cpal::SampleFormat::U16 => run::<u16, 2>(&device, &conf, out_mode)?,
 	    }
 	},
 	OutputMode::FourChannel => {
 	    let mut conf: cpal::StreamConfig = config.into();
 	    conf.channels = 4;
 	    match sample_format  {
-		cpal::SampleFormat::F32 => run::<f32, 4>(&device, &conf)?,
-		cpal::SampleFormat::I16 => run::<i16, 4>(&device, &conf)?,
-		cpal::SampleFormat::U16 => run::<u16, 4>(&device, &conf)?,
+		cpal::SampleFormat::F32 => run::<f32, 4>(&device, &conf, out_mode)?,
+		cpal::SampleFormat::I16 => run::<i16, 4>(&device, &conf, out_mode)?,
+		cpal::SampleFormat::U16 => run::<u16, 4>(&device, &conf, out_mode)?,
 	    }
 	},
 	OutputMode::EightChannel => {
 	    let mut conf: cpal::StreamConfig = config.into();
 	    conf.channels = 8;
 	    match sample_format  {
-		cpal::SampleFormat::F32 => run::<f32, 8>(&device, &conf)?,
-		cpal::SampleFormat::I16 => run::<i16, 8>(&device, &conf)?,
-		cpal::SampleFormat::U16 => run::<u16, 8>(&device, &conf)?,
+		cpal::SampleFormat::F32 => run::<f32, 8>(&device, &conf, out_mode)?,
+		cpal::SampleFormat::I16 => run::<i16, 8>(&device, &conf, out_mode)?,
+		cpal::SampleFormat::U16 => run::<u16, 8>(&device, &conf, out_mode)?,
 	    }
 	}
     }
@@ -128,7 +119,7 @@ fn main() -> Result<(), anyhow::Error> {
     Ok(())
 }
 
-fn run<T, const NCHAN:usize>(device: &cpal::Device, config: &cpal::StreamConfig) -> Result<(), anyhow::Error>
+fn run<T, const NCHAN:usize>(device: &cpal::Device, config: &cpal::StreamConfig, mode: OutputMode) -> Result<(), anyhow::Error>
 where
     T: cpal::Sample,
 {
@@ -152,9 +143,7 @@ where
 	    for frame in data.chunks_mut(channels) {
 		for ch in 0..channels {
 		    frame[ch] = ruff_out[ch][frame_count];
-		}
-		
-		
+		}				
 		frame_count = frame_count + 1;
 	    }
         },
@@ -163,5 +152,5 @@ where
     stream.play()?;
 
     // start the megra repl
-    repl::start_repl(&ruffbox)
+    repl::start_repl(&ruffbox, mode)
 }
