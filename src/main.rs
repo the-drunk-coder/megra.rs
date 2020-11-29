@@ -6,7 +6,7 @@ pub mod parameter;
 pub mod event;
 pub mod event_helpers;
 pub mod markov_sequence_generator;
-pub mod event_processor;
+pub mod generator_processor;
 pub mod generator;
 pub mod session;
 pub mod scheduler;
@@ -140,6 +140,8 @@ where
 	    // ruffbox handles it's own logical time ...
             let ruff_out = ruff.process(0.0, true);
 	    let mut frame_count = 0;
+
+	    // there might be a faster way to de-interleave here ... 
 	    for frame in data.chunks_mut(channels) {
 		for ch in 0..channels {
 		    frame[ch] = ruff_out[ch][frame_count];

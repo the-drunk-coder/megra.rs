@@ -23,6 +23,11 @@ use crate::generator::Generator;
 /// maps an event type (like "bd") to a mapping between keywords and buffer number ...
 pub type SampleSet = HashMap<String, Vec<(HashSet<String>, usize)>>;
 
+
+
+pub enum BuiltInEvent {
+    Level(EventOperation)
+}
 /// As this doesn't strive to be a turing-complete lisp, we'll start with the basic
 /// megra operations, learning and inferring, plus the built-in events
 pub enum BuiltIn {
@@ -36,6 +41,8 @@ pub enum BuiltIn {
     LoadSample,
     SyncContext,
     BounceParameter,
+    ModEvent(BuiltInEvent),    
+    //GeneratorGrowN,
 }
 
 pub enum Command {
@@ -56,6 +63,7 @@ pub enum Atom {
     Command(Command),
     SyncContext(SyncContext),
     Generator(Generator),
+    //GeneratorProcessor(GeneratorProcessor),
     Parameter(Parameter)	
 }
 
@@ -84,6 +92,12 @@ fn parse_builtin<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<&'a s
 	map(tag("silence"), |_| BuiltIn::Silence),
 	map(tag("~"), |_| BuiltIn::Silence),
 	map(tag("bounce"), |_| BuiltIn::BounceParameter),
+	map(tag("lvl"), |_| BuiltIn::ModEvent(BuiltInEvent::Level(EventOperation::Replace))),
+	map(tag("lvl-add"), |_| BuiltIn::ModEvent(BuiltInEvent::Level(EventOperation::Add))),
+	map(tag("lvl-mul"), |_| BuiltIn::ModEvent(BuiltInEvent::Level(EventOperation::Multiply))),
+	map(tag("lvl-sub"), |_| BuiltIn::ModEvent(BuiltInEvent::Level(EventOperation::Subtract))),
+	map(tag("lvl-div"), |_| BuiltIn::ModEvent(BuiltInEvent::Level(EventOperation::Divide))),
+	//map(tag("grown"), |_| BuiltIn::GeneratorGrowN),
     ))(i)
 }
 
@@ -581,6 +595,13 @@ fn handle_sync_context(tail: &mut Vec<Expr>) -> Atom {
     })
 }
 
+fn handle_mod_event(ev: &BuiltInEvent, tail: &mut Vec<Expr>) -> Atom {
+    let mut ev = Event::with_name("sampler".to_string());
+    
+    
+    Atom::Event (ev)
+}
+
 /// This function tries to reduce the AST.
 /// This has to return an Expression rather than an Atom because quoted s_expressions
 /// can't be reduced
@@ -604,13 +625,15 @@ fn eval_expression(e: Expr, sample_set: &SampleSet) -> Option<Expr> {
 			BuiltIn::Clear => Atom::Command(Command::Clear),
 			BuiltIn::LoadSample => handle_load_sample(&mut reduced_tail),
 			BuiltIn::BounceParameter => handle_bounce_parameter(&mut reduced_tail),
+			//BuiltIn::GeneratorGrowN => handle_grown(&mut reduced_tail),
 			BuiltIn::Silence => Atom::Event(Event::with_name("silence".to_string())),
 			BuiltIn::Sine => handle_sine(&mut reduced_tail),
 			BuiltIn::Saw => handle_saw(&mut reduced_tail),
 			BuiltIn::Rule => handle_rule(&mut reduced_tail),
 			BuiltIn::Learn => handle_learn(&mut reduced_tail),
 			BuiltIn::Infer => handle_infer(&mut reduced_tail),			
-			BuiltIn::SyncContext => handle_sync_context(&mut reduced_tail)	
+			BuiltIn::SyncContext => handle_sync_context(&mut reduced_tail),
+			BuiltIn::ModEvent(ev) => handle_mod_event(&ev, &mut reduced_tail)	
 		    }))
 		},
 		Expr::Custom(s) => {
