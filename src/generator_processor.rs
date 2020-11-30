@@ -12,10 +12,20 @@ pub trait GeneratorProcessor {
 }
 
 /// Apple-ys events to the throughcoming ones 
-struct PearProcessor {
-    apply_to_transition: bool,
-    events_to_be_applied: Vec<Event>,
-    last_static: Vec<StaticEvent>
+pub struct PearProcessor {
+    pub apply_to_transition: bool,
+    pub events_to_be_applied: Vec<Event>,
+    pub last_static: Vec<StaticEvent>
+}
+
+impl PearProcessor {
+    pub fn new() -> Self {
+	PearProcessor {
+	    apply_to_transition: false,
+	    events_to_be_applied: Vec::new(),
+	    last_static: Vec::new()
+	}	    
+    }
 }
 
 // zip mode etc seem to be outdated ... going for any mode for now

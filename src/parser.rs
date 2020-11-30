@@ -19,6 +19,7 @@ use crate::event::*;
 use crate::parameter::*;
 use crate::session::SyncContext;
 use crate::generator::Generator;
+use crate::generator_processor::*;
 use crate::event_helpers::*;
 use ruffbox_synth::ruffbox::synth::SynthParameter;
 
@@ -72,7 +73,7 @@ pub enum Command {
     LoadSample((String, Vec<String>, String)) // set (events), keyword, path
 }
 
-pub enum Atom {
+pub enum Atom { // atom might not be the right word any longer 
     Float(f32),
     Description(String), // pfa descriptions
     Keyword(String),
@@ -85,14 +86,16 @@ pub enum Atom {
     Command(Command),
     SyncContext(SyncContext),
     Generator(Generator),
-    //GeneratorProcessor(GeneratorProcessor),
-    Parameter(Parameter)	
+    GeneratorProcessor(Box<dyn GeneratorProcessor>),
+    GeneratorProcessorList(Vec<Box<dyn GeneratorProcessor>>),
+    Parameter(Parameter),
+    Nothing
 }
 
 pub enum Expr {
     Constant(Atom),
     Custom(String),
-    Application(Box<Expr>, Vec<Expr>),
+    Application(Box<Expr>, Vec<Expr>),    
 }
 
 
@@ -603,17 +606,45 @@ fn handle_builtin_mod_event(event_type: &BuiltInEvent, tail: &mut Vec<Expr>) -> 
     Atom::Event (ev)
 }
 
-enum LastElem {
-    GeneratorProc,
-    Generator,
-    Else 
+fn collect_gen_proc(proc_type: &BuiltInGenProc, tail: &mut Vec<Expr>) -> Box<dyn GeneratorProcessor + Send> {
+    let mut tail_drain = tail.drain(..);
+    Box::new(match proc_type {
+	BuiltInGenProc::Pear => {
+	    let mut proc = PearProcessor::new();
+	    while let Some(Expr::Constant(Atom::Event(e))) = tail_drain.next() {
+		proc.events_to_be_applied.push(e);
+	    }
+	    proc
+	}
+    })        
 }
-
 // store list of genProcs in a vec if there's no root gen ???
 fn handle_builtin_gen_proc(proc_type: &BuiltInGenProc, tail: &mut Vec<Expr>) -> Atom {
-    
-	
-    Atom::Event (Event::with_name("silence".to_string()))
+        
+    let last = tail.pop();
+    match last {
+	Some(Expr::Constant(Atom::Generator(mut g))) => {
+	    g.processors.push(collect_gen_proc(proc_type, tail));
+	    Atom::Generator(g)
+	},
+	Some(Expr::Constant(Atom::GeneratorProcessor(gp)))=> {
+	    let mut v = Vec::new();
+	    v.push(gp);
+	    v.push(collect_gen_proc(proc_type, tail));
+	    Atom::GeneratorProcessorList(v)
+	},
+	Some(Expr::Constant(Atom::GeneratorProcessorList(mut l)))=> {
+	    l.push(collect_gen_proc(proc_type, tail));
+	    Atom::GeneratorProcessorList(l)
+	},
+	Some(l) => {
+	    tail.push(l);
+	    Atom::GeneratorProcessor(collect_gen_proc(proc_type, tail))
+	},
+	None => {
+	    Atom::Nothing
+	}
+    }    
 }
 
 /// This function tries to reduce the AST.
@@ -623,7 +654,7 @@ fn eval_expression(e: Expr, sample_set: &SampleSet) -> Option<Expr> {
     match e {
 	// Constants and quoted s-expressions are our base-case
 	Expr::Constant(_) => Some(e),
-	Expr::Custom(_) => Some(e),
+	Expr::Custom(_) => Some(e),	
 	Expr::Application(head, tail) => {
 
 	    let reduced_head = eval_expression(*head, sample_set)?;
@@ -656,7 +687,7 @@ fn eval_expression(e: Expr, sample_set: &SampleSet) -> Option<Expr> {
 		    } else {
 			None
 		    }
-		}, // return custom function
+		}, // return custom function		,
 		_ => {
 		    println!("something else");
 		    None

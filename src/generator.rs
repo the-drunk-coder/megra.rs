@@ -56,16 +56,20 @@ impl Generator {
 
 // to bind, i need a holder, would that work in an enum ?
 pub fn haste(gen: &mut Generator, n: usize, factor: f32) {
-    gen.time_mods.push(TimeMod{
-	val: factor,
-	op: EventOperation::Multiply		
-    });
+    for _ in 0..n {
+	gen.time_mods.push(TimeMod{
+	    val: factor,
+	    op: EventOperation::Multiply		
+	});
+    }    
 }
 
 // to bind, i need a holder, would that work in an enum ?
 pub fn relax(gen: &mut Generator, n: usize, factor: f32) {
-    gen.time_mods.push(TimeMod{
-	val: factor,
-	op: EventOperation::Divide		
-    });
+    for _ in 0..n {
+	gen.time_mods.push(TimeMod{
+	    val: factor,
+	    op: EventOperation::Divide		
+	});
+    }
 }
