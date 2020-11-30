@@ -29,7 +29,7 @@ pub type SampleSet = HashMap<String, Vec<(HashSet<String>, usize)>>;
 // reflect event hierarchy here, like, Tuned, Param, Sample, Noise ?
 pub enum BuiltInEvent {
     Level(EventOperation),
-    //LpFreq(EventOperation),
+    Reverb(EventOperation),
     //LpQ(EventOperation),
     //LpDist(EventOperation),
     Sine(EventOperation),
@@ -113,11 +113,12 @@ fn parse_builtin<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<&'a s
 	map(tag("sine"), |_| BuiltIn::SoundEvent(BuiltInEvent::Sine(EventOperation::Replace))),
 	map(tag("saw"), |_| BuiltIn::SoundEvent(BuiltInEvent::Saw(EventOperation::Replace))),
 	map(tag("sqr"), |_| BuiltIn::SoundEvent(BuiltInEvent::Square(EventOperation::Replace))),
-	map(tag("lvl"), |_| BuiltIn::ModEvent(BuiltInEvent::Level(EventOperation::Replace))),
+	map(tag("lvl"), |_| BuiltIn::ModEvent(BuiltInEvent::Level(EventOperation::Replace))),	
 	map(tag("lvl-add"), |_| BuiltIn::ModEvent(BuiltInEvent::Level(EventOperation::Add))),
 	map(tag("lvl-mul"), |_| BuiltIn::ModEvent(BuiltInEvent::Level(EventOperation::Multiply))),
 	map(tag("lvl-sub"), |_| BuiltIn::ModEvent(BuiltInEvent::Level(EventOperation::Subtract))),
 	map(tag("lvl-div"), |_| BuiltIn::ModEvent(BuiltInEvent::Level(EventOperation::Divide))),
+	map(tag("rev"), |_| BuiltIn::ModEvent(BuiltInEvent::Reverb(EventOperation::Replace))),	
 	map(tag("pear"), |_| BuiltIn::GenProc(BuiltInGenProc::Pear)),
     ))(i)
 }
@@ -593,11 +594,13 @@ fn handle_builtin_mod_event(event_type: &BuiltInEvent, tail: &mut Vec<Expr>) -> 
     
     let mut ev = match event_type {
 	BuiltInEvent::Level(o) => Event::with_name_and_operation("lvl".to_string(), *o),	
+	BuiltInEvent::Reverb(o) => Event::with_name_and_operation("rev".to_string(), *o),	
 	_ => Event::with_name("lvl".to_string()),
     };
 
     let param_key = match event_type {
 	BuiltInEvent::Level(_) => SynthParameter::Level,
+	BuiltInEvent::Reverb(_) => SynthParameter::ReverbMix,
 	_ => SynthParameter::Level,
     };
 
