@@ -33,6 +33,11 @@ pub enum BuiltInEvent {
     Saw(EventOperation),
     Square(EventOperation),
 }
+
+pub enum BuiltInDynamicParameter {
+    Bounce,
+}
+
 /// As this doesn't strive to be a turing-complete lisp, we'll start with the basic
 /// megra operations, learning and inferring, plus the built-in events
 pub enum BuiltIn {
@@ -43,7 +48,7 @@ pub enum BuiltIn {
     Silence,
     LoadSample,
     SyncContext,
-    BounceParameter,
+    Parameter(BuiltInDynamicParameter),
     SoundEvent(BuiltInEvent),
     ModEvent(BuiltInEvent),
 }
@@ -94,7 +99,7 @@ fn parse_builtin<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<&'a s
 	map(tag("sx"), |_| BuiltIn::SyncContext),
 	map(tag("silence"), |_| BuiltIn::Silence),
 	map(tag("~"), |_| BuiltIn::Silence),
-	map(tag("bounce"), |_| BuiltIn::BounceParameter),
+	map(tag("bounce"), |_| BuiltIn::Parameter(BuiltInDynamicParameter::Bounce)),
 	map(tag("lvl"), |_| BuiltIn::ModEvent(BuiltInEvent::Level(EventOperation::Replace))),
 	map(tag("lvl-add"), |_| BuiltIn::ModEvent(BuiltInEvent::Level(EventOperation::Add))),
 	map(tag("lvl-mul"), |_| BuiltIn::ModEvent(BuiltInEvent::Level(EventOperation::Multiply))),
@@ -519,21 +524,26 @@ fn get_next_param(tail_drain: &mut std::vec::Drain<Expr>, default: f32) -> Param
     }
 }
 
-fn handle_bounce_parameter(tail: &mut Vec<Expr>) -> Atom {
+fn handle_builtin_dynamic_parameter(par: &BuiltInDynamicParameter, tail: &mut Vec<Expr>) -> Atom {
     let mut tail_drain = tail.drain(..);
-
-    let min = get_next_param(&mut tail_drain, 0.0);    
-    let max = get_next_param(&mut tail_drain, 0.0);    
-    let steps = get_next_param(&mut tail_drain, 0.0);
-        
+            
     Atom::Parameter(Parameter {
 	val:0.0,
-	modifier: Some(Box::new(BounceModifier {                        
-            min: min,
-            max: max,            
-            steps: steps,
-            step_count: (0.0).into(),
-        }))
+	modifier: Some(Box::new(
+	    match par {
+		BuiltInDynamicParameter::Bounce => {
+		    let min = get_next_param(&mut tail_drain, 0.0);    
+		    let max = get_next_param(&mut tail_drain, 0.0);    
+		    let steps = get_next_param(&mut tail_drain, 0.0);
+		    BounceModifier {                        
+			min: min,
+			max: max,            
+			steps: steps,
+			step_count: (0.0).into(),
+		    }
+		}
+	    }	    
+	))
     })
 }
 
@@ -615,7 +625,7 @@ fn eval_expression(e: Expr, sample_set: &SampleSet) -> Option<Expr> {
 		    Some(Expr::Constant(match bi {
 			BuiltIn::Clear => Atom::Command(Command::Clear),
 			BuiltIn::LoadSample => handle_load_sample(&mut reduced_tail),
-			BuiltIn::BounceParameter => handle_bounce_parameter(&mut reduced_tail),			
+			BuiltIn::Parameter(par) => handle_builtin_dynamic_parameter(&par, &mut reduced_tail),			
 			BuiltIn::Silence => Atom::Event(Event::with_name("silence".to_string())),			
 			BuiltIn::Rule => handle_rule(&mut reduced_tail),
 			BuiltIn::Learn => handle_learn(&mut reduced_tail),
