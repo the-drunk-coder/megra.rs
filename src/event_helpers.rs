@@ -5,6 +5,7 @@ pub fn map_name(name: &str) -> SourceType {
     match name {
 	"sine" => SourceType::SineSynth,
 	"saw" => SourceType::LFSawSynth,
+	"sqr" => SourceType::LFSquareSynth,
 	"sampler" => SourceType::Sampler,
 	_ => SourceType::SineSynth,	    
     }

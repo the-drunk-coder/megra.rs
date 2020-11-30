@@ -60,6 +60,17 @@ impl StaticEvent {
 }
 
 impl Event {
+    pub fn with_name_and_operation(name: String, op: EventOperation) -> Self {
+	let mut tags = Vec::new();
+	tags.push(name.clone()); // add to tags, for subsequent filters ...
+	Event {
+	    name: name,
+	    params: HashMap::new(),
+	    tags: tags,
+	    op: op,
+	}
+    }
+
     pub fn with_name(name: String) -> Self {
 	let mut tags = Vec::new();
 	tags.push(name.clone()); // add to tags, for subsequent filters ...

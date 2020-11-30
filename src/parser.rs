@@ -23,26 +23,29 @@ use crate::generator::Generator;
 /// maps an event type (like "bd") to a mapping between keywords and buffer number ...
 pub type SampleSet = HashMap<String, Vec<(HashSet<String>, usize)>>;
 
-
-
+// reflect event hierarchy here, like, Tuned, Param, Sample, Noise ?
 pub enum BuiltInEvent {
-    Level(EventOperation)
+    Level(EventOperation),
+    //LpFreq(EventOperation),
+    //LpQ(EventOperation),
+    //LpDist(EventOperation),
+    Sine(EventOperation),
+    Saw(EventOperation),
+    Square(EventOperation),
 }
 /// As this doesn't strive to be a turing-complete lisp, we'll start with the basic
 /// megra operations, learning and inferring, plus the built-in events
 pub enum BuiltIn {
     Learn,
-    Infer,
-    Sine,
-    Saw,
+    Infer,    
     Rule,
     Clear,
     Silence,
     LoadSample,
     SyncContext,
     BounceParameter,
-    ModEvent(BuiltInEvent),    
-    //GeneratorGrowN,
+    SoundEvent(BuiltInEvent),
+    ModEvent(BuiltInEvent),
 }
 
 pub enum Command {
@@ -63,7 +66,6 @@ pub enum Atom {
     Command(Command),
     SyncContext(SyncContext),
     Generator(Generator),
-    //GeneratorProcessor(GeneratorProcessor),
     Parameter(Parameter)	
 }
 
@@ -84,8 +86,9 @@ fn parse_builtin<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<&'a s
 	map(tag("learn"), |_| BuiltIn::Learn),
 	map(tag("infer"), |_| BuiltIn::Infer),
 	map(tag("rule"), |_| BuiltIn::Rule),
-	map(tag("sine"), |_| BuiltIn::Sine),
-	map(tag("saw"), |_| BuiltIn::Saw),
+	map(tag("sine"), |_| BuiltIn::SoundEvent(BuiltInEvent::Sine(EventOperation::Replace))),
+	map(tag("saw"), |_| BuiltIn::SoundEvent(BuiltInEvent::Saw(EventOperation::Replace))),
+	map(tag("sqr"), |_| BuiltIn::SoundEvent(BuiltInEvent::Square(EventOperation::Replace))),
 	map(tag("clear"), |_| BuiltIn::Clear),
 	map(tag("load-sample"), |_| BuiltIn::LoadSample),
 	map(tag("sx"), |_| BuiltIn::SyncContext),
@@ -97,7 +100,6 @@ fn parse_builtin<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<&'a s
 	map(tag("lvl-mul"), |_| BuiltIn::ModEvent(BuiltInEvent::Level(EventOperation::Multiply))),
 	map(tag("lvl-sub"), |_| BuiltIn::ModEvent(BuiltInEvent::Level(EventOperation::Subtract))),
 	map(tag("lvl-div"), |_| BuiltIn::ModEvent(BuiltInEvent::Level(EventOperation::Divide))),
-	//map(tag("grown"), |_| BuiltIn::GeneratorGrowN),
     ))(i)
 }
 
@@ -224,29 +226,25 @@ fn parse_expr<'a>(i: &'a str) -> IResult<&'a str, Expr, VerboseError<&'a str>> {
 
 /// To start we define a couple of helper functions
 fn get_float_from_expr(e: &Expr) -> Option<f32> {
-    if let Expr::Constant(Atom::Float(n)) = e {
-	Some(*n)
-    } else {
-	None
-    }
+    match e {
+	Expr::Constant(Atom::Float(n)) => Some(*n),
+	_ => None
+    }  
 }
 
 fn get_bool_from_expr(e: &Expr) -> Option<bool> {
-    if let Expr::Constant(Atom::Boolean(b)) = e {
-	Some(*b)
-    } else {
-	None
-    }
+    match e {
+	Expr::Constant(Atom::Boolean(b)) => Some(*b),
+	_ => None
+    }	    
 }
 
 fn get_string_from_expr(e: &Expr) -> Option<String> {
-    if let Expr::Constant(Atom::Description(s)) = e {
-	Some(s.to_string())
-    } else if let Expr::Constant(Atom::Symbol(s)) = e {
-	Some(s.to_string())
-    } else {
-	None
-    }
+    match e {
+	Expr::Constant(Atom::Description(s)) => Some(s.to_string()),
+	Expr::Constant(Atom::Symbol(s)) => Some(s.to_string()),
+	_ => None
+    }     
 }
 
 fn handle_learn(tail: &mut Vec<Expr>) -> Atom {
@@ -408,26 +406,6 @@ fn handle_infer(tail: &mut Vec<Expr>) -> Atom {
     })        
 }
 
-fn handle_saw(tail: &mut Vec<Expr>) -> Atom {
-
-    let mut tail_drain = tail.drain(..);
-    
-    let mut ev = Event::with_name("saw".to_string());
-    ev.tags.push("saw".to_string());
-    ev.params.insert("freq".to_string(), Box::new(Parameter::with_value(get_float_from_expr(&tail_drain.next().unwrap()).unwrap() as f32)));
-    
-    // set some defaults 2
-    ev.params.insert("lvl".to_string(), Box::new(Parameter::with_value(0.3)));
-    ev.params.insert("atk".to_string(), Box::new(Parameter::with_value(0.01)));
-    ev.params.insert("sus".to_string(), Box::new(Parameter::with_value(0.1)));
-    ev.params.insert("rel".to_string(), Box::new(Parameter::with_value(0.01)));
-    ev.params.insert("pos".to_string(), Box::new(Parameter::with_value(0.00)));
-
-    get_keyword_params(&mut ev.params, &mut tail_drain);
-        
-    Atom::Event (ev)
-}
-
 fn handle_load_sample(tail: &mut Vec<Expr>) -> Atom {
 
     let mut tail_drain = tail.drain(..);
@@ -476,19 +454,23 @@ fn handle_load_sample(tail: &mut Vec<Expr>) -> Atom {
     Atom::Command(Command::LoadSample((set, keywords, path)))
 }
 
-fn handle_sine(tail: &mut Vec<Expr>) -> Atom {
+fn handle_builtin_sound_event(event_type: &BuiltInEvent, tail: &mut Vec<Expr>) -> Atom {
     
     let mut tail_drain = tail.drain(..);
     
-    let mut ev = Event::with_name("sine".to_string());
-    ev.tags.push("sine".to_string());
+    let mut ev = match event_type {
+	BuiltInEvent::Sine(o) => Event::with_name_and_operation("sine".to_string(), *o),
+	BuiltInEvent::Saw(o) => Event::with_name_and_operation("saw".to_string(), *o),
+	BuiltInEvent::Square(o) => Event::with_name_and_operation("sqr".to_string(), *o),
+	_ => Event::with_name("sine".to_string()),
+    };
 
     // first arg is always freq ...
     ev.params.insert("freq".to_string(),Box::new(Parameter::with_value(get_float_from_expr(&tail_drain.next().unwrap()).unwrap())));
 
     // set some defaults 2
     ev.params.insert("lvl".to_string(), Box::new(Parameter::with_value(0.3)));
-    ev.params.insert("atk".to_string(), Box::new(Parameter::with_value(0.01)));
+    ev.params.insert("atk".to_string(), Box::new(Parameter::with_value(0.005)));
     ev.params.insert("sus".to_string(), Box::new(Parameter::with_value(0.1)));
     ev.params.insert("rel".to_string(), Box::new(Parameter::with_value(0.01)));
     ev.params.insert("pos".to_string(), Box::new(Parameter::with_value(0.00)));
@@ -497,6 +479,7 @@ fn handle_sine(tail: &mut Vec<Expr>) -> Atom {
     
     Atom::Event (ev)
 }
+
 
 fn handle_sample(tail: &mut Vec<Expr>, bufnum: usize) -> Atom {
     
@@ -509,7 +492,7 @@ fn handle_sample(tail: &mut Vec<Expr>, bufnum: usize) -> Atom {
     
     // set some defaults
     ev.params.insert("lvl".to_string(), Box::new(Parameter::with_value(0.3)));
-    ev.params.insert("atk".to_string(), Box::new(Parameter::with_value(0.01)));
+    ev.params.insert("atk".to_string(), Box::new(Parameter::with_value(0.005)));
     ev.params.insert("sus".to_string(), Box::new(Parameter::with_value(0.1)));
     ev.params.insert("rel".to_string(), Box::new(Parameter::with_value(0.01)));
     ev.params.insert("rate".to_string(), Box::new(Parameter::with_value(1.0)));
@@ -530,12 +513,8 @@ fn get_keyword_params(params: &mut HashMap<String, Box<Parameter>>, tail_drain: 
 
 fn get_next_param(tail_drain: &mut std::vec::Drain<Expr>, default: f32) -> Parameter{
     match tail_drain.next() {
-	Some(Expr::Constant(Atom::Float(n))) => {
-	    Parameter::with_value(n)
-	},
-	Some(Expr::Constant(Atom::Parameter(pl))) => {
-	    pl
-	},
+	Some(Expr::Constant(Atom::Float(n))) => Parameter::with_value(n),
+	Some(Expr::Constant(Atom::Parameter(pl))) => pl,
 	_ => Parameter::with_value(default)
     }
 }
@@ -562,6 +541,7 @@ fn handle_rule(tail: &mut Vec<Expr>) -> Atom {
     let mut tail_drain = tail.drain(..);
     let source_vec:Vec<char> = get_string_from_expr(&tail_drain.next().unwrap()).unwrap().chars().collect();
     let sym_vec:Vec<char> = get_string_from_expr(&tail_drain.next().unwrap()).unwrap().chars().collect();
+    
     Atom::Rule(Rule {
 	source: source_vec,
 	symbol: sym_vec[0],
@@ -595,9 +575,20 @@ fn handle_sync_context(tail: &mut Vec<Expr>) -> Atom {
     })
 }
 
-fn handle_mod_event(ev: &BuiltInEvent, tail: &mut Vec<Expr>) -> Atom {
-    let mut ev = Event::with_name("sampler".to_string());
+fn handle_builtin_mod_event(event_type: &BuiltInEvent, tail: &mut Vec<Expr>) -> Atom {
+    let mut tail_drain = tail.drain(..);
     
+    let mut ev = match event_type {
+	BuiltInEvent::Level(o) => Event::with_name_and_operation("lvl".to_string(), *o),	
+	_ => Event::with_name("lvl".to_string()),
+    };
+
+    let param_key = match event_type {
+	BuiltInEvent::Level(_) => "lvl",
+	_ => "lvl",
+    };
+
+    ev.params.insert(param_key.to_string(), Box::new(get_next_param(&mut tail_drain, 0.0)));
     
     Atom::Event (ev)
 }
@@ -624,16 +615,14 @@ fn eval_expression(e: Expr, sample_set: &SampleSet) -> Option<Expr> {
 		    Some(Expr::Constant(match bi {
 			BuiltIn::Clear => Atom::Command(Command::Clear),
 			BuiltIn::LoadSample => handle_load_sample(&mut reduced_tail),
-			BuiltIn::BounceParameter => handle_bounce_parameter(&mut reduced_tail),
-			//BuiltIn::GeneratorGrowN => handle_grown(&mut reduced_tail),
-			BuiltIn::Silence => Atom::Event(Event::with_name("silence".to_string())),
-			BuiltIn::Sine => handle_sine(&mut reduced_tail),
-			BuiltIn::Saw => handle_saw(&mut reduced_tail),
+			BuiltIn::BounceParameter => handle_bounce_parameter(&mut reduced_tail),			
+			BuiltIn::Silence => Atom::Event(Event::with_name("silence".to_string())),			
 			BuiltIn::Rule => handle_rule(&mut reduced_tail),
 			BuiltIn::Learn => handle_learn(&mut reduced_tail),
 			BuiltIn::Infer => handle_infer(&mut reduced_tail),			
 			BuiltIn::SyncContext => handle_sync_context(&mut reduced_tail),
-			BuiltIn::ModEvent(ev) => handle_mod_event(&ev, &mut reduced_tail)	
+			BuiltIn::SoundEvent(ev) => handle_builtin_sound_event(&ev, &mut reduced_tail),
+			BuiltIn::ModEvent(ev) => handle_builtin_mod_event(&ev, &mut reduced_tail)	
 		    }))
 		},
 		Expr::Custom(s) => {
