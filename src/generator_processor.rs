@@ -3,8 +3,7 @@ use crate::{event::Event,
 	    markov_sequence_generator::MarkovSequenceGenerator};
 
 
-pub trait GeneratorProcessor {
-    
+pub trait GeneratorProcessor {    
     fn process_events(&mut self, events: &mut Vec<StaticEvent>);
     
     fn process_generator(&mut self, generator: &mut MarkovSequenceGenerator);
@@ -14,17 +13,21 @@ pub trait GeneratorProcessor {
 
 /// Apple-ys events to the throughcoming ones 
 struct PearProcessor {
-    events_to_be_applied: Vec<Event>
+    apply_to_transition: bool,
+    events_to_be_applied: Vec<Event>,
+    last_static: Vec<StaticEvent>
 }
 
 // zip mode etc seem to be outdated ... going for any mode for now
 impl GeneratorProcessor for PearProcessor {    
     fn process_events(&mut self, events: &mut Vec<StaticEvent>) {
+	self.last_static.clear();
 	for ev in self.events_to_be_applied.iter_mut() {
-	    let ev_static = ev.to_static();
+	    let ev_static = ev.to_static();	    
 	    for in_ev in events.iter_mut() {
 		in_ev.apply(&ev_static);
-	    }	    
+	    }
+	    self.last_static.push(ev_static);
 	}
     }
 
@@ -32,8 +35,12 @@ impl GeneratorProcessor for PearProcessor {
 	// pass
     }
     
-    fn process_transition(&mut self, _: &mut StaticEvent) {
-	// pass
+    fn process_transition(&mut self, trans: &mut StaticEvent) {
+	if self.apply_to_transition {
+	    for ev in self.last_static.iter() {
+		trans.apply(&ev); // not sure 
+	    }
+	}
     }
 }
 

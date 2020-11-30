@@ -22,7 +22,6 @@ use crate::generator::Generator;
 use crate::event_helpers::*;
 use ruffbox_synth::ruffbox::synth::SynthParameter;
 
-
 /// maps an event type (like "bd") to a mapping between keywords and buffer number ...
 pub type SampleSet = HashMap<String, Vec<(HashSet<String>, usize)>>;
 
@@ -39,6 +38,17 @@ pub enum BuiltInEvent {
 
 pub enum BuiltInDynamicParameter {
     Bounce,
+    //Brownian,
+    //Oscil,
+    //Env,
+    // RandRange
+}
+
+pub enum BuiltInGenProc {
+    Pear,
+    // PPear,
+    // Apple,
+    
 }
 
 /// As this doesn't strive to be a turing-complete lisp, we'll start with the basic
@@ -54,6 +64,7 @@ pub enum BuiltIn {
     Parameter(BuiltInDynamicParameter),
     SoundEvent(BuiltInEvent),
     ModEvent(BuiltInEvent),
+    GenProc(BuiltInGenProc),
 }
 
 pub enum Command {
@@ -74,40 +85,37 @@ pub enum Atom {
     Command(Command),
     SyncContext(SyncContext),
     Generator(Generator),
+    //GeneratorProcessor(GeneratorProcessor),
     Parameter(Parameter)	
 }
 
 pub enum Expr {
     Constant(Atom),
     Custom(String),
-    /// (func-name arg1 arg2)
     Application(Box<Expr>, Vec<Expr>),
 }
 
 
-fn parse_builtin<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<&'a str>> {
-    // alt gives us the result of first parser that succeeds, of the series of
-    // parsers we give it
+fn parse_builtin<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<&'a str>> {    
     alt((	
-	// map lets us process the parsed output, in this case we know what we parsed,
-	// so we ignore the input and return the BuiltIn directly
 	map(tag("learn"), |_| BuiltIn::Learn),
 	map(tag("infer"), |_| BuiltIn::Infer),
-	map(tag("rule"), |_| BuiltIn::Rule),
-	map(tag("sine"), |_| BuiltIn::SoundEvent(BuiltInEvent::Sine(EventOperation::Replace))),
-	map(tag("saw"), |_| BuiltIn::SoundEvent(BuiltInEvent::Saw(EventOperation::Replace))),
-	map(tag("sqr"), |_| BuiltIn::SoundEvent(BuiltInEvent::Square(EventOperation::Replace))),
+	map(tag("rule"), |_| BuiltIn::Rule),	
 	map(tag("clear"), |_| BuiltIn::Clear),
 	map(tag("load-sample"), |_| BuiltIn::LoadSample),
 	map(tag("sx"), |_| BuiltIn::SyncContext),
 	map(tag("silence"), |_| BuiltIn::Silence),
 	map(tag("~"), |_| BuiltIn::Silence),
 	map(tag("bounce"), |_| BuiltIn::Parameter(BuiltInDynamicParameter::Bounce)),
+	map(tag("sine"), |_| BuiltIn::SoundEvent(BuiltInEvent::Sine(EventOperation::Replace))),
+	map(tag("saw"), |_| BuiltIn::SoundEvent(BuiltInEvent::Saw(EventOperation::Replace))),
+	map(tag("sqr"), |_| BuiltIn::SoundEvent(BuiltInEvent::Square(EventOperation::Replace))),
 	map(tag("lvl"), |_| BuiltIn::ModEvent(BuiltInEvent::Level(EventOperation::Replace))),
 	map(tag("lvl-add"), |_| BuiltIn::ModEvent(BuiltInEvent::Level(EventOperation::Add))),
 	map(tag("lvl-mul"), |_| BuiltIn::ModEvent(BuiltInEvent::Level(EventOperation::Multiply))),
 	map(tag("lvl-sub"), |_| BuiltIn::ModEvent(BuiltInEvent::Level(EventOperation::Subtract))),
 	map(tag("lvl-div"), |_| BuiltIn::ModEvent(BuiltInEvent::Level(EventOperation::Divide))),
+	map(tag("pear"), |_| BuiltIn::GenProc(BuiltInGenProc::Pear)),
     ))(i)
 }
 
@@ -177,15 +185,10 @@ fn parse_atom<'a>(i: &'a str) -> IResult<&'a str, Atom, VerboseError<&'a str>> {
     ))(i)
 }
 
-/// We then add the Expr layer on top
 fn parse_constant<'a>(i: &'a str) -> IResult<&'a str, Expr, VerboseError<&'a str>> {
     map(parse_atom, |atom| Expr::Constant(atom))(i)
 }
-/// Before continuing, we need a helper function to parse lists.
-/// A list starts with `(` and ends with a matching `)`.
-/// By putting whitespace and newline parsing here, we can avoid having to worry about it
-/// in much of the rest of the parser.
-///
+
 /// Unlike the previous functions, this function doesn't take or consume input, instead it
 /// takes a parsing function and returns a new parsing function.
 fn s_exp<'a, O1, F>(inner: F) -> impl FnMut(&'a str) -> IResult<&'a str, O1, VerboseError<&'a str>>
@@ -224,15 +227,6 @@ fn parse_expr<'a>(i: &'a str) -> IResult<&'a str, Expr, VerboseError<&'a str>> {
     )(i)
 }
 
-/// And that's it!
-/// We can now parse our entire lisp language.
-///
-/// But in order to make it a little more interesting, we can hack together
-/// a little interpreter to take an Expr, which is really an
-/// [Abstract Syntax Tree](https://en.wikipedia.org/wiki/Abstract_syntax_tree) (AST),
-/// and give us something back
-
-/// To start we define a couple of helper functions
 fn get_float_from_expr(e: &Expr) -> Option<f32> {
     match e {
 	Expr::Constant(Atom::Float(n)) => Some(*n),
@@ -253,6 +247,20 @@ fn get_string_from_expr(e: &Expr) -> Option<String> {
 	Expr::Constant(Atom::Symbol(s)) => Some(s.to_string()),
 	_ => None
     }     
+}
+
+fn get_keyword_params(params: &mut HashMap<SynthParameter, Box<Parameter>>, tail_drain: &mut std::vec::Drain<Expr>) {
+    while let Some(Expr::Constant(Atom::Keyword(k))) = tail_drain.next() {
+	params.insert(map_parameter(&k), Box::new(get_next_param(tail_drain, 0.0)));
+    }
+}
+
+fn get_next_param(tail_drain: &mut std::vec::Drain<Expr>, default: f32) -> Parameter {
+    match tail_drain.next() {
+	Some(Expr::Constant(Atom::Float(n))) => Parameter::with_value(n),
+	Some(Expr::Constant(Atom::Parameter(pl))) => pl,
+	_ => Parameter::with_value(default)
+    }
 }
 
 fn handle_learn(tail: &mut Vec<Expr>) -> Atom {
@@ -320,9 +328,10 @@ fn handle_learn(tail: &mut Vec<Expr>) -> Atom {
 	    symbol_ages: HashMap::new(),
 	    default_duration: dur as u64,
 	    init_symbol: s_v[0],
-	    last_transition: None,			    
+	    last_transition: None,			
 	},
-	processors: Vec::new()
+	processors: Vec::new(),
+	time_mods: Vec::new(),
     })  
 }
 
@@ -410,7 +419,8 @@ fn handle_infer(tail: &mut Vec<Expr>) -> Atom {
 	    init_symbol: init_sym.unwrap(),
 	    last_transition: None,			    
 	},
-	processors: Vec::new()
+	processors: Vec::new(),
+	time_mods: Vec::new(),
     })        
 }
 
@@ -514,20 +524,6 @@ fn handle_sample(tail: &mut Vec<Expr>, bufnum: usize) -> Atom {
     Atom::Event (ev)
 }
 
-fn get_keyword_params(params: &mut HashMap<SynthParameter, Box<Parameter>>, tail_drain: &mut std::vec::Drain<Expr> ) {
-    while let Some(Expr::Constant(Atom::Keyword(k))) = tail_drain.next() {	
-	params.insert(map_parameter(&k), Box::new(get_next_param(tail_drain, 0.0)));
-    }
-}
-
-fn get_next_param(tail_drain: &mut std::vec::Drain<Expr>, default: f32) -> Parameter{
-    match tail_drain.next() {
-	Some(Expr::Constant(Atom::Float(n))) => Parameter::with_value(n),
-	Some(Expr::Constant(Atom::Parameter(pl))) => pl,
-	_ => Parameter::with_value(default)
-    }
-}
-
 fn handle_builtin_dynamic_parameter(par: &BuiltInDynamicParameter, tail: &mut Vec<Expr>) -> Atom {
     let mut tail_drain = tail.drain(..);
             
@@ -607,6 +603,19 @@ fn handle_builtin_mod_event(event_type: &BuiltInEvent, tail: &mut Vec<Expr>) -> 
     Atom::Event (ev)
 }
 
+enum LastElem {
+    GeneratorProc,
+    Generator,
+    Else 
+}
+
+// store list of genProcs in a vec if there's no root gen ???
+fn handle_builtin_gen_proc(proc_type: &BuiltInGenProc, tail: &mut Vec<Expr>) -> Atom {
+    
+	
+    Atom::Event (Event::with_name("silence".to_string()))
+}
+
 /// This function tries to reduce the AST.
 /// This has to return an Expression rather than an Atom because quoted s_expressions
 /// can't be reduced
@@ -628,15 +637,16 @@ fn eval_expression(e: Expr, sample_set: &SampleSet) -> Option<Expr> {
 		Expr::Constant(Atom::BuiltIn(bi)) => {
 		    Some(Expr::Constant(match bi {
 			BuiltIn::Clear => Atom::Command(Command::Clear),
-			BuiltIn::LoadSample => handle_load_sample(&mut reduced_tail),
-			BuiltIn::Parameter(par) => handle_builtin_dynamic_parameter(&par, &mut reduced_tail),			
+			BuiltIn::LoadSample => handle_load_sample(&mut reduced_tail),			
 			BuiltIn::Silence => Atom::Event(Event::with_name("silence".to_string())),			
 			BuiltIn::Rule => handle_rule(&mut reduced_tail),
 			BuiltIn::Learn => handle_learn(&mut reduced_tail),
 			BuiltIn::Infer => handle_infer(&mut reduced_tail),			
 			BuiltIn::SyncContext => handle_sync_context(&mut reduced_tail),
+			BuiltIn::Parameter(par) => handle_builtin_dynamic_parameter(&par, &mut reduced_tail),
 			BuiltIn::SoundEvent(ev) => handle_builtin_sound_event(&ev, &mut reduced_tail),
-			BuiltIn::ModEvent(ev) => handle_builtin_mod_event(&ev, &mut reduced_tail)	
+			BuiltIn::ModEvent(ev) => handle_builtin_mod_event(&ev, &mut reduced_tail),
+			BuiltIn::GenProc(g) => handle_builtin_gen_proc(&g, &mut reduced_tail)	
 		    }))
 		},
 		Expr::Custom(s) => {
