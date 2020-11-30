@@ -19,6 +19,9 @@ use crate::event::*;
 use crate::parameter::*;
 use crate::session::SyncContext;
 use crate::generator::Generator;
+use crate::event_helpers::*;
+use ruffbox_synth::ruffbox::synth::SynthParameter;
+
 
 /// maps an event type (like "bd") to a mapping between keywords and buffer number ...
 pub type SampleSet = HashMap<String, Vec<(HashSet<String>, usize)>>;
@@ -360,7 +363,7 @@ fn handle_infer(tail: &mut Vec<Expr>) -> Atom {
 	if collect_rules {
 	    if let Atom::Rule(s) = c {
 		let mut dur_ev =  Event::with_name("transition".to_string());
-		dur_ev.params.insert("duration".to_string(), Box::new(Parameter::with_value(s.duration as f32)));
+		dur_ev.params.insert(SynthParameter::Duration, Box::new(Parameter::with_value(s.duration as f32)));
 		duration_mapping.insert((*s.source.last().unwrap(), s.symbol), dur_ev);
 		rules.push(s.to_pfa_rule());
 		continue;
@@ -471,14 +474,14 @@ fn handle_builtin_sound_event(event_type: &BuiltInEvent, tail: &mut Vec<Expr>) -
     };
 
     // first arg is always freq ...
-    ev.params.insert("freq".to_string(),Box::new(Parameter::with_value(get_float_from_expr(&tail_drain.next().unwrap()).unwrap())));
+    ev.params.insert(SynthParameter::PitchFrequency, Box::new(Parameter::with_value(get_float_from_expr(&tail_drain.next().unwrap()).unwrap())));
 
     // set some defaults 2
-    ev.params.insert("lvl".to_string(), Box::new(Parameter::with_value(0.3)));
-    ev.params.insert("atk".to_string(), Box::new(Parameter::with_value(0.005)));
-    ev.params.insert("sus".to_string(), Box::new(Parameter::with_value(0.1)));
-    ev.params.insert("rel".to_string(), Box::new(Parameter::with_value(0.01)));
-    ev.params.insert("pos".to_string(), Box::new(Parameter::with_value(0.00)));
+    ev.params.insert(SynthParameter::Level, Box::new(Parameter::with_value(0.3)));
+    ev.params.insert(SynthParameter::Attack, Box::new(Parameter::with_value(0.005)));
+    ev.params.insert(SynthParameter::Sustain, Box::new(Parameter::with_value(0.1)));
+    ev.params.insert(SynthParameter::Release, Box::new(Parameter::with_value(0.01)));
+    ev.params.insert(SynthParameter::ChannelPosition, Box::new(Parameter::with_value(0.00)));
     
     get_keyword_params(&mut ev.params, &mut tail_drain);
     
@@ -493,26 +496,27 @@ fn handle_sample(tail: &mut Vec<Expr>, bufnum: usize) -> Atom {
     let mut ev = Event::with_name("sampler".to_string());
     ev.tags.push("sampler".to_string());
 
-    ev.params.insert("bufnum".to_string(), Box::new(Parameter::with_value(bufnum as f32)));
+    ev.params.insert(SynthParameter::SampleBufferNumber, Box::new(Parameter::with_value(bufnum as f32)));
     
     // set some defaults
-    ev.params.insert("lvl".to_string(), Box::new(Parameter::with_value(0.3)));
-    ev.params.insert("atk".to_string(), Box::new(Parameter::with_value(0.005)));
-    ev.params.insert("sus".to_string(), Box::new(Parameter::with_value(0.1)));
-    ev.params.insert("rel".to_string(), Box::new(Parameter::with_value(0.01)));
-    ev.params.insert("rate".to_string(), Box::new(Parameter::with_value(1.0)));
-    ev.params.insert("lpdist".to_string(), Box::new(Parameter::with_value(0.0)));
-    ev.params.insert("start".to_string(), Box::new(Parameter::with_value(0.0)));
-    ev.params.insert("pos".to_string(), Box::new(Parameter::with_value(0.00)));
+    ev.params.insert(SynthParameter::Level, Box::new(Parameter::with_value(0.3)));
+    ev.params.insert(SynthParameter::Attack, Box::new(Parameter::with_value(0.005)));
+    ev.params.insert(SynthParameter::Sustain, Box::new(Parameter::with_value(0.1)));
+    ev.params.insert(SynthParameter::Release, Box::new(Parameter::with_value(0.01)));
+    ev.params.insert(SynthParameter::ChannelPosition, Box::new(Parameter::with_value(0.00)));
+    ev.params.insert(SynthParameter::PlaybackRate, Box::new(Parameter::with_value(1.0)));
+    ev.params.insert(SynthParameter::LowpassFilterDistortion, Box::new(Parameter::with_value(0.0)));
+    ev.params.insert(SynthParameter::PlaybackStart, Box::new(Parameter::with_value(0.0)));
+    
     
     get_keyword_params(&mut ev.params, &mut tail_drain);
     
     Atom::Event (ev)
 }
 
-fn get_keyword_params(params: &mut HashMap<String, Box<Parameter>>, tail_drain: &mut std::vec::Drain<Expr> ) {
+fn get_keyword_params(params: &mut HashMap<SynthParameter, Box<Parameter>>, tail_drain: &mut std::vec::Drain<Expr> ) {
     while let Some(Expr::Constant(Atom::Keyword(k))) = tail_drain.next() {	
-	params.insert(k, Box::new(get_next_param(tail_drain, 0.0)));
+	params.insert(map_parameter(&k), Box::new(get_next_param(tail_drain, 0.0)));
     }
 }
 
@@ -594,11 +598,11 @@ fn handle_builtin_mod_event(event_type: &BuiltInEvent, tail: &mut Vec<Expr>) -> 
     };
 
     let param_key = match event_type {
-	BuiltInEvent::Level(_) => "lvl",
-	_ => "lvl",
+	BuiltInEvent::Level(_) => SynthParameter::Level,
+	_ => SynthParameter::Level,
     };
 
-    ev.params.insert(param_key.to_string(), Box::new(get_next_param(&mut tail_drain, 0.0)));
+    ev.params.insert(param_key, Box::new(get_next_param(&mut tail_drain, 0.0)));
     
     Atom::Event (ev)
 }

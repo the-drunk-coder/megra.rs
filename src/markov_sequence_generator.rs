@@ -1,6 +1,7 @@
 use crate::event::{Event, StaticEvent};
 use vom_rs::pfa;
 use std::collections::HashMap;
+use ruffbox_synth::ruffbox::synth::SynthParameter;
 
 pub struct Rule {
     pub source: Vec<char>,
@@ -73,7 +74,7 @@ impl MarkovSequenceGenerator {
 		transition = Some(dur.to_static());
 	    } else {		
 		let mut t = Event::with_name("transition".to_string()).to_static();
-		t.params.insert("duration".to_string(), self.default_duration as f32);
+		t.params.insert(SynthParameter::Duration, self.default_duration as f32);
 		transition = Some(t);
 	    }
 	}
@@ -85,7 +86,7 @@ impl MarkovSequenceGenerator {
 	    t
 	} else {
 	    let mut t = Event::with_name("transition".to_string()).to_static();
-	    t.params.insert("duration".to_string(), self.default_duration as f32);
+	    t.params.insert(SynthParameter::Duration, self.default_duration as f32);
 	    t
 	}	
     }

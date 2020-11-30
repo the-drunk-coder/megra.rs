@@ -3,6 +3,7 @@ use std::sync;
 use parking_lot::Mutex;
 
 use ruffbox_synth::ruffbox::Ruffbox;
+use ruffbox_synth::ruffbox::synth::SynthParameter;
 
 use crate::scheduler::{Scheduler, SchedulerData};
 use crate::generator::Generator;
@@ -63,7 +64,7 @@ impl <const BUFSIZE:usize, const NCHAN:usize> Session<BUFSIZE, NCHAN> {
 		}
 		
 		let mut bufnum:usize = 0;
-		if let Some(b) = ev.params.get("bufnum") {
+		if let Some(b) = ev.params.get(&SynthParameter::SampleBufferNumber) {
 		    bufnum = *b as usize;
 		}
 		
@@ -74,17 +75,17 @@ impl <const BUFSIZE:usize, const NCHAN:usize> Session<BUFSIZE, NCHAN> {
 		    //println!("{} {}",k,v);
 
 		    // special handling for stereo param
-		    if k == "pos" && data.mode == OutputMode::Stereo {			
+		    if k == &SynthParameter::ChannelPosition && data.mode == OutputMode::Stereo {			
 			let pos = (*v + 1.0) * 0.5;			
-			ruff.set_instance_parameter(inst, map_parameter(k), pos);
+			ruff.set_instance_parameter(inst, *k, pos);
 		    } else {
-			ruff.set_instance_parameter(inst, map_parameter(k), *v);
+			ruff.set_instance_parameter(inst, *k, *v);
 		    }
 		}
 		ruff.trigger(inst);
 	    }
 	    
-	    (data.generator.current_transition().params["duration"] as f64 / 1000.0) as f64
+	    (data.generator.current_transition().params[&SynthParameter::Duration] as f64 / 1000.0) as f64
 	};
 
 	// start scheduler if it exists ...
