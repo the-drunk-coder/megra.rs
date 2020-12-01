@@ -508,8 +508,7 @@ fn handle_sample(tail: &mut Vec<Expr>, bufnum: usize) -> Atom {
     let mut tail_drain = tail.drain(..);
     
     let mut ev = Event::with_name("sampler".to_string());
-    ev.tags.push("sampler".to_string());
-
+    
     ev.params.insert(SynthParameter::SampleBufferNumber, Box::new(Parameter::with_value(bufnum as f32)));
     
     // set some defaults
@@ -614,9 +613,15 @@ fn collect_gen_proc(proc_type: &BuiltInGenProc, tail: &mut Vec<Expr>) -> Box<dyn
     Box::new(match proc_type {
 	BuiltInGenProc::Pear => {
 	    let mut proc = PearProcessor::new();
+
+	    let mut last_filters = Vec::new();
+	    last_filters.push("".to_string());
+	    
+	    let mut evs = Vec::new();
 	    while let Some(Expr::Constant(Atom::Event(e))) = tail_drain.next() {
-		proc.events_to_be_applied.push(e);
+		evs.push(e);
 	    }
+	    proc.events_to_be_applied.insert(last_filters, evs);
 	    proc
 	}
     })        

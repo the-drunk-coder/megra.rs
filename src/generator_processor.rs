@@ -2,6 +2,7 @@ use crate::{event::Event,
 	    event::StaticEvent,	    
 	    markov_sequence_generator::MarkovSequenceGenerator};
 
+use std::collections::HashMap;
 
 pub trait GeneratorProcessor {    
     fn process_events(&mut self, events: &mut Vec<StaticEvent>);
@@ -13,17 +14,15 @@ pub trait GeneratorProcessor {
 
 /// Apple-ys events to the throughcoming ones 
 pub struct PearProcessor {
-    pub apply_to_transition: bool,
-    pub events_to_be_applied: Vec<Event>,
-    pub last_static: Vec<StaticEvent>
+    pub events_to_be_applied: HashMap<Vec<String>, Vec<Event>>,    
+    pub last_static: HashMap<Vec<String>, Vec<StaticEvent>>
 }
 
 impl PearProcessor {
     pub fn new() -> Self {
 	PearProcessor {
-	    apply_to_transition: false,
-	    events_to_be_applied: Vec::new(),
-	    last_static: Vec::new()
+	    events_to_be_applied: HashMap::new(),
+	    last_static: HashMap::new()
 	}	    
     }
 }
@@ -32,12 +31,17 @@ impl PearProcessor {
 impl GeneratorProcessor for PearProcessor {    
     fn process_events(&mut self, events: &mut Vec<StaticEvent>) {
 	self.last_static.clear();
-	for ev in self.events_to_be_applied.iter_mut() {
-	    let ev_static = ev.to_static();	    
-	    for in_ev in events.iter_mut() {
-		in_ev.apply(&ev_static);
+	for (filter, evs) in self.events_to_be_applied.iter_mut() {
+	    let mut evs_static = Vec::new();
+	    for ev in evs.iter_mut() {
+		let ev_static = ev.to_static();	    
+		for in_ev in events.iter_mut() {
+		    in_ev.apply(&ev_static, filter);
+		}
+		evs_static.push(ev_static);
 	    }
-	    self.last_static.push(ev_static);
+	    
+	    self.last_static.insert(filter.to_vec(), evs_static);
 	}
     }
 
@@ -46,11 +50,11 @@ impl GeneratorProcessor for PearProcessor {
     }
     
     fn process_transition(&mut self, trans: &mut StaticEvent) {
-	if self.apply_to_transition {
-	    for ev in self.last_static.iter() {
-		trans.apply(&ev); // not sure 
+	for (filter, evs) in self.last_static.iter_mut() {
+	    for ev in evs.iter() {
+		trans.apply(&ev, filter); // not sure 
 	    }
-	}
+	}	
     }
 }
 

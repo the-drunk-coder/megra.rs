@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::boxed::Box;
 use ruffbox_synth::ruffbox::synth::SynthParameter;
 
@@ -16,7 +16,7 @@ pub enum EventOperation {
 pub struct Event {
     pub name: String,
     pub params: HashMap<SynthParameter, Box<Parameter>>,
-    pub tags: Vec<String>,
+    pub tags: HashSet<String>,
     pub op: EventOperation,
 }
 
@@ -24,12 +24,26 @@ pub struct Event {
 pub struct StaticEvent {
     pub name: String,
     pub params: HashMap<SynthParameter, f32>,
-    pub tags: Vec<String>,
+    pub tags: HashSet<String>,
     pub op: EventOperation,
 }
 
 impl StaticEvent {
-    pub fn apply(&mut self, other: &StaticEvent) {
+    pub fn apply(&mut self, other: &StaticEvent, filters: &Vec<String>) {
+
+	let mut apply = false;
+
+	// check if tags contain one of the filters (filters are always or-matched)
+	for f in filters.into_iter() {	    
+	    if f == "" || self.tags.contains(f) {
+		apply = true;
+	    }
+	}
+
+	if !apply {
+	    return;
+	}
+	
 	for (k,v) in other.params.iter() {
 	    if self.params.contains_key(k) {
 		match other.op {
@@ -62,8 +76,8 @@ impl StaticEvent {
 
 impl Event {
     pub fn with_name_and_operation(name: String, op: EventOperation) -> Self {
-	let mut tags = Vec::new();
-	tags.push(name.clone()); // add to tags, for subsequent filters ...
+	let mut tags = HashSet::new();
+	tags.insert(name.clone()); // add to tags, for subsequent filters ...
 	Event {
 	    name: name,
 	    params: HashMap::new(),
@@ -73,8 +87,8 @@ impl Event {
     }
 
     pub fn with_name(name: String) -> Self {
-	let mut tags = Vec::new();
-	tags.push(name.clone()); // add to tags, for subsequent filters ...
+	let mut tags = HashSet::new();
+	tags.insert(name.clone()); // add to tags, for subsequent filters ...
 	Event {
 	    name: name,
 	    params: HashMap::new(),
