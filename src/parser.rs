@@ -503,11 +503,15 @@ fn handle_builtin_sound_event(event_type: &BuiltInEvent, tail: &mut Vec<Expr>) -
 }
 
 
-fn handle_sample(tail: &mut Vec<Expr>, bufnum: usize) -> Atom {
+fn handle_sample(tail: &mut Vec<Expr>, bufnum: usize, set: &String, keywords: &HashSet<String>) -> Atom {
     
     let mut tail_drain = tail.drain(..);
     
     let mut ev = Event::with_name("sampler".to_string());
+    ev.tags.insert(set.to_string());
+    for k in keywords.iter() {
+	ev.tags.insert(k.to_string());
+    }
     
     ev.params.insert(SynthParameter::SampleBufferNumber, Box::new(Parameter::with_value(bufnum as f32)));
     
@@ -519,8 +523,7 @@ fn handle_sample(tail: &mut Vec<Expr>, bufnum: usize) -> Atom {
     ev.params.insert(SynthParameter::ChannelPosition, Box::new(Parameter::with_value(0.00)));
     ev.params.insert(SynthParameter::PlaybackRate, Box::new(Parameter::with_value(1.0)));
     ev.params.insert(SynthParameter::LowpassFilterDistortion, Box::new(Parameter::with_value(0.0)));
-    ev.params.insert(SynthParameter::PlaybackStart, Box::new(Parameter::with_value(0.0)));
-    
+    ev.params.insert(SynthParameter::PlaybackStart, Box::new(Parameter::with_value(0.0)));    
     
     get_keyword_params(&mut ev.params, &mut tail_drain);
     
@@ -618,10 +621,39 @@ fn collect_gen_proc(proc_type: &BuiltInGenProc, tail: &mut Vec<Expr>) -> Box<dyn
 	    last_filters.push("".to_string());
 	    
 	    let mut evs = Vec::new();
-	    while let Some(Expr::Constant(Atom::Event(e))) = tail_drain.next() {
-		evs.push(e);
+	    let mut collect_filters = false;
+	    
+	    while let Some(Expr::Constant(c)) = tail_drain.next() {				
+		match c {
+		    Atom::Event(e) => {
+			evs.push(e);
+			if collect_filters {
+			    collect_filters = false;
+			}
+		    },
+		    Atom::Keyword(k) => {
+			match k.as_str() {
+			    "for" => {
+				let mut n_evs = Vec::new();
+				let mut n_filters = Vec::new();
+				n_evs.append(&mut evs);
+				n_filters.append(&mut last_filters);
+				proc.events_to_be_applied.insert(n_filters, n_evs);
+				collect_filters = true;
+			    },
+			    _ => {}
+			}
+		    },
+		    Atom::Symbol(s) => {
+			if collect_filters {
+			    last_filters.push(s)
+			}
+		    },
+		    _ => {}
+		}
 	    }
-	    proc.events_to_be_applied.insert(last_filters, evs);
+
+	    proc.events_to_be_applied.insert(last_filters, evs);	    	    
 	    proc
 	}
     })        
@@ -691,11 +723,11 @@ fn eval_expression(e: Expr, sample_set: &SampleSet) -> Option<Expr> {
 		Expr::Custom(s) => {
 		    if let Some(sample_info) = sample_set.get(&s) {
 			// just choose first sample for now ...
-			Some(Expr::Constant(handle_sample(&mut reduced_tail, sample_info[0].1)))
+			Some(Expr::Constant(handle_sample(&mut reduced_tail, sample_info[0].1, &s, &sample_info[0].0)))
 		    } else {
 			None
 		    }
-		}, // return custom function		,
+		}, // return custom function,
 		_ => {
 		    println!("something else");
 		    None
