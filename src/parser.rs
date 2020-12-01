@@ -30,6 +30,7 @@ pub type SampleSet = HashMap<String, Vec<(HashSet<String>, usize)>>;
 pub enum BuiltInEvent {
     Level(EventOperation),
     Reverb(EventOperation),
+    Duration(EventOperation),
     //LpQ(EventOperation),
     //LpDist(EventOperation),
     Sine(EventOperation),
@@ -101,25 +102,89 @@ pub enum Expr {
 
 fn parse_builtin<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<&'a str>> {    
     alt((	
+	parse_generators,
+	parse_commands,
+	map(tag("sx"), |_| BuiltIn::SyncContext),
+	
+	parse_events,
+	parse_dynamic_parameters,
+	parse_generator_processors,
+    ))(i)
+}
+
+fn parse_commands<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<&'a str>> {    
+    alt((		
+	map(tag("clear"), |_| BuiltIn::Clear),
+	map(tag("load-sample"), |_| BuiltIn::LoadSample),	
+    ))(i)
+}
+
+fn parse_dynamic_parameters<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<&'a str>> {
+    //alt((		
+    map(tag("bounce"), |_| BuiltIn::Parameter(BuiltInDynamicParameter::Bounce))(i)
+    //))(i)
+}
+
+fn parse_generators<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<&'a str>> {    
+    alt((		
 	map(tag("learn"), |_| BuiltIn::Learn),
 	map(tag("infer"), |_| BuiltIn::Infer),
 	map(tag("rule"), |_| BuiltIn::Rule),	
-	map(tag("clear"), |_| BuiltIn::Clear),
-	map(tag("load-sample"), |_| BuiltIn::LoadSample),
-	map(tag("sx"), |_| BuiltIn::SyncContext),
-	map(tag("silence"), |_| BuiltIn::Silence),
-	map(tag("~"), |_| BuiltIn::Silence),
-	map(tag("bounce"), |_| BuiltIn::Parameter(BuiltInDynamicParameter::Bounce)),
-	map(tag("sine"), |_| BuiltIn::SoundEvent(BuiltInEvent::Sine(EventOperation::Replace))),
-	map(tag("saw"), |_| BuiltIn::SoundEvent(BuiltInEvent::Saw(EventOperation::Replace))),
-	map(tag("sqr"), |_| BuiltIn::SoundEvent(BuiltInEvent::Square(EventOperation::Replace))),
+    ))(i)
+}
+
+fn parse_generator_processors<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<&'a str>> {
+    //alt((		
+    map(tag("pear"), |_| BuiltIn::GenProc(BuiltInGenProc::Pear))(i)
+    //))(i)
+}
+
+fn parse_level_event<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<&'a str>> {    
+    alt((		
 	map(tag("lvl"), |_| BuiltIn::ModEvent(BuiltInEvent::Level(EventOperation::Replace))),	
 	map(tag("lvl-add"), |_| BuiltIn::ModEvent(BuiltInEvent::Level(EventOperation::Add))),
 	map(tag("lvl-mul"), |_| BuiltIn::ModEvent(BuiltInEvent::Level(EventOperation::Multiply))),
 	map(tag("lvl-sub"), |_| BuiltIn::ModEvent(BuiltInEvent::Level(EventOperation::Subtract))),
-	map(tag("lvl-div"), |_| BuiltIn::ModEvent(BuiltInEvent::Level(EventOperation::Divide))),
+	map(tag("lvl-div"), |_| BuiltIn::ModEvent(BuiltInEvent::Level(EventOperation::Divide))),	
+    ))(i)
+}
+
+fn parse_duration_event<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<&'a str>> {    
+    alt((		
+	map(tag("dur"), |_| BuiltIn::ModEvent(BuiltInEvent::Duration(EventOperation::Replace))),	
+	map(tag("dur-add"), |_| BuiltIn::ModEvent(BuiltInEvent::Duration(EventOperation::Add))),
+	map(tag("dur-mul"), |_| BuiltIn::ModEvent(BuiltInEvent::Duration(EventOperation::Multiply))),
+	map(tag("dur-sub"), |_| BuiltIn::ModEvent(BuiltInEvent::Duration(EventOperation::Subtract))),
+	map(tag("dur-div"), |_| BuiltIn::ModEvent(BuiltInEvent::Duration(EventOperation::Divide))),	
+    ))(i)
+}
+
+fn parse_reverb_event<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<&'a str>> {    
+    alt((		
 	map(tag("rev"), |_| BuiltIn::ModEvent(BuiltInEvent::Reverb(EventOperation::Replace))),	
-	map(tag("pear"), |_| BuiltIn::GenProc(BuiltInGenProc::Pear)),
+	map(tag("rev-add"), |_| BuiltIn::ModEvent(BuiltInEvent::Reverb(EventOperation::Add))),
+	map(tag("rev-mul"), |_| BuiltIn::ModEvent(BuiltInEvent::Reverb(EventOperation::Multiply))),
+	map(tag("rev-sub"), |_| BuiltIn::ModEvent(BuiltInEvent::Reverb(EventOperation::Subtract))),
+	map(tag("rev-div"), |_| BuiltIn::ModEvent(BuiltInEvent::Reverb(EventOperation::Divide))),	
+    ))(i)
+}
+
+fn parse_synth_event<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<&'a str>> {    
+    alt((		
+	map(tag("sine"), |_| BuiltIn::SoundEvent(BuiltInEvent::Sine(EventOperation::Replace))),
+	map(tag("saw"), |_| BuiltIn::SoundEvent(BuiltInEvent::Saw(EventOperation::Replace))),
+	map(tag("sqr"), |_| BuiltIn::SoundEvent(BuiltInEvent::Square(EventOperation::Replace))),
+	map(tag("silence"), |_| BuiltIn::Silence),
+	map(tag("~"), |_| BuiltIn::Silence),
+    ))(i)
+}
+
+fn parse_events<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<&'a str>> {    
+    alt((	
+	parse_level_event,
+	parse_synth_event,
+	parse_reverb_event,
+	parse_duration_event
     ))(i)
 }
 
@@ -596,13 +661,15 @@ fn handle_builtin_mod_event(event_type: &BuiltInEvent, tail: &mut Vec<Expr>) -> 
     
     let mut ev = match event_type {
 	BuiltInEvent::Level(o) => Event::with_name_and_operation("lvl".to_string(), *o),	
-	BuiltInEvent::Reverb(o) => Event::with_name_and_operation("rev".to_string(), *o),	
+	BuiltInEvent::Reverb(o) => Event::with_name_and_operation("rev".to_string(), *o),
+	BuiltInEvent::Duration(o) => Event::with_name_and_operation("dur".to_string(), *o),	
 	_ => Event::with_name("lvl".to_string()),
     };
 
     let param_key = match event_type {
 	BuiltInEvent::Level(_) => SynthParameter::Level,
 	BuiltInEvent::Reverb(_) => SynthParameter::ReverbMix,
+	BuiltInEvent::Duration(_) => SynthParameter::Duration,
 	_ => SynthParameter::Level,
     };
 
