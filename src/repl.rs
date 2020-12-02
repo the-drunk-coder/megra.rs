@@ -1,13 +1,14 @@
-use crate::session::Session;
-use crate::parser::SampleSet;
-use rustyline::error::ReadlineError;
-use rustyline::Editor;
-use crate::parser;
-use crate::session::OutputMode;
-use crate::interpreter;
-use ruffbox_synth::ruffbox::Ruffbox;
 use std::sync;
 use parking_lot::Mutex;
+
+use rustyline::error::ReadlineError;
+use rustyline::Editor;
+use ruffbox_synth::ruffbox::Ruffbox;
+
+use crate::builtin_types::*;
+use crate::session::{Session, OutputMode};
+use crate::parser;
+use crate::interpreter;
 
 pub fn start_repl<const BUFSIZE:usize, const NCHAN:usize>(ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>, mode: OutputMode) -> Result<(), anyhow::Error> {
     let mut session = Session::with_mode(mode);
