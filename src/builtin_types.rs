@@ -10,12 +10,28 @@ use std::collections::{HashMap, HashSet};
 pub type SampleSet = HashMap<String, Vec<(HashSet<String>, usize)>>;
 
 // reflect event hierarchy here, like, Tuned, Param, Sample, Noise ?
-pub enum BuiltInEvent {
+pub enum BuiltInParameterEvent {
+    PitchFrequency(EventOperation),
+    Attack(EventOperation),
+    Release(EventOperation),
+    Sustain(EventOperation),
+    ChannelPosition(EventOperation),    
     Level(EventOperation),
+    Duration(EventOperation),    
     Reverb(EventOperation),
-    Duration(EventOperation),
-    //LpQ(EventOperation),
-    //LpDist(EventOperation),
+    Delay(EventOperation),
+    LpFreq(EventOperation),
+    LpQ(EventOperation),
+    LpDist(EventOperation),
+    PeakFreq(EventOperation),
+    PeakQ(EventOperation),
+    PeakGain(EventOperation),
+    Pulsewidth(EventOperation),
+    PlaybackStart(EventOperation),
+    PlaybackRate(EventOperation),    
+}
+
+pub enum BuiltInSoundEvent {
     Sine(EventOperation),
     Saw(EventOperation),
     Square(EventOperation),
@@ -45,8 +61,8 @@ pub enum BuiltIn {
     LoadSample,
     SyncContext,
     Parameter(BuiltInDynamicParameter),
-    SoundEvent(BuiltInEvent),
-    ModEvent(BuiltInEvent),
+    SoundEvent(BuiltInSoundEvent),
+    ParameterEvent(BuiltInParameterEvent),
     GenProc(BuiltInGenProc),
 }
 

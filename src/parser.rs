@@ -62,20 +62,35 @@ fn parse_generator_processors<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, Verbo
 
 fn parse_synth_event<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<&'a str>> {    
     alt((		
-	map(tag("sine"), |_| BuiltIn::SoundEvent(BuiltInEvent::Sine(EventOperation::Replace))),
-	map(tag("saw"), |_| BuiltIn::SoundEvent(BuiltInEvent::Saw(EventOperation::Replace))),
-	map(tag("sqr"), |_| BuiltIn::SoundEvent(BuiltInEvent::Square(EventOperation::Replace))),
+	map(tag("sine"), |_| BuiltIn::SoundEvent(BuiltInSoundEvent::Sine(EventOperation::Replace))),
+	map(tag("saw"), |_| BuiltIn::SoundEvent(BuiltInSoundEvent::Saw(EventOperation::Replace))),
+	map(tag("sqr"), |_| BuiltIn::SoundEvent(BuiltInSoundEvent::Square(EventOperation::Replace))),
 	map(tag("silence"), |_| BuiltIn::Silence),
 	map(tag("~"), |_| BuiltIn::Silence),
     ))(i)
 }
 
 fn parse_events<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<&'a str>> {    
-    alt((	
+    alt((
+	parse_pitch_frequency_event,
 	parse_level_event,
 	parse_synth_event,
 	parse_reverb_event,
-	parse_duration_event
+	parse_duration_event,
+	parse_attack_event,
+	parse_release_event,
+	parse_sustain_event,
+	parse_channel_position_event,
+	parse_delay_event,
+	parse_lp_freq_event,
+	parse_lp_q_event,
+	parse_lp_dist_event,
+	parse_pf_freq_event,
+	parse_pf_q_event,
+	parse_pf_gain_event,
+	parse_pw_event,
+	parse_playback_start_event,
+	parse_playback_rate_event,
     ))(i)
 }
 
@@ -217,7 +232,7 @@ fn eval_expression(e: Expr, sample_set: &SampleSet) -> Option<Expr> {
 			BuiltIn::SyncContext => handle_sync_context(&mut reduced_tail),
 			BuiltIn::Parameter(par) => handle_builtin_dynamic_parameter(&par, &mut reduced_tail),
 			BuiltIn::SoundEvent(ev) => handle_builtin_sound_event(&ev, &mut reduced_tail),
-			BuiltIn::ModEvent(ev) => handle_builtin_mod_event(&ev, &mut reduced_tail),
+			BuiltIn::ParameterEvent(ev) => handle_builtin_mod_event(&ev, &mut reduced_tail),
 			BuiltIn::GenProc(g) => handle_builtin_gen_proc(&g, &mut reduced_tail)	
 		    }))
 		},
