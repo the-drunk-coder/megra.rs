@@ -20,3 +20,4 @@ vom_rs = { git = "https://gitlab.com/ellipsenpark/vom.rs" }
 rustyline = "6.3.0"
 claxon = "0.4.3"
 getopts = "0.2"
+rand = "0.7"

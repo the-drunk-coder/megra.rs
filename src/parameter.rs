@@ -1,9 +1,28 @@
 use std::boxed::Box;
 
-pub trait Modifier {
+pub trait Modifier: ModifierClone {
     fn evaluate(&mut self, input: f32) -> f32;
 }
+pub trait ModifierClone {
+    fn clone_box(&self) -> Box<dyn Modifier + Send>;
+}
 
+impl<T> ModifierClone for T
+where
+    T: 'static + Modifier + Clone + Send,
+{
+    fn clone_box(&self) -> Box<dyn Modifier + Send> {
+        Box::new(self.clone())
+    }
+}
+
+impl Clone for Box<dyn Modifier + Send> {
+    fn clone(&self) -> Box<dyn Modifier + Send> {
+        self.clone_box()
+    }
+}
+
+#[derive(Clone)]
 pub struct BounceModifier {
     pub min: Parameter,
     pub max: Parameter,
@@ -32,6 +51,7 @@ impl Modifier for BounceModifier {
     }
 }
 
+#[derive(Clone)]
 pub struct Parameter {
     pub val: f32,
     pub modifier: Option<Box<dyn Modifier + Send>>,

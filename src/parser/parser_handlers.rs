@@ -395,6 +395,7 @@ pub fn collect_gen_proc(proc_type: &BuiltInGenProc, tail: &mut Vec<Expr>) -> Box
 	    
 	    let mut evs = Vec::new();
 	    let mut collect_filters = false;
+	    let mut cur_prob = Parameter::with_value(100.0); // if nothing is specified, it's always or prob 100
 	    
 	    while let Some(Expr::Constant(c)) = tail_drain.next() {				
 		match c {
@@ -406,12 +407,32 @@ pub fn collect_gen_proc(proc_type: &BuiltInGenProc, tail: &mut Vec<Expr>) -> Box
 		    },
 		    Atom::Keyword(k) => {
 			match k.as_str() {
+			    "p" => {
+				// save current context, if something has been found
+				if !evs.is_empty() {
+				    let mut filtered_events = HashMap::new();
+				    let mut n_evs = Vec::new();
+				    let mut n_filters = Vec::new();
+				    n_evs.append(&mut evs);
+				    n_filters.append(&mut last_filters);
+				    filtered_events.insert(n_filters, n_evs);
+				    proc.events_to_be_applied.push((cur_prob.clone(), filtered_events));
+				}				
+				// grab new probability
+				cur_prob = get_next_param(&mut tail_drain, 100.0);
+				collect_filters = false;
+			    },
 			    "for" => {
-				let mut n_evs = Vec::new();
-				let mut n_filters = Vec::new();
-				n_evs.append(&mut evs);
-				n_filters.append(&mut last_filters);
-				proc.events_to_be_applied.insert(n_filters, n_evs);
+				if !evs.is_empty() {
+				    let mut filtered_events = HashMap::new();
+				    let mut n_evs = Vec::new();
+				    let mut n_filters = Vec::new();
+				    n_evs.append(&mut evs);
+				    n_filters.append(&mut last_filters);
+				    filtered_events.insert(n_filters, n_evs);
+				    proc.events_to_be_applied.push((cur_prob.clone(), filtered_events));
+				}
+				// collect new filters
 				collect_filters = true;
 			    },
 			    _ => {}
@@ -426,7 +447,12 @@ pub fn collect_gen_proc(proc_type: &BuiltInGenProc, tail: &mut Vec<Expr>) -> Box
 		}
 	    }
 
-	    proc.events_to_be_applied.insert(last_filters, evs);	    	    
+	    // save last context
+	    if !evs.is_empty() {
+		let mut filtered_events = HashMap::new();
+		filtered_events.insert(last_filters, evs);
+		proc.events_to_be_applied.push((cur_prob, filtered_events));
+	    }	    	    
 	    proc
 	}
     })        
