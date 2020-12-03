@@ -2,7 +2,7 @@ use crate::markov_sequence_generator::{Rule, MarkovSequenceGenerator};
 use crate::event::*;
 use crate::parameter::*;
 use crate::generator_processor::GeneratorProcessor;
-use crate::generator::Generator;
+use crate::generator::{Generator, GenModFun};
 use crate::session::SyncContext;
 use std::collections::{HashMap, HashSet};
 
@@ -47,7 +47,15 @@ pub enum BuiltInDynamicParameter {
 
 pub enum BuiltInGenProc {
     Pear,
-    // Apple,    
+    Apple,
+    // Every
+}
+
+pub enum BuiltInGenModFun {
+    Haste,
+    Relax,
+    //Rew,
+    //Skip
 }
 
 /// As this doesn't strive to be a turing-complete lisp, we'll start with the basic
@@ -64,6 +72,7 @@ pub enum BuiltIn {
     SoundEvent(BuiltInSoundEvent),
     ParameterEvent(BuiltInParameterEvent),
     GenProc(BuiltInGenProc),
+    GenModFun(BuiltInGenModFun)
 }
 
 pub enum Command {
@@ -87,6 +96,7 @@ pub enum Atom { // atom might not be the right word any longer
     GeneratorProcessor(Box<dyn GeneratorProcessor>),
     GeneratorProcessorList(Vec<Box<dyn GeneratorProcessor>>),
     Parameter(Parameter),
+    GeneratorModifierFunction((GenModFun, Vec<f32>)),
     Nothing
 }
 

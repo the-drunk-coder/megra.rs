@@ -26,9 +26,10 @@ fn parse_builtin<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<&'a s
 	parse_generators,
 	parse_commands,
 	map(tag("sx"), |_| BuiltIn::SyncContext),	
+	parse_generator_modifier_functions, // needs to come before events so it can catch relax before rel(ease)
 	parse_events,
 	parse_dynamic_parameters,
-	parse_generator_processors,
+	parse_generator_processors,	
     ))(i)
 }
 
@@ -54,11 +55,18 @@ fn parse_generators<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<&'
 }
 
 fn parse_generator_processors<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<&'a str>> {
-    //alt((		
-    map(tag("pear"), |_| BuiltIn::GenProc(BuiltInGenProc::Pear))(i)
-    //))(i)
+    alt((		
+	map(tag("pear"), |_| BuiltIn::GenProc(BuiltInGenProc::Pear)),
+	map(tag("apple"), |_| BuiltIn::GenProc(BuiltInGenProc::Apple))
+    ))(i)
 }
 
+fn parse_generator_modifier_functions<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<&'a str>> {
+    alt((		
+	map(tag("haste"), |_| BuiltIn::GenModFun(BuiltInGenModFun::Haste)),
+	map(tag("relax"), |_| BuiltIn::GenModFun(BuiltInGenModFun::Relax))
+    ))(i)
+}
 
 fn parse_synth_event<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<&'a str>> {    
     alt((		
@@ -232,7 +240,8 @@ fn eval_expression(e: Expr, sample_set: &SampleSet) -> Option<Expr> {
 			BuiltIn::Parameter(par) => handle_builtin_dynamic_parameter(&par, &mut reduced_tail),
 			BuiltIn::SoundEvent(ev) => handle_builtin_sound_event(&ev, &mut reduced_tail),
 			BuiltIn::ParameterEvent(ev) => handle_builtin_mod_event(&ev, &mut reduced_tail),
-			BuiltIn::GenProc(g) => handle_builtin_gen_proc(&g, &mut reduced_tail)	
+			BuiltIn::GenProc(g) => handle_builtin_gen_proc(&g, &mut reduced_tail),
+			BuiltIn::GenModFun(g) => handle_builtin_gen_mod_fun(&g, &mut reduced_tail)	
 		    }))
 		},
 		Expr::Custom(s) => {

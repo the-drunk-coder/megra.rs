@@ -20,6 +20,12 @@ pub fn interpret<const BUFSIZE:usize, const NCHAN:usize>(session: &mut Session<B
 	Expr::Constant(Atom::Event(_)) => {	    
 	    println!("an event");
 	},
+	Expr::Constant(Atom::GeneratorModifierFunction(_)) => {	    
+	    println!("a gen mod fun");
+	},
+	Expr::Constant(Atom::GeneratorProcessor(_)) => {	    
+	    println!("a gen proc");
+	},
 	Expr::Constant(Atom::SyncContext(mut s)) => {
 	    let name = s.name.clone();
 	    for c in s.generators.drain(..){

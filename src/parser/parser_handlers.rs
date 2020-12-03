@@ -3,7 +3,7 @@ use crate::markov_sequence_generator::{Rule, MarkovSequenceGenerator};
 use crate::event::*;
 use crate::parameter::*;
 use crate::session::SyncContext;
-use crate::generator::Generator;
+use crate::generator::{Generator, haste, relax};
 use crate::generator_processor::*;
 use crate::parser::parser_helpers::*;
 
@@ -275,7 +275,7 @@ pub fn handle_sample(tail: &mut Vec<Expr>, bufnum: usize, set: &String, keywords
 
 pub fn handle_builtin_dynamic_parameter(par: &BuiltInDynamicParameter, tail: &mut Vec<Expr>) -> Atom {
     let mut tail_drain = tail.drain(..);
-            
+    
     Atom::Parameter(Parameter {
 	val:0.0,
 	modifier: Some(Box::new(
@@ -384,82 +384,124 @@ pub fn handle_builtin_mod_event(event_type: &BuiltInParameterEvent, tail: &mut V
     Atom::Event (ev)
 }
 
-pub fn collect_gen_proc(proc_type: &BuiltInGenProc, tail: &mut Vec<Expr>) -> Box<dyn GeneratorProcessor + Send> {
+fn collect_pear (tail: &mut Vec<Expr>) -> Box<PearProcessor> {
     let mut tail_drain = tail.drain(..);
-    Box::new(match proc_type {
-	BuiltInGenProc::Pear => {
-	    let mut proc = PearProcessor::new();
+    let mut proc = PearProcessor::new();
 
-	    let mut last_filters = Vec::new();
-	    last_filters.push("".to_string());
-	    
-	    let mut evs = Vec::new();
-	    let mut collect_filters = false;
-	    let mut cur_prob = Parameter::with_value(100.0); // if nothing is specified, it's always or prob 100
-	    
-	    while let Some(Expr::Constant(c)) = tail_drain.next() {				
-		match c {
-		    Atom::Event(e) => {
-			evs.push(e);
-			if collect_filters {
-			    collect_filters = false;
-			}
+    let mut last_filters = Vec::new();
+    last_filters.push("".to_string());
+    
+    let mut evs = Vec::new();
+    let mut collect_filters = false;
+    let mut cur_prob = Parameter::with_value(100.0); // if nothing is specified, it's always or prob 100
+    
+    while let Some(Expr::Constant(c)) = tail_drain.next() {				
+	match c {
+	    Atom::Event(e) => {
+		evs.push(e);
+		if collect_filters {
+		    collect_filters = false;
+		}
+	    },
+	    Atom::Keyword(k) => {
+		match k.as_str() {
+		    "p" => {
+			// save current context, if something has been found
+			if !evs.is_empty() {
+			    let mut filtered_events = HashMap::new();
+			    let mut n_evs = Vec::new();
+			    let mut n_filters = Vec::new();
+			    n_evs.append(&mut evs);
+			    n_filters.append(&mut last_filters);
+			    filtered_events.insert(n_filters, n_evs);
+			    proc.events_to_be_applied.push((cur_prob.clone(), filtered_events));
+			}				
+			// grab new probability
+			cur_prob = get_next_param(&mut tail_drain, 100.0);
+			collect_filters = false;
 		    },
-		    Atom::Keyword(k) => {
-			match k.as_str() {
-			    "p" => {
-				// save current context, if something has been found
-				if !evs.is_empty() {
-				    let mut filtered_events = HashMap::new();
-				    let mut n_evs = Vec::new();
-				    let mut n_filters = Vec::new();
-				    n_evs.append(&mut evs);
-				    n_filters.append(&mut last_filters);
-				    filtered_events.insert(n_filters, n_evs);
-				    proc.events_to_be_applied.push((cur_prob.clone(), filtered_events));
-				}				
-				// grab new probability
-				cur_prob = get_next_param(&mut tail_drain, 100.0);
-				collect_filters = false;
-			    },
-			    "for" => {
-				if !evs.is_empty() {
-				    let mut filtered_events = HashMap::new();
-				    let mut n_evs = Vec::new();
-				    let mut n_filters = Vec::new();
-				    n_evs.append(&mut evs);
-				    n_filters.append(&mut last_filters);
-				    filtered_events.insert(n_filters, n_evs);
-				    proc.events_to_be_applied.push((cur_prob.clone(), filtered_events));
-				}
-				// collect new filters
-				collect_filters = true;
-			    },
-			    _ => {}
+		    "for" => {
+			if !evs.is_empty() {
+			    let mut filtered_events = HashMap::new();
+			    let mut n_evs = Vec::new();
+			    let mut n_filters = Vec::new();
+			    n_evs.append(&mut evs);
+			    n_filters.append(&mut last_filters);
+			    filtered_events.insert(n_filters, n_evs);
+			    proc.events_to_be_applied.push((cur_prob.clone(), filtered_events));
 			}
-		    },
-		    Atom::Symbol(s) => {
-			if collect_filters {
-			    last_filters.push(s)
-			}
+			// collect new filters
+			collect_filters = true;
 		    },
 		    _ => {}
 		}
-	    }
-
-	    // save last context
-	    if !evs.is_empty() {
-		let mut filtered_events = HashMap::new();
-		filtered_events.insert(last_filters, evs);
-		proc.events_to_be_applied.push((cur_prob, filtered_events));
-	    }	    	    
-	    proc
+	    },
+	    Atom::Symbol(s) => {
+		if collect_filters {
+		    last_filters.push(s)
+		}
+	    },
+	    _ => {}
 	}
-    })        
+    }
+
+    // save last context
+    if !evs.is_empty() {
+	let mut filtered_events = HashMap::new();
+	filtered_events.insert(last_filters, evs);
+	proc.events_to_be_applied.push((cur_prob, filtered_events));
+    }	    	    
+    Box::new(proc)
 }
-// store list of genProcs in a vec if there's no root gen ???
-pub fn handle_builtin_gen_proc(proc_type: &BuiltInGenProc, tail: &mut Vec<Expr>) -> Atom {
+
+
+fn collect_apple (tail: &mut Vec<Expr>) -> Box<AppleProcessor> {
+    let mut tail_drain = tail.drain(..); 
+    let mut proc = AppleProcessor::new();
+            
+    let mut cur_prob = Parameter::with_value(100.0); // if nothing is specified, it's always or prob 100
+    let mut gen_mod_funs = Vec::new();
         
+    while let Some(Expr::Constant(c)) = tail_drain.next() {				
+	match c {
+	    Atom::GeneratorModifierFunction(g) => {
+		gen_mod_funs.push(g);
+	    }
+	    Atom::Keyword(k) => {
+		match k.as_str() {
+		    "p" => {
+			if !gen_mod_funs.is_empty() {
+			    let mut new_mods = Vec::new();
+			    new_mods.append(&mut gen_mod_funs);			    
+			    proc.modifiers_to_be_applied.push((cur_prob.clone(), new_mods));
+			}
+			// grab new probability
+			cur_prob = get_next_param(&mut tail_drain, 100.0);
+		    },		    
+		    _ => {}
+		}
+	    },	    
+	    _ => {}
+	}
+    }
+
+    // save last context
+    if !gen_mod_funs.is_empty() {	
+	proc.modifiers_to_be_applied.push((cur_prob, gen_mod_funs));
+    }
+    
+    Box::new(proc)
+}
+
+pub fn collect_gen_proc(proc_type: &BuiltInGenProc, tail: &mut Vec<Expr>) -> Box<dyn GeneratorProcessor + Send> {
+    match proc_type {
+	BuiltInGenProc::Pear => collect_pear(tail),
+	BuiltInGenProc::Apple => collect_apple(tail),
+    }        
+}
+
+// store list of genProcs in a vec if there's no root gen ???
+pub fn handle_builtin_gen_proc(proc_type: &BuiltInGenProc, tail: &mut Vec<Expr>) -> Atom {    
     let last = tail.pop();
     match last {
 	Some(Expr::Constant(Atom::Generator(mut g))) => {
@@ -484,4 +526,46 @@ pub fn handle_builtin_gen_proc(proc_type: &BuiltInGenProc, tail: &mut Vec<Expr>)
 	    Atom::Nothing
 	}
     }    
+}
+
+pub fn handle_builtin_gen_mod_fun(gen_mod: &BuiltInGenModFun, tail: &mut Vec<Expr>) -> Atom {
+
+    let last = tail.pop();
+    match last {
+	Some(Expr::Constant(Atom::Generator(mut g))) => {
+	    let mut tail_drain = tail.drain(..); 	    
+	    let mut args = Vec::new();
+
+	    while let Some(Expr::Constant(Atom::Float(f))) = tail_drain.next() {
+		args.push(f);
+	    }
+
+	    match gen_mod {
+		BuiltInGenModFun::Haste => haste(&mut g.root_generator, &mut g.time_mods, &args),
+		BuiltInGenModFun::Relax => relax(&mut g.root_generator, &mut g.time_mods, &args),
+	    }
+	    Atom::Generator(g)
+	},	
+	
+	Some(l) => {
+	    tail.push(l);
+
+	    let mut tail_drain = tail.drain(..); 	    
+	    let mut args = Vec::new();
+
+	    while let Some(Expr::Constant(Atom::Float(f))) = tail_drain.next() {
+		args.push(f);
+	    }
+    
+	    Atom::GeneratorModifierFunction (match gen_mod {
+		BuiltInGenModFun::Haste => (haste, args),
+		BuiltInGenModFun::Relax => (relax, args),
+	    })
+	},
+	None => {
+	    Atom::Nothing
+	}
+    } 
+    
+    
 }

@@ -77,6 +77,15 @@ pub struct AppleProcessor {
     pub modifiers_to_be_applied: Vec<(Parameter, Vec<(GenModFun, Vec<f32>)>)>
 }
 
+impl AppleProcessor {
+    pub fn new() -> Self {
+	AppleProcessor {
+	    modifiers_to_be_applied: Vec::new(),	    
+	}	    
+    }
+}
+
+
 impl GeneratorProcessor for AppleProcessor {    
     fn process_events(&mut self, _: &mut Vec<StaticEvent>) {
 	// pass
