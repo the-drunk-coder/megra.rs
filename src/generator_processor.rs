@@ -4,17 +4,18 @@ use std::collections::HashMap;
 use crate::{event::Event,
 	    event::StaticEvent,
 	    parameter::Parameter,
+	    generator::{TimeMod, GenModFun},
 	    markov_sequence_generator::MarkovSequenceGenerator};
 
 pub trait GeneratorProcessor {    
     fn process_events(&mut self, events: &mut Vec<StaticEvent>);    
-    fn process_generator(&mut self, generator: &mut MarkovSequenceGenerator);    
+    fn process_generator(&mut self, generator: &mut MarkovSequenceGenerator, time_mods: &mut Vec<TimeMod>);    
     fn process_transition(&mut self, transition: &mut StaticEvent);
 }
 
 /// Apple-ys events to the throughcoming ones 
 pub struct PearProcessor {
-    pub events_to_be_applied: Vec<(Parameter, HashMap<Vec<String>, Vec<Event>>)>,    
+    pub events_to_be_applied: Vec<(Parameter, HashMap<Vec<String>, Vec<Event>>)>,
     pub last_static: Vec<(usize, HashMap<Vec<String>, Vec<StaticEvent>>)>,
 }
 
@@ -53,7 +54,7 @@ impl GeneratorProcessor for PearProcessor {
 	}	    	
     }
 
-    fn process_generator(&mut self, _: &mut MarkovSequenceGenerator) {
+    fn process_generator(&mut self, _: &mut MarkovSequenceGenerator, _: &mut Vec<TimeMod>) {
 	// pass
     }
     
@@ -71,3 +72,29 @@ impl GeneratorProcessor for PearProcessor {
     }
 }
 
+/// Apple-ys modifiers to the underlying processors
+pub struct AppleProcessor {
+    pub modifiers_to_be_applied: Vec<(Parameter, Vec<(GenModFun, Vec<f32>)>)>
+}
+
+impl GeneratorProcessor for AppleProcessor {    
+    fn process_events(&mut self, _: &mut Vec<StaticEvent>) {
+	// pass
+    }
+
+    fn process_generator(&mut self, gen: &mut MarkovSequenceGenerator, time_mods: &mut Vec<TimeMod>) {	
+	let mut rng = rand::thread_rng();
+	for (prob, gen_mods) in self.modifiers_to_be_applied.iter_mut() {	    
+	    let cur_prob:usize = (prob.evaluate() as usize) % 101; // make sure prob is always between 0 and 100
+	    for (gen_mod, args) in gen_mods.iter() {						
+		if rng.gen_range(0, 100) < cur_prob {
+		    gen_mod(gen, time_mods, args)
+		}				
+	    }	    
+	}	    	
+    }
+    
+    fn process_transition(&mut self, _: &mut StaticEvent) {
+	// pass
+    }
+}
