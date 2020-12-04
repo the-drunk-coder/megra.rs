@@ -412,7 +412,7 @@ fn collect_pear (tail: &mut Vec<Expr>) -> Box<PearProcessor> {
 			    let mut n_evs = Vec::new();
 			    let mut n_filters = Vec::new();
 			    n_evs.append(&mut evs);
-			    n_filters.append(&mut last_filters);
+			    n_filters.extend_from_slice(&last_filters);
 			    filtered_events.insert(n_filters, n_evs);
 			    proc.events_to_be_applied.push((cur_prob.clone(), filtered_events));
 			}				
