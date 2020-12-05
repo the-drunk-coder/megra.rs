@@ -13,10 +13,14 @@ pub trait GeneratorProcessor {
     fn process_transition(&mut self, transition: &mut StaticEvent);
 }
 
+type StaticEventsAndFilters = HashMap<Vec<String>, Vec<StaticEvent>>;
+type EventsAndFilters = HashMap<Vec<String>, Vec<Event>>;
+type GenModFunsAndArgs = Vec<(GenModFun, Vec<f32>)>;
+
 /// Apple-ys events to the throughcoming ones 
 pub struct PearProcessor {
-    pub events_to_be_applied: Vec<(Parameter, HashMap<Vec<String>, Vec<Event>>)>,
-    pub last_static: Vec<(usize, HashMap<Vec<String>, Vec<StaticEvent>>)>,
+    pub events_to_be_applied: Vec<(Parameter, EventsAndFilters)>,
+    pub last_static: Vec<(usize, StaticEventsAndFilters)>,
 }
 
 impl PearProcessor {
@@ -29,7 +33,9 @@ impl PearProcessor {
 }
 
 // zip mode etc seem to be outdated ... going for any mode for now
-impl GeneratorProcessor for PearProcessor {    
+impl GeneratorProcessor for PearProcessor {
+    fn process_generator(&mut self, _: &mut MarkovSequenceGenerator, _: &mut Vec<TimeMod>) { /* pass */ }
+    
     fn process_events(&mut self, events: &mut Vec<StaticEvent>) {
 	self.last_static.clear();
 	let mut rng = rand::thread_rng();
@@ -53,10 +59,6 @@ impl GeneratorProcessor for PearProcessor {
 	    self.last_static.push((cur_prob, stat_evs));
 	}	    	
     }
-
-    fn process_generator(&mut self, _: &mut MarkovSequenceGenerator, _: &mut Vec<TimeMod>) {
-	// pass
-    }
     
     fn process_transition(&mut self, trans: &mut StaticEvent) {
 	let mut rng = rand::thread_rng();
@@ -74,7 +76,7 @@ impl GeneratorProcessor for PearProcessor {
 
 /// Apple-ys modifiers to the underlying processors
 pub struct AppleProcessor {
-    pub modifiers_to_be_applied: Vec<(Parameter, Vec<(GenModFun, Vec<f32>)>)>
+    pub modifiers_to_be_applied: Vec<(Parameter, GenModFunsAndArgs)>
 }
 
 impl AppleProcessor {
@@ -85,12 +87,10 @@ impl AppleProcessor {
     }
 }
 
-
 impl GeneratorProcessor for AppleProcessor {    
-    fn process_events(&mut self, _: &mut Vec<StaticEvent>) {
-	// pass
-    }
-
+    fn process_events(&mut self, _: &mut Vec<StaticEvent>) { /* pass */ }
+    fn process_transition(&mut self, _: &mut StaticEvent) { /* pass */ }
+    
     fn process_generator(&mut self, gen: &mut MarkovSequenceGenerator, time_mods: &mut Vec<TimeMod>) {	
 	let mut rng = rand::thread_rng();
 	for (prob, gen_mods) in self.modifiers_to_be_applied.iter_mut() {	    
@@ -101,16 +101,9 @@ impl GeneratorProcessor for AppleProcessor {
 		}				
 	    }	    
 	}	    	
-    }
-    
-    fn process_transition(&mut self, _: &mut StaticEvent) {
-	// pass
-    }
+    }    
 }
 
-type StaticEventsAndFilters = HashMap<Vec<String>, Vec<StaticEvent>>;
-type EventsAndFilters = HashMap<Vec<String>, Vec<Event>>;
-type GenModFunsAndArgs = Vec<(GenModFun, Vec<f32>)>;
 
 /// Apple-ys events to the throughcoming ones 
 pub struct EveryProcessor {
@@ -146,8 +139,7 @@ impl GeneratorProcessor for EveryProcessor {
     }
 
     fn process_generator(&mut self, gen: &mut MarkovSequenceGenerator, time_mods: &mut Vec<TimeMod>) {	
-	for (step, _, gen_mods) in self.things_to_be_applied.iter_mut() { // genmodfuns not needed here ...
-	    
+	for (step, _, gen_mods) in self.things_to_be_applied.iter_mut() { // genmodfuns not needed here ...	    
 	    let cur_step:usize = (step.static_val as usize) % 101; 
 	    if self.step_count % cur_step == 0 {		    
 		for (gen_mod, args) in gen_mods.iter() {		    
