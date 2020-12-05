@@ -108,9 +108,18 @@ impl GeneratorProcessor for AppleProcessor {
 /// Apple-ys events to the throughcoming ones 
 pub struct EveryProcessor {
     pub step_count:usize,
-    pub max_step_count:usize,
-    pub things_to_be_applied: Vec<(Parameter, EventsAndFilters, GenModFunsAndArgs)>,    
+    pub things_to_be_applied: Vec<(Parameter, EventsAndFilters, GenModFunsAndArgs)>,
     pub last_static: Vec<(usize, StaticEventsAndFilters)>, // only needed for events, not filters
+}
+
+impl EveryProcessor {
+    pub fn new() -> Self {
+	EveryProcessor {
+	    step_count: 0,
+	    things_to_be_applied: Vec::new(),
+	    last_static: Vec::new(),	 
+	}	    
+    }
 }
 
 impl GeneratorProcessor for EveryProcessor {
@@ -119,9 +128,8 @@ impl GeneratorProcessor for EveryProcessor {
 	self.last_static.clear();
 	for (step, filtered_events, _) in self.things_to_be_applied.iter_mut() { // genmodfuns not needed here ...
 	    let cur_step:usize = (step.evaluate() as usize) % 101; // make sure prob is always between 0 and 100
-	    if self.step_count % cur_step == 0 {
+	    if self.step_count != 0 && self.step_count % cur_step == 0 {
 		let mut stat_evs = HashMap::new();
-		//println!("cur p {}", cur_prob);
 		for (filter, evs) in filtered_events.iter_mut() {
 		    let mut evs_static = Vec::new();
 		    for ev in evs.iter_mut() {
@@ -141,7 +149,7 @@ impl GeneratorProcessor for EveryProcessor {
     fn process_generator(&mut self, gen: &mut MarkovSequenceGenerator, time_mods: &mut Vec<TimeMod>) {	
 	for (step, _, gen_mods) in self.things_to_be_applied.iter_mut() { // genmodfuns not needed here ...	    
 	    let cur_step:usize = (step.static_val as usize) % 101; 
-	    if self.step_count % cur_step == 0 {		    
+	    if self.step_count != 0 && self.step_count % cur_step == 0 {		    
 		for (gen_mod, args) in gen_mods.iter() {		    
 		    gen_mod(gen, time_mods, args)
 		}				
@@ -151,7 +159,7 @@ impl GeneratorProcessor for EveryProcessor {
     
     fn process_transition(&mut self, trans: &mut StaticEvent) {	
 	for (cur_step, filtered_events) in self.last_static.iter() {
-	    if self.step_count % cur_step == 0 {
+	    if self.step_count != 0 && self.step_count % cur_step == 0 {
 		for (filter, evs) in filtered_events.iter() {
 		    for ev in evs.iter() {			
 			trans.apply(&ev, filter); // not sure

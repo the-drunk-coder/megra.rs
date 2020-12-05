@@ -48,7 +48,7 @@ pub enum BuiltInDynamicParameter {
 pub enum BuiltInGenProc {
     Pear,
     Apple,
-    // Every
+    Every
 }
 
 pub enum BuiltInGenModFun {

@@ -57,7 +57,8 @@ fn parse_generators<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<&'
 fn parse_generator_processors<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<&'a str>> {
     alt((		
 	map(tag("pear"), |_| BuiltIn::GenProc(BuiltInGenProc::Pear)),
-	map(tag("apple"), |_| BuiltIn::GenProc(BuiltInGenProc::Apple))
+	map(tag("apple"), |_| BuiltIn::GenProc(BuiltInGenProc::Apple)),
+	map(tag("every"), |_| BuiltIn::GenProc(BuiltInGenProc::Every))
     ))(i)
 }
 
