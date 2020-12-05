@@ -54,6 +54,7 @@ impl Modifier for BounceModifier {
 #[derive(Clone)]
 pub struct Parameter {
     pub val: f32,
+    pub static_val: f32,
     pub modifier: Option<Box<dyn Modifier + Send>>,
 }
 
@@ -61,13 +62,15 @@ impl Parameter {
     pub fn with_value(val: f32) -> Self {
 	Parameter {
 	    val: val,
+	    static_val: val,
 	    modifier: None
 	}
     }
     
     pub fn evaluate(&mut self) -> f32 {
 	if let Some(m) = &mut self.modifier {
-	    m.evaluate(self.val)
+	    self.static_val = m.evaluate(self.val);
+	    self.static_val
 	} else {
 	    self.val
 	}

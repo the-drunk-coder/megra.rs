@@ -278,6 +278,7 @@ pub fn handle_builtin_dynamic_parameter(par: &BuiltInDynamicParameter, tail: &mu
     
     Atom::Parameter(Parameter {
 	val:0.0,
+	static_val:0.0,
 	modifier: Some(Box::new(
 	    match par {
 		BuiltInDynamicParameter::Bounce => {
