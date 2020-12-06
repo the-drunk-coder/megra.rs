@@ -23,6 +23,21 @@ pub struct SchedulerData<const BUFSIZE:usize, const NCHAN:usize> {
 }
 
 impl <const BUFSIZE:usize, const NCHAN:usize> SchedulerData<BUFSIZE, NCHAN> {
+
+    pub fn from_previous(old: &SchedulerData<BUFSIZE, NCHAN>, mut data: Box<Generator>, ruffbox: sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>) -> Self {
+	data.transfer_state(&old.generator);
+	
+	SchedulerData {
+	    start_time: old.start_time,
+	    stream_time: old.stream_time,
+	    logical_time: old.logical_time, 
+	    last_diff: 0.0,
+	    generator: data,
+	    ruffbox: ruffbox,
+	    mode: old.mode
+	}
+    }
+    
     pub fn from_data(data: Box<Generator>, ruffbox: sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>, mode: OutputMode) -> Self {
 	// get logical time since start from ruffbox
 	let stream_time;
@@ -42,6 +57,7 @@ impl <const BUFSIZE:usize, const NCHAN:usize> SchedulerData<BUFSIZE, NCHAN> {
     }
 }
 
+
 impl <const BUFSIZE:usize, const NCHAN:usize> Scheduler<BUFSIZE, NCHAN> {
     pub fn new() -> Self {
         Scheduler {
@@ -52,28 +68,25 @@ impl <const BUFSIZE:usize, const NCHAN:usize> Scheduler<BUFSIZE, NCHAN> {
     
     /// Start this scheduler.
     pub fn start(&mut self,
-		 mode: OutputMode,
 		 fun: fn(&mut SchedulerData<BUFSIZE, NCHAN>) -> f64,
-		 data: Box<Generator>,
-		 ruffbox: sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>) {
+		 data: sync::Arc<Mutex<SchedulerData<BUFSIZE, NCHAN>>>) {
 	self.running.store(true, Ordering::SeqCst);
 	let running = self.running.clone();
-        self.handle = Some(thread::spawn(move || {
-            
-	    let mut sched_data:SchedulerData<BUFSIZE, NCHAN> = SchedulerData::<BUFSIZE, NCHAN>::from_data(data, ruffbox, mode);	    
-	    
+        self.handle = Some(thread::spawn(move || {            	    
 	    while running.load(Ordering::SeqCst) {
-		let cur = sched_data.start_time.elapsed().as_secs_f64();
-		
-                sched_data.last_diff = cur - sched_data.logical_time;
-		let next = (fun)(&mut sched_data);
-		//println!("cur: {} should: {} next diff: {} stream_diff: {}", cur, sched_data.logical_time,
-		//next - sched_data.last_diff,
-		//	 sched_data.stream_time - sched_data.logical_time);
-		sched_data.logical_time += next;				
-		sched_data.stream_time += next;
+		let next:f64;
+		let ldif:f64;
+		{
+		    let mut sched_data = data.lock();
+		    let cur = sched_data.start_time.elapsed().as_secs_f64();		    
+                    sched_data.last_diff = cur - sched_data.logical_time;
+		    next = (fun)(&mut sched_data);
+		    ldif = sched_data.last_diff;		    
+		    sched_data.logical_time += next;				
+		    sched_data.stream_time += next;
+		}
 		// compensate for eventual lateness ...
-		thread::sleep(Duration::from_secs_f64(next - sched_data.last_diff)); 
+		thread::sleep(Duration::from_secs_f64(next - ldif)); 
             }
         }));
     }

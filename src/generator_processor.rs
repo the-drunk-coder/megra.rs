@@ -10,7 +10,7 @@ use crate::{event::Event,
 pub trait GeneratorProcessor {    
     fn process_events(&mut self, events: &mut Vec<StaticEvent>);    
     fn process_generator(&mut self, generator: &mut MarkovSequenceGenerator, time_mods: &mut Vec<TimeMod>);    
-    fn process_transition(&mut self, transition: &mut StaticEvent);
+    fn process_transition(&mut self, transition: &mut StaticEvent);    
 }
 
 type StaticEventsAndFilters = HashMap<Vec<String>, Vec<StaticEvent>>;
@@ -33,7 +33,7 @@ impl PearProcessor {
 }
 
 // zip mode etc seem to be outdated ... going for any mode for now
-impl GeneratorProcessor for PearProcessor {
+impl GeneratorProcessor for PearProcessor {        
     fn process_generator(&mut self, _: &mut MarkovSequenceGenerator, _: &mut Vec<TimeMod>) { /* pass */ }
     
     fn process_events(&mut self, events: &mut Vec<StaticEvent>) {
@@ -122,7 +122,7 @@ impl EveryProcessor {
     }
 }
 
-impl GeneratorProcessor for EveryProcessor {
+impl GeneratorProcessor for EveryProcessor {    
     // this one 
     fn process_events(&mut self, events: &mut Vec<StaticEvent>) {
 	self.last_static.clear();

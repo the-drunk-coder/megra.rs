@@ -24,8 +24,6 @@ impl TimeMod {
     }
 }
 
-
-
 pub struct Generator {
     pub name: String,
     pub root_generator: MarkovSequenceGenerator,
@@ -34,6 +32,11 @@ pub struct Generator {
 }
 
 impl Generator {
+
+    pub fn transfer_state(&mut self, other: &Generator) {
+	self.root_generator.transfer_state(&other.root_generator);
+	// genprocs follow later ...
+    }
 
     pub fn current_events(&mut self) -> Vec<StaticEvent> {
 	let mut events = self.root_generator.current_events();
@@ -58,7 +61,6 @@ impl Generator {
 
 pub type GenModFun = fn(&mut MarkovSequenceGenerator, &mut Vec::<TimeMod>, &Vec<f32>);
 
-// to bind, i need a holder, would that work in an enum ?
 pub fn haste(_: &mut MarkovSequenceGenerator, time_mods: &mut Vec<TimeMod>, args: &Vec<f32>) {
     for _ in 0..args[0] as usize {
 	time_mods.push(TimeMod{
@@ -68,7 +70,6 @@ pub fn haste(_: &mut MarkovSequenceGenerator, time_mods: &mut Vec<TimeMod>, args
     }    
 }
 
-// to bind, i need a holder, would that work in an enum ?
 pub fn relax(_: &mut MarkovSequenceGenerator, time_mods: &mut Vec<TimeMod>, args: &Vec<f32>) {
     for _ in 0..args[0] as usize {
 	time_mods.push(TimeMod{

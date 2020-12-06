@@ -16,7 +16,8 @@ crossbeam = "0.7.3"
 parking_lot = "0.11.0"
 ruffbox_synth = { path = "../ruffbox-synth" }
 nom = "6.0.0-alpha1"
-vom_rs = { git = "https://gitlab.com/ellipsenpark/vom.rs" }
+#vom_rs = { git = "https://gitlab.com/ellipsenpark/vom.rs" }
+vom_rs = { path = "../vom.rs" }
 rustyline = "6.3.0"
 claxon = "0.4.3"
 getopts = "0.2"

@@ -185,6 +185,6 @@ pub fn parse_playback_rate_event<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, Ve
 	map(tag("rate-mul"), |_| BuiltIn::ParameterEvent(BuiltInParameterEvent::PlaybackRate(EventOperation::Multiply))),
 	map(tag("rate-sub"), |_| BuiltIn::ParameterEvent(BuiltInParameterEvent::PlaybackRate(EventOperation::Subtract))),
 	map(tag("rate-div"), |_| BuiltIn::ParameterEvent(BuiltInParameterEvent::PlaybackRate(EventOperation::Divide))),
-	map(tag("rate"), |_| BuiltIn::ParameterEvent(BuiltInParameterEvent::PlaybackRate(EventOperation::Replace))),	
+	map(tag("rate"), |_| BuiltIn::ParameterEvent(BuiltInParameterEvent::PlaybackRate(EventOperation::Replace))),
     ))(i)
 }
