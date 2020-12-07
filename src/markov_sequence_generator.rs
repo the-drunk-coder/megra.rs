@@ -38,11 +38,7 @@ impl MarkovSequenceGenerator {
 	if let Some(t) = &other.last_transition {
 	    println!("transfer trans");
 	    self.last_transition = Some(t.clone());
-	    // this needs to be secured
-	    if self.generator.labels.contains_key(&other.generator.current_state.unwrap()) {
-		self.generator.current_state = Some(other.generator.current_state.unwrap());
-	    }
-	    self.generator.current_symbol = Some(other.generator.current_symbol.unwrap());
+	    self.generator.transfer_state(&other.generator);
 	}	
     }
     
@@ -51,13 +47,11 @@ impl MarkovSequenceGenerator {
 	
 	// try to get a transition if there wasn't one
 	// that'd mean it's probably the initial one, or there's something wrong ... 
-	if self.last_transition.is_none() {
-	    println!("init trans");
+	if self.last_transition.is_none() {	    
 	    self.last_transition = self.generator.next_transition();
 	}
 	
-	if let Some(trans) = &self.last_transition {
-	    println!("last l: {} s: {}", trans.last_symbol, trans.next_symbol);
+	if let Some(trans) = &self.last_transition {	    
 	    // increment symbol age ...
 	    *self.symbol_ages.entry(trans.last_symbol).or_insert(0) += 1;
 	    // get static events ...
