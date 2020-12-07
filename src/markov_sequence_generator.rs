@@ -28,7 +28,6 @@ pub struct MarkovSequenceGenerator {
     pub modified: bool,    
     pub symbol_ages: HashMap<char, u64>,
     pub default_duration: u64,
-    pub init_symbol: char,
     pub last_transition: Option<pfa::PfaQueryResult<char>>,    
 }
 
@@ -60,16 +59,7 @@ impl MarkovSequenceGenerator {
 		    static_events.push(e.to_static());
 		}		
 	    }	    	 
-	} else {
-	    // increment symbol age ...
-	    *self.symbol_ages.entry(self.init_symbol).or_insert(0) += 1;
-	    // get static events ...
-	    if let Some(events) = self.event_mapping.get_mut(&self.init_symbol) {
-		for e in events.iter_mut() {
-		    static_events.push(e.to_static());
-		}		
-	    }	
-	}
+	} 
 	    		
 	static_events
     }
