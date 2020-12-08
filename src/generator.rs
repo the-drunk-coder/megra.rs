@@ -1,4 +1,5 @@
 use std::boxed::Box;
+use std::collections::BTreeSet;
 use crate::{event::{StaticEvent, EventOperation},
 	    generator_processor::GeneratorProcessor,
 	    markov_sequence_generator::MarkovSequenceGenerator};
@@ -25,7 +26,7 @@ impl TimeMod {
 }
 
 pub struct Generator {
-    pub name: String,
+    pub id_tags: BTreeSet<String>,
     pub root_generator: MarkovSequenceGenerator,
     pub processors: Vec<Box<dyn GeneratorProcessor + Send>>,
     pub time_mods: Vec<TimeMod>

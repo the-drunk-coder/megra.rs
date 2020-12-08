@@ -12,7 +12,11 @@ pub fn interpret<const BUFSIZE:usize, const NCHAN:usize>(session: &mut Session<B
 							 ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>) {
     match parsed_in {
 	Expr::Constant(Atom::Generator(g)) => {	    
-	    println!("a generator called \'{}\'", g.name);
+	    print!("a generator called \'");
+	    for tag in g.id_tags.iter() {
+		print!("{} ", tag);
+	    }
+	    println!("\'");
 	},
 	Expr::Constant(Atom::Parameter(_)) => {	    
 	    println!("a parameter");
@@ -52,7 +56,7 @@ pub fn interpret<const BUFSIZE:usize, const NCHAN:usize>(session: &mut Session<B
 			let s = sample.unwrap() as f32 / max_val;
 			sample_buffer.push(s);				    
 		    }
-		    
+		    		    
 		    let mut ruff = ruffbox.lock();
 		    let bufnum = ruff.load_sample(&sample_buffer);
 

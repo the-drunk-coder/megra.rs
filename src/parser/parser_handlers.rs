@@ -7,7 +7,7 @@ use crate::generator::{Generator, haste, relax};
 use crate::generator_processor::*;
 use crate::parser::parser_helpers::*;
 
-use std::collections::{HashMap,HashSet};
+use std::collections::{HashMap, HashSet, BTreeSet};
 use vom_rs::pfa::Pfa;
 use ruffbox_synth::ruffbox::synth::SynthParameter;
 
@@ -64,9 +64,11 @@ pub fn handle_learn(tail: &mut Vec<Expr>) -> Atom {
     
     let s_v: std::vec::Vec<char> = sample.chars().collect();
     let pfa = Pfa::<char>::learn(&s_v, 3, 0.01, 30);
+    let mut id_tags = BTreeSet::new();
+    id_tags.insert(name.clone());
     
     Atom::Generator(Generator {
-	name: name.clone(),
+	id_tags: id_tags,
 	root_generator: MarkovSequenceGenerator {
 	    name: name,
 	    generator: pfa,
@@ -149,9 +151,11 @@ pub fn handle_infer(tail: &mut Vec<Expr>) -> Atom {
     }
     
     let pfa = Pfa::<char>::infer_from_rules(&mut rules);
+    let mut id_tags = BTreeSet::new();
+    id_tags.insert(name.clone());
     
     Atom::Generator(Generator {
-	name: name.clone(),
+	id_tags: id_tags.clone(),
 	root_generator: MarkovSequenceGenerator {
 	    name: name,
 	    generator: pfa,
@@ -316,7 +320,8 @@ pub fn handle_sync_context(tail: &mut Vec<Expr>) -> Atom {
 
     while let Some(Expr::Constant(c)) = tail_drain.next() {		
 	match c {
-	    Atom::Generator(k) => {
+	    Atom::Generator(mut k) => {
+		k.id_tags.insert(name.clone());
 		gens.push(k);
 	    }
 	    _ => println!{"ignored"}

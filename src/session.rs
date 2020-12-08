@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{BTreeSet, HashMap};
 use std::sync;
 use parking_lot::Mutex;
 
@@ -27,7 +27,7 @@ pub struct SyncContext {
 }
 
 pub struct Session <const BUFSIZE:usize, const NCHAN:usize> {
-    schedulers: HashMap<String, (Scheduler<BUFSIZE, NCHAN>, sync::Arc<Mutex<SchedulerData<BUFSIZE, NCHAN>>>)>,
+    schedulers: HashMap<BTreeSet<String>, (Scheduler<BUFSIZE, NCHAN>, sync::Arc<Mutex<SchedulerData<BUFSIZE, NCHAN>>>)>,
     output_mode: OutputMode,
 }
 
@@ -42,9 +42,9 @@ impl <const BUFSIZE:usize, const NCHAN:usize> Session<BUFSIZE, NCHAN> {
     
     pub fn start_generator(&mut self, gen: Box<Generator>, ruffbox: sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>) {
 
-	let name = gen.name.clone();
+	let id_tags = gen.id_tags.clone();
 	// start scheduler if it exists ...
-	if let Some((_, data)) = self.schedulers.get_mut(&name) {
+	if let Some((_, data)) = self.schedulers.get_mut(&id_tags) {
 	    // keep the scheduler running, just replace the data ...
 	    let mut sched_data = data.lock();
 	    *sched_data = SchedulerData::<BUFSIZE, NCHAN>::from_previous(&sched_data, gen, ruffbox);
@@ -61,8 +61,8 @@ impl <const BUFSIZE:usize, const NCHAN:usize> Session<BUFSIZE, NCHAN> {
 		let events = data.generator.current_events();
 		let mut ruff = data.ruffbox.lock();
 		for ev in events.iter() {
-		    //println!("event: {}",  ev.name);
-		    
+
+		    // no need to allocate a string everytime here, should be changed
 		    if ev.name == "silence" {
 			continue;
 		    }
@@ -76,8 +76,6 @@ impl <const BUFSIZE:usize, const NCHAN:usize> Session<BUFSIZE, NCHAN> {
 		    let inst = ruff.prepare_instance(map_name(&ev.name), data.stream_time + 0.05, bufnum);
 		    
 		    for (k,v) in ev.params.iter() {
-			//println!("{} {}",k,v);
-
 			// special handling for stereo param
 			if k == &SynthParameter::ChannelPosition && data.mode == OutputMode::Stereo {			
 			    let pos = (*v + 1.0) * 0.5;			
@@ -88,16 +86,16 @@ impl <const BUFSIZE:usize, const NCHAN:usize> Session<BUFSIZE, NCHAN> {
 		    }
 		    ruff.trigger(inst);
 		}
-		
+
 		(data.generator.current_transition().params[&SynthParameter::Duration] as f64 / 1000.0) as f64
 	    };
 	    
 	    sched.start(eval_loop, sync::Arc::clone(&sched_data));
-	    self.schedulers.insert(name, (sched, sched_data));
+	    self.schedulers.insert(id_tags, (sched, sched_data));
 	}		
     }
 
-    pub fn stop_generator(&mut self, gen_name: &String) {
+    pub fn stop_generator(&mut self, gen_name: &BTreeSet<String>) {
 	if let Some((sched, _)) = self.schedulers.get_mut(gen_name) {
 	    sched.stop();
 	}
@@ -105,7 +103,11 @@ impl <const BUFSIZE:usize, const NCHAN:usize> Session<BUFSIZE, NCHAN> {
 
     pub fn clear_session(&mut self) {
 	for (k,(sched, _)) in self.schedulers.iter_mut() {
-	    println!("stop generator \'{}\'", k);
+	    print!("stop generator \'");
+	    for tag in k.iter() {
+		print!("{} ", tag);
+	    }
+	    println!("\'");
 	    sched.stop();
 	}
 	self.schedulers = HashMap::new();
