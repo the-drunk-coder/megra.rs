@@ -314,10 +314,20 @@ pub fn handle_sync_context(tail: &mut Vec<Expr>) -> Atom {
     
     // name is the first symbol
     let name: String = get_string_from_expr(&tail_drain.next().unwrap()).unwrap();
-    let _active = get_bool_from_expr(&tail_drain.next().unwrap()).unwrap();
-    let mut gens: Vec<Generator> = Vec::new();
-    let mut _syncs: Vec<String> = Vec::new();
+    let active = get_bool_from_expr(&tail_drain.next().unwrap()).unwrap();
 
+    if !active {
+	return Atom::SyncContext(SyncContext {
+	    name: name,
+	    generators: Vec::new(),
+	    synced: Vec::new(),
+	    sync_to: None,
+	    active: false,
+	})
+    }
+
+    let mut gens: Vec<Generator> = Vec::new();
+    
     let mut count = 0;
     while let Some(Expr::Constant(c)) = tail_drain.next() {		
 	match c {
@@ -340,7 +350,9 @@ pub fn handle_sync_context(tail: &mut Vec<Expr>) -> Atom {
     Atom::SyncContext(SyncContext {
 	name: name,
 	generators: gens,
-	synced: _syncs
+	synced: Vec::new(),
+	sync_to: None,
+	active: true,
     })
 }
 

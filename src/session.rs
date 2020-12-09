@@ -23,12 +23,15 @@ pub enum OutputMode {
 pub struct SyncContext {
     pub name: String,
     pub synced: Vec<String>,
+    pub sync_to: Option<String>,
+    pub active: bool,
     pub generators: Vec<Generator>
 }
 
 pub struct Session <const BUFSIZE:usize, const NCHAN:usize> {
     schedulers: HashMap<BTreeSet<String>, (Scheduler<BUFSIZE, NCHAN>, sync::Arc<Mutex<SchedulerData<BUFSIZE, NCHAN>>>)>,
     output_mode: OutputMode,
+    contexts: HashMap<String, BTreeSet<BTreeSet<String>>>,
 }
 
 impl <const BUFSIZE:usize, const NCHAN:usize> Session<BUFSIZE, NCHAN> {
@@ -37,7 +40,38 @@ impl <const BUFSIZE:usize, const NCHAN:usize> Session<BUFSIZE, NCHAN> {
 	Session {
 	    schedulers: HashMap::new(),
 	    output_mode: mode,
+	    contexts: HashMap::new(),	    
 	}
+    }
+
+    pub fn handle_context(&mut self, ctx: &mut SyncContext, ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>) {
+	let name = ctx.name.clone();
+	if ctx.active {	    
+	    let mut new_gens = BTreeSet::new();
+	    
+	    for c in ctx.generators.drain(..){
+		new_gens.insert(c.id_tags.clone());
+		self.start_generator(Box::new(c), sync::Arc::clone(ruffbox));
+	    }
+
+	    if self.contexts.contains_key(&name) {
+		let diff:Vec<_> = new_gens.difference(self.contexts.get(&name).unwrap()).cloned().collect();
+		for tags in diff.iter() {
+		    self.stop_generator(&tags);
+		}
+	    }	    
+	    
+	    self.contexts.insert(name, new_gens);
+	    
+	} else {
+	    if let Some(old_ctx) = self.contexts.get(&name) {		
+		for tags in old_ctx.clone().iter() { // this is the type of clone i hate ...
+		    self.stop_generator(&tags);
+		}
+		self.contexts.remove(&name);
+	    }
+	}	    
+		
     }
     
     pub fn start_generator(&mut self, gen: Box<Generator>, ruffbox: sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>) {

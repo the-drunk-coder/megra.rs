@@ -41,11 +41,8 @@ pub fn interpret<const BUFSIZE:usize, const NCHAN:usize>(session: &mut Session<B
 	    }	    	    
 	}
 	Expr::Constant(Atom::SyncContext(mut s)) => {
-	    let name = s.name.clone();
-	    for c in s.generators.drain(..){
-		session.start_generator(Box::new(c), sync::Arc::clone(&ruffbox));
-	    }				
-	    println!("a context called \'{}\'", name);
+	    println!("a context called \'{}\'", s.name);
+	    session.handle_context(&mut s, &ruffbox);	    
 	},
 	Expr::Constant(Atom::Command(c)) => {
 	    match c {
