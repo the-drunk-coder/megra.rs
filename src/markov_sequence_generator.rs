@@ -20,6 +20,7 @@ impl Rule {
     }
 }
 
+#[derive(Clone)]
 pub struct MarkovSequenceGenerator {
     pub name: String,
     pub generator: pfa::Pfa<char>,
@@ -35,7 +36,6 @@ impl MarkovSequenceGenerator {
 
     pub fn transfer_state(&mut self, other: &MarkovSequenceGenerator) {
 	if let Some(t) = &other.last_transition {
-	    println!("transfer trans");
 	    self.last_transition = Some(t.clone());
 	    self.generator.transfer_state(&other.generator);
 	}	

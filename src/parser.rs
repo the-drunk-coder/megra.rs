@@ -29,7 +29,8 @@ fn parse_builtin<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<&'a s
 	parse_generator_modifier_functions, // needs to come before events so it can catch relax before rel(ease)
 	parse_events,
 	parse_dynamic_parameters,
-	parse_generator_processors,	
+	parse_generator_processors,
+	parse_multiplexer,	
     ))(i)
 }
 
@@ -43,6 +44,12 @@ fn parse_commands<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<&'a 
 fn parse_dynamic_parameters<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<&'a str>> {
     //alt((		
     map(tag("bounce"), |_| BuiltIn::Parameter(BuiltInDynamicParameter::Bounce))(i)
+    //))(i)
+}
+
+fn parse_multiplexer<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<&'a str>> {
+    //alt((		
+    map(tag("xdup"), |_| BuiltIn::Multiplexer(BuiltInMultiplexer::XDup))(i)
     //))(i)
 }
 
@@ -242,7 +249,8 @@ fn eval_expression(e: Expr, sample_set: &SampleSet) -> Option<Expr> {
 			BuiltIn::SoundEvent(ev) => handle_builtin_sound_event(&ev, &mut reduced_tail),
 			BuiltIn::ParameterEvent(ev) => handle_builtin_mod_event(&ev, &mut reduced_tail),
 			BuiltIn::GenProc(g) => handle_builtin_gen_proc(&g, &mut reduced_tail),
-			BuiltIn::GenModFun(g) => handle_builtin_gen_mod_fun(&g, &mut reduced_tail)	
+			BuiltIn::GenModFun(g) => handle_builtin_gen_mod_fun(&g, &mut reduced_tail),
+			BuiltIn::Multiplexer(m) => handle_builtin_multiplexer(&m, &mut reduced_tail)	
 		    }))
 		},
 		Expr::Custom(s) => {

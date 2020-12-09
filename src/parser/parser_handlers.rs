@@ -10,6 +10,8 @@ use crate::parser::parser_helpers::*;
 use std::collections::{HashMap, HashSet, BTreeSet};
 use vom_rs::pfa::Pfa;
 use ruffbox_synth::ruffbox::synth::SynthParameter;
+// might be faster with global, uninterned symbol something ??
+use uuid::Uuid;
 
 pub fn handle_learn(tail: &mut Vec<Expr>) -> Atom {
     let mut tail_drain = tail.drain(..);
@@ -323,6 +325,12 @@ pub fn handle_sync_context(tail: &mut Vec<Expr>) -> Atom {
 	    Atom::Generator(mut k) => {
 		k.id_tags.insert(name.clone());
 		gens.push(k);
+	    }
+	    Atom::GeneratorList(mut kl) => {
+		for k in kl.iter_mut() {
+		    k.id_tags.insert(name.clone());
+		}
+		gens.append(&mut kl);
 	    }
 	    _ => println!{"ignored"}
 	}
@@ -649,6 +657,62 @@ pub fn handle_builtin_gen_mod_fun(gen_mod: &BuiltInGenModFun, tail: &mut Vec<Exp
 	    Atom::Nothing
 	}
     } 
+}
+
+
+
+pub fn handle_builtin_multiplexer(_mul: &BuiltInMultiplexer, tail: &mut Vec<Expr>) -> Atom {
+    let last = tail.pop(); // generator or generator list ...
+
+    let mut gen_proc_list_list = Vec::new();
     
-    
+    let mut tail_drain = tail.drain(..);
+    while let Some(Expr::Constant(c)) = tail_drain.next() {
+	match c {
+	    Atom::GeneratorProcessorList(gpl) => {
+		gen_proc_list_list.push(gpl);
+	    },
+	    Atom::GeneratorProcessor(gp) => {
+		let mut gpl = Vec::new();
+		gpl.push(gp);
+		gen_proc_list_list.push(gpl);
+	    },
+	    Atom::GeneratorModifierFunction(_gm) => {
+		//???
+	    },
+	    _ => { println!("can't multiplex this ..."); },
+	}
+    }
+
+    let mut gens = Vec::new();
+
+    match last {
+	Some(Expr::Constant(Atom::Generator(g))) => {	    
+	     // multiplex into duplicates by cloning ...
+	    for mut gpl in gen_proc_list_list.drain(..) {
+		 let mut pclone = g.clone();
+		 pclone.id_tags.insert(format!("mpx-{}", Uuid::new_v4().to_simple()));
+		 pclone.processors.append(&mut gpl);
+		 gens.push(pclone);
+	     }
+  	     gens.push(g);
+	 },
+	Some(Expr::Constant(Atom::GeneratorList(mut gl))) => {
+	    for gen in gl.drain(..) {
+		// multiplex into duplicates by cloning ...		
+		for gpl in gen_proc_list_list.iter() {
+		    let mut pclone = gen.clone();
+		    pclone.id_tags.insert(format!("mpx-{}", Uuid::new_v4().to_simple()));
+		    pclone.processors.append(&mut gpl.clone());
+		    gens.push(pclone);
+		}
+		gens.push(gen);
+	    }	    
+	},
+	_ => {}	
+    }
+            	
+    // for xdup, this would be enough ... for xspread etc, we need to prepend another processor ... 
+                
+    Atom::GeneratorList(gens)
 }

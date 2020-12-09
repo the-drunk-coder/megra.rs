@@ -7,17 +7,37 @@ use crate::{event::Event,
 	    generator::{TimeMod, GenModFun},
 	    markov_sequence_generator::MarkovSequenceGenerator};
 
-pub trait GeneratorProcessor {    
-    fn process_events(&mut self, events: &mut Vec<StaticEvent>);    
+pub trait GeneratorProcessor: GeneratorProcessorClone {    
+    fn process_events(&mut self, events: &mut Vec<StaticEvent>);
     fn process_generator(&mut self, generator: &mut MarkovSequenceGenerator, time_mods: &mut Vec<TimeMod>);    
     fn process_transition(&mut self, transition: &mut StaticEvent);    
+}
+
+pub trait GeneratorProcessorClone {
+    fn clone_box(&self) -> Box<dyn GeneratorProcessor + Send>;
+}
+
+impl<T> GeneratorProcessorClone for T
+where
+    T: 'static + GeneratorProcessor + Clone + Send,
+{
+    fn clone_box(&self) -> Box<dyn GeneratorProcessor + Send> {
+        Box::new(self.clone())
+    }
+}
+
+impl Clone for Box<dyn GeneratorProcessor + Send> {
+    fn clone(&self) -> Box<dyn GeneratorProcessor + Send> {
+        self.clone_box()
+    }
 }
 
 type StaticEventsAndFilters = HashMap<Vec<String>, Vec<StaticEvent>>;
 type EventsAndFilters = HashMap<Vec<String>, Vec<Event>>;
 type GenModFunsAndArgs = Vec<(GenModFun, Vec<f32>)>;
 
-/// Apple-ys events to the throughcoming ones 
+/// Apple-ys events to the throughcoming ones
+#[derive(Clone)]
 pub struct PearProcessor {
     pub events_to_be_applied: Vec<(Parameter, EventsAndFilters)>,
     pub last_static: Vec<(usize, StaticEventsAndFilters)>,
@@ -75,6 +95,7 @@ impl GeneratorProcessor for PearProcessor {
 }
 
 /// Apple-ys modifiers to the underlying processors
+#[derive(Clone)]
 pub struct AppleProcessor {
     pub modifiers_to_be_applied: Vec<(Parameter, GenModFunsAndArgs)>
 }
@@ -105,7 +126,8 @@ impl GeneratorProcessor for AppleProcessor {
 }
 
 
-/// Apple-ys events to the throughcoming ones 
+/// Apple-ys events to the throughcoming ones
+#[derive(Clone)]
 pub struct EveryProcessor {
     pub step_count:usize,
     pub things_to_be_applied: Vec<(Parameter, EventsAndFilters, GenModFunsAndArgs)>,

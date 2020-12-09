@@ -30,6 +30,16 @@ pub fn interpret<const BUFSIZE:usize, const NCHAN:usize>(session: &mut Session<B
 	Expr::Constant(Atom::GeneratorProcessor(_)) => {	    
 	    println!("a gen proc");
 	},
+	Expr::Constant(Atom::GeneratorList(gl)) => {	    
+	    println!("a gen list");
+	    for gen in gl.iter() {
+		print!("--- a generator called \'");
+		for tag in gen.id_tags.iter() {
+		    print!("{} ", tag);
+		}
+		println!("\'");
+	    }	    	    
+	}
 	Expr::Constant(Atom::SyncContext(mut s)) => {
 	    let name = s.name.clone();
 	    for c in s.generators.drain(..){

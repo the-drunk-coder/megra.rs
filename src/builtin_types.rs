@@ -58,6 +58,13 @@ pub enum BuiltInGenModFun {
     //Skip
 }
 
+pub enum BuiltInMultiplexer {
+    XDup,
+    //XSpread,
+    //XBounce,
+    //XRot
+}
+
 /// As this doesn't strive to be a turing-complete lisp, we'll start with the basic
 /// megra operations, learning and inferring, plus the built-in events
 pub enum BuiltIn {
@@ -72,7 +79,8 @@ pub enum BuiltIn {
     SoundEvent(BuiltInSoundEvent),
     ParameterEvent(BuiltInParameterEvent),
     GenProc(BuiltInGenProc),
-    GenModFun(BuiltInGenModFun)
+    GenModFun(BuiltInGenModFun),
+    Multiplexer(BuiltInMultiplexer),
 }
 
 pub enum Command {
@@ -93,8 +101,9 @@ pub enum Atom { // atom might not be the right word any longer
     Command(Command),
     SyncContext(SyncContext),
     Generator(Generator),
-    GeneratorProcessor(Box<dyn GeneratorProcessor>),
-    GeneratorProcessorList(Vec<Box<dyn GeneratorProcessor>>),
+    GeneratorProcessor(Box<dyn GeneratorProcessor + Send>),
+    GeneratorProcessorList(Vec<Box<dyn GeneratorProcessor + Send>>),
+    GeneratorList(Vec<Generator>),
     Parameter(Parameter),
     GeneratorModifierFunction((GenModFun, Vec<f32>)),
     Nothing

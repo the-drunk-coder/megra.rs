@@ -13,6 +13,7 @@ pub enum EventOperation {
     Divide
 }
 
+#[derive(Clone)]
 pub struct Event {
     pub name: String,
     pub params: HashMap<SynthParameter, Box<Parameter>>,
@@ -21,6 +22,7 @@ pub struct Event {
 }
 
 // an event is also an operation
+#[derive(Clone)]
 pub struct StaticEvent {
     pub name: String,
     pub params: HashMap<SynthParameter, f32>,

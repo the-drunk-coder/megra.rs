@@ -6,6 +6,7 @@ use crate::{event::{StaticEvent, EventOperation},
 use ruffbox_synth::ruffbox::synth::SynthParameter;
 
 // little helper struct for fixed time operations
+#[derive(Clone)]
 pub struct TimeMod {
     val: f32,
     op: EventOperation,
@@ -25,12 +26,14 @@ impl TimeMod {
     }
 }
 
+#[derive(Clone)]
 pub struct Generator {
     pub id_tags: BTreeSet<String>,
     pub root_generator: MarkovSequenceGenerator,
     pub processors: Vec<Box<dyn GeneratorProcessor + Send>>,
     pub time_mods: Vec<TimeMod>
 }
+
 
 impl Generator {
 
