@@ -600,6 +600,13 @@ pub fn handle_builtin_gen_proc(proc_type: &BuiltInGenProc, tail: &mut Vec<Expr>)
 	    g.processors.push(collect_gen_proc(proc_type, tail));
 	    Atom::Generator(g)
 	},
+	Some(Expr::Constant(Atom::GeneratorList(mut gl))) => {
+	    let gp = collect_gen_proc(proc_type, tail);
+	    for gen in gl.iter_mut() {
+		gen.processors.push(gp.clone());
+	    }	    
+	    Atom::GeneratorList(gl)
+	},
 	Some(Expr::Constant(Atom::GeneratorProcessor(gp)))=> {
 	    let mut v = Vec::new();
 	    v.push(gp);
