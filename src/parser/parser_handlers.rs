@@ -319,8 +319,7 @@ pub fn handle_sync_context(tail: &mut Vec<Expr>) -> Atom {
     if !active {
 	return Atom::SyncContext(SyncContext {
 	    name: name,
-	    generators: Vec::new(),
-	    synced: Vec::new(),
+	    generators: Vec::new(),	    
 	    sync_to: None,
 	    active: false,
 	})
@@ -347,7 +346,6 @@ pub fn handle_sync_context(tail: &mut Vec<Expr>) -> Atom {
     Atom::SyncContext(SyncContext {
 	name: name,
 	generators: gens,
-	synced: Vec::new(),
 	sync_to: None,
 	active: true,
     })

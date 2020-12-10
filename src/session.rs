@@ -22,7 +22,6 @@ pub enum OutputMode {
 
 pub struct SyncContext {
     pub name: String,
-    pub synced: Vec<String>,
     pub sync_to: Option<String>,
     pub active: bool,
     pub generators: Vec<Generator>
@@ -53,9 +52,9 @@ impl <const BUFSIZE:usize, const NCHAN:usize> Session<BUFSIZE, NCHAN> {
 		new_gens.insert(c.id_tags.clone());				
 		self.start_generator(Box::new(c), sync::Arc::clone(ruffbox));		
 	    }
-
-	    if self.contexts.contains_key(&name) {		
-		let diff:Vec<_> = self.contexts.get(&name).unwrap().difference(&new_gens).cloned().collect();
+	    
+	    if let Some(old_gens) = self.contexts.get(&name) {		
+		let diff:Vec<_> = old_gens.difference(&new_gens).cloned().collect();
 		for tags in diff.iter() {		    
 		    self.stop_generator(&tags);
 		}
@@ -71,8 +70,7 @@ impl <const BUFSIZE:usize, const NCHAN:usize> Session<BUFSIZE, NCHAN> {
 		}
 		self.contexts.remove(&name);
 	    }
-	}	    
-		
+	}		
     }
     
     pub fn start_generator(&mut self, gen: Box<Generator>, ruffbox: sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>) {
@@ -80,11 +78,13 @@ impl <const BUFSIZE:usize, const NCHAN:usize> Session<BUFSIZE, NCHAN> {
 	let id_tags = gen.id_tags.clone();
 	// start scheduler if it exists ...
 	if let Some((_, data)) = self.schedulers.get_mut(&id_tags) {
+
 	    print!("resume generator \'");
 	    for tag in id_tags.iter() {
 		print!("{} ", tag);
 	    }
 	    println!("\'");
+	    
 	    // keep the scheduler running, just replace the data ...
 	    let mut sched_data = data.lock();
 	    *sched_data = SchedulerData::<BUFSIZE, NCHAN>::from_previous(&sched_data, gen, ruffbox);
