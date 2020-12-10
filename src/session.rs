@@ -130,18 +130,24 @@ impl <const BUFSIZE:usize, const NCHAN:usize> Session<BUFSIZE, NCHAN> {
     }
 
     pub fn stop_generator(&mut self, gen_name: &BTreeSet<String>) {
+	let mut found = false;
 	if let Some((sched, _)) = self.schedulers.get_mut(gen_name) {
 	    sched.stop();
+	    found = true;
+	}
+
+	if found {
+	    self.schedulers.remove(gen_name);
+	    print!("stopped/removed generator \'");
+	    for tag in gen_name.iter() {
+		print!("{} ", tag);
+	    }
+	    println!("\'");	    
 	}
     }
 
     pub fn clear_session(&mut self) {
-	for (k,(sched, _)) in self.schedulers.iter_mut() {
-	    print!("stop generator \'");
-	    for tag in k.iter() {
-		print!("{} ", tag);
-	    }
-	    println!("\'");
+	for (_,(sched, _)) in self.schedulers.iter_mut() {	    
 	    sched.stop();
 	}
 	self.schedulers = HashMap::new();
