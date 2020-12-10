@@ -48,24 +48,25 @@ impl <const BUFSIZE:usize, const NCHAN:usize> Session<BUFSIZE, NCHAN> {
 	let name = ctx.name.clone();
 	if ctx.active {	    
 	    let mut new_gens = BTreeSet::new();
-	    
-	    for c in ctx.generators.drain(..){
-		new_gens.insert(c.id_tags.clone());
-		self.start_generator(Box::new(c), sync::Arc::clone(ruffbox));
+
+	    for c in ctx.generators.drain(..) {		
+		new_gens.insert(c.id_tags.clone());				
+		self.start_generator(Box::new(c), sync::Arc::clone(ruffbox));		
 	    }
 
-	    if self.contexts.contains_key(&name) {
-		let diff:Vec<_> = new_gens.difference(self.contexts.get(&name).unwrap()).cloned().collect();
-		for tags in diff.iter() {
+	    if self.contexts.contains_key(&name) {		
+		let diff:Vec<_> = self.contexts.get(&name).unwrap().difference(&new_gens).cloned().collect();
+		for tags in diff.iter() {		    
 		    self.stop_generator(&tags);
 		}
-	    }	    
+	    }  
 	    
 	    self.contexts.insert(name, new_gens);
 	    
 	} else {
-	    if let Some(old_ctx) = self.contexts.get(&name) {		
-		for tags in old_ctx.clone().iter() { // this is the type of clone i hate ...
+
+	    if let Some(old_ctx) = self.contexts.get(&name) {				
+		for tags in old_ctx.clone().iter() { // this is the type of clone i hate ...		    
 		    self.stop_generator(&tags);
 		}
 		self.contexts.remove(&name);
@@ -79,10 +80,21 @@ impl <const BUFSIZE:usize, const NCHAN:usize> Session<BUFSIZE, NCHAN> {
 	let id_tags = gen.id_tags.clone();
 	// start scheduler if it exists ...
 	if let Some((_, data)) = self.schedulers.get_mut(&id_tags) {
+	    print!("resume generator \'");
+	    for tag in id_tags.iter() {
+		print!("{} ", tag);
+	    }
+	    println!("\'");
 	    // keep the scheduler running, just replace the data ...
 	    let mut sched_data = data.lock();
 	    *sched_data = SchedulerData::<BUFSIZE, NCHAN>::from_previous(&sched_data, gen, ruffbox);
 	} else {
+	    print!("start generator \'");
+	    for tag in id_tags.iter() {
+		print!("{} ", tag);
+	    }
+	    println!("\'");
+	    
 	    // otherwise, create new sched and data ...
 	    let sched_data:sync::Arc<Mutex<SchedulerData<BUFSIZE, NCHAN>>>
 		= sync::Arc::new(Mutex::new(SchedulerData::<BUFSIZE, NCHAN>::from_data(gen, ruffbox, self.output_mode)));	    
@@ -138,6 +150,7 @@ impl <const BUFSIZE:usize, const NCHAN:usize> Session<BUFSIZE, NCHAN> {
 
 	if found {
 	    self.schedulers.remove(gen_name);
+
 	    print!("stopped/removed generator \'");
 	    for tag in gen_name.iter() {
 		print!("{} ", tag);
@@ -147,8 +160,14 @@ impl <const BUFSIZE:usize, const NCHAN:usize> Session<BUFSIZE, NCHAN> {
     }
 
     pub fn clear_session(&mut self) {
-	for (_,(sched, _)) in self.schedulers.iter_mut() {	    
+	for (k,(sched, _)) in self.schedulers.iter_mut() {	    
 	    sched.stop();
+
+	    print!("stopped/removed generator \'");
+	    for tag in k.iter() {
+		print!("{} ", tag);
+	    }
+	    println!("\'");	    
 	}
 	self.schedulers = HashMap::new();
     }

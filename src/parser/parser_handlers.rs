@@ -328,18 +328,15 @@ pub fn handle_sync_context(tail: &mut Vec<Expr>) -> Atom {
 
     let mut gens: Vec<Generator> = Vec::new();
     
-    let mut count = 0;
     while let Some(Expr::Constant(c)) = tail_drain.next() {		
 	match c {
 	    Atom::Generator(mut k) => {
-		k.id_tags.insert(format!("{}-{}", name.clone(), count));
-		count += 1;
+		k.id_tags.insert(name.clone());
 		gens.push(k);
 	    }
 	    Atom::GeneratorList(mut kl) => {
 		for k in kl.iter_mut() {
-		    k.id_tags.insert(format!("{}-{}", name.clone(), count));
-		    count += 1;
+		    k.id_tags.insert(name.clone());
 		}
 		gens.append(&mut kl);
 	    }
@@ -723,10 +720,18 @@ pub fn handle_builtin_multiplexer(_mul: &BuiltInMultiplexer, tail: &mut Vec<Expr
 		
 		pclone.processors.append(&mut gpl);
 		gens.push(pclone);
-	     }
-  	     gens.push(g);
+	    }	    	    
+  	    gens.push(g);
 	 },
 	Some(Expr::Constant(Atom::GeneratorList(mut gl))) => {
+	    // collect tags ... make sure the multiplexing process leaves
+	    // each generator individually, but deterministically tagged ...
+	    let mut all_tags:BTreeSet<String> = BTreeSet::new();
+	    
+	    for gen in gl.iter() {
+		all_tags.append(&mut gen.id_tags.clone());
+	    }
+	    
 	    for gen in gl.drain(..) {
 		// multiplex into duplicates by cloning ...		
 		for gpl in gen_proc_list_list.iter() {
@@ -735,7 +740,7 @@ pub fn handle_builtin_multiplexer(_mul: &BuiltInMultiplexer, tail: &mut Vec<Expr
 		    // this isn't super elegant but hey ... 
 		    for i in 0..100 {
 			let tag = format!("mpx-{}", i);
-			if !pclone.id_tags.contains(&tag) {
+			if !all_tags.contains(&tag) {
 			    pclone.id_tags.insert(tag);
 			    break;
 			} 		    
