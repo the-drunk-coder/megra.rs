@@ -84,7 +84,7 @@ impl <const BUFSIZE:usize, const NCHAN:usize> Session<BUFSIZE, NCHAN> {
 		}
 				
 		for c in ctx.generators.drain(..) {
-		    // nothing to sync to in that case ...
+		    // sync to what is most likely the root generator 
 		    self.start_generator(Box::new(c), sync::Arc::clone(ruffbox), smallest_id);
 		}
 	    } else {
