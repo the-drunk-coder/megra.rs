@@ -48,22 +48,59 @@ impl <const BUFSIZE:usize, const NCHAN:usize> Session<BUFSIZE, NCHAN> {
 	if ctx.active {	    
 	    let mut new_gens = BTreeSet::new();
 
-	    for c in ctx.generators.drain(..) {		
-		new_gens.insert(c.id_tags.clone());				
-		self.start_generator(Box::new(c), sync::Arc::clone(ruffbox));		
+	    // collect id_tags
+	    for c in ctx.generators.iter() {		
+		new_gens.insert(c.id_tags.clone());		
 	    }
-	    
-	    if let Some(old_gens) = self.contexts.get(&name) {		
+
+	    // c=alc difference, stop vanished ones, sync new ones ...	    
+	    if let Some(old_gens) = self.contexts.get(&name) { // this means context is running		
 		let diff:Vec<_> = old_gens.difference(&new_gens).cloned().collect();
 		for tags in diff.iter() {		    
 		    self.stop_generator(&tags);
-		}
-	    }  
-	    
-	    self.contexts.insert(name, new_gens);
-	    
-	} else {
+		}		
+	    }
 
+	    // is there rally no way around the second lookup ?
+	    let mut remainders:Vec<_> = Vec::new();
+	    if let Some(old_gens) = self.contexts.get(&name) { // this means context is running
+		remainders = old_gens.intersection(&new_gens).cloned().collect();				
+	    }
+	    
+	    if !remainders.is_empty() {
+
+		let mut smallest_id = None;
+		let mut last_len:usize = 10000000; // usize max would be better ... 
+		for tags in remainders.iter() {		  		    
+		    if tags.len() < last_len {
+			last_len = tags.len();
+			smallest_id = Some(tags);
+		    }
+		}
+
+		if let Some(tags) = smallest_id {
+		    print!("sync to existing: \'");
+		    for tag in tags.iter() {
+			print!("{} ", tag);
+		    }
+		    println!("\'");			
+		}
+		
+		
+		for c in ctx.generators.drain(..) {
+		    // nothing to sync to in that case ...
+		    self.start_generator(Box::new(c), sync::Arc::clone(ruffbox), smallest_id);
+		}
+	    } else {
+		for c in ctx.generators.drain(..) {
+		    // nothing to sync to in that case ...
+		    self.start_generator(Box::new(c), sync::Arc::clone(ruffbox), None);
+		}
+	    }
+	    
+	    self.contexts.insert(name, new_gens);	    	    
+	} else {
+	    // stop all that were kept in this context, remove context ...
 	    if let Some(old_ctx) = self.contexts.get(&name) {				
 		for tags in old_ctx.clone().iter() { // this is the type of clone i hate ...		    
 		    self.stop_generator(&tags);
@@ -73,12 +110,12 @@ impl <const BUFSIZE:usize, const NCHAN:usize> Session<BUFSIZE, NCHAN> {
 	}		
     }
     
-    pub fn start_generator(&mut self, gen: Box<Generator>, ruffbox: sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>) {
+    pub fn start_generator(&mut self, gen: Box<Generator>, ruffbox: sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>, sync: Option<&BTreeSet<String>>) {
 
 	let id_tags = gen.id_tags.clone();
 	// start scheduler if it exists ...
 	if let Some((_, data)) = self.schedulers.get_mut(&id_tags) {
-
+	    // resume sync: later ...
 	    print!("resume generator \'");
 	    for tag in id_tags.iter() {
 		print!("{} ", tag);
@@ -94,10 +131,21 @@ impl <const BUFSIZE:usize, const NCHAN:usize> Session<BUFSIZE, NCHAN> {
 		print!("{} ", tag);
 	    }
 	    println!("\'");
+
+	    let sched_data:sync::Arc<Mutex<SchedulerData<BUFSIZE, NCHAN>>>;
+	    if let Some(id_tags) = sync {
+		//this is prob kinda redundant 
+		if let Some((_, data)) = self.schedulers.get_mut(&id_tags) {
+		    sched_data = sync::Arc::new(Mutex::new(SchedulerData::<BUFSIZE, NCHAN>::from_previous(&data.lock(), gen, ruffbox)));	    
+		} else {
+		    sched_data = sync::Arc::new(Mutex::new(SchedulerData::<BUFSIZE, NCHAN>::from_data(gen, ruffbox, self.output_mode)));	    
+		}
+		
+	    } else {
+		sched_data = sync::Arc::new(Mutex::new(SchedulerData::<BUFSIZE, NCHAN>::from_data(gen, ruffbox, self.output_mode)));	    
+	    }
 	    
 	    // otherwise, create new sched and data ...
-	    let sched_data:sync::Arc<Mutex<SchedulerData<BUFSIZE, NCHAN>>>
-		= sync::Arc::new(Mutex::new(SchedulerData::<BUFSIZE, NCHAN>::from_data(gen, ruffbox, self.output_mode)));	    
 	    let mut sched = Scheduler::<BUFSIZE, NCHAN>::new();
 		    
 	    // the evaluation function ...
