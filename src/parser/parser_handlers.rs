@@ -367,9 +367,9 @@ pub fn handle_builtin_mod_event(event_type: &BuiltInParameterEvent, tail: &mut V
     
     let mut ev = match event_type {
 	BuiltInParameterEvent::PitchFrequency(o) => Event::with_name_and_operation("freq".to_string(), *o),
-	BuiltInParameterEvent::Attack(o) => Event::with_name_and_operation("atk".to_string(), *o),
-	BuiltInParameterEvent::Release(o) => Event::with_name_and_operation("rel".to_string(), *o),
-	BuiltInParameterEvent::Sustain(o) => Event::with_name_and_operation("sus".to_string(), *o),
+	BuiltInParameterEvent::Attack(o) => Event::with_name_and_operation("atk".to_string(), *o), // milliseconds, not seconds
+	BuiltInParameterEvent::Release(o) => Event::with_name_and_operation("rel".to_string(), *o), // milliseconds, not seconds
+	BuiltInParameterEvent::Sustain(o) => Event::with_name_and_operation("sus".to_string(), *o), // milliseconds, not seconds
 	BuiltInParameterEvent::ChannelPosition(o) => Event::with_name_and_operation("pos".to_string(), *o),    
 	BuiltInParameterEvent::Level(o) => Event::with_name_and_operation("lvl".to_string(), *o),
 	BuiltInParameterEvent::Duration(o) => Event::with_name_and_operation("dur".to_string(), *o),    
@@ -407,8 +407,13 @@ pub fn handle_builtin_mod_event(event_type: &BuiltInParameterEvent, tail: &mut V
 	BuiltInParameterEvent::PlaybackRate(_) => SynthParameter::PlaybackRate,
     };
 
-    ev.params.insert(param_key, Box::new(get_next_param(&mut tail_drain, 0.0)));
-    
+    match param_key {
+	SynthParameter::Attack => ev.params.insert(param_key, Box::new(get_next_param_with_factor(&mut tail_drain, 100.0, 0.001))),
+	SynthParameter::Sustain => ev.params.insert(param_key, Box::new(get_next_param_with_factor(&mut tail_drain, 100.0, 0.001))),
+	SynthParameter::Release => ev.params.insert(param_key, Box::new(get_next_param_with_factor(&mut tail_drain, 100.0, 0.001))),
+	_ => ev.params.insert(param_key, Box::new(get_next_param(&mut tail_drain, 0.0))),
+    };
+        
     Atom::Event (ev)
 }
 

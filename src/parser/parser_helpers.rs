@@ -39,3 +39,11 @@ pub fn get_next_param(tail_drain: &mut std::vec::Drain<Expr>, default: f32) -> P
 	_ => Parameter::with_value(default)
     }
 }
+
+pub fn get_next_param_with_factor(tail_drain: &mut std::vec::Drain<Expr>, default: f32, factor: f32) -> Parameter {
+    match tail_drain.next() {
+	Some(Expr::Constant(Atom::Float(n))) => Parameter::with_value(n * factor),
+	Some(Expr::Constant(Atom::Parameter(pl))) => pl,
+	_ => Parameter::with_value(default)
+    }
+}
