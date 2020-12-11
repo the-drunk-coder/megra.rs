@@ -63,15 +63,11 @@ impl <const BUFSIZE:usize, const NCHAN:usize> Session<BUFSIZE, NCHAN> {
 		    self.stop_generator(&tags);
 		}		
 	    }
-
-	    //println!("diff {} {}", difference.len(), difference.is_empty());
-	    //println!("rem {}", remainders.len());
 	    
 	    // if there's both old and new generators	    	    
 	    if !remainders.is_empty() && !difference.is_empty() {
-
 		let mut smallest_id = None;
-		let mut last_len:usize = 10000000; // usize max would be better ... 
+		let mut last_len:usize = usize::MAX; // usize max would be better ... 
 		for tags in remainders.iter() {		  		    
 		    if tags.len() < last_len {
 			last_len = tags.len();
