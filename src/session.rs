@@ -53,21 +53,22 @@ impl <const BUFSIZE:usize, const NCHAN:usize> Session<BUFSIZE, NCHAN> {
 		new_gens.insert(c.id_tags.clone());		
 	    }
 
-	    // c=alc difference, stop vanished ones, sync new ones ...	    
+	    // calc difference, stop vanished ones, sync new ones ...
+	    let mut difference:Vec<_> = Vec::new();
+	    let mut remainders:Vec<_> = Vec::new();
 	    if let Some(old_gens) = self.contexts.get(&name) { // this means context is running		
-		let diff:Vec<_> = old_gens.difference(&new_gens).cloned().collect();
-		for tags in diff.iter() {		    
+		remainders = new_gens.intersection(&old_gens).cloned().collect();
+		difference = new_gens.symmetric_difference(&old_gens).cloned().collect();		
+		for tags in difference.iter() {		    
 		    self.stop_generator(&tags);
 		}		
 	    }
 
-	    // is there rally no way around the second lookup ?
-	    let mut remainders:Vec<_> = Vec::new();
-	    if let Some(old_gens) = self.contexts.get(&name) { // this means context is running
-		remainders = old_gens.intersection(&new_gens).cloned().collect();				
-	    }
+	    //println!("diff {} {}", difference.len(), difference.is_empty());
+	    //println!("rem {}", remainders.len());
 	    
-	    if !remainders.is_empty() {
+	    // if there's both old and new generators	    	    
+	    if !remainders.is_empty() && !difference.is_empty() {
 
 		let mut smallest_id = None;
 		let mut last_len:usize = 10000000; // usize max would be better ... 
@@ -85,8 +86,7 @@ impl <const BUFSIZE:usize, const NCHAN:usize> Session<BUFSIZE, NCHAN> {
 		    }
 		    println!("\'");			
 		}
-		
-		
+				
 		for c in ctx.generators.drain(..) {
 		    // nothing to sync to in that case ...
 		    self.start_generator(Box::new(c), sync::Arc::clone(ruffbox), smallest_id);
