@@ -326,13 +326,24 @@ pub fn handle_sync_context(tail: &mut Vec<Expr>) -> Atom {
     }
 
     let mut gens: Vec<Generator> = Vec::new();
+    let mut sync_to = None;
     
     while let Some(Expr::Constant(c)) = tail_drain.next() {		
 	match c {
+	    Atom::Keyword(k) => {
+		match k.as_str() {
+		    "sync" => {
+			if let Expr::Constant(Atom::Symbol(sync)) = tail_drain.next().unwrap() {
+			    sync_to = Some(sync);
+			}			
+		    }
+		    _ => {} // ignore
+		}
+	    },
 	    Atom::Generator(mut k) => {
 		k.id_tags.insert(name.clone());
 		gens.push(k);
-	    }
+	    },
 	    Atom::GeneratorList(mut kl) => {
 		for k in kl.iter_mut() {
 		    k.id_tags.insert(name.clone());
@@ -346,7 +357,7 @@ pub fn handle_sync_context(tail: &mut Vec<Expr>) -> Atom {
     Atom::SyncContext(SyncContext {
 	name: name,
 	generators: gens,
-	sync_to: None,
+	sync_to: sync_to,
 	active: true,
     })
 }

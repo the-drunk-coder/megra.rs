@@ -63,9 +63,36 @@ impl <const BUFSIZE:usize, const NCHAN:usize> Session<BUFSIZE, NCHAN> {
 		    self.stop_generator(&tags);
 		}		
 	    }
-	    
-	    // if there's both old and new generators	    	    
-	    if !remainders.is_empty() && !difference.is_empty() {
+
+	    if let Some(sync) = &ctx.sync_to {
+		if let Some(sync_gens) = self.contexts.get(sync) {
+		    // if there's both old and new generators	    	    
+		    let mut smallest_id = None;
+		    let mut last_len:usize = usize::MAX; // usize max would be better ...
+		    let sync_clone =  sync_gens.clone();
+		    for tags in sync_clone.iter() {		  		    
+			if tags.len() < last_len {
+			    last_len = tags.len();
+			    smallest_id = Some(tags);
+			}
+		    }
+
+		    if let Some(tags) = smallest_id {
+			print!("sync to existing: \'");
+			for tag in tags.iter() {
+			    print!("{} ", tag);
+			}
+			println!("\'");			
+		    }
+		    
+		    for c in ctx.generators.drain(..) {
+			// sync to what is most likely the root generator 
+			self.start_generator(Box::new(c), sync::Arc::clone(ruffbox), smallest_id);
+		    }
+		}
+		
+	    } else if !remainders.is_empty() && !difference.is_empty() {
+		// if there's both old and new generators	    	    
 		let mut smallest_id = None;
 		let mut last_len:usize = usize::MAX; // usize max would be better ... 
 		for tags in remainders.iter() {		  		    
@@ -132,6 +159,7 @@ impl <const BUFSIZE:usize, const NCHAN:usize> Session<BUFSIZE, NCHAN> {
 	    if let Some(id_tags) = sync {
 		//this is prob kinda redundant 
 		if let Some((_, data)) = self.schedulers.get_mut(&id_tags) {
+		    // synchronize timing data 
 		    sched_data = sync::Arc::new(Mutex::new(SchedulerData::<BUFSIZE, NCHAN>::from_previous(&data.lock(), gen, ruffbox)));	    
 		} else {
 		    sched_data = sync::Arc::new(Mutex::new(SchedulerData::<BUFSIZE, NCHAN>::from_data(gen, ruffbox, self.output_mode)));	    
