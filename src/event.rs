@@ -34,7 +34,7 @@ pub struct StaticEvent {
 #[derive(Clone)]
 pub struct ControlEvent {
     pub tags: HashSet<String>,
-    pub ctx: Option<SyncContext>,
+    pub ctx: Option<Vec<SyncContext>>,
     // later: command
 }
 

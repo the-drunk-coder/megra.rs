@@ -21,8 +21,11 @@ pub fn interpret<const BUFSIZE:usize, const NCHAN:usize>(session: &mut Session<B
 	Expr::Constant(Atom::Parameter(_)) => {	    
 	    println!("a parameter");
 	},
-	Expr::Constant(Atom::Event(_)) => {	    
-	    println!("an event");
+	Expr::Constant(Atom::SoundEvent(_)) => {	    
+	    println!("a sound event");
+	},
+	Expr::Constant(Atom::ControlEvent(_)) => {	    
+	    println!("a control event");
 	},
 	Expr::Constant(Atom::GeneratorModifierFunction(_)) => {	    
 	    println!("a gen mod fun");

@@ -28,7 +28,7 @@ pub fn handle_learn(tail: &mut Vec<Expr>) -> Atom {
 	if collect_events {
 	    if let Atom::Symbol(ref s) = c {
 		let mut ev_vec = Vec::new();
-		if let Expr::Constant(Atom::Event(e)) = tail_drain.next().unwrap() {
+		if let Expr::Constant(Atom::SoundEvent(e)) = tail_drain.next().unwrap() {
 		    ev_vec.push(SourceEvent::Sound(e));
 		}
 		event_mapping.insert(s.chars().next().unwrap(), ev_vec);
@@ -104,7 +104,7 @@ pub fn handle_infer(tail: &mut Vec<Expr>) -> Atom {
 	if collect_events {
 	    if let Atom::Symbol(ref s) = c {
 		let mut ev_vec = Vec::new();
-		if let Expr::Constant(Atom::Event(e)) = tail_drain.next().unwrap() {
+		if let Expr::Constant(Atom::SoundEvent(e)) = tail_drain.next().unwrap() {
 		    ev_vec.push(SourceEvent::Sound(e));
 		}
 		let sym = s.chars().next().unwrap();
@@ -241,7 +241,7 @@ pub fn handle_builtin_sound_event(event_type: &BuiltInSoundEvent, tail: &mut Vec
     
     get_keyword_params(&mut ev.params, &mut tail_drain);
     
-    Atom::Event (ev)
+    Atom::SoundEvent (ev)
 }
 
 
@@ -269,7 +269,7 @@ pub fn handle_sample(tail: &mut Vec<Expr>, bufnum: usize, set: &String, keywords
     
     get_keyword_params(&mut ev.params, &mut tail_drain);
     
-    Atom::Event (ev)
+    Atom::SoundEvent (ev)
 }
 
 pub fn handle_builtin_dynamic_parameter(par: &BuiltInDynamicParameter, tail: &mut Vec<Expr>) -> Atom {
@@ -414,7 +414,7 @@ pub fn handle_builtin_mod_event(event_type: &BuiltInParameterEvent, tail: &mut V
 	_ => ev.params.insert(param_key, Box::new(get_next_param(&mut tail_drain, 0.0))),
     };
         
-    Atom::Event (ev)
+    Atom::SoundEvent (ev)
 }
 
 fn collect_every(tail: &mut Vec<Expr>) -> Box<EveryProcessor> {
@@ -435,7 +435,7 @@ fn collect_every(tail: &mut Vec<Expr>) -> Box<EveryProcessor> {
 		gen_mod_funs.push(g);
 		collect_filters = false;
 	    }
-	    Atom::Event(e) => {
+	    Atom::SoundEvent(e) => {
 		events.push(e);
 		collect_filters = false;
 	    },
@@ -511,7 +511,7 @@ fn collect_pear (tail: &mut Vec<Expr>) -> Box<PearProcessor> {
     
     while let Some(Expr::Constant(c)) = tail_drain.next() {				
 	match c {
-	    Atom::Event(e) => {
+	    Atom::SoundEvent(e) => {
 		evs.push(e);
 		if collect_filters {
 		    collect_filters = false;
@@ -773,3 +773,11 @@ pub fn handle_builtin_multiplexer(_mul: &BuiltInMultiplexer, tail: &mut Vec<Expr
                 
     Atom::GeneratorList(gens)
 }
+
+pub fn handle_control_event(_tail: &mut Vec<Expr>) -> Atom {
+    Atom::ControlEvent(ControlEvent {
+	tags: HashSet::new(),
+	ctx: None,
+    })
+}
+

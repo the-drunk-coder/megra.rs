@@ -25,7 +25,8 @@ fn parse_builtin<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<&'a s
     alt((	
 	parse_generators,
 	parse_commands,
-	map(tag("sx"), |_| BuiltIn::SyncContext),	
+	map(tag("sx"), |_| BuiltIn::SyncContext),
+	map(tag("ctrl"), |_| BuiltIn::ControlEvent),	
 	parse_generator_modifier_functions, // needs to come before events so it can catch relax before rel(ease)
 	parse_events,
 	parse_dynamic_parameters,
@@ -240,13 +241,14 @@ fn eval_expression(e: Expr, sample_set: &SampleSet) -> Option<Expr> {
 		    Some(Expr::Constant(match bi {
 			BuiltIn::Clear => Atom::Command(Command::Clear),
 			BuiltIn::LoadSample => handle_load_sample(&mut reduced_tail),			
-			BuiltIn::Silence => Atom::Event(Event::with_name("silence".to_string())),			
+			BuiltIn::Silence => Atom::SoundEvent(Event::with_name("silence".to_string())),			
 			BuiltIn::Rule => handle_rule(&mut reduced_tail),
 			BuiltIn::Learn => handle_learn(&mut reduced_tail),
 			BuiltIn::Infer => handle_infer(&mut reduced_tail),			
 			BuiltIn::SyncContext => handle_sync_context(&mut reduced_tail),
 			BuiltIn::Parameter(par) => handle_builtin_dynamic_parameter(&par, &mut reduced_tail),
 			BuiltIn::SoundEvent(ev) => handle_builtin_sound_event(&ev, &mut reduced_tail),
+			BuiltIn::ControlEvent => handle_control_event(&mut reduced_tail),
 			BuiltIn::ParameterEvent(ev) => handle_builtin_mod_event(&ev, &mut reduced_tail),
 			BuiltIn::GenProc(g) => handle_builtin_gen_proc(&g, &mut reduced_tail),
 			BuiltIn::GenModFun(g) => handle_builtin_gen_mod_fun(&g, &mut reduced_tail),

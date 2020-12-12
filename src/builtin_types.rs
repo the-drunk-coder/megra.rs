@@ -37,6 +37,12 @@ pub enum BuiltInSoundEvent {
     Square(EventOperation),
 }
 
+pub enum Bu {
+    Sine(EventOperation),
+    Saw(EventOperation),
+    Square(EventOperation),
+}
+
 pub enum BuiltInDynamicParameter {
     Bounce,
     //Brownian,
@@ -77,6 +83,7 @@ pub enum BuiltIn {
     SyncContext,
     Parameter(BuiltInDynamicParameter),
     SoundEvent(BuiltInSoundEvent),
+    ControlEvent,
     ParameterEvent(BuiltInParameterEvent),
     GenProc(BuiltInGenProc),
     GenModFun(BuiltInGenModFun),
@@ -96,7 +103,8 @@ pub enum Atom { // atom might not be the right word any longer
     Boolean(bool),
     BuiltIn(BuiltIn),
     MarkovSequenceGenerator(MarkovSequenceGenerator),
-    Event(Event),
+    SoundEvent(Event),
+    ControlEvent(ControlEvent),
     Rule(Rule),
     Command(Command),
     SyncContext(SyncContext),
