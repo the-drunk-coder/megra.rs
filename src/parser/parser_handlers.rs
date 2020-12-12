@@ -774,10 +774,17 @@ pub fn handle_builtin_multiplexer(_mul: &BuiltInMultiplexer, tail: &mut Vec<Expr
     Atom::GeneratorList(gens)
 }
 
-pub fn handle_control_event(_tail: &mut Vec<Expr>) -> Atom {
+pub fn handle_control_event(tail: &mut Vec<Expr>) -> Atom {
+    let mut tail_drain = tail.drain(..);
+    let mut sync_contexts = Vec::new();
+
+    while let Some(Expr::Constant(Atom::SyncContext(s))) = tail_drain.next() {
+	sync_contexts.push(s);
+    }
+
     Atom::ControlEvent(ControlEvent {
 	tags: HashSet::new(),
-	ctx: None,
+	ctx: if sync_contexts.is_empty() { None } else { Some(sync_contexts) },
     })
 }
 
