@@ -98,7 +98,7 @@ pub enum Atom { // atom might not be the right word any longer
     BuiltIn(BuiltIn),
     MarkovSequenceGenerator(MarkovSequenceGenerator),
     SoundEvent(Event),
-    ControlEvent(ControlEvent)
+    ControlEvent(ControlEvent),
     Rule(Rule),
     Command(Command),
     SyncContext(SyncContext),
