@@ -6,7 +6,7 @@ use ruffbox_synth::ruffbox::Ruffbox;
 use crate::builtin_types::*;
 use crate::session::Session;
 
-pub fn interpret<const BUFSIZE:usize, const NCHAN:usize>(session: &mut Session<BUFSIZE, NCHAN>,
+pub fn interpret<const BUFSIZE:usize, const NCHAN:usize>(session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
 							 sample_set: &mut SampleSet,
 							 parsed_in: Expr,
 							 ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>) {
@@ -44,13 +44,13 @@ pub fn interpret<const BUFSIZE:usize, const NCHAN:usize>(session: &mut Session<B
 	    }	    	    
 	}
 	Expr::Constant(Atom::SyncContext(mut s)) => {
-	    println!("a context called \'{}\'", s.name);
-	    session.handle_context(&mut s, &ruffbox);	    
+	    println!("a context called \'{}\'", s.name);	    
+	    Session::handle_context(&session, &mut s, &ruffbox);	    
 	},
 	Expr::Constant(Atom::Command(c)) => {
 	    match c {
-		Command::Clear => {
-		    session.clear_session();
+		Command::Clear => {		    
+		    Session::clear_session(session);
 		    println!("a command (stop session)");
 		},
 		Command::LoadSample((set, mut keywords, path)) => {

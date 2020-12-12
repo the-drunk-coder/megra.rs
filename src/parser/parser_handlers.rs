@@ -104,9 +104,11 @@ pub fn handle_infer(tail: &mut Vec<Expr>) -> Atom {
 	if collect_events {
 	    if let Atom::Symbol(ref s) = c {
 		let mut ev_vec = Vec::new();
-		if let Expr::Constant(Atom::SoundEvent(e)) = tail_drain.next().unwrap() {
-		    ev_vec.push(SourceEvent::Sound(e));
-		}
+		match tail_drain.next().unwrap() {
+		    Expr::Constant(Atom::SoundEvent(e)) => ev_vec.push(SourceEvent::Sound(e)),
+		    Expr::Constant(Atom::ControlEvent(c)) => ev_vec.push(SourceEvent::Control(c)),
+		    _ => {}
+		}		
 		let sym = s.chars().next().unwrap();
 		event_mapping.insert(sym, ev_vec);		
 		continue;

@@ -4,7 +4,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use crate::generator::Generator;
 use ruffbox_synth::ruffbox::Ruffbox;
 use parking_lot::Mutex;
-use crate::session::OutputMode;
+use crate::session::{OutputMode, Session};
 
 /// A simple time-recursion event scheduler running at a fixed time interval.
 pub struct Scheduler<const BUFSIZE:usize, const NCHAN:usize> {
@@ -19,12 +19,16 @@ pub struct SchedulerData<const BUFSIZE:usize, const NCHAN:usize> {
     pub last_diff: f64,
     pub generator: Box<Generator>,
     pub ruffbox: sync::Arc<Mutex<Ruffbox<BUFSIZE,NCHAN>>>,
+    pub session: sync::Arc<Mutex<Session<BUFSIZE,NCHAN>>>,
     pub mode: OutputMode
 }
 
 impl <const BUFSIZE:usize, const NCHAN:usize> SchedulerData<BUFSIZE, NCHAN> {
 
-    pub fn from_previous(old: &SchedulerData<BUFSIZE, NCHAN>, mut data: Box<Generator>, ruffbox: sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>) -> Self {
+    pub fn from_previous(old: &SchedulerData<BUFSIZE, NCHAN>,
+			 mut data: Box<Generator>,
+			 ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>,
+			 session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>) -> Self {
 	data.transfer_state(&old.generator);
 	// keep scheduling, retain data
 	SchedulerData {
@@ -33,12 +37,16 @@ impl <const BUFSIZE:usize, const NCHAN:usize> SchedulerData<BUFSIZE, NCHAN> {
 	    logical_time: old.logical_time, 
 	    last_diff: 0.0,
 	    generator: data,
-	    ruffbox: ruffbox,
+	    ruffbox: sync::Arc::clone(ruffbox),
+	    session: sync::Arc::clone(session),
 	    mode: old.mode
 	}
     }
     
-    pub fn from_data(data: Box<Generator>, ruffbox: sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>, mode: OutputMode) -> Self {
+    pub fn from_data(data: Box<Generator>,
+		     ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>,
+		     session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
+		     mode: OutputMode) -> Self {
 	// get logical time since start from ruffbox
 	let stream_time;
 	{
@@ -51,7 +59,8 @@ impl <const BUFSIZE:usize, const NCHAN:usize> SchedulerData<BUFSIZE, NCHAN> {
 	    logical_time: 0.0, 
 	    last_diff: 0.0,
 	    generator: data,
-	    ruffbox: ruffbox,
+	    ruffbox: sync::Arc::clone(ruffbox),
+	    session: sync::Arc::clone(session),
 	    mode: mode
 	}
     }

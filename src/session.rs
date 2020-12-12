@@ -45,7 +45,7 @@ impl <const BUFSIZE:usize, const NCHAN:usize> Session<BUFSIZE, NCHAN> {
 	}
     }
     
-    pub fn handle_context(&mut self, ctx: &mut SyncContext, ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>) {
+    pub fn handle_context(session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>, ctx: &mut SyncContext, ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>) {
 	let name = ctx.name.clone();
 	if ctx.active {	    
 	    let mut new_gens = BTreeSet::new();
@@ -58,39 +58,49 @@ impl <const BUFSIZE:usize, const NCHAN:usize> Session<BUFSIZE, NCHAN> {
 	    // calc difference, stop vanished ones, sync new ones ...
 	    let mut difference:Vec<_> = Vec::new();
 	    let mut remainders:Vec<_> = Vec::new();
-	    if let Some(old_gens) = self.contexts.get(&name) { // this means context is running		
-		remainders = new_gens.intersection(&old_gens).cloned().collect();
-		difference = new_gens.symmetric_difference(&old_gens).cloned().collect();		
-		for tags in difference.iter() {		    
-		    self.stop_generator(&tags);
-		}		
+
+	    {
+		let sess = session.lock();
+		if let Some(old_gens) = sess.contexts.get(&name) { // this means context is running		
+		    remainders = new_gens.intersection(&old_gens).cloned().collect();
+		    difference = new_gens.symmetric_difference(&old_gens).cloned().collect();				    		
+		}
 	    }
-
+	    
+	    for tags in difference.iter() {		    
+		Session::stop_generator(session, &tags);
+	    }
+	    
 	    if let Some(sync) = &ctx.sync_to {
-		if let Some(sync_gens) = self.contexts.get(sync) {
-		    // if there's both old and new generators	    	    
-		    let mut smallest_id = None;
-		    let mut last_len:usize = usize::MAX; // usize max would be better ...
-		    let sync_clone =  sync_gens.clone();
-		    for tags in sync_clone.iter() {		  		    
-			if tags.len() < last_len {
-			    last_len = tags.len();
-			    smallest_id = Some(tags);
-			}
+		
+		let mut smallest_id = None;	    
+		{
+		    let sess = session.lock();
+		    if let Some(sync_gens) = sess.contexts.get(sync) {
+			// if there's both old and new generators	    	    
+			
+			let mut last_len:usize = usize::MAX; // usize max would be better ...
+			
+			for tags in sync_gens.iter() {		  		    
+			    if tags.len() < last_len {
+				last_len = tags.len();
+				smallest_id = Some(tags.clone());
+			    }
+			}								    		    
 		    }
+		}
 
-		    if let Some(tags) = smallest_id {
-			print!("sync to existing: \'");
-			for tag in tags.iter() {
-			    print!("{} ", tag);
-			}
-			println!("\'");			
+		if let Some(ref tags) = smallest_id {
+		    print!("sync to existing: \'");
+		    for tag in tags.iter() {
+			print!("{} ", tag);
 		    }
-		    
-		    for c in ctx.generators.drain(..) {
-			// sync to what is most likely the root generator 
-			self.start_generator(Box::new(c), sync::Arc::clone(ruffbox), smallest_id);
-		    }
+		    println!("\'");			
+		}
+
+		for c in ctx.generators.drain(..) {
+		    // sync to what is most likely the root generator 
+		    Session::start_generator(session, Box::new(c), ruffbox, &smallest_id);
 		}
 		
 	    } else if !remainders.is_empty() && !difference.is_empty() {
@@ -100,11 +110,11 @@ impl <const BUFSIZE:usize, const NCHAN:usize> Session<BUFSIZE, NCHAN> {
 		for tags in remainders.iter() {		  		    
 		    if tags.len() < last_len {
 			last_len = tags.len();
-			smallest_id = Some(tags);
+			smallest_id = Some(tags.clone());
 		    }
 		}
 
-		if let Some(tags) = smallest_id {
+		if let Some(ref tags) = smallest_id {
 		    print!("sync to existing: \'");
 		    for tag in tags.iter() {
 			print!("{} ", tag);
@@ -114,32 +124,51 @@ impl <const BUFSIZE:usize, const NCHAN:usize> Session<BUFSIZE, NCHAN> {
 		
 		for c in ctx.generators.drain(..) {
 		    // sync to what is most likely the root generator 
-		    self.start_generator(Box::new(c), sync::Arc::clone(ruffbox), smallest_id);
+		    Session::start_generator(session, Box::new(c), ruffbox, &smallest_id);
 		}
 	    } else {
 		for c in ctx.generators.drain(..) {
 		    // nothing to sync to in that case ...
-		    self.start_generator(Box::new(c), sync::Arc::clone(ruffbox), None);
+		    Session::start_generator(session, Box::new(c), ruffbox, &None);
 		}
 	    }
-	    
-	    self.contexts.insert(name, new_gens);	    	    
-	} else {
-	    // stop all that were kept in this context, remove context ...
-	    if let Some(old_ctx) = self.contexts.get(&name) {				
-		for tags in old_ctx.clone().iter() { // this is the type of clone i hate ...		    
-		    self.stop_generator(&tags);
-		}
-		self.contexts.remove(&name);
-	    }
-	}		
-    }
-    
-    pub fn start_generator(&mut self, gen: Box<Generator>, ruffbox: sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>, sync: Option<&BTreeSet<String>>) {
 
+	    // insert new context
+	    {
+		let mut sess = session.lock();
+		sess.contexts.insert(name, new_gens);
+	    }
+	} else {	    
+	    // stop all that were kept in this context, remove context ...
+	    let mut an_old_ctx = None;
+	    {
+		let sess = session.lock();
+		if let Some(old_ctx) = sess.contexts.get(&name) {				
+		    an_old_ctx = Some(old_ctx.clone());
+		}
+	    }
+	    if let Some(old_ctx) = an_old_ctx {
+		for tags in old_ctx.iter() { // this is the type of clone i hate ...		    
+		    Session::stop_generator(session, tags);
+		}
+	    }	    	    	    	    
+	    // remove context 
+	    {
+		let mut sess = session.lock();
+		sess.contexts.remove(&name);
+	    }	    
+	}
+    }		
+
+    pub fn start_generator(session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
+			   gen: Box<Generator>,
+			   ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>,
+			   sync: &Option<BTreeSet<String>>) {
+	
+	let mut sess = session.lock();
 	let id_tags = gen.id_tags.clone();
 	// start scheduler if it exists ...
-	if let Some((_, data)) = self.schedulers.get_mut(&id_tags) {
+	if let Some((_, data)) = sess.schedulers.get_mut(&id_tags) {
 	    // resume sync: later ...
 	    print!("resume generator \'");
 	    for tag in id_tags.iter() {
@@ -149,7 +178,7 @@ impl <const BUFSIZE:usize, const NCHAN:usize> Session<BUFSIZE, NCHAN> {
 	    
 	    // keep the scheduler running, just replace the data ...
 	    let mut sched_data = data.lock();
-	    *sched_data = SchedulerData::<BUFSIZE, NCHAN>::from_previous(&sched_data, gen, ruffbox);
+	    *sched_data = SchedulerData::<BUFSIZE, NCHAN>::from_previous(&sched_data, gen, ruffbox, session);
 	} else {
 	    print!("start generator \'");
 	    for tag in id_tags.iter() {
@@ -160,15 +189,15 @@ impl <const BUFSIZE:usize, const NCHAN:usize> Session<BUFSIZE, NCHAN> {
 	    let sched_data:sync::Arc<Mutex<SchedulerData<BUFSIZE, NCHAN>>>;
 	    if let Some(id_tags) = sync {
 		//this is prob kinda redundant 
-		if let Some((_, data)) = self.schedulers.get_mut(&id_tags) {
+		if let Some((_, data)) = sess.schedulers.get_mut(&id_tags) {
 		    // synchronize timing data 
-		    sched_data = sync::Arc::new(Mutex::new(SchedulerData::<BUFSIZE, NCHAN>::from_previous(&data.lock(), gen, ruffbox)));	    
+		    sched_data = sync::Arc::new(Mutex::new(SchedulerData::<BUFSIZE, NCHAN>::from_previous(&data.lock(), gen, ruffbox, session)));	    
 		} else {
-		    sched_data = sync::Arc::new(Mutex::new(SchedulerData::<BUFSIZE, NCHAN>::from_data(gen, ruffbox, self.output_mode)));	    
+		    sched_data = sync::Arc::new(Mutex::new(SchedulerData::<BUFSIZE, NCHAN>::from_data(gen, ruffbox, session, sess.output_mode)));	    
 		}
 		
 	    } else {
-		sched_data = sync::Arc::new(Mutex::new(SchedulerData::<BUFSIZE, NCHAN>::from_data(gen, ruffbox, self.output_mode)));	    
+		sched_data = sync::Arc::new(Mutex::new(SchedulerData::<BUFSIZE, NCHAN>::from_data(gen, ruffbox, session, sess.output_mode)));	    
 	    }
 	    
 	    // otherwise, create new sched and data ...
@@ -179,10 +208,9 @@ impl <const BUFSIZE:usize, const NCHAN:usize> Session<BUFSIZE, NCHAN> {
 	    let eval_loop = |data: &mut SchedulerData<BUFSIZE, NCHAN>| -> f64 {
 		
 		let events = data.generator.current_events();
-		let mut ruff = data.ruffbox.lock();
 		for ev in events.iter() {
 		    match ev {
-			InterpretableEvent::Sound(s) => {
+			InterpretableEvent::Sound(s) => {			    
 			    // no need to allocate a string everytime here, should be changed
 			    if s.name == "silence" {
 				continue;
@@ -192,7 +220,8 @@ impl <const BUFSIZE:usize, const NCHAN:usize> Session<BUFSIZE, NCHAN> {
 			    if let Some(b) = s.params.get(&SynthParameter::SampleBufferNumber) {
 				bufnum = *b as usize;
 			    }
-			    
+
+			    let mut ruff = data.ruffbox.lock();
 			    // latency 0.05, should be made configurable later ...
 			    let inst = ruff.prepare_instance(map_name(&s.name), data.stream_time + 0.05, bufnum);
 			    // set parameters and trigger instance
@@ -207,31 +236,35 @@ impl <const BUFSIZE:usize, const NCHAN:usize> Session<BUFSIZE, NCHAN> {
 			    }			    
 			    ruff.trigger(inst);
 			},		    
-			InterpretableEvent::Control(_) => {
-			    todo!();
+			InterpretableEvent::Control(c) => {
+			    
+			    if let Some(mut contexts) = c.ctx.clone() { // this is the worst clone .... 
+				for mut sx in contexts.drain(..) {				    
+				    Session::handle_context(&data.session, &mut sx, &data.ruffbox);
+				}
+			    }			    
 			}
 		    }
 		}
-		
-		
-
+				
 		(data.generator.current_transition().params[&SynthParameter::Duration] as f64 / 1000.0) as f64
 	    };
 	    
 	    sched.start(eval_loop, sync::Arc::clone(&sched_data));
-	    self.schedulers.insert(id_tags, (sched, sched_data));
+	    sess.schedulers.insert(id_tags, (sched, sched_data));
 	}		
     }
 
-    pub fn stop_generator(&mut self, gen_name: &BTreeSet<String>) {
+    pub fn stop_generator(session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>, gen_name: &BTreeSet<String>) {
+	let mut sess = session.lock();
 	let mut found = false;
-	if let Some((sched, _)) = self.schedulers.get_mut(gen_name) {
+	if let Some((sched, _)) = sess.schedulers.get_mut(gen_name) {
 	    sched.stop();
 	    found = true;
 	}
 
 	if found {
-	    self.schedulers.remove(gen_name);
+	    sess.schedulers.remove(gen_name);
 
 	    print!("stopped/removed generator \'");
 	    for tag in gen_name.iter() {
@@ -241,8 +274,9 @@ impl <const BUFSIZE:usize, const NCHAN:usize> Session<BUFSIZE, NCHAN> {
 	}
     }
 
-    pub fn clear_session(&mut self) {
-	for (k,(sched, _)) in self.schedulers.iter_mut() {	    
+    pub fn clear_session(session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>) {
+	let mut sess = session.lock();
+	for (k,(sched, _)) in sess.schedulers.iter_mut() {	    
 	    sched.stop();
 
 	    print!("stopped/removed generator \'");
@@ -251,6 +285,8 @@ impl <const BUFSIZE:usize, const NCHAN:usize> Session<BUFSIZE, NCHAN> {
 	    }
 	    println!("\'");	    
 	}
-	self.schedulers = HashMap::new();
+	sess.schedulers = HashMap::new();
     }
 }
+
+

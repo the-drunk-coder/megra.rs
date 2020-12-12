@@ -11,7 +11,7 @@ use crate::parser;
 use crate::interpreter;
 
 pub fn start_repl<const BUFSIZE:usize, const NCHAN:usize>(ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>, mode: OutputMode) -> Result<(), anyhow::Error> {
-    let mut session = Session::with_mode(mode);
+    let session = sync::Arc::new(Mutex::new(Session::with_mode(mode)));
     let mut sample_set = SampleSet::new();
     
     // `()` can be used when no completer is required
@@ -50,7 +50,7 @@ pub fn start_repl<const BUFSIZE:usize, const NCHAN:usize>(ruffbox: &sync::Arc<Mu
 					let inner_pfa_in = parser::eval_from_str(&line_buffer.as_str(), &sample_set);
 					match inner_pfa_in {
 					    Ok(pfa) => {
-						interpreter::interpret(&mut session, &mut sample_set, pfa, &ruffbox);			
+						interpreter::interpret(&session, &mut sample_set, pfa, &ruffbox);			
 						rl.add_history_entry(line_buffer.as_str());
 						break;
 					    },
@@ -71,7 +71,7 @@ pub fn start_repl<const BUFSIZE:usize, const NCHAN:usize>(ruffbox: &sync::Arc<Mu
 			}
 		    },
 		    Ok(pfa) => {
-			interpreter::interpret(&mut session, &mut sample_set, pfa, &ruffbox);			
+			interpreter::interpret(&session, &mut sample_set, pfa, &ruffbox);			
 			rl.add_history_entry(line.as_str());						
 		    }
 		}
