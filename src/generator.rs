@@ -1,6 +1,6 @@
 use std::boxed::Box;
 use std::collections::BTreeSet;
-use crate::{event::{StaticEvent, EventOperation},
+use crate::{event::{StaticEvent, InterpretableEvent, EventOperation},
 	    generator_processor::GeneratorProcessor,
 	    markov_sequence_generator::MarkovSequenceGenerator};
 use ruffbox_synth::ruffbox::synth::SynthParameter;
@@ -42,7 +42,7 @@ impl Generator {
 	// genprocs follow later ...
     }
 
-    pub fn current_events(&mut self) -> Vec<StaticEvent> {
+    pub fn current_events(&mut self) -> Vec<InterpretableEvent> {
 	let mut events = self.root_generator.current_events();
 	for proc in self.processors.iter_mut() {
 	    proc.process_events(&mut events);

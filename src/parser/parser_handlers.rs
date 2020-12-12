@@ -18,7 +18,7 @@ pub fn handle_learn(tail: &mut Vec<Expr>) -> Atom {
     let name: String = get_string_from_expr(&tail_drain.next().unwrap()).unwrap();
     
     let mut sample:String = "".to_string();
-    let mut event_mapping = HashMap::<char, Vec<Event>>::new();
+    let mut event_mapping = HashMap::<char, Vec<SourceEvent>>::new();
     
     let mut collect_events = false;			
     let mut dur = 200;
@@ -29,7 +29,7 @@ pub fn handle_learn(tail: &mut Vec<Expr>) -> Atom {
 	    if let Atom::Symbol(ref s) = c {
 		let mut ev_vec = Vec::new();
 		if let Expr::Constant(Atom::Event(e)) = tail_drain.next().unwrap() {
-		    ev_vec.push(e);
+		    ev_vec.push(SourceEvent::Sound(e));
 		}
 		event_mapping.insert(s.chars().next().unwrap(), ev_vec);
 		continue;
@@ -90,7 +90,7 @@ pub fn handle_infer(tail: &mut Vec<Expr>) -> Atom {
     // name is the first symbol
     let name: String = get_string_from_expr(&tail_drain.next().unwrap()).unwrap();
     
-    let mut event_mapping = HashMap::<char, Vec<Event>>::new();
+    let mut event_mapping = HashMap::<char, Vec<SourceEvent>>::new();
     let mut duration_mapping = HashMap::<(char,char), Event>::new();
     let mut rules = Vec::new();
     
@@ -105,7 +105,7 @@ pub fn handle_infer(tail: &mut Vec<Expr>) -> Atom {
 	    if let Atom::Symbol(ref s) = c {
 		let mut ev_vec = Vec::new();
 		if let Expr::Constant(Atom::Event(e)) = tail_drain.next().unwrap() {
-		    ev_vec.push(e);
+		    ev_vec.push(SourceEvent::Sound(e));
 		}
 		let sym = s.chars().next().unwrap();
 		event_mapping.insert(sym, ev_vec);		

@@ -7,6 +7,7 @@ use ruffbox_synth::ruffbox::synth::SynthParameter;
 
 use crate::scheduler::{Scheduler, SchedulerData};
 use crate::generator::Generator;
+use crate::event::{InterpretableEvent};
 use crate::event_helpers::*;
 
 #[derive(Clone,Copy,PartialEq)]
@@ -20,6 +21,7 @@ pub enum OutputMode {
     //TwentyFourChannel,           
 }
 
+#[derive(Clone)]
 pub struct SyncContext {
     pub name: String,
     pub sync_to: Option<String>,
@@ -42,7 +44,7 @@ impl <const BUFSIZE:usize, const NCHAN:usize> Session<BUFSIZE, NCHAN> {
 	    contexts: HashMap::new(),	    
 	}
     }
-
+    
     pub fn handle_context(&mut self, ctx: &mut SyncContext, ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>) {
 	let name = ctx.name.clone();
 	if ctx.active {	    
@@ -109,7 +111,7 @@ impl <const BUFSIZE:usize, const NCHAN:usize> Session<BUFSIZE, NCHAN> {
 		    }
 		    println!("\'");			
 		}
-				
+		
 		for c in ctx.generators.drain(..) {
 		    // sync to what is most likely the root generator 
 		    self.start_generator(Box::new(c), sync::Arc::clone(ruffbox), smallest_id);
@@ -171,7 +173,7 @@ impl <const BUFSIZE:usize, const NCHAN:usize> Session<BUFSIZE, NCHAN> {
 	    
 	    // otherwise, create new sched and data ...
 	    let mut sched = Scheduler::<BUFSIZE, NCHAN>::new();
-		    
+	    
 	    // the evaluation function ...
 	    // or better, the inside part of the time recursion
 	    let eval_loop = |data: &mut SchedulerData<BUFSIZE, NCHAN>| -> f64 {
@@ -179,31 +181,39 @@ impl <const BUFSIZE:usize, const NCHAN:usize> Session<BUFSIZE, NCHAN> {
 		let events = data.generator.current_events();
 		let mut ruff = data.ruffbox.lock();
 		for ev in events.iter() {
-
-		    // no need to allocate a string everytime here, should be changed
-		    if ev.name == "silence" {
-			continue;
-		    }
-		    
-		    let mut bufnum:usize = 0;
-		    if let Some(b) = ev.params.get(&SynthParameter::SampleBufferNumber) {
-			bufnum = *b as usize;
-		    }
-		    
-		    // latency 0.05, should be made configurable later ...
-		    let inst = ruff.prepare_instance(map_name(&ev.name), data.stream_time + 0.05, bufnum);
-		    
-		    for (k,v) in ev.params.iter() {
-			// special handling for stereo param
-			if k == &SynthParameter::ChannelPosition && data.mode == OutputMode::Stereo {			
-			    let pos = (*v + 1.0) * 0.5;			
-			    ruff.set_instance_parameter(inst, *k, pos);
-			} else {
-			    ruff.set_instance_parameter(inst, *k, *v);
+		    match ev {
+			InterpretableEvent::Sound(s) => {
+			    // no need to allocate a string everytime here, should be changed
+			    if s.name == "silence" {
+				continue;
+			    }
+			    
+			    let mut bufnum:usize = 0;
+			    if let Some(b) = s.params.get(&SynthParameter::SampleBufferNumber) {
+				bufnum = *b as usize;
+			    }
+			    
+			    // latency 0.05, should be made configurable later ...
+			    let inst = ruff.prepare_instance(map_name(&s.name), data.stream_time + 0.05, bufnum);
+			    // set parameters and trigger instance
+			    for (k,v) in s.params.iter() {
+				// special handling for stereo param
+				if k == &SynthParameter::ChannelPosition && data.mode == OutputMode::Stereo {			
+				    let pos = (*v + 1.0) * 0.5;			
+				    ruff.set_instance_parameter(inst, *k, pos);
+				} else {
+				    ruff.set_instance_parameter(inst, *k, *v);
+				}
+			    }			    
+			    ruff.trigger(inst);
+			},		    
+			InterpretableEvent::Control(_) => {
+			    todo!();
 			}
 		    }
-		    ruff.trigger(inst);
 		}
+		
+		
 
 		(data.generator.current_transition().params[&SynthParameter::Duration] as f64 / 1000.0) as f64
 	    };

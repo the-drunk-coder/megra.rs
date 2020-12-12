@@ -3,6 +3,7 @@ use std::boxed::Box;
 use ruffbox_synth::ruffbox::synth::SynthParameter;
 
 use crate::parameter::Parameter;
+use crate::session::SyncContext;
 
 #[derive(Clone,Copy)]
 pub enum EventOperation {
@@ -28,6 +29,25 @@ pub struct StaticEvent {
     pub params: HashMap<SynthParameter, f32>,
     pub tags: HashSet<String>,
     pub op: EventOperation,
+}
+
+#[derive(Clone)]
+pub struct ControlEvent {
+    pub tags: HashSet<String>,
+    pub ctx: Option<SyncContext>,
+    // later: command
+}
+
+#[derive(Clone)]
+pub enum SourceEvent {
+    Sound(Event),
+    Control(ControlEvent)
+}
+
+#[derive(Clone)]
+pub enum InterpretableEvent {
+    Sound(StaticEvent),
+    Control(ControlEvent)
 }
 
 impl StaticEvent {

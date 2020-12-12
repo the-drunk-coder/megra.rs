@@ -1,14 +1,13 @@
 use rand::*;
 use std::collections::HashMap;
 
-use crate::{event::Event,
-	    event::StaticEvent,
+use crate::{event::{StaticEvent, InterpretableEvent, Event},
 	    parameter::Parameter,
 	    generator::{TimeMod, GenModFun},
 	    markov_sequence_generator::MarkovSequenceGenerator};
 
 pub trait GeneratorProcessor: GeneratorProcessorClone {    
-    fn process_events(&mut self, events: &mut Vec<StaticEvent>);
+    fn process_events(&mut self, events: &mut Vec<InterpretableEvent>);
     fn process_generator(&mut self, generator: &mut MarkovSequenceGenerator, time_mods: &mut Vec<TimeMod>);    
     fn process_transition(&mut self, transition: &mut StaticEvent);    
 }
@@ -56,9 +55,11 @@ impl PearProcessor {
 impl GeneratorProcessor for PearProcessor {        
     fn process_generator(&mut self, _: &mut MarkovSequenceGenerator, _: &mut Vec<TimeMod>) { /* pass */ }
     
-    fn process_events(&mut self, events: &mut Vec<StaticEvent>) {
+    fn process_events(&mut self, events: &mut Vec<InterpretableEvent>) {
 	self.last_static.clear();
 	let mut rng = rand::thread_rng();
+	// the four nested loops are intimidating but keep in mind that the
+	// event count is usually very small ...
 	for (prob, filtered_events) in self.events_to_be_applied.iter_mut() {
 	    let mut stat_evs = HashMap::new();
 	    let cur_prob:usize = (prob.evaluate() as usize) % 101; // make sure prob is always between 0 and 100
@@ -68,8 +69,15 @@ impl GeneratorProcessor for PearProcessor {
 		for ev in evs.iter_mut() {
 		    let ev_static = ev.to_static();	    
 		    for in_ev in events.iter_mut() {
-			if rng.gen_range(0, 100) < cur_prob {
-			    in_ev.apply(&ev_static, filter);
+			match in_ev {
+			    InterpretableEvent::Sound(s) => {
+				if rng.gen_range(0, 100) < cur_prob {
+				    s.apply(&ev_static, filter);
+				}
+			    },
+			    InterpretableEvent::Control(_) => {
+				// ?? 
+			    },			    
 			}			
 		    }
 		    evs_static.push(ev_static);
@@ -109,7 +117,7 @@ impl AppleProcessor {
 }
 
 impl GeneratorProcessor for AppleProcessor {    
-    fn process_events(&mut self, _: &mut Vec<StaticEvent>) { /* pass */ }
+    fn process_events(&mut self, _: &mut Vec<InterpretableEvent>) { /* pass */ }
     fn process_transition(&mut self, _: &mut StaticEvent) { /* pass */ }
     
     fn process_generator(&mut self, gen: &mut MarkovSequenceGenerator, time_mods: &mut Vec<TimeMod>) {	
@@ -146,7 +154,7 @@ impl EveryProcessor {
 
 impl GeneratorProcessor for EveryProcessor {    
     // this one 
-    fn process_events(&mut self, events: &mut Vec<StaticEvent>) {
+    fn process_events(&mut self, events: &mut Vec<InterpretableEvent>) {
 	self.last_static.clear();
 	for (step, filtered_events, _) in self.things_to_be_applied.iter_mut() { // genmodfuns not needed here ...
 	    let cur_step:usize = (step.evaluate() as usize) % 101; // make sure prob is always between 0 and 100
@@ -156,8 +164,15 @@ impl GeneratorProcessor for EveryProcessor {
 		    let mut evs_static = Vec::new();
 		    for ev in evs.iter_mut() {
 			let ev_static = ev.to_static();	    
-			for in_ev in events.iter_mut() {			    
-			    in_ev.apply(&ev_static, filter);
+			for in_ev in events.iter_mut() {
+			    match in_ev {
+				InterpretableEvent::Sound(s) => {				    
+				    s.apply(&ev_static, filter);				    
+				},
+				InterpretableEvent::Control(_) => {
+				    // ?? 
+				},			    
+			    }			    
 			}			
 			evs_static.push(ev_static);
 		    }		    

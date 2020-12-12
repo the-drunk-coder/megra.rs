@@ -1,4 +1,4 @@
-use crate::event::{Event, StaticEvent};
+use crate::event::{InterpretableEvent, SourceEvent, StaticEvent, Event};
 use vom_rs::pfa;
 use std::collections::HashMap;
 use ruffbox_synth::ruffbox::synth::SynthParameter;
@@ -24,7 +24,7 @@ impl Rule {
 pub struct MarkovSequenceGenerator {
     pub name: String,
     pub generator: pfa::Pfa<char>,
-    pub event_mapping: HashMap<char, Vec<Event>>,
+    pub event_mapping: HashMap<char, Vec<SourceEvent>>,
     pub duration_mapping: HashMap<(char, char), Event>,
     pub modified: bool,    
     pub symbol_ages: HashMap<char, u64>,
@@ -41,8 +41,8 @@ impl MarkovSequenceGenerator {
 	}	
     }
     
-    pub fn current_events(&mut self) -> Vec<StaticEvent> {
-	let mut static_events = Vec::new();
+    pub fn current_events(&mut self) -> Vec<InterpretableEvent> {
+	let mut interpretable_events = Vec::new();
 	
 	// try to get a transition if there wasn't one
 	// that'd mean it's probably the initial one, or there's something wrong ... 
@@ -55,13 +55,18 @@ impl MarkovSequenceGenerator {
 	    *self.symbol_ages.entry(trans.last_symbol).or_insert(0) += 1;
 	    // get static events ...
 	    if let Some(events) = self.event_mapping.get_mut(&trans.last_symbol) {
-		for e in events.iter_mut() {
-		    static_events.push(e.to_static());
+		for e in events.iter_mut() {		    
+		    interpretable_events.push(match e {
+			SourceEvent::Sound(e) => InterpretableEvent::Sound(e.to_static()),
+			// this is quite an effort to copy the whole sync ctx all the time.
+			// i hope i can find a mor efficient method later ...
+			SourceEvent::Control(e) => InterpretableEvent::Control(e.clone()), 
+		    });
 		}		
 	    }	    	 
 	} 
-	    		
-	static_events
+	
+	interpretable_events
     }
 
     pub fn current_transition(&mut self) -> StaticEvent {

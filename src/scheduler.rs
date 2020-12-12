@@ -26,7 +26,7 @@ impl <const BUFSIZE:usize, const NCHAN:usize> SchedulerData<BUFSIZE, NCHAN> {
 
     pub fn from_previous(old: &SchedulerData<BUFSIZE, NCHAN>, mut data: Box<Generator>, ruffbox: sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>) -> Self {
 	data.transfer_state(&old.generator);
-	
+	// keep scheduling, retain data
 	SchedulerData {
 	    start_time: old.start_time,
 	    stream_time: old.stream_time,
