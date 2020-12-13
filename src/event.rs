@@ -129,6 +129,12 @@ impl Event {
 	map
     }
 
+    pub fn shake(&mut self, factor: f32) {
+	for (_,v) in self.params.iter_mut() {
+	    v.shake(factor);
+	}
+    }
+    
     pub fn to_static(&mut self) -> StaticEvent {
 	StaticEvent {
 	    name: self.name.clone(),
