@@ -349,6 +349,8 @@ pub fn handle_sync_context(tail: &mut Vec<Expr>, parts_store: &PartsStore) -> At
 			k.id_tags.insert(name.clone());
 		    }
 		    gens.append(&mut klc);
+		} else {
+		    println!("warning: '{} not defined!", s);
 		}
 	    },
 	    Atom::Generator(mut k) => {
@@ -643,6 +645,7 @@ pub fn handle_builtin_gen_proc(proc_type: &BuiltInGenProc, tail: &mut Vec<Expr>,
 		}	    
 		Atom::GeneratorList(glc)
 	    } else {
+		println!("warning: '{} not defined!", s);
 		Atom::GeneratorProcessor(collect_gen_proc(proc_type, tail)) // ignore symbol
 	    }
 	},
@@ -772,6 +775,8 @@ pub fn handle_builtin_multiplexer(_mul: &BuiltInMultiplexer, tail: &mut Vec<Expr
 		    }
 		    gens.push(gen);		
 		}
+	    } else {
+		println!("warning: '{} not defined!", s);
 	    }
 	},
 	Some(Expr::Constant(Atom::Generator(g))) => {	    
