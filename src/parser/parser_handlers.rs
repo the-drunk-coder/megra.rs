@@ -627,12 +627,24 @@ pub fn collect_gen_proc(proc_type: &BuiltInGenProc, tail: &mut Vec<Expr>) -> Box
 }
 
 // store list of genProcs in a vec if there's no root gen ???
-pub fn handle_builtin_gen_proc(proc_type: &BuiltInGenProc, tail: &mut Vec<Expr>) -> Atom {    
+pub fn handle_builtin_gen_proc(proc_type: &BuiltInGenProc, tail: &mut Vec<Expr>, parts_store: &PartsStore) -> Atom {    
     let last = tail.pop();
     match last {
 	Some(Expr::Constant(Atom::Generator(mut g))) => {
 	    g.processors.push(collect_gen_proc(proc_type, tail));
 	    Atom::Generator(g)
+	},
+	Some(Expr::Constant(Atom::Symbol(s))) => {
+	    if let Some(gl) = parts_store.get(&s) {
+		let gp = collect_gen_proc(proc_type, tail);
+		let mut glc = gl.clone();
+		for gen in glc.iter_mut() { // clone here
+		    gen.processors.push(gp.clone());		    
+		}	    
+		Atom::GeneratorList(glc)
+	    } else {
+		Atom::GeneratorProcessor(collect_gen_proc(proc_type, tail)) // ignore symbol
+	    }
 	},
 	Some(Expr::Constant(Atom::GeneratorList(mut gl))) => {
 	    let gp = collect_gen_proc(proc_type, tail);
@@ -661,7 +673,8 @@ pub fn handle_builtin_gen_proc(proc_type: &BuiltInGenProc, tail: &mut Vec<Expr>)
     }    
 }
 
-pub fn handle_builtin_gen_mod_fun(gen_mod: &BuiltInGenModFun, tail: &mut Vec<Expr>) -> Atom {
+// needs to be made on generator lists first ...
+pub fn handle_builtin_gen_mod_fun(gen_mod: &BuiltInGenModFun, tail: &mut Vec<Expr>, _parts_store: &PartsStore) -> Atom {
 
     let last = tail.pop();
     match last {
@@ -703,7 +716,7 @@ pub fn handle_builtin_gen_mod_fun(gen_mod: &BuiltInGenModFun, tail: &mut Vec<Exp
 
 
 
-pub fn handle_builtin_multiplexer(_mul: &BuiltInMultiplexer, tail: &mut Vec<Expr>) -> Atom {
+pub fn handle_builtin_multiplexer(_mul: &BuiltInMultiplexer, tail: &mut Vec<Expr>, parts_store: &PartsStore) -> Atom {
     let last = tail.pop(); // generator or generator list ...
 
     let mut gen_proc_list_list = Vec::new();
@@ -729,6 +742,38 @@ pub fn handle_builtin_multiplexer(_mul: &BuiltInMultiplexer, tail: &mut Vec<Expr
     let mut gens = Vec::new();
 
     match last {
+	Some(Expr::Constant(Atom::Symbol(s))) => {
+	    if let Some(kl) = parts_store.get(&s) {
+		let mut klc = kl.clone();
+		// collect tags ... make sure the multiplexing process leaves
+		// each generator individually, but deterministically tagged ...
+		let mut all_tags:BTreeSet<String> = BTreeSet::new();
+		
+		for gen in klc.iter() {
+		    all_tags.append(&mut gen.id_tags.clone());
+		}
+		
+		for gen in klc.drain(..) {
+		    // multiplex into duplicates by cloning ...		
+		    for gpl in gen_proc_list_list.iter() {
+			let mut pclone = gen.clone();
+			
+			// this isn't super elegant but hey ... 
+			for i in 0..100 {
+			    let tag = format!("mpx-{}", i);
+			    if !all_tags.contains(&tag) {
+				pclone.id_tags.insert(tag);
+				break;
+			    } 		    
+			}
+			
+			pclone.processors.append(&mut gpl.clone());
+			gens.push(pclone);
+		    }
+		    gens.push(gen);		
+		}
+	    }
+	},
 	Some(Expr::Constant(Atom::Generator(g))) => {	    
 	     // multiplex into duplicates by cloning ...
 	    for mut gpl in gen_proc_list_list.drain(..) {
