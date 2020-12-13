@@ -29,7 +29,7 @@ pub fn start_repl<const BUFSIZE:usize, const NCHAN:usize>(ruffbox: &sync::Arc<Mu
 		// ignore empty lines ...
 		if line.len() == 0 { continue; }
 		
-		let pfa_in = parser::eval_from_str(&line.as_str(), &sample_set, &parts_store);
+		let pfa_in = parser::eval_from_str(&line.as_str(), &sample_set, &parts_store, mode);
 		
 		match pfa_in {
 		    Err(e) => {
@@ -48,7 +48,7 @@ pub fn start_repl<const BUFSIZE:usize, const NCHAN:usize>(ruffbox: &sync::Arc<Mu
 				match readline_inner {
 				    Ok(line) => {
 					line_buffer.push_str(&line.as_str());
-					let inner_pfa_in = parser::eval_from_str(&line_buffer.as_str(), &sample_set, &parts_store);
+					let inner_pfa_in = parser::eval_from_str(&line_buffer.as_str(), &sample_set, &parts_store, mode);
 					match inner_pfa_in {
 					    Ok(pfa) => {
 						interpreter::interpret(&session, &mut sample_set, &mut parts_store, pfa, &ruffbox);			

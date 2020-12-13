@@ -2,7 +2,7 @@ use crate::builtin_types::*;
 use crate::markov_sequence_generator::{Rule, MarkovSequenceGenerator};
 use crate::event::*;
 use crate::parameter::*;
-use crate::session::SyncContext;
+use crate::session::{OutputMode, SyncContext};
 use crate::generator::{Generator, haste, relax};
 use crate::generator_processor::*;
 use crate::parser::parser_helpers::*;
@@ -97,8 +97,7 @@ pub fn handle_infer(tail: &mut Vec<Expr>) -> Atom {
     let mut collect_events = false;
     let mut collect_rules = false;
     let mut dur:f32 = 200.0;
-    
-    
+        
     while let Some(Expr::Constant(c)) = tail_drain.next() {
 	
 	if collect_events {
@@ -719,7 +718,7 @@ pub fn handle_builtin_gen_mod_fun(gen_mod: &BuiltInGenModFun, tail: &mut Vec<Exp
 
 
 
-pub fn handle_builtin_multiplexer(_mul: &BuiltInMultiplexer, tail: &mut Vec<Expr>, parts_store: &PartsStore) -> Atom {
+pub fn handle_builtin_multiplexer(mul: &BuiltInMultiplexer, tail: &mut Vec<Expr>, parts_store: &PartsStore, out_mode: OutputMode) -> Atom {
     let last = tail.pop(); // generator or generator list ...
 
     let mut gen_proc_list_list = Vec::new();
@@ -830,7 +829,60 @@ pub fn handle_builtin_multiplexer(_mul: &BuiltInMultiplexer, tail: &mut Vec<Expr
 	_ => {}	
     }
             	
-    // for xdup, this would be enough ... for xspread etc, we need to prepend another processor ... 
+    // for xdup, this would be enough ... for xspread etc, we need to prepend another processor ...
+    match mul {
+	BuiltInMultiplexer::XSpread => {
+	    let positions = match out_mode {
+		OutputMode::Stereo => {
+		    if gens.len() == 1 {
+			vec![0.0]
+		    } else {
+			let mut p = Vec::new();
+			for i in 0..gens.len() {
+			    let val = (i as f32 * (2.0 / (gens.len() as f32 - 1.0))) - 1.0;
+			    p.push(val);			    
+			}
+			p
+		
+		    }
+		},
+		OutputMode::FourChannel => {
+		    if gens.len() == 1 {
+			vec![0.0]
+		    } else {
+			let mut p = Vec::new();
+			for i in 0..gens.len() {
+			    let val = 1.0 + (i as f32 * (3.0 / (gens.len() as f32 - 1.0)));
+			    p.push(val);			    
+			}
+			p
+		    }
+		},
+		OutputMode::EightChannel => {
+		    if gens.len() == 1 {
+			vec![0.0]
+		    } else {
+			let mut p = Vec::new();
+			for i in 0..gens.len() {
+			    let val = 1.0 + (i as f32 * (7.0 / (gens.len() as f32 - 1.0)));
+			    p.push(val);			    
+			}
+			p
+		    }
+		},
+	    };
+	    for i in 0..gens.len() {
+		let mut p = PearProcessor::new();
+		let mut ev = Event::with_name_and_operation("pos".to_string(), EventOperation::Replace);
+		ev.params.insert(SynthParameter::ChannelPosition, Box::new(Parameter::with_value(positions[i])));
+		let mut filtered_events = HashMap::new();
+		filtered_events.insert(vec!["".to_string()], vec![ev]);
+		p.events_to_be_applied.push((Parameter::with_value(100.0), filtered_events));
+		gens[i].processors.push(Box::new(p));
+	    }
+	},
+	_ => {}
+    }
                 
     Atom::GeneratorList(gens)
 }

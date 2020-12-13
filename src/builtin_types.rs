@@ -61,7 +61,7 @@ pub enum BuiltInGenModFun {
 
 pub enum BuiltInMultiplexer {
     XDup,
-    //XSpread,
+    XSpread,
     //XBounce,
     //XRot
 }

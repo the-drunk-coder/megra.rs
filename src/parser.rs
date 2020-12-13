@@ -17,6 +17,7 @@ use nom::{
 
 use crate::builtin_types::*;
 use crate::event::*;
+use crate::session::OutputMode;
 
 use parse_parameter_events::*;
 use parser_handlers::*;
@@ -50,9 +51,10 @@ fn parse_dynamic_parameters<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, Verbose
 }
 
 fn parse_multiplexer<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<&'a str>> {
-    //alt((		
-    map(tag("xdup"), |_| BuiltIn::Multiplexer(BuiltInMultiplexer::XDup))(i)
-    //))(i)
+    alt((		
+	map(tag("xdup"), |_| BuiltIn::Multiplexer(BuiltInMultiplexer::XDup)),
+	map(tag("xspread"), |_| BuiltIn::Multiplexer(BuiltInMultiplexer::XSpread))
+    ))(i)
 }
 
 fn parse_generators<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<&'a str>> {    
@@ -223,18 +225,18 @@ fn parse_expr<'a>(i: &'a str) -> IResult<&'a str, Expr, VerboseError<&'a str>> {
 /// This function tries to reduce the AST.
 /// This has to return an Expression rather than an Atom because quoted s_expressions
 /// can't be reduced
-fn eval_expression(e: Expr, sample_set: &SampleSet, parts_store: &PartsStore) -> Option<Expr> {
+fn eval_expression(e: Expr, sample_set: &SampleSet, parts_store: &PartsStore, out_mode: OutputMode) -> Option<Expr> {
     match e {
 	// Constants and quoted s-expressions are our base-case
 	Expr::Constant(_) => Some(e),
 	Expr::Custom(_) => Some(e),	
 	Expr::Application(head, tail) => {
 
-	    let reduced_head = eval_expression(*head, sample_set, parts_store)?;
+	    let reduced_head = eval_expression(*head, sample_set, parts_store, out_mode)?;
 
 	    let mut reduced_tail = tail
 		.into_iter()
-		.map(|expr| eval_expression(expr, sample_set, parts_store))
+		.map(|expr| eval_expression(expr, sample_set, parts_store, out_mode))
 		.collect::<Option<Vec<Expr>>>()?;
 
 	    match reduced_head {
@@ -254,7 +256,7 @@ fn eval_expression(e: Expr, sample_set: &SampleSet, parts_store: &PartsStore) ->
 			BuiltIn::ParameterEvent(ev) => handle_builtin_mod_event(&ev, &mut reduced_tail),
 			BuiltIn::GenProc(g) => handle_builtin_gen_proc(&g, &mut reduced_tail, parts_store),
 			BuiltIn::GenModFun(g) => handle_builtin_gen_mod_fun(&g, &mut reduced_tail, parts_store),
-			BuiltIn::Multiplexer(m) => handle_builtin_multiplexer(&m, &mut reduced_tail, parts_store)	
+			BuiltIn::Multiplexer(m) => handle_builtin_multiplexer(&m, &mut reduced_tail, parts_store, out_mode)	
 		    }))
 		},
 		Expr::Custom(s) => {
@@ -276,10 +278,10 @@ fn eval_expression(e: Expr, sample_set: &SampleSet, parts_store: &PartsStore) ->
 
 /// And we add one more top-level function to tie everything together, letting
 /// us call eval on a string directly
-pub fn eval_from_str(src: &str, sample_set: &SampleSet, parts_store: &PartsStore) -> Result<Expr, String> {
+pub fn eval_from_str(src: &str, sample_set: &SampleSet, parts_store: &PartsStore, out_mode: OutputMode) -> Result<Expr, String> {
     parse_expr(src)
 	.map_err(|e: nom::Err<VerboseError<&str>>| format!("{:#?}", e))
-	.and_then(|(_, exp)| eval_expression(exp, sample_set, parts_store).ok_or("Eval failed".to_string()))
+	.and_then(|(_, exp)| eval_expression(exp, sample_set, parts_store, out_mode).ok_or("Eval failed".to_string()))
 }
 
 
