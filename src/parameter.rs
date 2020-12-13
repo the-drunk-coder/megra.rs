@@ -1,7 +1,9 @@
 use std::boxed::Box;
+use rand::Rng;
 
 pub trait Modifier: ModifierClone {
     fn evaluate(&mut self, input: f32) -> f32;
+    fn shake(&mut self, factor: f32);
 }
 pub trait ModifierClone {
     fn clone_box(&self) -> Box<dyn Modifier + Send>;
@@ -49,6 +51,12 @@ impl Modifier for BounceModifier {
         
         cur
     }
+
+    fn shake(&mut self, factor: f32) {
+	self.min.shake(factor);
+	self.max.shake(factor);
+	self.steps.shake(factor);
+    }
 }
 
 #[derive(Clone)]
@@ -75,5 +83,34 @@ impl Parameter {
 	    self.val
 	}
     }
+
+    pub fn shake(&mut self, mut factor: f32) {
+	factor = factor.clamp(0.0, 1.0);
+	let mut rng = rand::thread_rng();
+	// heuristic ... from old megra ... not sure what i thought back then, let's see ...
+	let rand = (factor * (1000.0 - rng.gen_range(0.0, 2000.0))) * (self.val / 1000.0); 
+	self.val += rand;
+	if let Some(m) = self.modifier.as_mut() {
+	    m.shake(factor);
+	}
+    }
 }
 
+// TEST TEST TEST 
+#[cfg(test)]
+mod tests {
+    // Note this useful idiom: importing names from outer (for mod tests) scope.
+    use super::*;
+    
+    #[test]
+    fn test_shake() {
+	for _ in 0..20 {
+	    let mut a = Parameter::with_value(1000.0);
+	    a.shake(0.5);
+	    println!("val after shake: {}", a.evaluate());
+	    assert!(a.evaluate() != 1000.0);
+	    assert!(a.evaluate() >= 500.0);
+	    assert!(a.evaluate() <= 1500.0);	    	
+	}	
+    }
+}
