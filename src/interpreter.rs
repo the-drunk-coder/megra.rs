@@ -80,7 +80,10 @@ pub fn interpret<const BUFSIZE:usize, const NCHAN:usize>(session: &sync::Arc<Mut
 		    
 		    println!("a command (load sample)");
 		},
-		Command::LoadPart((name, generators)) => {
+		Command::LoadPart((name, mut generators)) => {
+		    for gen in generators.iter_mut() {
+			gen.id_tags.insert(name.clone());
+		    }
 		    parts_store.insert(name, generators);
 		    println!("a command (load part)");
 		}
