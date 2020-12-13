@@ -311,7 +311,7 @@ pub fn handle_rule(tail: &mut Vec<Expr>) -> Atom {
     })
 }
 
-pub fn handle_sync_context(tail: &mut Vec<Expr>) -> Atom {
+pub fn handle_sync_context(tail: &mut Vec<Expr>, parts_store: &PartsStore) -> Atom {
     let mut tail_drain = tail.drain(..);
     
     // name is the first symbol
@@ -340,6 +340,15 @@ pub fn handle_sync_context(tail: &mut Vec<Expr>) -> Atom {
 			}			
 		    }
 		    _ => {} // ignore
+		}
+	    },
+	    Atom::Symbol(s) => {
+		if let Some(kl) = parts_store.get(&s) {
+		    let mut klc = kl.clone();
+		    for k in klc.iter_mut() {
+			k.id_tags.insert(name.clone());
+		    }
+		    gens.append(&mut klc);
 		}
 	    },
 	    Atom::Generator(mut k) => {
@@ -790,3 +799,19 @@ pub fn handle_control_event(tail: &mut Vec<Expr>) -> Atom {
     })
 }
 
+pub fn handle_load_part(tail: &mut Vec<Expr>) -> Atom {
+    let mut tail_drain = tail.drain(..);
+    let mut gens = Vec::new();
+
+    let name: String = get_string_from_expr(&tail_drain.next().unwrap()).unwrap();
+    
+    while let Some(Expr::Constant(c)) = tail_drain.next() {
+	match c {
+	    Atom::Generator(g) => gens.push(g),
+	    Atom::GeneratorList(mut gl) => gens.append(&mut gl),
+	    _ => {}
+	}
+    }
+    
+    Atom::Command(Command::LoadPart((name, gens)))
+}

@@ -8,6 +8,7 @@ use crate::session::Session;
 
 pub fn interpret<const BUFSIZE:usize, const NCHAN:usize>(session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
 							 sample_set: &mut SampleSet,
+							 parts_store: &mut PartsStore,
 							 parsed_in: Expr,
 							 ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>) {
     match parsed_in {
@@ -78,6 +79,10 @@ pub fn interpret<const BUFSIZE:usize, const NCHAN:usize>(session: &sync::Arc<Mut
 		    sample_set.entry(set).or_insert(Vec::new()).push((keyword_set, bufnum));
 		    
 		    println!("a command (load sample)");
+		},
+		Command::LoadPart((name, generators)) => {
+		    parts_store.insert(name, generators);
+		    println!("a command (load part)");
 		}
 	    };
 	    

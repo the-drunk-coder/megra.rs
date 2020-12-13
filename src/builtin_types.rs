@@ -8,6 +8,7 @@ use std::collections::{HashMap, HashSet};
 
 /// maps an event type (like "bd") to a mapping between keywords and buffer number ...
 pub type SampleSet = HashMap<String, Vec<(HashSet<String>, usize)>>;
+pub type PartsStore = HashMap<String, Vec<Generator>>;
 
 // reflect event hierarchy here, like, Tuned, Param, Sample, Noise ?
 pub enum BuiltInParameterEvent {
@@ -74,6 +75,7 @@ pub enum BuiltIn {
     Clear,
     Silence,
     LoadSample,
+    LoadPart,
     SyncContext,
     Parameter(BuiltInDynamicParameter),
     SoundEvent(BuiltInSoundEvent),
@@ -86,7 +88,8 @@ pub enum BuiltIn {
 
 pub enum Command {
     Clear,
-    LoadSample((String, Vec<String>, String)) // set (events), keyword, path
+    LoadSample((String, Vec<String>, String)) ,// set (events), keyword, path
+    LoadPart((String, Vec<Generator>)) // set (events), keyword, path
 }
 
 pub enum Atom { // atom might not be the right word any longer 

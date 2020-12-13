@@ -38,7 +38,8 @@ fn parse_builtin<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<&'a s
 fn parse_commands<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<&'a str>> {    
     alt((		
 	map(tag("clear"), |_| BuiltIn::Clear),
-	map(tag("load-sample"), |_| BuiltIn::LoadSample),	
+	map(tag("load-sample"), |_| BuiltIn::LoadSample),
+	map(tag("defpart"), |_| BuiltIn::LoadPart),	
     ))(i)
 }
 
@@ -222,30 +223,31 @@ fn parse_expr<'a>(i: &'a str) -> IResult<&'a str, Expr, VerboseError<&'a str>> {
 /// This function tries to reduce the AST.
 /// This has to return an Expression rather than an Atom because quoted s_expressions
 /// can't be reduced
-fn eval_expression(e: Expr, sample_set: &SampleSet) -> Option<Expr> {
+fn eval_expression(e: Expr, sample_set: &SampleSet, parts_store: &PartsStore) -> Option<Expr> {
     match e {
 	// Constants and quoted s-expressions are our base-case
 	Expr::Constant(_) => Some(e),
 	Expr::Custom(_) => Some(e),	
 	Expr::Application(head, tail) => {
 
-	    let reduced_head = eval_expression(*head, sample_set)?;
+	    let reduced_head = eval_expression(*head, sample_set, parts_store)?;
 
 	    let mut reduced_tail = tail
 		.into_iter()
-		.map(|expr| eval_expression(expr, sample_set))
+		.map(|expr| eval_expression(expr, sample_set, parts_store))
 		.collect::<Option<Vec<Expr>>>()?;
 
 	    match reduced_head {
 		Expr::Constant(Atom::BuiltIn(bi)) => {
 		    Some(Expr::Constant(match bi {
 			BuiltIn::Clear => Atom::Command(Command::Clear),
-			BuiltIn::LoadSample => handle_load_sample(&mut reduced_tail),			
+			BuiltIn::LoadSample => handle_load_sample(&mut reduced_tail),
+			BuiltIn::LoadPart => handle_load_part(&mut reduced_tail),			
 			BuiltIn::Silence => Atom::SoundEvent(Event::with_name("silence".to_string())),			
 			BuiltIn::Rule => handle_rule(&mut reduced_tail),
 			BuiltIn::Learn => handle_learn(&mut reduced_tail),
 			BuiltIn::Infer => handle_infer(&mut reduced_tail),			
-			BuiltIn::SyncContext => handle_sync_context(&mut reduced_tail),
+			BuiltIn::SyncContext => handle_sync_context(&mut reduced_tail, parts_store),
 			BuiltIn::Parameter(par) => handle_builtin_dynamic_parameter(&par, &mut reduced_tail),
 			BuiltIn::SoundEvent(ev) => handle_builtin_sound_event(&ev, &mut reduced_tail),
 			BuiltIn::ControlEvent => handle_control_event(&mut reduced_tail),
@@ -274,10 +276,10 @@ fn eval_expression(e: Expr, sample_set: &SampleSet) -> Option<Expr> {
 
 /// And we add one more top-level function to tie everything together, letting
 /// us call eval on a string directly
-pub fn eval_from_str(src: &str, sample_set: &SampleSet) -> Result<Expr, String> {
+pub fn eval_from_str(src: &str, sample_set: &SampleSet, parts_store: &PartsStore) -> Result<Expr, String> {
     parse_expr(src)
 	.map_err(|e: nom::Err<VerboseError<&str>>| format!("{:#?}", e))
-	.and_then(|(_, exp)| eval_expression(exp, sample_set).ok_or("Eval failed".to_string()))
+	.and_then(|(_, exp)| eval_expression(exp, sample_set, parts_store).ok_or("Eval failed".to_string()))
 }
 
 

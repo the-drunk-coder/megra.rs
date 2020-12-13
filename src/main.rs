@@ -124,14 +124,15 @@ fn run<T, const NCHAN:usize>(device: &cpal::Device, config: &cpal::StreamConfig,
 where
     T: cpal::Sample,
 {
+    // at some point i'll need to implement more samplerates i suppose ...
     let _sample_rate = config.sample_rate.0 as f32;
     let channels = config.channels as usize;
     
     let err_fn = |err| eprintln!("an error occurred on stream: {}", err);
 
     let ruffbox = Arc::new(Mutex::new(Ruffbox::<512, NCHAN>::new()));
-
-    let ruffbox2 = Arc::clone(&ruffbox);    
+    let ruffbox2 = Arc::clone(&ruffbox); // the one for the audio thread ...
+    
     let stream = device.build_output_stream(
         config,
         move |data: &mut [f32], _: &cpal::OutputCallbackInfo| {
