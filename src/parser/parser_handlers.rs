@@ -754,17 +754,19 @@ pub fn handle_builtin_multiplexer(mul: &BuiltInMultiplexer, tail: &mut Vec<Expr>
 		for gen in klc.iter() {
 		    all_tags.append(&mut gen.id_tags.clone());
 		}
-		
+
+		let mut idx:usize = 0;
 		for gen in klc.drain(..) {
 		    // multiplex into duplicates by cloning ...		
 		    for gpl in gen_proc_list_list.iter() {
 			let mut pclone = gen.clone();
 			
 			// this isn't super elegant but hey ... 
-			for i in 0..100 {
+			for i in idx..100 {
 			    let tag = format!("mpx-{}", i);
 			    if !all_tags.contains(&tag) {
 				pclone.id_tags.insert(tag);
+				idx = i + 1;
 				break;
 			    } 		    
 			}
@@ -779,15 +781,17 @@ pub fn handle_builtin_multiplexer(mul: &BuiltInMultiplexer, tail: &mut Vec<Expr>
 	    }
 	},
 	Some(Expr::Constant(Atom::Generator(g))) => {	    
-	     // multiplex into duplicates by cloning ...
+	    // multiplex into duplicates by cloning ...
+	    let mut idx:usize = 0;
 	    for mut gpl in gen_proc_list_list.drain(..) {
 		let mut pclone = g.clone();
 
 		// this isn't super elegant but hey ... 
-		for i in 0..100 {
+		for i in idx..100 {
 		    let tag = format!("mpx-{}", i);
 		    if !pclone.id_tags.contains(&tag) {
 			pclone.id_tags.insert(tag);
+			idx = i + 1;
 			break;
 		    } 		    
 		}
@@ -805,17 +809,19 @@ pub fn handle_builtin_multiplexer(mul: &BuiltInMultiplexer, tail: &mut Vec<Expr>
 	    for gen in gl.iter() {
 		all_tags.append(&mut gen.id_tags.clone());
 	    }
-	    
+
+	    let mut idx:usize = 0;
 	    for gen in gl.drain(..) {
 		// multiplex into duplicates by cloning ...		
 		for gpl in gen_proc_list_list.iter() {
 		    let mut pclone = gen.clone();
 
 		    // this isn't super elegant but hey ... 
-		    for i in 0..100 {
+		    for i in idx..100 {
 			let tag = format!("mpx-{}", i);
 			if !all_tags.contains(&tag) {
 			    pclone.id_tags.insert(tag);
+			    idx = i + 1;
 			    break;
 			} 		    
 		    }
@@ -842,8 +848,7 @@ pub fn handle_builtin_multiplexer(mul: &BuiltInMultiplexer, tail: &mut Vec<Expr>
 			    let val = (i as f32 * (2.0 / (gens.len() as f32 - 1.0))) - 1.0;
 			    p.push(val);			    
 			}
-			p
-		
+			p		
 		    }
 		},
 		OutputMode::FourChannel => {
@@ -871,6 +876,8 @@ pub fn handle_builtin_multiplexer(mul: &BuiltInMultiplexer, tail: &mut Vec<Expr>
 		    }
 		},
 	    };
+
+	    println!("{:?}", positions);
 	    for i in 0..gens.len() {
 		let mut p = PearProcessor::new();
 		let mut ev = Event::with_name_and_operation("pos".to_string(), EventOperation::Replace);
