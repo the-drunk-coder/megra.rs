@@ -1,5 +1,5 @@
 use std::boxed::Box;
-use std::collections::BTreeSet;
+use std::collections::{HashMap, BTreeSet};
 use crate::{event::{StaticEvent, InterpretableEvent, EventOperation, SourceEvent},
 	    generator_processor::GeneratorProcessor,
 	    markov_sequence_generator::MarkovSequenceGenerator};
@@ -84,17 +84,37 @@ pub fn relax(_: &mut MarkovSequenceGenerator, time_mods: &mut Vec<TimeMod>, args
 }
 
 
-pub fn grow(gen: &mut MarkovSequenceGenerator, _: &mut Vec<TimeMod>, args: &Vec<f32>) {
-    //println!("grow!");
-    let result = gen.generator.grow_flower().unwrap();
-    if let Some(old_evs) = gen.event_mapping.get(&result.template_symbol.unwrap()) {
-	let mut new_evs = old_evs.clone();
-	for ev in new_evs.iter_mut() {
-	    match ev {
-		SourceEvent::Sound(s) => s.shake(args[0]),
-		SourceEvent::Control(_) => {}
+pub fn grow(gen: &mut MarkovSequenceGenerator, _: &mut Vec<TimeMod>, args: &Vec<f32>) {        
+    if let Some(result) = gen.generator.grow_flower() {
+	println!("grow!");
+	let template_sym = result.template_symbol.unwrap();
+	let added_sym = result.added_symbol.unwrap();
+	if let Some(old_evs) = gen.event_mapping.get(&template_sym) {
+	    let mut new_evs = old_evs.clone();
+	    for ev in new_evs.iter_mut() {
+		match ev {
+		    SourceEvent::Sound(s) => s.shake(args[0]),
+		    SourceEvent::Control(_) => {}
+		}
 	    }
-	}
-	gen.event_mapping.insert(result.added_symbol.unwrap(), new_evs);
+	    
+	    gen.event_mapping.insert(added_sym, new_evs);
+	    gen.symbol_ages.insert(added_sym, 0);
+	    // is this ok or should it rather follow the actually added transitions ??
+	    let mut dur_mapping_to_add = HashMap::new();
+	    for sym in gen.generator.alphabet.iter() {
+		if let Some(dur) = gen.duration_mapping.get(&(*sym, template_sym)) {
+		    dur_mapping_to_add.insert((*sym, added_sym), dur.clone());
+		}
+		if let Some(dur) = gen.duration_mapping.get(&(template_sym, *sym)) {
+		    dur_mapping_to_add.insert((added_sym, *sym), dur.clone());
+		}	   	    
+	    }
+	    for (k, v) in dur_mapping_to_add.drain() {
+		gen.duration_mapping.insert(k,v);
+	    }
+	}    	    	    
+    } else {
+	println!("can't grow!");
     }
 }
