@@ -3,7 +3,7 @@ use crate::markov_sequence_generator::{Rule, MarkovSequenceGenerator};
 use crate::event::*;
 use crate::parameter::*;
 use crate::session::{OutputMode, SyncContext};
-use crate::generator::{Generator, haste, relax};
+use crate::generator::{Generator, haste, relax, grow};
 use crate::generator_processor::*;
 use crate::parser::parser_helpers::*;
 
@@ -691,6 +691,7 @@ pub fn handle_builtin_gen_mod_fun(gen_mod: &BuiltInGenModFun, tail: &mut Vec<Exp
 	    match gen_mod {
 		BuiltInGenModFun::Haste => haste(&mut g.root_generator, &mut g.time_mods, &args),
 		BuiltInGenModFun::Relax => relax(&mut g.root_generator, &mut g.time_mods, &args),
+		BuiltInGenModFun::Grow => grow(&mut g.root_generator, &mut g.time_mods, &args),
 	    }
 	    Atom::Generator(g)
 	},	
@@ -708,6 +709,7 @@ pub fn handle_builtin_gen_mod_fun(gen_mod: &BuiltInGenModFun, tail: &mut Vec<Exp
 	    Atom::GeneratorModifierFunction (match gen_mod {
 		BuiltInGenModFun::Haste => (haste, args),
 		BuiltInGenModFun::Relax => (relax, args),
+		BuiltInGenModFun::Grow => (grow, args),
 	    })
 	},
 	None => {

@@ -55,8 +55,10 @@ pub enum BuiltInGenProc {
 pub enum BuiltInGenModFun {
     Haste,
     Relax,
+    Grow,
     //Rew,
-    //Skip
+    //Skip,
+    
 }
 
 pub enum BuiltInMultiplexer {

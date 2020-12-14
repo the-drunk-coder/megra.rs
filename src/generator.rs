@@ -1,6 +1,6 @@
 use std::boxed::Box;
 use std::collections::BTreeSet;
-use crate::{event::{StaticEvent, InterpretableEvent, EventOperation},
+use crate::{event::{StaticEvent, InterpretableEvent, EventOperation, SourceEvent},
 	    generator_processor::GeneratorProcessor,
 	    markov_sequence_generator::MarkovSequenceGenerator};
 use ruffbox_synth::ruffbox::synth::SynthParameter;
@@ -80,5 +80,21 @@ pub fn relax(_: &mut MarkovSequenceGenerator, time_mods: &mut Vec<TimeMod>, args
 	    val: args[1],
 	    op: EventOperation::Divide		
 	});
+    }
+}
+
+
+pub fn grow(gen: &mut MarkovSequenceGenerator, _: &mut Vec<TimeMod>, args: &Vec<f32>) {
+    //println!("grow!");
+    let result = gen.generator.grow_flower().unwrap();
+    if let Some(old_evs) = gen.event_mapping.get(&result.template_symbol.unwrap()) {
+	let mut new_evs = old_evs.clone();
+	for ev in new_evs.iter_mut() {
+	    match ev {
+		SourceEvent::Sound(s) => s.shake(args[0]),
+		SourceEvent::Control(_) => {}
+	    }
+	}
+	gen.event_mapping.insert(result.added_symbol.unwrap(), new_evs);
     }
 }

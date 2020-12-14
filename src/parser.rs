@@ -76,7 +76,8 @@ fn parse_generator_processors<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, Verbo
 fn parse_generator_modifier_functions<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<&'a str>> {
     alt((		
 	map(tag("haste"), |_| BuiltIn::GenModFun(BuiltInGenModFun::Haste)),
-	map(tag("relax"), |_| BuiltIn::GenModFun(BuiltInGenModFun::Relax))
+	map(tag("relax"), |_| BuiltIn::GenModFun(BuiltInGenModFun::Relax)),
+	map(tag("grow"), |_| BuiltIn::GenModFun(BuiltInGenModFun::Grow))
     ))(i)
 }
 
