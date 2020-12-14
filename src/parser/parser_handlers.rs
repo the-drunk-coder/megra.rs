@@ -877,7 +877,7 @@ pub fn handle_builtin_multiplexer(mul: &BuiltInMultiplexer, tail: &mut Vec<Expr>
 		},
 	    };
 
-	    println!("{:?}", positions);
+	    //println!("{:?}", positions);
 	    for i in 0..gens.len() {
 		let mut p = PearProcessor::new();
 		let mut ev = Event::with_name_and_operation("pos".to_string(), EventOperation::Replace);
