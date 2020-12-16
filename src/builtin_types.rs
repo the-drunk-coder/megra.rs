@@ -40,7 +40,7 @@ pub enum BuiltInSoundEvent {
 
 pub enum BuiltInDynamicParameter {
     Bounce,
-    //Brownian,
+    Brownian,
     //Oscil,
     //Env,
     //RandRange

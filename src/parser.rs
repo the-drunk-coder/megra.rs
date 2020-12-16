@@ -1,6 +1,7 @@
 mod parse_parameter_events;
 mod parser_helpers;
 mod parser_handlers;
+mod handlers;
 
 use nom::{
     branch::alt,
@@ -45,9 +46,10 @@ fn parse_commands<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<&'a 
 }
 
 fn parse_dynamic_parameters<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<&'a str>> {
-    //alt((		
-    map(tag("bounce"), |_| BuiltIn::Parameter(BuiltInDynamicParameter::Bounce))(i)
-    //))(i)
+    alt((		
+	map(tag("bounce"), |_| BuiltIn::Parameter(BuiltInDynamicParameter::Bounce)),
+	map(tag("brownian"), |_| BuiltIn::Parameter(BuiltInDynamicParameter::Brownian)),
+    ))(i)
 }
 
 fn parse_multiplexer<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<&'a str>> {
@@ -251,13 +253,13 @@ fn eval_expression(e: Expr, sample_set: &SampleSet, parts_store: &PartsStore, ou
 			BuiltIn::Learn => handle_learn(&mut reduced_tail),
 			BuiltIn::Infer => handle_infer(&mut reduced_tail),			
 			BuiltIn::SyncContext => handle_sync_context(&mut reduced_tail, parts_store),
-			BuiltIn::Parameter(par) => handle_builtin_dynamic_parameter(&par, &mut reduced_tail),
+			BuiltIn::Parameter(par) => handlers::builtin_dynamic_parameter::handle(&par, &mut reduced_tail),
 			BuiltIn::SoundEvent(ev) => handle_builtin_sound_event(&ev, &mut reduced_tail),
 			BuiltIn::ControlEvent => handle_control_event(&mut reduced_tail),
 			BuiltIn::ParameterEvent(ev) => handle_builtin_mod_event(&ev, &mut reduced_tail),
-			BuiltIn::GenProc(g) => handle_builtin_gen_proc(&g, &mut reduced_tail, parts_store),
+			BuiltIn::GenProc(g) => handlers::builtin_generator_processor::handle(&g, &mut reduced_tail, parts_store),
 			BuiltIn::GenModFun(g) => handle_builtin_gen_mod_fun(&g, &mut reduced_tail, parts_store),
-			BuiltIn::Multiplexer(m) => handle_builtin_multiplexer(&m, &mut reduced_tail, parts_store, out_mode)	
+			BuiltIn::Multiplexer(m) => handlers::builtin_multiplexer::handle(&m, &mut reduced_tail, parts_store, out_mode)	
 		    }))
 		},
 		Expr::Custom(s) => {
