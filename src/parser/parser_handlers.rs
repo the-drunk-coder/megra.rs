@@ -2,6 +2,9 @@ use crate::builtin_types::*;
 use crate::markov_sequence_generator::{Rule, MarkovSequenceGenerator};
 use crate::event::*;
 use crate::parameter::*;
+use crate::parameter::modifier::{
+    bounce_modifier::BounceModifier
+};
 use crate::session::{OutputMode, SyncContext};
 use crate::generator::{Generator, haste, relax, grow};
 use crate::generator_processor::*;
