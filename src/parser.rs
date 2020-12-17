@@ -256,7 +256,7 @@ fn eval_expression(e: Expr, sample_set: &SampleSet, parts_store: &PartsStore, ou
 			BuiltIn::Parameter(par) => handlers::builtin_dynamic_parameter::handle(&par, &mut reduced_tail),
 			BuiltIn::SoundEvent(ev) => handlers::builtin_sound_event::handle(&ev, &mut reduced_tail),
 			BuiltIn::ControlEvent => handle_control_event(&mut reduced_tail),
-			BuiltIn::ParameterEvent(ev) => handle_builtin_mod_event(&ev, &mut reduced_tail),
+			BuiltIn::ParameterEvent(ev) => handlers::builtin_parameter_event::handle(&ev, &mut reduced_tail),
 			BuiltIn::GenProc(g) => handlers::builtin_generator_processor::handle(&g, &mut reduced_tail, parts_store),
 			BuiltIn::GenModFun(g) => handlers::builtin_generator_modifier_function::handle(&g, &mut reduced_tail, parts_store),
 			BuiltIn::Multiplexer(m) => handlers::builtin_multiplexer::handle(&m, &mut reduced_tail, parts_store, out_mode)	
