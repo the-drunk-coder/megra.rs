@@ -3,8 +3,8 @@ use crate::markov_sequence_generator::{Rule, MarkovSequenceGenerator};
 use crate::event::*;
 use crate::parameter::*;
 
-use crate::session::{ SyncContext};
-use crate::generator::{Generator, haste, relax, grow};
+use crate::session::SyncContext;
+use crate::generator::Generator;
 
 use crate::parser::parser_helpers::*;
 
@@ -354,48 +354,6 @@ pub fn handle_builtin_mod_event(event_type: &BuiltInParameterEvent, tail: &mut V
 }
 
 
-// needs to be made on generator lists first ...
-pub fn handle_builtin_gen_mod_fun(gen_mod: &BuiltInGenModFun, tail: &mut Vec<Expr>, _parts_store: &PartsStore) -> Atom {
-
-    let last = tail.pop();
-    match last {
-	Some(Expr::Constant(Atom::Generator(mut g))) => {
-	    let mut tail_drain = tail.drain(..); 	    
-	    let mut args = Vec::new();
-
-	    while let Some(Expr::Constant(Atom::Float(f))) = tail_drain.next() {
-		args.push(f);
-	    }
-
-	    match gen_mod {
-		BuiltInGenModFun::Haste => haste(&mut g.root_generator, &mut g.time_mods, &args),
-		BuiltInGenModFun::Relax => relax(&mut g.root_generator, &mut g.time_mods, &args),
-		BuiltInGenModFun::Grow => grow(&mut g.root_generator, &mut g.time_mods, &args),
-	    }
-	    Atom::Generator(g)
-	},	
-	
-	Some(l) => {
-	    tail.push(l);
-
-	    let mut tail_drain = tail.drain(..); 	    
-	    let mut args = Vec::new();
-
-	    while let Some(Expr::Constant(Atom::Float(f))) = tail_drain.next() {
-		args.push(f);
-	    }
-    
-	    Atom::GeneratorModifierFunction (match gen_mod {
-		BuiltInGenModFun::Haste => (haste, args),
-		BuiltInGenModFun::Relax => (relax, args),
-		BuiltInGenModFun::Grow => (grow, args),
-	    })
-	},
-	None => {
-	    Atom::Nothing
-	}
-    } 
-}
 
 
 pub fn handle_control_event(tail: &mut Vec<Expr>) -> Atom {
