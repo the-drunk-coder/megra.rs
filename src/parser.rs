@@ -254,7 +254,7 @@ fn eval_expression(e: Expr, sample_set: &SampleSet, parts_store: &PartsStore, ou
 			BuiltIn::Infer => handle_infer(&mut reduced_tail),			
 			BuiltIn::SyncContext => handle_sync_context(&mut reduced_tail, parts_store),
 			BuiltIn::Parameter(par) => handlers::builtin_dynamic_parameter::handle(&par, &mut reduced_tail),
-			BuiltIn::SoundEvent(ev) => handle_builtin_sound_event(&ev, &mut reduced_tail),
+			BuiltIn::SoundEvent(ev) => handlers::builtin_sound_event::handle(&ev, &mut reduced_tail),
 			BuiltIn::ControlEvent => handle_control_event(&mut reduced_tail),
 			BuiltIn::ParameterEvent(ev) => handle_builtin_mod_event(&ev, &mut reduced_tail),
 			BuiltIn::GenProc(g) => handlers::builtin_generator_processor::handle(&g, &mut reduced_tail, parts_store),
@@ -265,7 +265,7 @@ fn eval_expression(e: Expr, sample_set: &SampleSet, parts_store: &PartsStore, ou
 		Expr::Custom(s) => {
 		    if let Some(sample_info) = sample_set.get(&s) {
 			// just choose first sample for now ...
-			Some(Expr::Constant(handle_sample(&mut reduced_tail, sample_info[0].1, &s, &sample_info[0].0)))
+			Some(Expr::Constant(handlers::custom_sample_event::handle(&mut reduced_tail, sample_info[0].1, &s, &sample_info[0].0)))
 		    } else {
 			None
 		    }

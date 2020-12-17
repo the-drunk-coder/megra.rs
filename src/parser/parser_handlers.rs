@@ -2,12 +2,10 @@ use crate::builtin_types::*;
 use crate::markov_sequence_generator::{Rule, MarkovSequenceGenerator};
 use crate::event::*;
 use crate::parameter::*;
-use crate::parameter::modifier::{
-    bounce_modifier::BounceModifier
-};
-use crate::session::{OutputMode, SyncContext};
+
+use crate::session::{ SyncContext};
 use crate::generator::{Generator, haste, relax, grow};
-use crate::generator_processor::*;
+
 use crate::parser::parser_helpers::*;
 
 use std::collections::{HashMap, HashSet, BTreeSet};
@@ -222,60 +220,6 @@ pub fn handle_load_sample(tail: &mut Vec<Expr>) -> Atom {
     
     Atom::Command(Command::LoadSample((set, keywords, path)))
 }
-
-pub fn handle_builtin_sound_event(event_type: &BuiltInSoundEvent, tail: &mut Vec<Expr>) -> Atom {
-    
-    let mut tail_drain = tail.drain(..);
-    
-    let mut ev = match event_type {
-	BuiltInSoundEvent::Sine(o) => Event::with_name_and_operation("sine".to_string(), *o),
-	BuiltInSoundEvent::Saw(o) => Event::with_name_and_operation("saw".to_string(), *o),
-	BuiltInSoundEvent::Square(o) => Event::with_name_and_operation("sqr".to_string(), *o),
-    };
-
-    // first arg is always freq ...
-    ev.params.insert(SynthParameter::PitchFrequency, Box::new(Parameter::with_value(get_float_from_expr(&tail_drain.next().unwrap()).unwrap())));
-
-    // set some defaults 2
-    ev.params.insert(SynthParameter::Level, Box::new(Parameter::with_value(0.3)));
-    ev.params.insert(SynthParameter::Attack, Box::new(Parameter::with_value(0.005)));
-    ev.params.insert(SynthParameter::Sustain, Box::new(Parameter::with_value(0.1)));
-    ev.params.insert(SynthParameter::Release, Box::new(Parameter::with_value(0.01)));
-    ev.params.insert(SynthParameter::ChannelPosition, Box::new(Parameter::with_value(0.00)));
-    
-    get_keyword_params(&mut ev.params, &mut tail_drain);
-    
-    Atom::SoundEvent (ev)
-}
-
-
-pub fn handle_sample(tail: &mut Vec<Expr>, bufnum: usize, set: &String, keywords: &HashSet<String>) -> Atom {
-    
-    let mut tail_drain = tail.drain(..);
-    
-    let mut ev = Event::with_name("sampler".to_string());
-    ev.tags.insert(set.to_string());
-    for k in keywords.iter() {
-	ev.tags.insert(k.to_string());
-    }
-    
-    ev.params.insert(SynthParameter::SampleBufferNumber, Box::new(Parameter::with_value(bufnum as f32)));
-    
-    // set some defaults
-    ev.params.insert(SynthParameter::Level, Box::new(Parameter::with_value(0.3)));
-    ev.params.insert(SynthParameter::Attack, Box::new(Parameter::with_value(0.005)));
-    ev.params.insert(SynthParameter::Sustain, Box::new(Parameter::with_value(0.1)));
-    ev.params.insert(SynthParameter::Release, Box::new(Parameter::with_value(0.01)));
-    ev.params.insert(SynthParameter::ChannelPosition, Box::new(Parameter::with_value(0.00)));
-    ev.params.insert(SynthParameter::PlaybackRate, Box::new(Parameter::with_value(1.0)));
-    ev.params.insert(SynthParameter::LowpassFilterDistortion, Box::new(Parameter::with_value(0.0)));
-    ev.params.insert(SynthParameter::PlaybackStart, Box::new(Parameter::with_value(0.0)));    
-    
-    get_keyword_params(&mut ev.params, &mut tail_drain);
-    
-    Atom::SoundEvent (ev)
-}
-
 
 pub fn handle_rule(tail: &mut Vec<Expr>) -> Atom {
     let mut tail_drain = tail.drain(..);
