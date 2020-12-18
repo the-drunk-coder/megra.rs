@@ -1,10 +1,3 @@
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License in the LICENSE-APACHE file or at:
-//     https://www.apache.org/licenses/LICENSE-2.0
-
-//! Text widgets
-
 use std::fmt::{self, Debug};
 use std::ops::Range;
 use std::time::Duration;
@@ -15,6 +8,16 @@ use kas::event::{self, ControlKey, GrabMode, PressSource, ScrollDelta};
 use kas::geom::Vec2;
 use kas::prelude::*;
 use kas::text::SelectionHelper;
+
+use std::sync;
+use parking_lot::Mutex;
+
+use crate::session::{Session, OutputMode};
+use crate::builtin_types::*;
+use ruffbox_synth::ruffbox::Ruffbox;
+
+use crate::parser;
+use crate::interpreter;
 
 #[derive(Clone, Debug, PartialEq)]
 enum LastEdit {
@@ -35,93 +38,6 @@ enum EditAction {
     Unhandled,
     Activate,
     Edit,
-}
-
-/// An [`EditBox`] with no [`EditGuard`]
-///
-/// This may be useful when requiring a fully-typed [`EditBox`]. Alternatively,
-/// one may implement an [`EditGuard`], `G`, and use `EditBox<G>`.
-pub type EditBoxVoid = EditBox<EditVoid>;
-
-/// A *guard* around an [`EditBox`]
-///
-/// When an [`EditBox`] receives input, it updates its contents as expected,
-/// then invokes a method of `EditGuard`. This method may update the
-/// [`EditBox`] and may return a message to be returned by the [`EditBox`]'s
-/// event handler.
-///
-/// All methods on this trait are passed a reference to the [`EditBox`] as
-/// parameter. The `EditGuard`'s state may be accessed via the
-/// [`EditBox::guard`] public field.
-///
-/// All methods have a default implementation which does nothing.
-pub trait EditGuard: Sized {
-    /// The [`event::Handler::Msg`] type
-    type Msg;
-
-    /// Activation guard
-    ///
-    /// This function is called when the widget is "activated", for example by
-    /// the Enter/Return key for single-line edit boxes.
-    ///
-    /// Note that activation events cannot edit the contents.
-    fn activate(_: &mut EditBox<Self>) -> Option<Self::Msg> {
-        None
-    }
-
-    /// Focus-lost guard
-    ///
-    /// This function is called when the widget loses keyboard input focus.
-    fn focus_lost(_: &mut EditBox<Self>) -> Option<Self::Msg> {
-        None
-    }
-
-    /// Edit guard
-    ///
-    /// This function is called on any edit of the contents, by the user or
-    /// programmatically. It is also called when the `EditGuard` is first set.
-    /// On programmatic edits and the initial call, the return value of this
-    /// method is discarded.
-    fn edit(_: &mut EditBox<Self>) -> Option<Self::Msg> {
-        None
-    }
-}
-
-/// No-action [`EditGuard`]
-#[derive(Clone, Debug)]
-pub struct EditVoid;
-impl EditGuard for EditVoid {
-    type Msg = VoidMsg;
-}
-
-/// An [`EditGuard`] impl which calls a closure when activated
-pub struct EditActivate<F: Fn(&str) -> Option<M>, M>(pub F);
-impl<F: Fn(&str) -> Option<M>, M> EditGuard for EditActivate<F, M> {
-    type Msg = M;
-    fn activate(edit: &mut EditBox<Self>) -> Option<Self::Msg> {
-        (edit.guard.0)(edit.text.text())
-    }
-}
-
-/// An [`EditGuard`] impl which calls a closure when activated or focus is lost
-pub struct EditAFL<F: Fn(&str) -> Option<M>, M>(pub F);
-impl<F: Fn(&str) -> Option<M>, M> EditGuard for EditAFL<F, M> {
-    type Msg = M;
-    fn activate(edit: &mut EditBox<Self>) -> Option<Self::Msg> {
-        (edit.guard.0)(edit.text.text())
-    }
-    fn focus_lost(edit: &mut EditBox<Self>) -> Option<Self::Msg> {
-        (edit.guard.0)(edit.text.text())
-    }
-}
-
-/// An [`EditGuard`] impl which calls a closure when edited
-pub struct EditEdit<F: Fn(&str) -> Option<M>, M>(pub F);
-impl<F: Fn(&str) -> Option<M>, M> EditGuard for EditEdit<F, M> {
-    type Msg = M;
-    fn edit(edit: &mut EditBox<Self>) -> Option<Self::Msg> {
-        (edit.guard.0)(edit.text.text())
-    }
 }
 
 const TOUCH_DUR: Duration = Duration::from_secs(1);
@@ -149,9 +65,9 @@ impl Default for TouchPhase {
 /// line-wrapping and a larger vertical height). This mode is only recommended
 /// for short texts for performance reasons.
 #[widget(config(key_nav = true, cursor_icon = event::CursorIcon::Text))]
-#[handler(handle=noauto, generics = <> where G: EditGuard)]
-#[derive(Clone, Default, Widget)]
-pub struct EditBox<G: 'static> {
+#[handler(handle=noauto, generics = <>)]
+#[derive(Clone, Widget)]
+pub struct EditBox<const BUFSIZE:usize, const NCHAN:usize> {
     #[widget_core]
     core: CoreData,
     frame_offset: Coord,
@@ -166,12 +82,15 @@ pub struct EditBox<G: 'static> {
     last_edit: LastEdit,
     error_state: bool,
     touch_phase: TouchPhase,
-    callback: Option<fn(&String)>,
-    /// The associated [`EditGuard`] implementation
-    pub guard: G,
+    // megra stuff
+    ruffbox: sync::Arc<Mutex<Ruffbox<BUFSIZE,NCHAN>>>,
+    session: sync::Arc<Mutex<Session<BUFSIZE,NCHAN>>>,
+    sample_set: SampleSet,
+    parts_store: PartsStore,
+    mode: OutputMode
 }
 
-impl<G> Debug for EditBox<G> {
+impl<const BUFSIZE:usize, const NCHAN:usize> Debug for EditBox<BUFSIZE, NCHAN> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(
             f,
@@ -182,7 +101,7 @@ impl<G> Debug for EditBox<G> {
     }
 }
 
-impl<G: 'static> Layout for EditBox<G> {
+impl <const BUFSIZE:usize, const NCHAN:usize> Layout for EditBox<BUFSIZE, NCHAN> {
     fn size_rules(&mut self, size_handle: &mut dyn SizeHandle, axis: AxisInfo) -> SizeRules {
         let frame_sides = size_handle.edit_surround();
         let inner = size_handle.inner_margin();
@@ -269,9 +188,11 @@ impl<G: 'static> Layout for EditBox<G> {
     }
 }
 
-impl EditBox<EditVoid> {
+impl <const BUFSIZE:usize, const NCHAN:usize> EditBox<BUFSIZE, NCHAN> {
     /// Construct an `EditBox` with the given inital `text`.
-    pub fn new<S: ToString>(text: S, callback: fn(&String)) -> Self {
+    pub fn new<S: ToString>(text: S,
+			    ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE,NCHAN>>>,
+			    mode: OutputMode) -> Self {
         let text = text.to_string();
         let len = text.len();
         EditBox {
@@ -288,13 +209,16 @@ impl EditBox<EditVoid> {
             last_edit: LastEdit::None,
             error_state: false,
             touch_phase: TouchPhase::None,
-	    callback: Some(callback),
-            guard: EditVoid,
+	    ruffbox: sync::Arc::clone(ruffbox),
+	    session: sync::Arc::new(Mutex::new(Session::<BUFSIZE, NCHAN>::with_mode(mode))),
+	    sample_set: SampleSet::new(),
+	    parts_store: PartsStore::new(),
+	    mode: mode,
         }
     }    
 }
 
-impl<G> EditBox<G> {
+impl<const BUFSIZE:usize, const NCHAN:usize> EditBox<BUFSIZE, NCHAN> {
         
     fn received_char(&mut self, mgr: &mut Manager, c: char) -> EditAction {
 
@@ -352,9 +276,18 @@ impl<G> EditBox<G> {
                 }
             }            
 	    ControlKey::Return if ctrl => {
-		if let Some(cb) = self.callback {
-		    cb(self.text.text());
-		}		  
+		// EVAALL
+		let pfa_in = parser::eval_from_str(self.text.text(), &self.sample_set, &self.parts_store, self.mode);		
+	
+		match pfa_in {
+		    Err(_) => {
+			println!("can't parse");			
+		    },
+		    Ok(pfa) => {
+			interpreter::interpret(&self.session, &mut self.sample_set, &mut self.parts_store, pfa, &self.ruffbox);
+		    }
+		}
+				  
 		Action::Activate
             }
 	    ControlKey::Return => {
@@ -669,22 +602,8 @@ impl<G> EditBox<G> {
     }
 }
 
-impl<G: EditGuard> HasStr for EditBox<G> {
-    fn get_str(&self) -> &str {
-        self.text.text()
-    }
-}
-
-impl<G: EditGuard> HasString for EditBox<G> {
-    fn set_string(&mut self, string: String) -> TkAction {
-        let action = kas::text::util::set_string_and_prepare(&mut self.text, string);
-        let _ = G::edit(self);
-        action
-    }
-}
-
-impl<G: EditGuard + 'static> event::Handler for EditBox<G> {
-    type Msg = G::Msg;
+impl <const BUFSIZE:usize, const NCHAN:usize>  event::Handler for EditBox<BUFSIZE, NCHAN> {
+    type Msg = VoidMsg;
 
     fn handle(&mut self, mgr: &mut Manager, event: Event) -> Response<Self::Msg> {
         match event {
@@ -692,9 +611,7 @@ impl<G: EditGuard + 'static> event::Handler for EditBox<G> {
                 mgr.request_char_focus(self.id());
                 Response::None
             }
-            Event::LostCharFocus => G::focus_lost(self)
-                .map(|msg| msg.into())
-                .unwrap_or(Response::None),
+            Event::LostCharFocus => Response::None,
             Event::LostSelFocus => {
                 self.selection.set_empty();
                 mgr.redraw(self.id());
@@ -703,14 +620,12 @@ impl<G: EditGuard + 'static> event::Handler for EditBox<G> {
             Event::Control(key) => match self.control_key(mgr, key) {
                 EditAction::None => Response::None,
                 EditAction::Unhandled => Response::Unhandled(Event::Control(key)),
-                EditAction::Activate => G::activate(self).into(),
-                EditAction::Edit => G::edit(self).into(),
+                _ => Response::None,
             },
             Event::ReceivedCharacter(c) => match self.received_char(mgr, c) {
                 EditAction::None => Response::None,
                 EditAction::Unhandled => Response::Unhandled(Event::ReceivedCharacter(c)),
-                EditAction::Activate => G::activate(self).into(),
-                EditAction::Edit => G::edit(self).into(),
+                _ => Response::None,
             },
             Event::PressStart { source, coord, .. } if source.is_primary() => {
                 if let PressSource::Touch(touch_id) = source {
