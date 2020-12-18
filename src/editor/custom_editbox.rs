@@ -157,9 +157,7 @@ pub struct EditBox<G: 'static> {
     frame_offset: Coord,
     frame_size: Size,
     text_pos: Coord,
-    view_offset: Coord,
-    editable: bool,
-    multi_line: bool,
+    view_offset: Coord,    
     text: Text<String>,
     required: Vec2,
     selection: SelectionHelper,
@@ -177,9 +175,8 @@ impl<G> Debug for EditBox<G> {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(
             f,
-            "EditBox {{ core: {:?}, editable: {:?}, text: {:?}, ... }}",
+            "EditBox {{ core: {:?}, text: {:?}, ... }}",
             self.core,
-            self.editable,
             self.text.text()
         )
     }
@@ -195,12 +192,7 @@ impl<G: 'static> Layout for EditBox<G> {
         let margins = size_handle.outer_margins();
         let frame_rules = SizeRules::extract_fixed(axis.is_vertical(), frame_size, margins);
 
-        let class = if self.multi_line {
-            TextClass::EditMulti
-        } else {
-            TextClass::Edit
-        };
-        let content_rules = size_handle.text_bound(&mut self.text, class, axis);
+        let content_rules = size_handle.text_bound(&mut self.text, TextClass::EditMulti, axis);
         let m = content_rules.margins();
 
         // Note: we do not allocate space for the edit marker (size_handle.edit_marker_width());
@@ -220,35 +212,25 @@ impl<G: 'static> Layout for EditBox<G> {
     }
 
     fn set_rect(&mut self, rect: Rect, align: AlignHints) {
-        let valign = if self.multi_line {
-            Align::Stretch
-        } else {
-            Align::Centre
-        };
         let rect = align
-            .complete(Align::Stretch, valign, self.rect().size)
+            .complete(Align::Stretch, Align::Stretch, self.rect().size)
             .apply(rect);
 
         self.core.rect = rect;
         self.text_pos = rect.pos + self.frame_offset;
         let size = rect.size - self.frame_size;
-        let multi_line = self.multi_line;
         self.required = self
             .text
             .update_env(|env| {
                 env.set_bounds(size.into());
-                env.set_wrap(multi_line);
+                env.set_wrap(true);
             })
             .into();
         self.set_view_offset_from_edit_pos();
     }
 
     fn draw(&self, draw_handle: &mut dyn DrawHandle, mgr: &event::ManagerState, disabled: bool) {
-        let class = if self.multi_line {
-            TextClass::EditMulti
-        } else {
-            TextClass::Edit
-        };
+        
         let mut input_state = self.input_state(mgr, disabled);
         input_state.error = self.error_state;
         draw_handle.edit_box(self.core.rect, input_state);
@@ -259,7 +241,7 @@ impl<G: 'static> Layout for EditBox<G> {
                 bounds,
                 self.view_offset,
                 self.text.as_ref(),
-                class,
+                TextClass::EditMulti,
             );
         } else {
             // TODO(opt): we could cache the selection rectangles here to make
@@ -271,7 +253,7 @@ impl<G: 'static> Layout for EditBox<G> {
                 self.view_offset,
                 &self.text,
                 self.selection.range(),
-                class,
+		TextClass::EditMulti,
             );
         }
         if input_state.char_focus {
@@ -280,7 +262,7 @@ impl<G: 'static> Layout for EditBox<G> {
                 bounds,
                 self.view_offset,
                 self.text.as_ref(),
-                class,
+		TextClass::EditMulti,
                 self.selection.edit_pos(),
             );
         }
@@ -297,9 +279,7 @@ impl EditBox<EditVoid> {
             frame_offset: Default::default(),
             frame_size: Default::default(),
             text_pos: Default::default(),
-            view_offset: Default::default(),
-            editable: true,
-            multi_line: false,
+            view_offset: Default::default(),            
             text: Text::new(Default::default(), text.into()),
             required: Vec2::ZERO,
             selection: SelectionHelper::new(len, len),
@@ -315,17 +295,8 @@ impl EditBox<EditVoid> {
 }
 
 impl<G> EditBox<G> {
-    
-    /// Set whether this `EditBox` shows multiple text lines
-    pub fn multi_line(mut self, multi_line: bool) -> Self {
-        self.multi_line = multi_line;
-        self
-    }
-    
+        
     fn received_char(&mut self, mgr: &mut Manager, c: char) -> EditAction {
-        if !self.editable {
-            return EditAction::Unhandled;
-        }
 
         let pos = self.selection.edit_pos();
         let selection = self.selection.range();
@@ -351,9 +322,6 @@ impl<G> EditBox<G> {
     }
 
     fn control_key(&mut self, mgr: &mut Manager, key: ControlKey) -> EditAction {
-        if !self.editable {
-            return EditAction::Unhandled;
-        }
 
         let mut buf = [0u8; 4];
         let pos = self.selection.edit_pos();
@@ -383,13 +351,13 @@ impl<G> EditBox<G> {
                     Action::Unhandled
                 }
             }            
-	    ControlKey::Return if ctrl && self.multi_line => {
+	    ControlKey::Return if ctrl => {
 		if let Some(cb) = self.callback {
 		    cb(self.text.text());
 		}		  
 		Action::Activate
             }
-	    ControlKey::Return if self.multi_line => {
+	    ControlKey::Return => {
                 Action::Insert('\n'.encode_utf8(&mut buf), LastEdit::Insert)
             }	    
             ControlKey::Tab => Action::Insert('\t'.encode_utf8(&mut buf), LastEdit::Insert),
@@ -566,19 +534,8 @@ impl<G> EditBox<G> {
             }
             ControlKey::Paste => {
                 if let Some(content) = mgr.get_clipboard() {
-                    let mut end = content.len();
-                    if !self.multi_line {
-                        // We cut the content short on control characters and
-                        // ignore them (preventing line-breaks and ignoring any
-                        // actions such as recursive-paste).
-                        for (i, c) in content.char_indices() {
-                            if c < '\u{20}' || (c >= '\u{7f}' && c <= '\u{9f}') {
-                                end = i;
-                                break;
-                            }
-                        }
-                    }
-
+                    let end = content.len();
+                    
                     string = content;
                     Action::Insert(&string[0..end], LastEdit::Paste)
                 } else {
