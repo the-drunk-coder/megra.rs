@@ -18,3 +18,7 @@ rustyline = "6.3.0"
 claxon = "0.4.3"
 getopts = "0.2"
 rand = "0.7"
+kas = { version = "0.6.0", features = ["winit"] }
+kas-theme = "0.6.0"
+kas-wgpu = "0.6.0"
+unicode-segmentation = "1.7.1"

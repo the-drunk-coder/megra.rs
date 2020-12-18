@@ -12,6 +12,7 @@ pub mod generator;
 pub mod session;
 pub mod scheduler;
 pub mod repl;
+pub mod editor;
 
 use getopts::Options;
 use std::{env, sync::Arc};
@@ -41,6 +42,7 @@ fn main() -> Result<(), anyhow::Error> {
 
     let mut opts = Options::new();
     opts.optflag("v", "version", "Print version");
+    opts.optflag("e", "editor", "Use integrated editor (experimental)");
     opts.optflag("h", "help", "Print this help");
     opts.optopt("o", "output-mode", "output mode (stereo, 8ch)", "stereo");
 
@@ -52,9 +54,15 @@ fn main() -> Result<(), anyhow::Error> {
         }
     };
 
+    let mut editor = false;
+    
     if matches.opt_present("v") {
         println!("{}", "0.0.1");
         return Ok(());
+    }
+
+    if matches.opt_present("e") {
+	editor = true;
     }
 
     if matches.opt_present("h") {
@@ -92,27 +100,27 @@ fn main() -> Result<(), anyhow::Error> {
 	    let mut conf: cpal::StreamConfig = config.into();
 	    conf.channels = 2;
 	    match sample_format  {		
-		cpal::SampleFormat::F32 => run::<f32, 2>(&device, &conf, out_mode)?,
-		cpal::SampleFormat::I16 => run::<i16, 2>(&device, &conf, out_mode)?,
-		cpal::SampleFormat::U16 => run::<u16, 2>(&device, &conf, out_mode)?,
+		cpal::SampleFormat::F32 => run::<f32, 2>(&device, &conf, out_mode, editor)?,
+		cpal::SampleFormat::I16 => run::<i16, 2>(&device, &conf, out_mode, editor)?,
+		cpal::SampleFormat::U16 => run::<u16, 2>(&device, &conf, out_mode, editor)?,
 	    }
 	},
 	OutputMode::FourChannel => {
 	    let mut conf: cpal::StreamConfig = config.into();
 	    conf.channels = 4;
 	    match sample_format  {
-		cpal::SampleFormat::F32 => run::<f32, 4>(&device, &conf, out_mode)?,
-		cpal::SampleFormat::I16 => run::<i16, 4>(&device, &conf, out_mode)?,
-		cpal::SampleFormat::U16 => run::<u16, 4>(&device, &conf, out_mode)?,
+		cpal::SampleFormat::F32 => run::<f32, 4>(&device, &conf, out_mode, editor)?,
+		cpal::SampleFormat::I16 => run::<i16, 4>(&device, &conf, out_mode, editor)?,
+		cpal::SampleFormat::U16 => run::<u16, 4>(&device, &conf, out_mode, editor)?,
 	    }
 	},
 	OutputMode::EightChannel => {
 	    let mut conf: cpal::StreamConfig = config.into();
 	    conf.channels = 8;
 	    match sample_format  {
-		cpal::SampleFormat::F32 => run::<f32, 8>(&device, &conf, out_mode)?,
-		cpal::SampleFormat::I16 => run::<i16, 8>(&device, &conf, out_mode)?,
-		cpal::SampleFormat::U16 => run::<u16, 8>(&device, &conf, out_mode)?,
+		cpal::SampleFormat::F32 => run::<f32, 8>(&device, &conf, out_mode, editor)?,
+		cpal::SampleFormat::I16 => run::<i16, 8>(&device, &conf, out_mode, editor)?,
+		cpal::SampleFormat::U16 => run::<u16, 8>(&device, &conf, out_mode, editor)?,
 	    }
 	}
     }
@@ -120,7 +128,7 @@ fn main() -> Result<(), anyhow::Error> {
     Ok(())
 }
 
-fn run<T, const NCHAN:usize>(device: &cpal::Device, config: &cpal::StreamConfig, mode: OutputMode) -> Result<(), anyhow::Error>
+fn run<T, const NCHAN:usize>(device: &cpal::Device, config: &cpal::StreamConfig, mode: OutputMode, editor: bool) -> Result<(), anyhow::Error>
 where
     T: cpal::Sample,
 {
@@ -155,6 +163,12 @@ where
     )?;
     stream.play()?;
 
-    // start the megra repl
-    repl::start_repl(&ruffbox, mode)
+    if editor {
+	editor::run_editor();
+	Ok(())
+    } else {
+	// start the megra repl
+	repl::start_repl(&ruffbox, mode)
+    }
+    
 }
