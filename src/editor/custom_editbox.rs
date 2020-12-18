@@ -309,114 +309,17 @@ impl EditBox<EditVoid> {
             touch_phase: TouchPhase::None,
             guard: EditVoid,
         }
-    }
-
-    /// Set an [`EditGuard`]
-    ///
-    /// Technically, this consumes `self` and reconstructs another `EditBox`
-    /// with a different parameterisation.
-    ///
-    /// This method calls [`EditGuard::edit`] after applying `guard` to `self`
-    /// and discards any message emitted.
-    pub fn with_guard<G: EditGuard>(self, guard: G) -> EditBox<G> {
-        let mut edit = EditBox {
-            core: self.core,
-            frame_offset: self.frame_offset,
-            frame_size: self.frame_size,
-            text_pos: self.text_pos,
-            view_offset: self.view_offset,
-            editable: self.editable,
-            multi_line: self.multi_line,
-            text: self.text,
-            required: self.required,
-            selection: self.selection,
-            edit_x_coord: self.edit_x_coord,
-            old_state: self.old_state,
-            last_edit: self.last_edit,
-            error_state: self.error_state,
-            touch_phase: self.touch_phase,
-            guard,
-        };
-        let _ = G::edit(&mut edit);
-        edit
-    }
-
-    /// Set a guard function, called on activation
-    ///
-    /// The closure `f` is called when the `EditBox` is activated (when the
-    /// "enter" key is pressed).
-    /// Its result, if not `None`, is the event handler's response.
-    ///
-    /// This method is a parametisation of [`EditBox::with_guard`]. Any guard
-    /// previously assigned to the `EditBox` will be replaced.
-    pub fn on_activate<F: Fn(&str) -> Option<M>, M>(self, f: F) -> EditBox<EditActivate<F, M>> {
-        self.with_guard(EditActivate(f))
-    }
-
-    /// Set a guard function, called on activation and input-focus lost
-    ///
-    /// The closure `f` is called when the `EditBox` is activated (when the
-    /// "enter" key is pressed) and when keyboard focus is lost.
-    /// Its result, if not `None`, is the event handler's response.
-    ///
-    /// This method is a parametisation of [`EditBox::with_guard`]. Any guard
-    /// previously assigned to the `EditBox` will be replaced.
-    pub fn on_afl<F: Fn(&str) -> Option<M>, M>(self, f: F) -> EditBox<EditAFL<F, M>> {
-        self.with_guard(EditAFL(f))
-    }
-
-    /// Set a guard function, called on edit
-    ///
-    /// The closure `f` is called when the `EditBox` is edited by the user.
-    /// Its result, if not `None`, is the event handler's response.
-    ///
-    /// The closure `f` is also called initially (by this method) and on
-    /// programmatic edits, however in these cases any results returned by `f`
-    /// are discarded.
-    ///
-    /// This method is a parametisation of [`EditBox::with_guard`]. Any guard
-    /// previously assigned to the `EditBox` will be replaced.
-    pub fn on_edit<F: Fn(&str) -> Option<M>, M>(self, f: F) -> EditBox<EditEdit<F, M>> {
-        self.with_guard(EditEdit(f))
-    }
+    }    
 }
 
 impl<G> EditBox<G> {
-    /// Set whether this `EditBox` is editable (inline)
-    pub fn editable(mut self, editable: bool) -> Self {
-        self.editable = editable;
-        self
-    }
-
-    /// Get whether this `EditBox` is editable
-    pub fn is_editable(&self) -> bool {
-        self.editable
-    }
-
-    /// Set whether this `EditBox` is editable
-    pub fn set_editable(&mut self, editable: bool) {
-        self.editable = editable;
-    }
-
+    
     /// Set whether this `EditBox` shows multiple text lines
     pub fn multi_line(mut self, multi_line: bool) -> Self {
         self.multi_line = multi_line;
         self
     }
-
-    /// Get whether the input state is erroneous
-    pub fn has_error(&self) -> bool {
-        self.error_state
-    }
-
-    /// Set the error state
-    ///
-    /// When true, the input field's background is drawn red.
-    // TODO: possibly change type to Option<String> and display the error
-    pub fn set_error_state(&mut self, error_state: bool) {
-        self.error_state = error_state;
-    }
-
+    
     fn received_char(&mut self, mgr: &mut Manager, c: char) -> EditAction {
         if !self.editable {
             return EditAction::Unhandled;

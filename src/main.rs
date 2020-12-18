@@ -164,11 +164,13 @@ where
     stream.play()?;
 
     if editor {
-	editor::run_editor();
-	Ok(())
+	let res = editor::run_editor();
+	match res {
+	    Ok(_) => Ok(()),
+	    Err(e) => Err(e)
+	}
     } else {
 	// start the megra repl
 	repl::start_repl(&ruffbox, mode)
-    }
-    
+    }    
 }

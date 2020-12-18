@@ -23,7 +23,7 @@ pub fn run_editor() -> Result<(), anyhow::Error> {
             #[layout(grid)]
             #[handler(msg = VoidMsg)]
             struct {
-                #[widget(row=0, col=0, rspan=10)] editor: EditBoxVoid = EditBox::new(doc).multi_line(true),                
+                #[widget(row=0, col=0)] editor: EditBoxVoid = EditBox::new(doc).multi_line(true),                
             }	    
         },
     );
