@@ -164,7 +164,7 @@ where
     stream.play()?;
 
     if editor {
-	let res = editor::run_editor();
+	let res = editor::run_editor(&ruffbox, mode);
 	match res {
 	    Ok(_) => Ok(()),
 	    Err(e) => Err(e)

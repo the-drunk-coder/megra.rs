@@ -168,6 +168,7 @@ pub struct EditBox<G: 'static> {
     last_edit: LastEdit,
     error_state: bool,
     touch_phase: TouchPhase,
+    callback: Option<fn(&String)>,
     /// The associated [`EditGuard`] implementation
     pub guard: G,
 }
@@ -288,7 +289,7 @@ impl<G: 'static> Layout for EditBox<G> {
 
 impl EditBox<EditVoid> {
     /// Construct an `EditBox` with the given inital `text`.
-    pub fn new<S: ToString>(text: S) -> Self {
+    pub fn new<S: ToString>(text: S, callback: fn(&String)) -> Self {
         let text = text.to_string();
         let len = text.len();
         EditBox {
@@ -307,6 +308,7 @@ impl EditBox<EditVoid> {
             last_edit: LastEdit::None,
             error_state: false,
             touch_phase: TouchPhase::None,
+	    callback: Some(callback),
             guard: EditVoid,
         }
     }    
@@ -382,8 +384,9 @@ impl<G> EditBox<G> {
                 }
             }            
 	    ControlKey::Return if ctrl && self.multi_line => {
-		
-                println!("CTRL ACTION !!! {:?}", self.selection.range());
+		if let Some(cb) = self.callback {
+		    cb(self.text.text());
+		}		  
 		Action::Activate
             }
 	    ControlKey::Return if self.multi_line => {

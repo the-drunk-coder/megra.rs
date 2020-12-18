@@ -1,29 +1,49 @@
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License in the LICENSE-APACHE file or at:
-//     https://www.apache.org/licenses/LICENSE-2.0
-
-//! Markdown parsing demo
-
+use std::sync;
+use parking_lot::Mutex;
 
 use kas::event::*;
 use kas::macros::make_widget;
 use kas::widget::Window;
+use ruffbox_synth::ruffbox::Ruffbox;
 
 mod custom_editbox;
 use custom_editbox::{EditBox, EditBoxVoid};
 
-pub fn run_editor() -> Result<(), anyhow::Error> {
+use crate::builtin_types::*;
+use crate::session::{Session, OutputMode};
+use crate::parser;
+use crate::interpreter;
+
+
+pub fn run_editor<const BUFSIZE:usize, const NCHAN:usize>(ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>, mode: OutputMode) -> Result<(), anyhow::Error> {
 
     let doc = r"Hello";
+    
+    let session = sync::Arc::new(Mutex::new(Session::<BUFSIZE, NCHAN>::with_mode(mode)));
+    let sample_set = Box::new(SampleSet::new());
+    let parts_store = Box::new(PartsStore::new());
 
+    let callback = move |text: &String| {
+
+	/*
+	let pfa_in = parser::eval_from_str(text, &sample_set, &parts_store, mode);		
+	match pfa_in {
+	    Err(e) => {
+		println!("can't parse");			
+	    },
+	    Ok(pfa) => {
+		interpreter::interpret(&session, &mut sample_set, &mut parts_store, pfa, &ruffbox);
+	    }
+	}*/
+    };
+    
     let window = Window::new(
         "Markdown parser",
         make_widget! {
             #[layout(grid)]
             #[handler(msg = VoidMsg)]
             struct {
-                #[widget(row=0, col=0)] editor: EditBoxVoid = EditBox::new(doc).multi_line(true),                
+                #[widget(row=0, col=0)] editor: EditBoxVoid = EditBox::new(doc, callback).multi_line(true),                
             }	    
         },
     );
