@@ -1,32 +1,22 @@
 use std::sync;
 use parking_lot::Mutex;
 
-use kas::event::*;
-use kas::macros::make_widget;
-use kas::widget::Window;
-use ruffbox_synth::ruffbox::Ruffbox;
-
-mod custom_editbox;
-use custom_editbox::EditBox;
-
 use crate::session::OutputMode;
 
-pub fn run_editor<const BUFSIZE:usize, const NCHAN:usize>(ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>, mode: OutputMode) -> Result<(), anyhow::Error> {
+use ruffbox_synth::ruffbox::Ruffbox;
 
-    let doc = r"(sx 'ga #t (infer 'tral :events 'a (saw 200) :rules (rule 'a 'a 100 400)))";
-        
-    let window = Window::new(
-        "Mégra",
-        make_widget! {
-            #[layout(grid)]
-            #[handler(msg = VoidMsg)]
-            struct<const BUFSIZE:usize, const NCHAN:usize> {
-                #[widget(row=0, col=0)]
-		editor: EditBox<BUFSIZE, NCHAN> = EditBox::new(doc, ruffbox, mode),
-            }	    
-        },
-    );
+mod megra_editor;
+use megra_editor::MegraEditor;
 
-    let theme = kas_theme::FlatTheme::new().with_colours("dark").with_font_size(7.0);
-    kas_wgpu::Toolkit::new(theme)?.with(window)?.run()    
+
+pub fn run_editor<const BUFSIZE:usize, const NCHAN:usize>(ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>, mode: OutputMode) {
+    let title = "Mégra Editor";
+
+    // Persist app state to file:
+    let storage = egui_glium::storage::FileStorage::from_path(".megra_edit.json");
+    
+    // Restore editor from file, or create new editor:
+    let app: MegraEditor = egui::app::get_value(&storage, egui::app::APP_KEY).unwrap_or_default();
+
+    egui_glium::run(title, Box::new(storage), Box::new(app));
 }
