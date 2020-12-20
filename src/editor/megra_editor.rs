@@ -9,7 +9,6 @@ pub struct MegraEditor {
     callback: Option<Arc<Mutex<dyn FnMut(&String)>>>,
 }
 
-
 impl Default for MegraEditor {
     fn default() -> Self {
         Self {
@@ -29,6 +28,17 @@ impl egui::app::App for MegraEditor {
     fn name(&self) -> &str {
         "Mégra Editor"
     }
+
+    fn load(&mut self, storage: &dyn egui::app::Storage) {
+	println!("load");
+        *self = egui::app::get_value(storage, egui::app::APP_KEY).unwrap_or_default()
+    }
+
+    fn save(&mut self, storage: &mut dyn egui::app::Storage) {
+	println!("save");
+        egui::app::set_value(storage, egui::app::APP_KEY, self);
+    }
+        
     /// Called each time the UI needs repainting, which may be many times per second.
     /// Put your widgets into a `SidePanel`, `TopPanel`, `CentralPanel`, `Window` or `Area`.
     fn ui(
@@ -54,9 +64,5 @@ impl egui::app::App for MegraEditor {
         });
 	
 	integration_context.output.window_size = Some(egui::Vec2::new(640.0, 480.0)); // resize the window to be just the size we need it to be
-    }
-
-    fn on_exit(&mut self, storage: &mut dyn egui::app::Storage) {
-        egui::app::set_value(storage, egui::app::APP_KEY, self);
-    }
+    }    
 }
