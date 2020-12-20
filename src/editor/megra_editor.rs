@@ -19,7 +19,7 @@ impl Default for MegraEditor {
 }
 
 impl MegraEditor {
-    pub fn set_callback(&mut self, callback: &Arc<Mutex<dyn FnMut(&String)>>) {		    
+    pub fn set_callback(&mut self, callback: &Arc<Mutex<dyn FnMut(&String)>>) {	
 	self.callback = Some(Arc::clone(callback));
     }    
 }
@@ -30,12 +30,21 @@ impl egui::app::App for MegraEditor {
     }
 
     fn load(&mut self, storage: &dyn egui::app::Storage) {
-	println!("load");
-        *self = egui::app::get_value(storage, egui::app::APP_KEY).unwrap_or_default()
+	// make sure callback is carried over after loading
+	let callback = if let Some(tmp_callback) = &self.callback {
+	    Some(Arc::clone(&tmp_callback))
+	} else {
+	    None
+	};
+	   
+        *self = egui::app::get_value(storage, egui::app::APP_KEY).unwrap_or_default();
+
+	if let Some(tmp_callback) = callback {
+	    self.set_callback(&tmp_callback);
+	}
     }
 
     fn save(&mut self, storage: &mut dyn egui::app::Storage) {
-	println!("save");
         egui::app::set_value(storage, egui::app::APP_KEY, self);
     }
         
@@ -51,7 +60,7 @@ impl egui::app::App for MegraEditor {
         egui::CentralPanel::default().show(ctx, |ui| {
             ui.heading("Mégra Editor");
 
-	    let tx = if let Some(cb) = self.callback.as_ref() {
+	    let tx = if let Some(cb) = self.callback.as_ref() {		
 		egui::CallbackTextEdit::multiline(&mut self.content).desired_rows(31).desired_width(640.0).eval_callback(&cb)		
 	    } else {
 		egui::CallbackTextEdit::multiline(&mut self.content).desired_rows(31).desired_width(640.0)

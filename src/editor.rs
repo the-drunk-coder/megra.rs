@@ -20,8 +20,8 @@ pub fn run_editor<const BUFSIZE:usize, const NCHAN:usize>(ruffbox: &Arc<Mutex<Ru
     let session = Arc::new(Mutex::new(Session::with_mode(mode)));
     let ruffbox2 = Arc::clone(ruffbox);
         
-    let callback_ref:Arc<Mutex<dyn FnMut(&String)>> = Arc::new(Mutex::new(
-	move |text: &String| {	    
+    let callback_ref:Arc<Mutex<dyn FnMut(&String)>> = Arc::new(Mutex::new(	
+	move |text: &String| {
 	    let pfa_in = parser::eval_from_str(text, &sample_set, &parts_store, mode);
 	    match pfa_in {
 		Ok(pfa) => {
