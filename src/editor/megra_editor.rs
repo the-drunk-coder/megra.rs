@@ -7,6 +7,8 @@ pub struct MegraEditor {
     content: String,
     #[serde(skip)]
     callback: Option<Arc<Mutex<dyn FnMut(&String)>>>,
+    #[serde(skip)]
+    selection_toggle: atomic::AtomicBool,
 }
 
 impl Default for MegraEditor {
@@ -14,6 +16,7 @@ impl Default for MegraEditor {
         Self {
             content: "(sx 'ga #t (infer 'troll :events 'a (saw 400) :rules (rule 'a 'a 100 400)))".to_owned(),
 	    callback: None,
+	    selection_toggle: atomic::AtomicBool::new(false),
         }
     }
 }
@@ -58,15 +61,23 @@ impl egui::app::App for MegraEditor {
        	
         // Example used in `README.md`.
         egui::CentralPanel::default().show(ctx, |ui| {
-            ui.heading("Mégra Editor");
-
+            
 	    let tx = if let Some(cb) = self.callback.as_ref() {		
-		egui::CallbackTextEdit::multiline(&mut self.content).desired_rows(31).desired_width(640.0).eval_callback(&cb)		
+		egui::CallbackTextEdit::multiline(&mut self.content, &mut self.selection_toggle)
+		    .desired_rows(34)
+		    .text_style(egui::TextStyle::Monospace)
+		    .desired_width(640.0)
+		    .eval_callback(&cb)		
 	    } else {
-		egui::CallbackTextEdit::multiline(&mut self.content).desired_rows(31).desired_width(640.0)
+		egui::CallbackTextEdit::multiline(&mut self.content, &mut self.selection_toggle)
+		    .desired_rows(34)
+		    .desired_width(640.0)
+		    .text_style(egui::TextStyle::Monospace)
 	    };
-	    	    
-	    ui.horizontal(|ui| {                
+
+	    ui.add(egui::Label::new("Mégra Editor").text_color(egui::Srgba::from_rgb(150, 250, 100)).monospace());
+	    ui.horizontal(|ui| {
+	
 		ui.add(tx)
             });
             

@@ -27,7 +27,7 @@ pub fn run_editor<const BUFSIZE:usize, const NCHAN:usize>(ruffbox: &Arc<Mutex<Ru
 		Ok(pfa) => {
 		    interpreter::interpret(&session, &mut sample_set, &mut parts_store, pfa, &ruffbox2);
 		},
-		Err(_) => {println!("could not parse this!")},
+		Err(_) => {println!("could not parse this! {}", text)},
 	    }
 	}
     ));
