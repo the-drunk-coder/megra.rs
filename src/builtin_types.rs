@@ -2,7 +2,7 @@ use crate::markov_sequence_generator::{Rule, MarkovSequenceGenerator};
 use crate::event::*;
 use crate::parameter::*;
 use crate::generator_processor::GeneratorProcessor;
-use crate::generator::{Generator, GenModFun};
+use crate::generator::{Generator, GenModFun, GenModFunParameter};
 use crate::session::SyncContext;
 use std::collections::{HashMap, HashSet};
 
@@ -112,7 +112,7 @@ pub enum Atom { // atom might not be the right word any longer
     GeneratorProcessorList(Vec<Box<dyn GeneratorProcessor + Send>>),
     GeneratorList(Vec<Generator>),
     Parameter(Parameter),
-    GeneratorModifierFunction((GenModFun, Vec<f32>)),
+    GeneratorModifierFunction((GenModFun, Vec<GenModFunParameter>, HashMap<String, GenModFunParameter>)),
     Nothing
 }
 

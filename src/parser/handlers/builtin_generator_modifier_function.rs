@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use crate::builtin_types::*;
 use crate::generator::*;
 
@@ -7,16 +8,27 @@ pub fn handle(gen_mod: &BuiltInGenModFun, tail: &mut Vec<Expr>, _parts_store: &P
     match last {
 	Some(Expr::Constant(Atom::Generator(mut g))) => {
 	    let mut tail_drain = tail.drain(..); 	    
-	    let mut args = Vec::new();
-
-	    while let Some(Expr::Constant(Atom::Float(f))) = tail_drain.next() {
-		args.push(f);
+	    let mut pos_args = Vec::new();
+	    let mut named_args = HashMap::new();
+	    
+	    while let Some(Expr::Constant(c)) = tail_drain.next() {
+		match c {
+		    Atom::Float(f) => pos_args.push(GenModFunParameter::Numeric(f)),
+		    Atom::Keyword(k) => {
+			named_args.insert(k, match tail_drain.next() {
+			    Some(Expr::Constant(Atom::Float(f))) => GenModFunParameter::Numeric(f),
+			    Some(Expr::Constant(Atom::Symbol(s))) => GenModFunParameter::Symbolic(s),
+			    _ => GenModFunParameter::Numeric(0.0) // dumb placeholder			    
+			});
+		    },
+		    _ => {}
+		} 
 	    }
 
 	    match gen_mod {
-		BuiltInGenModFun::Haste => haste(&mut g.root_generator, &mut g.time_mods, &args),
-		BuiltInGenModFun::Relax => relax(&mut g.root_generator, &mut g.time_mods, &args),
-		BuiltInGenModFun::Grow => grow(&mut g.root_generator, &mut g.time_mods, &args),
+		BuiltInGenModFun::Haste => haste(&mut g.root_generator, &mut g.time_mods, &pos_args, &named_args),
+		BuiltInGenModFun::Relax => relax(&mut g.root_generator, &mut g.time_mods, &pos_args, &named_args),
+		BuiltInGenModFun::Grow => grow(&mut g.root_generator, &mut g.time_mods, &pos_args, &named_args),
 	    }
 	    Atom::Generator(g)
 	},	
@@ -25,16 +37,27 @@ pub fn handle(gen_mod: &BuiltInGenModFun, tail: &mut Vec<Expr>, _parts_store: &P
 	    tail.push(l);
 
 	    let mut tail_drain = tail.drain(..); 	    
-	    let mut args = Vec::new();
-
-	    while let Some(Expr::Constant(Atom::Float(f))) = tail_drain.next() {
-		args.push(f);
+	    let mut pos_args = Vec::new();
+	    let mut named_args = HashMap::new();
+	    
+	    while let Some(Expr::Constant(c)) = tail_drain.next() {
+		match c {
+		    Atom::Float(f) => pos_args.push(GenModFunParameter::Numeric(f)),
+		    Atom::Keyword(k) => {
+			named_args.insert(k, match tail_drain.next() {
+			    Some(Expr::Constant(Atom::Float(f))) => GenModFunParameter::Numeric(f),
+			    Some(Expr::Constant(Atom::Symbol(s))) => GenModFunParameter::Symbolic(s),
+			    _ => GenModFunParameter::Numeric(0.0) // dumb placeholder			    
+			});
+		    },
+		    _ => {}
+		} 
 	    }
     
 	    Atom::GeneratorModifierFunction (match gen_mod {
-		BuiltInGenModFun::Haste => (haste, args),
-		BuiltInGenModFun::Relax => (relax, args),
-		BuiltInGenModFun::Grow => (grow, args),
+		BuiltInGenModFun::Haste => (haste, pos_args, named_args),
+		BuiltInGenModFun::Relax => (relax, pos_args, named_args),
+		BuiltInGenModFun::Grow => (grow, pos_args, named_args),
 	    })
 	},
 	None => {

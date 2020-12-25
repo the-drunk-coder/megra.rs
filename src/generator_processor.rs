@@ -3,7 +3,7 @@ use std::collections::HashMap;
 
 use crate::{event::{StaticEvent, InterpretableEvent, Event},
 	    parameter::Parameter,
-	    generator::{TimeMod, GenModFun},
+	    generator::{TimeMod, GenModFun, GenModFunParameter},
 	    markov_sequence_generator::MarkovSequenceGenerator};
 
 pub trait GeneratorProcessor: GeneratorProcessorClone {    
@@ -33,7 +33,7 @@ impl Clone for Box<dyn GeneratorProcessor + Send> {
 
 type StaticEventsAndFilters = HashMap<Vec<String>, Vec<StaticEvent>>;
 type EventsAndFilters = HashMap<Vec<String>, Vec<Event>>;
-type GenModFunsAndArgs = Vec<(GenModFun, Vec<f32>)>;
+type GenModFunsAndArgs = Vec<(GenModFun, Vec<GenModFunParameter>, HashMap<String, GenModFunParameter>)>;
 
 /// Apple-ys events to the throughcoming ones
 #[derive(Clone)]
@@ -124,9 +124,9 @@ impl GeneratorProcessor for AppleProcessor {
 	let mut rng = rand::thread_rng();
 	for (prob, gen_mods) in self.modifiers_to_be_applied.iter_mut() {	    
 	    let cur_prob:usize = (prob.evaluate() as usize) % 101; // make sure prob is always between 0 and 100
-	    for (gen_mod, args) in gen_mods.iter() {						
+	    for (gen_mod_fun, pos_args, named_args) in gen_mods.iter() {						
 		if rng.gen_range(0, 100) < cur_prob {
-		    gen_mod(gen, time_mods, args)
+		    gen_mod_fun(gen, time_mods, pos_args, named_args)
 		}				
 	    }	    
 	}	    	
@@ -187,8 +187,8 @@ impl GeneratorProcessor for EveryProcessor {
 	for (step, _, gen_mods) in self.things_to_be_applied.iter_mut() { // genmodfuns not needed here ...	    
 	    let cur_step:usize = (step.static_val as usize) % 101; 
 	    if self.step_count != 0 && self.step_count % cur_step == 0 {		    
-		for (gen_mod, args) in gen_mods.iter() {		    
-		    gen_mod(gen, time_mods, args)
+		for (gen_mod_fun, pos_args, named_args) in gen_mods.iter() {		    
+		    gen_mod_fun(gen, time_mods, pos_args, named_args)
 		}				
 	    }	    
 	}	    	
