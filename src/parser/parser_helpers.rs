@@ -32,6 +32,60 @@ pub fn get_keyword_params(params: &mut HashMap<SynthParameter, Box<Parameter>>, 
     }
 }
 
+pub fn get_raw_keyword_params(tail_drain: &mut std::vec::Drain<Expr>) -> HashMap<String, Atom> {
+    let mut params = HashMap::new();
+    while let Some(Expr::Constant(Atom::Keyword(k))) = tail_drain.next() {
+	if let Some(Expr::Constant(c)) = tail_drain.next() {
+	    // only bool, string, float, symbol
+	    match c {
+		Atom::Float(f) => params.insert(k, Atom::Float(f)),
+		Atom::Boolean(b) => params.insert(k, Atom::Boolean(b)),
+		Atom::Description(d) => params.insert(k, Atom::Description(d)),
+		Atom::Symbol(d) => params.insert(k, Atom::Symbol(d)),
+		_ => params.insert(k, Atom::Nothing),
+	    };
+	}
+    }
+    params
+}
+
+pub fn find_keyword_float_param(raw_params: &HashMap<String, Atom>, key: String, default: f32) -> Parameter {
+    Parameter::with_value(
+	if let Some(Atom::Float(f)) = raw_params.get(&key) {
+	    *f
+	} else {
+	    default
+	})
+}
+
+pub fn find_keyword_float_value(raw_params: &HashMap<String, Atom>, key: String, default: f32) -> f32 {
+    if let Some(Atom::Float(f)) = raw_params.get(&key) {
+	*f
+    } else {
+	default
+    }
+}
+
+pub fn find_keyword_bool_value(raw_params: &HashMap<String, Atom>, key: String, default: bool) -> bool {
+    if let Some(Atom::Boolean(b)) = raw_params.get(&key) {
+	*b
+    } else {
+	default
+    }
+}
+
+pub fn get_next_keyword_param(key: String, tail_drain: &mut std::vec::Drain<Expr>, default: f32) -> Parameter {
+    if let Some(Expr::Constant(Atom::Keyword(k))) = tail_drain.next() {
+	if k == key {
+	    get_next_param(tail_drain, default)
+	} else {
+	    Parameter::with_value(default)
+	}	
+    } else {
+	Parameter::with_value(default)
+    }
+}
+
 pub fn get_next_param(tail_drain: &mut std::vec::Drain<Expr>, default: f32) -> Parameter {
     match tail_drain.next() {
 	Some(Expr::Constant(Atom::Float(n))) => Parameter::with_value(n),

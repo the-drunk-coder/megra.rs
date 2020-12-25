@@ -81,6 +81,7 @@ pub fn haste(_: &mut MarkovSequenceGenerator,
 	     pos_args: &Vec<GenModFunParameter>,
 	     _: &HashMap<String, GenModFunParameter>) {
 
+    // sanity check, otherwise nothing happens ...    
     if let GenModFunParameter::Numeric(n) = pos_args[0] {
 	if let GenModFunParameter::Numeric(v) = pos_args[1] {
 	    for _ in 0..n as usize {
@@ -129,7 +130,7 @@ pub fn grow(gen: &mut MarkovSequenceGenerator,
 	    "old" => gen.generator.grow_old(),
 	    _ => gen.generator.grow_old(),
 	} {
-	    println!("grow!");
+	    //println!("grow!");
 	    let template_sym = result.template_symbol.unwrap();
 	    let added_sym = result.added_symbol.unwrap();
 	    if let Some(old_evs) = gen.event_mapping.get(&template_sym) {
