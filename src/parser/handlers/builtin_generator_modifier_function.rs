@@ -13,12 +13,12 @@ pub fn handle(gen_mod: &BuiltInGenModFun, tail: &mut Vec<Expr>, _parts_store: &P
 	    
 	    while let Some(Expr::Constant(c)) = tail_drain.next() {
 		match c {
-		    Atom::Float(f) => pos_args.push(GenModFunParameter::Numeric(f)),
+		    Atom::Float(f) => pos_args.push(ConfigParameter::Numeric(f)),
 		    Atom::Keyword(k) => {
 			named_args.insert(k, match tail_drain.next() {
-			    Some(Expr::Constant(Atom::Float(f))) => GenModFunParameter::Numeric(f),
-			    Some(Expr::Constant(Atom::Symbol(s))) => GenModFunParameter::Symbolic(s),
-			    _ => GenModFunParameter::Numeric(0.0) // dumb placeholder			    
+			    Some(Expr::Constant(Atom::Float(f))) => ConfigParameter::Numeric(f),
+			    Some(Expr::Constant(Atom::Symbol(s))) => ConfigParameter::Symbolic(s),
+			    _ => ConfigParameter::Numeric(0.0) // dumb placeholder			    
 			});
 		    },
 		    _ => {}
@@ -42,12 +42,12 @@ pub fn handle(gen_mod: &BuiltInGenModFun, tail: &mut Vec<Expr>, _parts_store: &P
 	    
 	    while let Some(Expr::Constant(c)) = tail_drain.next() {
 		match c {
-		    Atom::Float(f) => pos_args.push(GenModFunParameter::Numeric(f)),
+		    Atom::Float(f) => pos_args.push(ConfigParameter::Numeric(f)),
 		    Atom::Keyword(k) => {
 			named_args.insert(k, match tail_drain.next() {
-			    Some(Expr::Constant(Atom::Float(f))) => GenModFunParameter::Numeric(f),
-			    Some(Expr::Constant(Atom::Symbol(s))) => GenModFunParameter::Symbolic(s),
-			    _ => GenModFunParameter::Numeric(0.0) // dumb placeholder			    
+			    Some(Expr::Constant(Atom::Float(f))) => ConfigParameter::Numeric(f),
+			    Some(Expr::Constant(Atom::Symbol(s))) => ConfigParameter::Symbolic(s),
+			    _ => ConfigParameter::Numeric(0.0) // dumb placeholder			    
 			});
 		    },
 		    _ => {}

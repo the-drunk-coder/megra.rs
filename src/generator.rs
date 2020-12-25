@@ -1,6 +1,7 @@
 use std::boxed::Box;
 use std::collections::{HashMap, BTreeSet};
-use crate::{event::{StaticEvent, InterpretableEvent, EventOperation, SourceEvent},
+use crate::{builtin_types::ConfigParameter,
+	    event::{StaticEvent, InterpretableEvent, EventOperation, SourceEvent},
 	    generator_processor::GeneratorProcessor,
 	    markov_sequence_generator::MarkovSequenceGenerator};
 use ruffbox_synth::ruffbox::synth::SynthParameter;
@@ -63,27 +64,19 @@ impl Generator {
     }
 }
 
-// might be unified with event parameters at some point but
-// i'm not sure how yet ...
-#[derive(Clone)]
-pub enum GenModFunParameter {
-    Numeric(f32),
-    Symbolic(String)    
-}
-
 pub type GenModFun = fn(&mut MarkovSequenceGenerator,
 			&mut Vec::<TimeMod>,
-			&Vec<GenModFunParameter>,
-			&HashMap<String, GenModFunParameter>);
+			&Vec<ConfigParameter>,
+			&HashMap<String, ConfigParameter>);
 
 pub fn haste(_: &mut MarkovSequenceGenerator,
 	     time_mods: &mut Vec<TimeMod>,
-	     pos_args: &Vec<GenModFunParameter>,
-	     _: &HashMap<String, GenModFunParameter>) {
+	     pos_args: &Vec<ConfigParameter>,
+	     _: &HashMap<String, ConfigParameter>) {
 
     // sanity check, otherwise nothing happens ...    
-    if let GenModFunParameter::Numeric(n) = pos_args[0] {
-	if let GenModFunParameter::Numeric(v) = pos_args[1] {
+    if let ConfigParameter::Numeric(n) = pos_args[0] {
+	if let ConfigParameter::Numeric(v) = pos_args[1] {
 	    for _ in 0..n as usize {
 		time_mods.push(TimeMod{
 		    val: v,
@@ -96,11 +89,11 @@ pub fn haste(_: &mut MarkovSequenceGenerator,
 
 pub fn relax(_: &mut MarkovSequenceGenerator,
 	     time_mods: &mut Vec<TimeMod>,
-	     pos_args: &Vec<GenModFunParameter>,
-	     _: &HashMap<String, GenModFunParameter>) {
+	     pos_args: &Vec<ConfigParameter>,
+	     _: &HashMap<String, ConfigParameter>) {
     
-    if let GenModFunParameter::Numeric(n) = pos_args[0] {
-	if let GenModFunParameter::Numeric(v) = pos_args[1] {
+    if let ConfigParameter::Numeric(n) = pos_args[0] {
+	if let ConfigParameter::Numeric(v) = pos_args[1] {
 	    for _ in 0..n as usize {
 		time_mods.push(TimeMod{
 		    val: v,
@@ -114,12 +107,12 @@ pub fn relax(_: &mut MarkovSequenceGenerator,
 
 pub fn grow(gen: &mut MarkovSequenceGenerator,
 	    _: &mut Vec<TimeMod>,
-	    pos_args: &Vec<GenModFunParameter>,
-	    named_args: &HashMap<String, GenModFunParameter>) {
+	    pos_args: &Vec<ConfigParameter>,
+	    named_args: &HashMap<String, ConfigParameter>) {
 
-    if let GenModFunParameter::Numeric(f) = pos_args[0] {
+    if let ConfigParameter::Numeric(f) = pos_args[0] {
 	// get method or use default ...
-	let m = if let Some(GenModFunParameter::Symbolic(s)) = named_args.get("method") {
+	let m = if let Some(ConfigParameter::Symbolic(s)) = named_args.get("method") {
 	    s.clone()
 	} else {
 	    "flower".to_string()

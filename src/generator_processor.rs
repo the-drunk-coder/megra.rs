@@ -1,10 +1,11 @@
 use rand::*;
 use std::collections::HashMap;
 
-use crate::{event::{StaticEvent, InterpretableEvent, Event},
-	    parameter::Parameter,
-	    generator::{TimeMod, GenModFun, GenModFunParameter},
-	    markov_sequence_generator::MarkovSequenceGenerator};
+use crate::{ builtin_types::ConfigParameter,
+             event::{StaticEvent, InterpretableEvent, Event},
+	     parameter::Parameter,
+	     generator::{TimeMod, GenModFun},
+	     markov_sequence_generator::MarkovSequenceGenerator};
 
 pub trait GeneratorProcessor: GeneratorProcessorClone {    
     fn process_events(&mut self, events: &mut Vec<InterpretableEvent>);
@@ -33,7 +34,7 @@ impl Clone for Box<dyn GeneratorProcessor + Send> {
 
 type StaticEventsAndFilters = HashMap<Vec<String>, Vec<StaticEvent>>;
 type EventsAndFilters = HashMap<Vec<String>, Vec<Event>>;
-type GenModFunsAndArgs = Vec<(GenModFun, Vec<GenModFunParameter>, HashMap<String, GenModFunParameter>)>;
+type GenModFunsAndArgs = Vec<(GenModFun, Vec<ConfigParameter>, HashMap<String, ConfigParameter>)>;
 
 /// Apple-ys events to the throughcoming ones
 #[derive(Clone)]

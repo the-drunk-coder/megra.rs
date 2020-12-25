@@ -2,13 +2,21 @@ use crate::markov_sequence_generator::{Rule, MarkovSequenceGenerator};
 use crate::event::*;
 use crate::parameter::*;
 use crate::generator_processor::GeneratorProcessor;
-use crate::generator::{Generator, GenModFun, GenModFunParameter};
+use crate::generator::{Generator, GenModFun};
 use crate::session::SyncContext;
 use std::collections::{HashMap, HashSet};
 
 /// maps an event type (like "bd") to a mapping between keywords and buffer number ...
 pub type SampleSet = HashMap<String, Vec<(HashSet<String>, usize)>>;
 pub type PartsStore = HashMap<String, Vec<Generator>>;
+
+// might be unified with event parameters at some point but
+// i'm not sure how yet ...
+#[derive(Clone)]
+pub enum ConfigParameter {
+    Numeric(f32),
+    Symbolic(String)
+}
 
 // reflect event hierarchy here, like, Tuned, Param, Sample, Noise ?
 pub enum BuiltInParameterEvent {
@@ -112,7 +120,7 @@ pub enum Atom { // atom might not be the right word any longer
     GeneratorProcessorList(Vec<Box<dyn GeneratorProcessor + Send>>),
     GeneratorList(Vec<Generator>),
     Parameter(Parameter),
-    GeneratorModifierFunction((GenModFun, Vec<GenModFunParameter>, HashMap<String, GenModFunParameter>)),
+    GeneratorModifierFunction((GenModFun, Vec<ConfigParameter>, HashMap<String, ConfigParameter>)),
     Nothing
 }
 
