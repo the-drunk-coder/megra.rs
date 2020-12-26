@@ -1,6 +1,7 @@
 use std::boxed::Box;
+use std::sync::*;
 use std::collections::{HashMap, BTreeSet};
-use crate::{builtin_types::ConfigParameter,
+use crate::{builtin_types::{GlobalParameters, ConfigParameter},
 	    event::{StaticEvent, InterpretableEvent, EventOperation, SourceEvent},
 	    generator_processor::GeneratorProcessor,
 	    markov_sequence_generator::MarkovSequenceGenerator};
@@ -43,19 +44,19 @@ impl Generator {
 	// genprocs follow later ...
     }
 
-    pub fn current_events(&mut self) -> Vec<InterpretableEvent> {
+    pub fn current_events(&mut self, global_parameters: &Arc<GlobalParameters>) -> Vec<InterpretableEvent> {
 	let mut events = self.root_generator.current_events();
 	for proc in self.processors.iter_mut() {
-	    proc.process_events(&mut events);
-	    proc.process_generator(&mut self.root_generator, &mut self.time_mods);
+	    proc.process_events(&mut events, global_parameters);
+	    proc.process_generator(&mut self.root_generator, global_parameters, &mut self.time_mods);
 	}
 	events
     }
     
-    pub fn current_transition(&mut self) -> StaticEvent {
+    pub fn current_transition(&mut self, global_parameters: &Arc<GlobalParameters>) -> StaticEvent {
 	let mut trans = self.root_generator.current_transition();
 	for proc in self.processors.iter_mut() {
-	    proc.process_transition(&mut trans);
+	    proc.process_transition(&mut trans, global_parameters);
 	}
 	if let Some(tmod) = self.time_mods.pop() {
 	    tmod.apply_to(&mut trans);

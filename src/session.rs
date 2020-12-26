@@ -211,7 +211,7 @@ impl <const BUFSIZE:usize, const NCHAN:usize> Session<BUFSIZE, NCHAN> {
 	    // or better, the inside part of the time recursion
 	    let eval_loop = |data: &mut SchedulerData<BUFSIZE, NCHAN>| -> f64 {
 		
-		let events = data.generator.current_events();
+		let events = data.generator.current_events(&data.global_parameters);
 		for ev in events.iter() {
 		    match ev {
 			InterpretableEvent::Sound(s) => {			    
@@ -251,7 +251,7 @@ impl <const BUFSIZE:usize, const NCHAN:usize> Session<BUFSIZE, NCHAN> {
 		    }
 		}
 				
-		(data.generator.current_transition().params[&SynthParameter::Duration] as f64 / 1000.0) as f64
+		(data.generator.current_transition(&data.global_parameters).params[&SynthParameter::Duration] as f64 / 1000.0) as f64
 	    };
 	    
 	    sched.start(eval_loop, sync::Arc::clone(&sched_data));
