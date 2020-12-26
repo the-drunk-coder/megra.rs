@@ -6,11 +6,12 @@ use ruffbox_synth::ruffbox::Ruffbox;
 use crate::builtin_types::*;
 use crate::session::Session;
 
-pub fn interpret<const BUFSIZE:usize, const NCHAN:usize>(session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
+pub fn interpret<const BUFSIZE:usize, const NCHAN:usize>(parsed_in: Expr,							 
+							 session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
+							 ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>,
+							 global_parameters: &sync::Arc<GlobalParameters>,
 							 sample_set: &mut SampleSet,
-							 parts_store: &mut PartsStore,
-							 parsed_in: Expr,
-							 ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>) {
+							 parts_store: &mut PartsStore) {
     match parsed_in {
 	Expr::Constant(Atom::Generator(g)) => {	    
 	    print!("a generator called \'");
@@ -46,7 +47,7 @@ pub fn interpret<const BUFSIZE:usize, const NCHAN:usize>(session: &sync::Arc<Mut
 	}
 	Expr::Constant(Atom::SyncContext(mut s)) => {
 	    println!("a context called \'{}\'", s.name);	    
-	    Session::handle_context(&session, &mut s, &ruffbox);	    
+	    Session::handle_context(&mut s, &session, &ruffbox, &global_parameters);	    
 	},
 	Expr::Constant(Atom::Command(c)) => {
 	    match c {

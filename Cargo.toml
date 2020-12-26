@@ -21,3 +21,4 @@ rand = "0.7"
 egui = { path = "../thirdparty/egui/egui" }
 egui_glium = { path = "../thirdparty/egui/egui_glium" }
 serde = { version = "1", features = ["derive"] }
+dashmap = "4.0.0"

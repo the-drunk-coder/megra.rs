@@ -5,6 +5,7 @@ use crate::generator::Generator;
 use ruffbox_synth::ruffbox::Ruffbox;
 use parking_lot::Mutex;
 use crate::session::{OutputMode, Session};
+use crate::builtin_types::*;
 
 /// A simple time-recursion event scheduler running at a fixed time interval.
 pub struct Scheduler<const BUFSIZE:usize, const NCHAN:usize> {
@@ -20,6 +21,7 @@ pub struct SchedulerData<const BUFSIZE:usize, const NCHAN:usize> {
     pub generator: Box<Generator>,
     pub ruffbox: sync::Arc<Mutex<Ruffbox<BUFSIZE,NCHAN>>>,
     pub session: sync::Arc<Mutex<Session<BUFSIZE,NCHAN>>>,
+    pub global_parameters: sync::Arc<GlobalParameters>,
     pub mode: OutputMode
 }
 
@@ -39,13 +41,15 @@ impl <const BUFSIZE:usize, const NCHAN:usize> SchedulerData<BUFSIZE, NCHAN> {
 	    generator: data,
 	    ruffbox: sync::Arc::clone(ruffbox),
 	    session: sync::Arc::clone(session),
+	    global_parameters: sync::Arc::clone(&old.global_parameters),
 	    mode: old.mode
 	}
     }
     
-    pub fn from_data(data: Box<Generator>,
-		     ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>,
+    pub fn from_data(data: Box<Generator>,		     
 		     session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
+		     ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>,
+		     global_parameters: &sync::Arc<GlobalParameters>,
 		     mode: OutputMode) -> Self {
 	// get logical time since start from ruffbox
 	let stream_time;
@@ -61,6 +65,7 @@ impl <const BUFSIZE:usize, const NCHAN:usize> SchedulerData<BUFSIZE, NCHAN> {
 	    generator: data,
 	    ruffbox: sync::Arc::clone(ruffbox),
 	    session: sync::Arc::clone(session),
+	    global_parameters: sync::Arc::clone(global_parameters),
 	    mode: mode
 	}
     }

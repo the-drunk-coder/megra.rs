@@ -9,6 +9,7 @@ use crate::scheduler::{Scheduler, SchedulerData};
 use crate::generator::Generator;
 use crate::event::{InterpretableEvent};
 use crate::event_helpers::*;
+use crate::builtin_types::GlobalParameters;
 
 #[derive(Clone,Copy,PartialEq)]
 pub enum OutputMode {
@@ -45,7 +46,10 @@ impl <const BUFSIZE:usize, const NCHAN:usize> Session<BUFSIZE, NCHAN> {
 	}
     }
     
-    pub fn handle_context(session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>, ctx: &mut SyncContext, ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>) {
+    pub fn handle_context(ctx: &mut SyncContext,
+			  session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,			  
+			  ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>,
+			  global_parameters: &sync::Arc<GlobalParameters> ) {
 	let name = ctx.name.clone();
 	if ctx.active {	    
 	    let mut new_gens = BTreeSet::new();
@@ -100,7 +104,7 @@ impl <const BUFSIZE:usize, const NCHAN:usize> Session<BUFSIZE, NCHAN> {
 
 		for c in ctx.generators.drain(..) {
 		    // sync to what is most likely the root generator 
-		    Session::start_generator(session, Box::new(c), ruffbox, &smallest_id);
+		    Session::start_generator(Box::new(c), session, ruffbox, global_parameters, &smallest_id);
 		}
 		
 	    } else if !remainders.is_empty() && !difference.is_empty() {
@@ -124,12 +128,12 @@ impl <const BUFSIZE:usize, const NCHAN:usize> Session<BUFSIZE, NCHAN> {
 		
 		for c in ctx.generators.drain(..) {
 		    // sync to what is most likely the root generator 
-		    Session::start_generator(session, Box::new(c), ruffbox, &smallest_id);
+		    Session::start_generator(Box::new(c), session, ruffbox, global_parameters, &smallest_id);
 		}
 	    } else {
 		for c in ctx.generators.drain(..) {
 		    // nothing to sync to in that case ...
-		    Session::start_generator(session, Box::new(c), ruffbox, &None);
+		    Session::start_generator(Box::new(c), session, ruffbox, global_parameters, &None);
 		}
 	    }
 
@@ -160,9 +164,10 @@ impl <const BUFSIZE:usize, const NCHAN:usize> Session<BUFSIZE, NCHAN> {
 	}
     }		
 
-    pub fn start_generator(session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
-			   gen: Box<Generator>,
+    pub fn start_generator(gen: Box<Generator>,
+			   session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,			   
 			   ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>,
+			   global_parameters: &sync::Arc<GlobalParameters>,
 			   sync: &Option<BTreeSet<String>>) {
 	
 	let mut sess = session.lock();
@@ -193,11 +198,10 @@ impl <const BUFSIZE:usize, const NCHAN:usize> Session<BUFSIZE, NCHAN> {
 		    // synchronize timing data 
 		    sched_data = sync::Arc::new(Mutex::new(SchedulerData::<BUFSIZE, NCHAN>::from_previous(&data.lock(), gen, ruffbox, session)));	    
 		} else {
-		    sched_data = sync::Arc::new(Mutex::new(SchedulerData::<BUFSIZE, NCHAN>::from_data(gen, ruffbox, session, sess.output_mode)));	    
-		}
-		
+		    sched_data = sync::Arc::new(Mutex::new(SchedulerData::<BUFSIZE, NCHAN>::from_data(gen, session, ruffbox, global_parameters, sess.output_mode)));
+		}		
 	    } else {
-		sched_data = sync::Arc::new(Mutex::new(SchedulerData::<BUFSIZE, NCHAN>::from_data(gen, ruffbox, session, sess.output_mode)));	    
+		sched_data = sync::Arc::new(Mutex::new(SchedulerData::<BUFSIZE, NCHAN>::from_data(gen, session, ruffbox, global_parameters, sess.output_mode)));
 	    }
 	    
 	    // otherwise, create new sched and data ...
@@ -240,7 +244,7 @@ impl <const BUFSIZE:usize, const NCHAN:usize> Session<BUFSIZE, NCHAN> {
 			    
 			    if let Some(mut contexts) = c.ctx.clone() { // this is the worst clone .... 
 				for mut sx in contexts.drain(..) {				    
-				    Session::handle_context(&data.session, &mut sx, &data.ruffbox);
+				    Session::handle_context(&mut sx, &data.session, &data.ruffbox, &data.global_parameters);
 				}
 			    }			    
 			}
