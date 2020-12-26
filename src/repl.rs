@@ -12,7 +12,7 @@ use crate::interpreter;
 
 pub fn start_repl<const BUFSIZE:usize, const NCHAN:usize>(ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>, mode: OutputMode) -> Result<(), anyhow::Error> {
     let session = sync::Arc::new(Mutex::new(Session::with_mode(mode)));
-    let global_parameters = sync::Arc::new(GlobalParameters::new());
+    let global_parameters = sync::Arc::new(GlobalParameters::with_capacity(1));
     let mut sample_set = SampleSet::new();
     let mut parts_store = PartsStore::new();
     
