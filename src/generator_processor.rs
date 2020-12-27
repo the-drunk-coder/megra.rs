@@ -45,3 +45,6 @@ pub use apple_processor::*;
 mod every_processor;
 pub use every_processor::*;
 
+mod lifemodel_processor;
+pub use lifemodel_processor::*;
+
