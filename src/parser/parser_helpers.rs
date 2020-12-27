@@ -11,6 +11,13 @@ pub fn get_float_from_expr(e: &Expr) -> Option<f32> {
     }  
 }
 
+pub fn get_float_from_expr_opt(e: &Option<Expr>) -> Option<f32> {
+    match e {
+	Some(Expr::Constant(Atom::Float(n))) => Some(*n),
+	_ => None
+    }  
+}
+
 pub fn get_bool_from_expr(e: &Expr) -> Option<bool> {
     match e {
 	Expr::Constant(Atom::Boolean(b)) => Some(*b),

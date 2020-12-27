@@ -164,7 +164,7 @@ fn collect_apple (tail: &mut Vec<Expr>) -> Box<AppleProcessor> {
             
     let mut cur_prob = Parameter::with_value(100.0); // if nothing is specified, it's always or prob 100
     let mut gen_mod_funs = Vec::new();
-        
+    
     while let Some(Expr::Constant(c)) = tail_drain.next() {				
 	match c {
 	    Atom::GeneratorModifierFunction(g) => {
@@ -196,11 +196,32 @@ fn collect_apple (tail: &mut Vec<Expr>) -> Box<AppleProcessor> {
     Box::new(proc)
 }
 
+fn collect_lifemodel (tail: &mut Vec<Expr>) -> Box<LifemodelProcessor> {
+    let mut tail_drain = tail.drain(..);
+    let mut proc = LifemodelProcessor::new();
+
+    // positional args: growth cycle, lifespan, variance
+    if let Some(growth_cycle) = get_float_from_expr_opt(&tail_drain.next()) {
+	proc.growth_cycle = growth_cycle as usize;
+    }
+
+    if let Some(lifespan) = get_float_from_expr_opt(&tail_drain.next()) {
+	proc.node_lifespan = lifespan as usize;
+    }
+
+    if let Some(variance) = get_float_from_expr_opt(&tail_drain.next()) {
+	proc.variance = variance;
+    }
+              
+    Box::new(proc)
+}
+
 pub fn collect_generator_processor(proc_type: &BuiltInGenProc, tail: &mut Vec<Expr>) -> Box<dyn GeneratorProcessor + Send> {
     match proc_type {
 	BuiltInGenProc::Pear => collect_pear(tail),
 	BuiltInGenProc::Apple => collect_apple(tail),
 	BuiltInGenProc::Every => collect_every(tail),
+	BuiltInGenProc::Lifemodel => collect_lifemodel(tail),
     }        
 }
 

@@ -71,7 +71,8 @@ fn parse_generator_processors<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, Verbo
     alt((		
 	map(tag("pear"), |_| BuiltIn::GenProc(BuiltInGenProc::Pear)),
 	map(tag("apple"), |_| BuiltIn::GenProc(BuiltInGenProc::Apple)),
-	map(tag("every"), |_| BuiltIn::GenProc(BuiltInGenProc::Every))
+	map(tag("every"), |_| BuiltIn::GenProc(BuiltInGenProc::Every)),
+	map(tag("life"), |_| BuiltIn::GenProc(BuiltInGenProc::Lifemodel))
     ))(i)
 }
 
