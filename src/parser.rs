@@ -80,7 +80,8 @@ fn parse_generator_modifier_functions<'a>(i: &'a str) -> IResult<&'a str, BuiltI
     alt((		
 	map(tag("haste"), |_| BuiltIn::GenModFun(BuiltInGenModFun::Haste)),
 	map(tag("relax"), |_| BuiltIn::GenModFun(BuiltInGenModFun::Relax)),
-	map(tag("grow"), |_| BuiltIn::GenModFun(BuiltInGenModFun::Grow))
+	map(tag("grow"), |_| BuiltIn::GenModFun(BuiltInGenModFun::Grow)),
+	map(tag("shrink"), |_| BuiltIn::GenModFun(BuiltInGenModFun::Shrink))
     ))(i)
 }
 

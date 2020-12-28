@@ -29,6 +29,7 @@ pub fn handle(gen_mod: &BuiltInGenModFun, tail: &mut Vec<Expr>, _parts_store: &P
 		BuiltInGenModFun::Haste => haste(&mut g.root_generator, &mut g.time_mods, &pos_args, &named_args),
 		BuiltInGenModFun::Relax => relax(&mut g.root_generator, &mut g.time_mods, &pos_args, &named_args),
 		BuiltInGenModFun::Grow => grow(&mut g.root_generator, &mut g.time_mods, &pos_args, &named_args),
+		BuiltInGenModFun::Shrink => shrink(&mut g.root_generator, &mut g.time_mods, &pos_args, &named_args),
 	    }
 	    Atom::Generator(g)
 	},	
@@ -58,6 +59,7 @@ pub fn handle(gen_mod: &BuiltInGenModFun, tail: &mut Vec<Expr>, _parts_store: &P
 		BuiltInGenModFun::Haste => (haste, pos_args, named_args),
 		BuiltInGenModFun::Relax => (relax, pos_args, named_args),
 		BuiltInGenModFun::Grow => (grow, pos_args, named_args),
+		BuiltInGenModFun::Shrink => (shrink, pos_args, named_args),
 	    })
 	},
 	None => {

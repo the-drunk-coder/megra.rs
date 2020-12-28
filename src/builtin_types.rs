@@ -75,6 +75,7 @@ pub enum BuiltInGenModFun {
     Haste,
     Relax,
     Grow,
+    Shrink,
     //Rew,
     //Skip,
     

@@ -1,4 +1,6 @@
 use std::collections::HashMap;
+use rand::seq::SliceRandom;
+
 use crate::{builtin_types::ConfigParameter,	    
 	    generator::{TimeMod, modifier_functions_raw::*},
 	    markov_sequence_generator::MarkovSequenceGenerator};
@@ -48,4 +50,19 @@ pub fn grow(gen: &mut MarkovSequenceGenerator,
 	
 	grow_raw(gen, &m, f);
     }
+}
+
+pub fn shrink(gen: &mut MarkovSequenceGenerator,
+	      _: &mut Vec<TimeMod>,
+	      _: &Vec<ConfigParameter>,
+	      _: &HashMap<String, ConfigParameter>) {
+    
+    let mut rand = None;
+    if let Some(random_symbol) = gen.generator.alphabet.choose(&mut rand::thread_rng()) {
+	rand = Some(random_symbol.clone());			
+    }
+    
+    if let Some(random_symbol) = rand {	
+	shrink_raw(gen, random_symbol, true);
+    }	    
 }
