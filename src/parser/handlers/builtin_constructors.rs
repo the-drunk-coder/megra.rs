@@ -169,6 +169,70 @@ pub fn construct_infer(tail: &mut Vec<Expr>) -> Atom {
     })        
 }
 
+pub fn construct_nucleus(tail: &mut Vec<Expr>) -> Atom {
+    let mut tail_drain = tail.drain(..);
+    
+    // name is the first symbol
+    let name: String = get_string_from_expr(&tail_drain.next().unwrap()).unwrap();
+
+    let mut event_mapping = HashMap::<char, Vec<SourceEvent>>::new();
+    let duration_mapping = HashMap::<(char,char), Event>::new();
+    let mut rules = Vec::new();
+    
+    let mut dur:f32 = 200.0;
+    let mut ev_vec = Vec::new();
+    
+    while let Some(Expr::Constant(c)) = tail_drain.next() {
+			
+	match c {
+	    Atom::SoundEvent(e) => ev_vec.push(SourceEvent::Sound(e)),
+	    Atom::ControlEvent(c) => ev_vec.push(SourceEvent::Control(c)),
+	    Atom::Keyword(k) => {
+		match k.as_str() {		    
+		    "dur" => {
+			if let Expr::Constant(Atom::Float(n)) = tail_drain.next().unwrap() {
+			    dur = n;
+			}
+		    },
+		    _ => println!("{}", k)
+		}
+	    }
+	    _ => println!{"ignored"}
+	}
+    }
+
+    event_mapping.insert('a', ev_vec);
+    
+    // one rule to rule them all
+    rules.push(Rule {
+	source: vec!['a'],
+	symbol: 'a',
+	probability: 1.0,
+	duration: dur as u64,
+    }.to_pfa_rule());
+    
+    let pfa = Pfa::<char>::infer_from_rules(&mut rules);
+    let mut id_tags = BTreeSet::new();
+    id_tags.insert(name.clone());
+    
+    Atom::Generator(Generator {
+	id_tags: id_tags.clone(),
+	root_generator: MarkovSequenceGenerator {
+	    name: name,
+	    generator: pfa,
+	    event_mapping: event_mapping,
+	    duration_mapping: duration_mapping,
+	    modified: false,
+	    symbol_ages: HashMap::new(),
+	    default_duration: dur as u64,
+	    last_transition: None,			    
+	},
+	processors: Vec::new(),
+	time_mods: Vec::new(),
+    })        
+
+}
+
 pub fn construct_rule(tail: &mut Vec<Expr>) -> Atom {
     let mut tail_drain = tail.drain(..);
     let source_vec:Vec<char> = get_string_from_expr(&tail_drain.next().unwrap()).unwrap().chars().collect();
@@ -187,5 +251,6 @@ pub fn handle(constructor_type: &BuiltInConstructor, tail: &mut Vec<Expr>) -> At
 	BuiltInConstructor::Infer => construct_infer(tail),
 	BuiltInConstructor::Learn => construct_learn(tail),
 	BuiltInConstructor::Rule => construct_rule(tail),
+	BuiltInConstructor::Nucleus => construct_nucleus(tail),
     }        
 }

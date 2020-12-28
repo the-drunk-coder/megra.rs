@@ -93,6 +93,7 @@ pub enum BuiltInConstructor {
     Learn,
     Infer,    
     Rule,
+    Nucleus,
 }
 
 /// As this doesn't strive to be a turing-complete lisp, we'll start with the basic
