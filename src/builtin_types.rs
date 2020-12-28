@@ -88,12 +88,17 @@ pub enum BuiltInMultiplexer {
     //XRot
 }
 
-/// As this doesn't strive to be a turing-complete lisp, we'll start with the basic
-/// megra operations, learning and inferring, plus the built-in events
-pub enum BuiltIn {
+/// constructor for generators ...
+pub enum BuiltInConstructor {
     Learn,
     Infer,    
     Rule,
+}
+
+/// As this doesn't strive to be a turing-complete lisp, we'll start with the basic
+/// megra operations, learning and inferring, plus the built-in events
+pub enum BuiltIn {
+    Constructor(BuiltInConstructor),
     Clear,
     Silence,
     LoadSample,
