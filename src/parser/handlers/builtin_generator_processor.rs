@@ -228,7 +228,47 @@ fn collect_lifemodel (tail: &mut Vec<Expr>) -> Box<LifemodelProcessor> {
 		match k.as_str() {
 		    "durs" => {
 			collect_durations = true;
-		    },		    
+		    },
+		    "apoptosis" => {
+			if let Expr::Constant(Atom::Boolean(b)) = tail_drain.next().unwrap() {
+			    proc.apoptosis = b;
+			}
+		    },
+		    "method" => {
+			if let Expr::Constant(Atom::Keyword(k)) = tail_drain.next().unwrap() {
+			    proc.growth_method = k;
+			}
+		    },
+		    "autophagia" => {
+			if let Expr::Constant(Atom::Boolean(b)) = tail_drain.next().unwrap() {
+			    proc.autophagia = b;
+			}
+		    },
+		    "lifespan-variance" => {
+			if let Expr::Constant(Atom::Float(f)) = tail_drain.next().unwrap() {
+			    proc.node_lifespan_variance = f;
+			}
+		    },
+		    "apoptosis-regain" => {
+			if let Expr::Constant(Atom::Float(f)) = tail_drain.next().unwrap() {
+			    proc.apoptosis_regain = f;
+			}
+		    },
+		    "autophagia-regain" => {
+			if let Expr::Constant(Atom::Float(f)) = tail_drain.next().unwrap() {
+			    proc.autophagia_regain = f;
+			}
+		    },
+		    "local-resources" => {
+			if let Expr::Constant(Atom::Float(f)) = tail_drain.next().unwrap() {
+			    proc.local_resources = f;
+			}
+		    },
+		    "cost" => {
+			if let Expr::Constant(Atom::Float(f)) = tail_drain.next().unwrap() {
+			    proc.growth_cost = f;
+			}
+		    },
 		    _ => {}
 		}
 	    },	    

@@ -193,7 +193,7 @@ pub fn construct_nucleus(tail: &mut Vec<Expr>) -> Atom {
 			if let Expr::Constant(Atom::Float(n)) = tail_drain.next().unwrap() {
 			    dur = n;
 			}
-		    },
+		    },		    
 		    _ => println!("{}", k)
 		}
 	    }
