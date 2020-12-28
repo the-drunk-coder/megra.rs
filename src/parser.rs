@@ -232,7 +232,7 @@ fn parse_application<'a>(i: &'a str) -> IResult<&'a str, Expr, VerboseError<&'a 
 fn parse_expr<'a>(i: &'a str) -> IResult<&'a str, Expr, VerboseError<&'a str>> {
     preceded(
 	multispace0,
-	alt((parse_constant, parse_application, parse_comment)),
+	alt((parse_comment, parse_constant, parse_application)),
     )(i)
 }
 
@@ -253,6 +253,12 @@ fn eval_expression(e: Expr, sample_set: &SampleSet, parts_store: &PartsStore, ou
 		.into_iter()
 		.map(|expr| eval_expression(expr, sample_set, parts_store, out_mode))
 		.collect::<Option<Vec<Expr>>>()?;
+
+	    // filter out reduced comments ...
+	    reduced_tail.retain(|x| match x {
+		Expr::Comment => false,
+		_ => true,
+	    });
 
 	    match reduced_head {
 		Expr::Constant(Atom::BuiltIn(bi)) => {
