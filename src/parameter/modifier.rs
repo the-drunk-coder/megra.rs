@@ -1,5 +1,6 @@
 pub mod bounce_modifier;
 pub mod brownian_modifier;
+pub mod envelope_modifier;
 
 pub trait Modifier: ModifierClone {
     fn evaluate(&mut self, input: f32) -> f32;
