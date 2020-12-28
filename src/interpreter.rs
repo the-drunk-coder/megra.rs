@@ -13,6 +13,7 @@ pub fn interpret<const BUFSIZE:usize, const NCHAN:usize>(parsed_in: Expr,
 							 sample_set: &mut SampleSet,
 							 parts_store: &mut PartsStore) {
     match parsed_in {
+	Expr::Comment => {println!("a comment")},
 	Expr::Constant(Atom::Generator(g)) => {	    
 	    print!("a generator called \'");
 	    for tag in g.id_tags.iter() {

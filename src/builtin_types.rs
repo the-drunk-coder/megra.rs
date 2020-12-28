@@ -143,6 +143,7 @@ pub enum Atom { // atom might not be the right word any longer
 }
 
 pub enum Expr {
+    Comment,
     Constant(Atom),
     Custom(String),
     Application(Box<Expr>, Vec<Expr>),    

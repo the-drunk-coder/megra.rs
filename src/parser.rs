@@ -23,6 +23,14 @@ use crate::session::OutputMode;
 use parse_parameter_events::*;
 use parser_handlers::*;
 
+fn parse_comment<'a>(i: &'a str) -> IResult<&'a str, Expr, VerboseError<&'a str>> {
+    map(preceded(
+        tag(";"),
+        take_while(|ch| ch != '\n')), |_| {
+	Expr::Comment
+    })(i)
+}
+
 fn parse_builtin<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<&'a str>> {    
     alt((	
 	parse_constructors,
@@ -224,7 +232,7 @@ fn parse_application<'a>(i: &'a str) -> IResult<&'a str, Expr, VerboseError<&'a 
 fn parse_expr<'a>(i: &'a str) -> IResult<&'a str, Expr, VerboseError<&'a str>> {
     preceded(
 	multispace0,
-	alt((parse_constant, parse_application)),
+	alt((parse_constant, parse_application, parse_comment)),
     )(i)
 }
 
@@ -234,6 +242,7 @@ fn parse_expr<'a>(i: &'a str) -> IResult<&'a str, Expr, VerboseError<&'a str>> {
 fn eval_expression(e: Expr, sample_set: &SampleSet, parts_store: &PartsStore, out_mode: OutputMode) -> Option<Expr> {
     match e {
 	// Constants and quoted s-expressions are our base-case
+	Expr::Comment => Some(e),
 	Expr::Constant(_) => Some(e),
 	Expr::Custom(_) => Some(e),	
 	Expr::Application(head, tail) => {
