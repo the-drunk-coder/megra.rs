@@ -212,6 +212,29 @@ fn collect_lifemodel (tail: &mut Vec<Expr>) -> Box<LifemodelProcessor> {
     if let Some(variance) = get_float_from_expr_opt(&tail_drain.next()) {
 	proc.variance = variance;
     }
+
+    let mut collect_durations = false;
+
+    while let Some(Expr::Constant(c)) = tail_drain.next() {
+	if collect_durations {
+	    match c {
+		Atom::Float(f) => {proc.durations.push(Parameter::with_value(f))},
+		Atom::Parameter(ref p) => proc.durations.push(p.clone()),
+		_ => {collect_durations = false;}
+	    }
+	}
+	match c {
+	    Atom::Keyword(k) => {
+		match k.as_str() {
+		    "durs" => {
+			collect_durations = true;
+		    },		    
+		    _ => {}
+		}
+	    },	    
+	    _ => {}
+	}
+    }
               
     Box::new(proc)
 }

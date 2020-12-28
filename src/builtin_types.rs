@@ -11,7 +11,6 @@ use dashmap::DashMap;
 pub type SampleSet = HashMap<String, Vec<(HashSet<String>, usize)>>;
 pub type PartsStore = HashMap<String, Vec<Generator>>;
 
-
 // might be unified with event parameters at some point but
 // i'm not sure how yet ...
 #[derive(Clone)]

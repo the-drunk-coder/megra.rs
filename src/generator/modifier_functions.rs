@@ -1,7 +1,8 @@
 use std::collections::HashMap;
 use rand::seq::SliceRandom;
 
-use crate::{builtin_types::ConfigParameter,	    
+use crate::{builtin_types::ConfigParameter,
+	    parameter::Parameter,
 	    generator::{TimeMod, modifier_functions_raw::*},
 	    markov_sequence_generator::MarkovSequenceGenerator};
 
@@ -48,7 +49,7 @@ pub fn grow(gen: &mut MarkovSequenceGenerator,
 	    "flower".to_string()
 	};
 	
-	grow_raw(gen, &m, f);
+	grow_raw(gen, &m, f, &Vec::<Parameter>::new());
     }
 }
 

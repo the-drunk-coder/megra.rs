@@ -176,7 +176,7 @@ pub fn construct_nucleus(tail: &mut Vec<Expr>) -> Atom {
     let name: String = get_string_from_expr(&tail_drain.next().unwrap()).unwrap();
 
     let mut event_mapping = HashMap::<char, Vec<SourceEvent>>::new();
-    let duration_mapping = HashMap::<(char,char), Event>::new();
+    let mut duration_mapping = HashMap::<(char,char), Event>::new();
     let mut rules = Vec::new();
     
     let mut dur:f32 = 200.0;
@@ -202,7 +202,10 @@ pub fn construct_nucleus(tail: &mut Vec<Expr>) -> Atom {
     }
 
     event_mapping.insert('a', ev_vec);
-    
+
+    let mut dur_ev =  Event::with_name("transition".to_string());
+    dur_ev.params.insert(SynthParameter::Duration, Box::new(Parameter::with_value(dur)));
+    duration_mapping.insert(('a','a'), dur_ev);
     // one rule to rule them all
     rules.push(Rule {
 	source: vec!['a'],

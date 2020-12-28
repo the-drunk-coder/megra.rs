@@ -1,6 +1,9 @@
+use ruffbox_synth::ruffbox::synth::SynthParameter;
 use std::collections::HashMap;
-use crate::{event::{EventOperation, SourceEvent},
+use rand::seq::SliceRandom;
+use crate::{event::{Event, EventOperation, SourceEvent},
 	    generator::TimeMod,
+	    parameter::Parameter,
 	    markov_sequence_generator::MarkovSequenceGenerator};
 
 pub fn haste_raw(time_mods: &mut Vec<TimeMod>,
@@ -27,7 +30,8 @@ pub fn relax_raw(time_mods: &mut Vec<TimeMod>,
 
 pub fn grow_raw(gen: &mut MarkovSequenceGenerator,
 		m: &String, // method
-		variance: f32) {
+		variance: f32,
+		durations: &Vec<Parameter>) {
        
     if let Some(result) = match m.as_str() {
 	"flower" => gen.generator.grow_flower(),
@@ -52,10 +56,23 @@ pub fn grow_raw(gen: &mut MarkovSequenceGenerator,
 	    let mut dur_mapping_to_add = HashMap::new();
 	    for sym in gen.generator.alphabet.iter() {
 		if let Some(dur) = gen.duration_mapping.get(&(*sym, template_sym)) {
-		    dur_mapping_to_add.insert((*sym, added_sym), dur.clone());
+		    if !durations.is_empty() {			
+			let mut dur_ev =  Event::with_name("transition".to_string());
+			dur_ev.params.insert(SynthParameter::Duration, Box::new(durations.choose(&mut rand::thread_rng()).unwrap().clone()));
+			dur_mapping_to_add.insert((*sym, added_sym), dur_ev);
+		    } else  {
+			dur_mapping_to_add.insert((*sym, added_sym), dur.clone());
+		    }		    
 		}
+
 		if let Some(dur) = gen.duration_mapping.get(&(template_sym, *sym)) {
-		    dur_mapping_to_add.insert((added_sym, *sym), dur.clone());
+		    if !durations.is_empty() {			
+			let mut dur_ev =  Event::with_name("transition".to_string());
+			dur_ev.params.insert(SynthParameter::Duration, Box::new(durations.choose(&mut rand::thread_rng()).unwrap().clone()));
+			dur_mapping_to_add.insert((added_sym, *sym), dur_ev);
+		    } else  {
+			dur_mapping_to_add.insert((added_sym, *sym), dur.clone());
+		    }		    
 		}	   	    
 	    }
 	    for (k, v) in dur_mapping_to_add.drain() {
@@ -75,5 +92,6 @@ pub fn shrink_raw(gen: &mut MarkovSequenceGenerator,
 	gen.generator.remove_symbol(sym, rebalance);
 	gen.event_mapping.remove(&sym);
 	gen.symbol_ages.remove(&sym);
-    }    
+    }
+    // remove eventual duration mappings ?
 }

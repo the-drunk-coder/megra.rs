@@ -6,6 +6,7 @@ use crate::{ builtin_types::{BuiltinGlobalParameters, GlobalParameters},
              event::{StaticEvent, InterpretableEvent},
 	     generator::{TimeMod, modifier_functions_raw::*},
 	     generator_processor::*,
+	     parameter::*,
 	     markov_sequence_generator::MarkovSequenceGenerator};
 
 struct LifemodelDefaults;
@@ -38,6 +39,7 @@ pub struct LifemodelProcessor {
     pub growth_cost: f32,
     pub apoptosis_regain: f32,
     pub autophagia_regain: f32,
+    pub durations: Vec<Parameter>,
     pub dont_let_die: bool,
 }
 
@@ -56,6 +58,7 @@ impl LifemodelProcessor {
 	    growth_cost: LifemodelDefaults::GROWTH_COST,
 	    apoptosis_regain: LifemodelDefaults::APOPTOSIS_REGAIN,
 	    autophagia_regain: LifemodelDefaults::AUTOPHAGIA_REGAIN,
+	    durations: Vec::new(),
 	    dont_let_die: true,
 	}	    
     }
@@ -98,8 +101,8 @@ impl GeneratorProcessor for LifemodelProcessor {
 	    };
 	    
 	    if grow {		
-		grow_raw(gen, &self.growth_method, self.variance);
-		println!("lm grow {:?}", gen.generator.alphabet);
+		grow_raw(gen, &self.growth_method, self.variance, &self.durations);
+		//println!("lm grow {:?}", gen.generator.alphabet);
 		something_happened = true;
 	    } else if self.autophagia {
 		// remove random symbol to allow further growth
@@ -114,7 +117,7 @@ impl GeneratorProcessor for LifemodelProcessor {
 		    }
 		    		    
 		    if let Some(random_symbol) = rand {
-			println!("lm auto {} {:?}", random_symbol, gen.generator.alphabet);
+			//println!("lm auto {} {:?}", random_symbol, gen.generator.alphabet);
 			// don't rebalance yet ...
 			shrink_raw(gen, random_symbol, false);
 			self.local_resources += self.autophagia_regain;
@@ -143,7 +146,7 @@ impl GeneratorProcessor for LifemodelProcessor {
 	    };
 
 	    if let Some(symbol_to_remove) = sym {
-		println!("lm apop {} {:?}", symbol_to_remove, gen.generator.alphabet);
+		//println!("lm apop {} {:?}", symbol_to_remove, gen.generator.alphabet);
 		shrink_raw(gen, symbol_to_remove, false);
 		something_happened = true;
 	    }
