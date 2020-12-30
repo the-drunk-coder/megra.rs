@@ -25,6 +25,13 @@ pub fn get_bool_from_expr(e: &Expr) -> Option<bool> {
     }	    
 }
 
+pub fn get_bool_from_expr_opt(e: &Option<Expr>) -> Option<bool> {
+    match e {
+	Some(Expr::Constant(Atom::Boolean(b))) => Some(*b),
+	_ => None
+    }  
+}
+
 pub fn get_string_from_expr(e: &Expr) -> Option<String> {
     match e {
 	Expr::Constant(Atom::Description(s)) => Some(s.to_string()),

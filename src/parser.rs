@@ -55,8 +55,9 @@ fn parse_commands<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<&'a 
 
 fn parse_dynamic_parameters<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<&'a str>> {
     alt((		
+	map(tag("env"), |_| BuiltIn::Parameter(BuiltInDynamicParameter::Envelope)),
 	map(tag("bounce"), |_| BuiltIn::Parameter(BuiltInDynamicParameter::Bounce)),
-	map(tag("brownian"), |_| BuiltIn::Parameter(BuiltInDynamicParameter::Brownian)),
+	map(tag("brownian"), |_| BuiltIn::Parameter(BuiltInDynamicParameter::Brownian)),	
     ))(i)
 }
 

@@ -3,7 +3,8 @@ use crate::parser::parser_helpers::*;
 use crate::parameter::{
     Parameter,
     modifier::bounce_modifier::BounceModifier,
-    modifier::brownian_modifier::BrownianModifier
+    modifier::brownian_modifier::BrownianModifier,
+    modifier::envelope_modifier::EnvelopeModifier
 };
 
 pub fn handle(par: &BuiltInDynamicParameter, tail: &mut Vec<Expr>) -> Atom {
@@ -29,7 +30,7 @@ pub fn handle(par: &BuiltInDynamicParameter, tail: &mut Vec<Expr>) -> Atom {
 			step_count: (0.0).into(),
 		    })
 		}
-		BuiltInDynamicParameter::Brownian => {
+	 	BuiltInDynamicParameter::Brownian => {
 
 		    let min = get_next_param(&mut tail_drain, 0.0);    
 		    let max = get_next_param(&mut tail_drain, 0.0);
@@ -47,6 +48,58 @@ pub fn handle(par: &BuiltInDynamicParameter, tail: &mut Vec<Expr>) -> Atom {
 			wrap: wrap,
 			current: current
 		    })
+		}
+
+		BuiltInDynamicParameter::Envelope => {
+		    let mut collect_steps = false;
+		    let mut collect_values = false;
+
+		    let mut values = Vec::new();
+		    let mut steps = Vec::new();
+		    let mut repeat = false;
+		    
+		    while let Some(Expr::Constant(c)) = tail_drain.next() {
+			if collect_steps {
+			    match c {
+				Atom::Float(f) => {steps.push(Parameter::with_value(f))},
+				Atom::Parameter(ref p) => steps.push(p.clone()),
+				_ => {collect_steps = false;}
+			    }
+			}
+			if collect_values {
+			    match c {
+				Atom::Float(f) => {values.push(Parameter::with_value(f))},
+				Atom::Parameter(ref p) => values.push(p.clone()),
+				_ => {collect_values = false;}
+			    }
+			}
+			match c {
+			    Atom::Keyword(k) => {
+				match k.as_str() {
+				    "v" => {
+					collect_values = true;
+				    },
+				    "values" => {
+					collect_values = true;
+				    },
+				    "s" => {
+					collect_steps = true;
+				    },
+				    "steps" => {
+					collect_steps = true;
+				    },
+				    "repeat" => {
+					if let Some(b) = get_bool_from_expr_opt(&tail_drain.next()) {
+					    repeat = b;
+					}
+				    },
+				    _ => {} // ignore
+				}
+			    }
+			    _ => {}
+			}
+		    }
+		    Box::new(EnvelopeModifier::from_data(&values, &steps, repeat))
 		}
 	    }	    
 	)
