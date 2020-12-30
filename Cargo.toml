@@ -22,3 +22,6 @@ egui = { path = "../thirdparty/egui/egui" }
 egui_glium = { path = "../thirdparty/egui/egui_glium" }
 serde = { version = "1", features = ["derive"] }
 dashmap = "4.0.0"
+
+[dev-dependencies]
+assert_approx_eq = "1.1.0"
