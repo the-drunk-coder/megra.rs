@@ -4,7 +4,8 @@ use crate::parameter::{
     Parameter,
     modifier::bounce_modifier::BounceModifier,
     modifier::brownian_modifier::BrownianModifier,
-    modifier::envelope_modifier::EnvelopeModifier
+    modifier::envelope_modifier::EnvelopeModifier,
+    modifier::randrange_modifier::RandRangeModifier
 };
 
 pub fn handle(par: &BuiltInDynamicParameter, tail: &mut Vec<Expr>) -> Atom {
@@ -128,6 +129,12 @@ pub fn handle(par: &BuiltInDynamicParameter, tail: &mut Vec<Expr>) -> Atom {
 		    }
 		    
 		    Box::new(EnvelopeModifier::from_data(&values, &steps, false))
+		},
+		BuiltInDynamicParameter::RandRange => {
+		    let min = get_next_param(&mut tail_drain, 0.0);    
+		    let max = get_next_param(&mut tail_drain, 0.0);
+		    		    
+		    Box::new(RandRangeModifier::from_data(min, max))
 		}
 	    }	    
 	)

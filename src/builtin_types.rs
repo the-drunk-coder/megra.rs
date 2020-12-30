@@ -60,8 +60,8 @@ pub enum BuiltInDynamicParameter {
     Brownian,
     Envelope,
     Fade,
+    RandRange
     //Oscil,    
-    //RandRange
 }
 
 pub enum BuiltInGenProc {

@@ -58,7 +58,8 @@ fn parse_dynamic_parameters<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, Verbose
 	map(tag("env"), |_| BuiltIn::Parameter(BuiltInDynamicParameter::Envelope)),
 	map(tag("fade"), |_| BuiltIn::Parameter(BuiltInDynamicParameter::Fade)),
 	map(tag("bounce"), |_| BuiltIn::Parameter(BuiltInDynamicParameter::Bounce)),
-	map(tag("brownian"), |_| BuiltIn::Parameter(BuiltInDynamicParameter::Brownian)),	
+	map(tag("brownian"), |_| BuiltIn::Parameter(BuiltInDynamicParameter::Brownian)),
+	map(tag("randr"), |_| BuiltIn::Parameter(BuiltInDynamicParameter::RandRange)),
     ))(i)
 }
 
