@@ -59,7 +59,7 @@ pub enum BuiltInDynamicParameter {
     Bounce,
     Brownian,
     Envelope,
-    //Fade
+    Fade,
     //Oscil,    
     //RandRange
 }

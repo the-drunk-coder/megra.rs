@@ -100,6 +100,34 @@ pub fn handle(par: &BuiltInDynamicParameter, tail: &mut Vec<Expr>) -> Atom {
 			}
 		    }
 		    Box::new(EnvelopeModifier::from_data(&values, &steps, repeat))
+		},
+		BuiltInDynamicParameter::Fade => {
+		    let from = get_next_param(&mut tail_drain, 0.0);    
+		    let to = get_next_param(&mut tail_drain, 0.0);
+
+		    let mut values = Vec::new();
+		    let mut steps = Vec::new();
+
+		    values.push(from);
+		    values.push(to);
+		    
+		    if let Some(Expr::Constant(Atom::Keyword(k))) = tail_drain.next() {						 
+			match k.as_str() {				    
+			    "steps" => {
+				if let Some(f) = get_float_from_expr_opt(&tail_drain.next()) {
+				    steps.push(Parameter::with_value(f));
+				}				
+			    },				    
+			    _ => {} // ignore
+			}
+		    }		    
+
+		    // if steps isn't specified, use default of 128
+		    if steps.is_empty() {
+			steps.push(Parameter::with_value(128.0));
+		    }
+		    
+		    Box::new(EnvelopeModifier::from_data(&values, &steps, false))
 		}
 	    }	    
 	)
