@@ -51,6 +51,7 @@ impl EnvelopeModifier {
 	env
     }	
 }
+
 impl Modifier for EnvelopeModifier {         
     fn evaluate(&mut self, _: f32) -> f32 {
 	
@@ -96,7 +97,7 @@ impl Modifier for EnvelopeModifier {
 	    }
 	    	  	  	 	    
 	    self.step_count = 0;
-	    println!("from: {} to: {} step: {} done: {}", self.current_from, self.current_to, self.current_steps, self.done);
+	    //println!("from: {} to: {} step: {} done: {}", self.current_from, self.current_to, self.current_steps, self.done);
 	} 
 	
 	let val = if self.current_from == self.current_to || self.done {
@@ -112,8 +113,13 @@ impl Modifier for EnvelopeModifier {
 	val
     }
 
-    fn shake(&mut self, _factor: f32) {
-	// later ...
+    fn shake(&mut self, factor: f32) {
+	for val in self.values.iter_mut() {
+	    val.shake(factor);
+	}
+	for step in self.steps.iter_mut() {
+	    step.shake(factor);
+	}
     }
 }
 
