@@ -195,8 +195,8 @@ impl <const BUFSIZE:usize, const NCHAN:usize> Session<BUFSIZE, NCHAN> {
 	    if let Some(id_tags) = sync {
 		//this is prob kinda redundant 
 		if let Some((_, data)) = sess.schedulers.get_mut(&id_tags) {
-		    // synchronize timing data 
-		    sched_data = sync::Arc::new(Mutex::new(SchedulerData::<BUFSIZE, NCHAN>::from_previous(&data.lock(), gen, ruffbox, session)));	    
+		    // synchronize timing data
+		    sched_data = sync::Arc::new(Mutex::new(SchedulerData::<BUFSIZE, NCHAN>::from_time_data(&data.lock(), gen, ruffbox, session)));	    
 		} else {
 		    sched_data = sync::Arc::new(Mutex::new(SchedulerData::<BUFSIZE, NCHAN>::from_data(gen, session, ruffbox, global_parameters, sess.output_mode)));
 		}		
