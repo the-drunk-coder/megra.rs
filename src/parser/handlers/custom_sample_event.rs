@@ -18,10 +18,10 @@ pub fn handle(tail: &mut Vec<Expr>, bufnum: usize, set: &String, keywords: &Hash
     ev.params.insert(SynthParameter::SampleBufferNumber, Box::new(Parameter::with_value(bufnum as f32)));
     
     // set some defaults
-    ev.params.insert(SynthParameter::Level, Box::new(Parameter::with_value(0.3)));
-    ev.params.insert(SynthParameter::Attack, Box::new(Parameter::with_value(0.005)));
-    ev.params.insert(SynthParameter::Sustain, Box::new(Parameter::with_value(0.1)));
-    ev.params.insert(SynthParameter::Release, Box::new(Parameter::with_value(0.01)));
+    ev.params.insert(SynthParameter::Level, Box::new(Parameter::with_value(0.4)));
+    ev.params.insert(SynthParameter::Attack, Box::new(Parameter::with_value(1.0)));
+    ev.params.insert(SynthParameter::Sustain, Box::new(Parameter::with_value(200.0)));
+    ev.params.insert(SynthParameter::Release, Box::new(Parameter::with_value(1.0)));
     ev.params.insert(SynthParameter::ChannelPosition, Box::new(Parameter::with_value(0.00)));
     ev.params.insert(SynthParameter::PlaybackRate, Box::new(Parameter::with_value(1.0)));
     ev.params.insert(SynthParameter::LowpassFilterDistortion, Box::new(Parameter::with_value(0.0)));
