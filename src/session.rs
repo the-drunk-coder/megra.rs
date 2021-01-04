@@ -27,7 +27,8 @@ pub struct SyncContext {
     pub name: String,
     pub sync_to: Option<String>,
     pub active: bool,
-    pub generators: Vec<Generator>
+    pub generators: Vec<Generator>,
+    pub shift: i32
 }
 
 pub struct Session <const BUFSIZE:usize, const NCHAN:usize> {
@@ -104,7 +105,7 @@ impl <const BUFSIZE:usize, const NCHAN:usize> Session<BUFSIZE, NCHAN> {
 
 		for c in ctx.generators.drain(..) {
 		    // sync to what is most likely the root generator 
-		    Session::start_generator(Box::new(c), session, ruffbox, global_parameters, &smallest_id);
+		    Session::start_generator(Box::new(c), session, ruffbox, global_parameters, &smallest_id, ctx.shift as f64 * 0.001);
 		}
 		
 	    } else if !remainders.is_empty() && !difference.is_empty() {
@@ -128,12 +129,12 @@ impl <const BUFSIZE:usize, const NCHAN:usize> Session<BUFSIZE, NCHAN> {
 		
 		for c in ctx.generators.drain(..) {
 		    // sync to what is most likely the root generator 
-		    Session::start_generator(Box::new(c), session, ruffbox, global_parameters, &smallest_id);
+		    Session::start_generator(Box::new(c), session, ruffbox, global_parameters, &smallest_id, ctx.shift as f64 * 0.001);
 		}
 	    } else {
 		for c in ctx.generators.drain(..) {
 		    // nothing to sync to in that case ...
-		    Session::start_generator(Box::new(c), session, ruffbox, global_parameters, &None);
+		    Session::start_generator(Box::new(c), session, ruffbox, global_parameters, &None, ctx.shift as f64 * 0.001);
 		}
 	    }
 
@@ -164,11 +165,12 @@ impl <const BUFSIZE:usize, const NCHAN:usize> Session<BUFSIZE, NCHAN> {
 	}
     }		
 
-    pub fn start_generator(gen: Box<Generator>,
+    pub fn start_generator(gen: Box<Generator>,			   
 			   session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,			   
 			   ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>,
 			   global_parameters: &sync::Arc<GlobalParameters>,
-			   sync: &Option<BTreeSet<String>>) {
+			   sync: &Option<BTreeSet<String>>,
+			   shift: f64) {
 	
 	let mut sess = session.lock();
 	let id_tags = gen.id_tags.clone();
@@ -196,7 +198,7 @@ impl <const BUFSIZE:usize, const NCHAN:usize> Session<BUFSIZE, NCHAN> {
 		//this is prob kinda redundant 
 		if let Some((_, data)) = sess.schedulers.get_mut(&id_tags) {
 		    // synchronize timing data
-		    sched_data = sync::Arc::new(Mutex::new(SchedulerData::<BUFSIZE, NCHAN>::from_time_data(&data.lock(), gen, ruffbox, session)));	    
+		    sched_data = sync::Arc::new(Mutex::new(SchedulerData::<BUFSIZE, NCHAN>::from_time_data(&data.lock(), shift, gen, ruffbox, session)));	    
 		} else {
 		    sched_data = sync::Arc::new(Mutex::new(SchedulerData::<BUFSIZE, NCHAN>::from_data(gen, session, ruffbox, global_parameters, sess.output_mode)));
 		}		

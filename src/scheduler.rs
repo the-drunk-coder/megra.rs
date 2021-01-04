@@ -47,14 +47,15 @@ impl <const BUFSIZE:usize, const NCHAN:usize> SchedulerData<BUFSIZE, NCHAN> {
     }
 
     pub fn from_time_data(old: &SchedulerData<BUFSIZE, NCHAN>,
+			  shift: f64,
 			  data: Box<Generator>,
 			  ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>,
 			  session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>) -> Self {
 	// keep scheduling, retain time
 	SchedulerData {
 	    start_time: old.start_time,
-	    stream_time: old.stream_time,
-	    logical_time: old.logical_time, 
+	    stream_time: old.stream_time + shift,
+	    logical_time: old.logical_time + shift, 
 	    last_diff: 0.0,
 	    generator: data,
 	    ruffbox: sync::Arc::clone(ruffbox),

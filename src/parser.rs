@@ -271,7 +271,7 @@ fn eval_expression(e: Expr, sample_set: &SampleSet, parts_store: &PartsStore, ou
 			BuiltIn::LoadPart => handle_load_part(&mut reduced_tail),			
 			BuiltIn::Silence => Atom::SoundEvent(Event::with_name("silence".to_string())),			
 			BuiltIn::Constructor(con) => handlers::builtin_constructors::handle(&con, &mut reduced_tail),
-			BuiltIn::SyncContext => handle_sync_context(&mut reduced_tail, parts_store),
+			BuiltIn::SyncContext => handlers::builtin_sync_context::handle(&mut reduced_tail, parts_store),
 			BuiltIn::Parameter(par) => handlers::builtin_dynamic_parameter::handle(&par, &mut reduced_tail),
 			BuiltIn::SoundEvent(ev) => handlers::builtin_sound_event::handle(&ev, &mut reduced_tail),
 			BuiltIn::ControlEvent => handle_control_event(&mut reduced_tail),
