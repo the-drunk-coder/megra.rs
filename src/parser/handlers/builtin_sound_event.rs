@@ -19,9 +19,9 @@ pub fn handle(event_type: &BuiltInSoundEvent, tail: &mut Vec<Expr>) -> Atom {
 
     // set some defaults 2
     ev.params.insert(SynthParameter::Level, Box::new(Parameter::with_value(0.3)));
-    ev.params.insert(SynthParameter::Attack, Box::new(Parameter::with_value(0.005)));
-    ev.params.insert(SynthParameter::Sustain, Box::new(Parameter::with_value(0.1)));
-    ev.params.insert(SynthParameter::Release, Box::new(Parameter::with_value(0.01)));
+    ev.params.insert(SynthParameter::Attack, Box::new(Parameter::with_value(2.0)));
+    ev.params.insert(SynthParameter::Sustain, Box::new(Parameter::with_value(48.0)));
+    ev.params.insert(SynthParameter::Release, Box::new(Parameter::with_value(100.0)));
     ev.params.insert(SynthParameter::ChannelPosition, Box::new(Parameter::with_value(0.00)));
     
     get_keyword_params(&mut ev.params, &mut tail_drain);

@@ -231,12 +231,22 @@ impl <const BUFSIZE:usize, const NCHAN:usize> Session<BUFSIZE, NCHAN> {
 			    // set parameters and trigger instance
 			    for (k,v) in s.params.iter() {
 				// special handling for stereo param
-				if k == &SynthParameter::ChannelPosition && data.mode == OutputMode::Stereo {			
-				    let pos = (*v + 1.0) * 0.5;			
-				    ruff.set_instance_parameter(inst, *k, pos);
-				} else {
-				    ruff.set_instance_parameter(inst, *k, *v);
+				match k {
+				    SynthParameter::ChannelPosition => {
+					if data.mode == OutputMode::Stereo {			
+					    let pos = (*v + 1.0) * 0.5;			
+					    ruff.set_instance_parameter(inst, *k, pos);
+					} else {
+					    ruff.set_instance_parameter(inst, *k, *v);
+					}
+				    },
+				    SynthParameter::Duration => ruff.set_instance_parameter(inst, *k, *v * 0.001),
+				    SynthParameter::Attack => ruff.set_instance_parameter(inst, *k, *v * 0.001),
+				    SynthParameter::Sustain => ruff.set_instance_parameter(inst, *k, *v * 0.001),
+				    SynthParameter::Release => ruff.set_instance_parameter(inst, *k, *v * 0.001),				    
+				    _ => ruff.set_instance_parameter(inst, *k, *v),
 				}
+				
 			    }			    
 			    ruff.trigger(inst);
 			},		    
@@ -251,7 +261,7 @@ impl <const BUFSIZE:usize, const NCHAN:usize> Session<BUFSIZE, NCHAN> {
 		    }
 		}
 				
-		(data.generator.current_transition(&data.global_parameters).params[&SynthParameter::Duration] as f64 / 1000.0) as f64
+		(data.generator.current_transition(&data.global_parameters).params[&SynthParameter::Duration] as f64 * 0.001) as f64
 	    };
 	    
 	    sched.start(eval_loop, sync::Arc::clone(&sched_data));

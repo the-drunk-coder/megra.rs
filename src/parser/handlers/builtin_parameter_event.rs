@@ -47,13 +47,8 @@ pub fn handle(event_type: &BuiltInParameterEvent, tail: &mut Vec<Expr>) -> Atom 
 	BuiltInParameterEvent::PlaybackStart(_) => SynthParameter::PlaybackStart,
 	BuiltInParameterEvent::PlaybackRate(_) => SynthParameter::PlaybackRate,
     };
-
-    match param_key {
-	SynthParameter::Attack => ev.params.insert(param_key, Box::new(get_next_param_with_factor(&mut tail_drain, 100.0, 0.001))),
-	SynthParameter::Sustain => ev.params.insert(param_key, Box::new(get_next_param_with_factor(&mut tail_drain, 100.0, 0.001))),
-	SynthParameter::Release => ev.params.insert(param_key, Box::new(get_next_param_with_factor(&mut tail_drain, 100.0, 0.001))),
-	_ => ev.params.insert(param_key, Box::new(get_next_param(&mut tail_drain, 0.0))),
-    };
-        
+            
+    ev.params.insert(param_key, Box::new(get_next_param(&mut tail_drain, 0.0)));
+            
     Atom::SoundEvent (ev)
 }
