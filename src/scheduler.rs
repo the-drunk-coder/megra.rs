@@ -18,6 +18,7 @@ pub struct SchedulerData<const BUFSIZE:usize, const NCHAN:usize> {
     pub stream_time: f64,
     pub logical_time: f64,
     pub last_diff: f64,
+    pub shift: f64,
     pub generator: Box<Generator>,
     pub ruffbox: sync::Arc<Mutex<Ruffbox<BUFSIZE,NCHAN>>>,
     pub session: sync::Arc<Mutex<Session<BUFSIZE,NCHAN>>>,
@@ -28,15 +29,18 @@ pub struct SchedulerData<const BUFSIZE:usize, const NCHAN:usize> {
 impl <const BUFSIZE:usize, const NCHAN:usize> SchedulerData<BUFSIZE, NCHAN> {
 
     pub fn from_previous(old: &SchedulerData<BUFSIZE, NCHAN>,
+			 shift: f64,
 			 mut data: Box<Generator>,
 			 ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>,
 			 session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>) -> Self {
+	let shift_diff = shift - old.shift;
 	data.transfer_state(&old.generator);
 	// keep scheduling, retain data
 	SchedulerData {
 	    start_time: old.start_time,
-	    stream_time: old.stream_time,
-	    logical_time: old.logical_time, 
+	    stream_time: old.stream_time + shift_diff,
+	    logical_time: old.logical_time + shift_diff,
+	    shift: shift,
 	    last_diff: 0.0,
 	    generator: data,
 	    ruffbox: sync::Arc::clone(ruffbox),
@@ -51,11 +55,14 @@ impl <const BUFSIZE:usize, const NCHAN:usize> SchedulerData<BUFSIZE, NCHAN> {
 			  data: Box<Generator>,
 			  ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>,
 			  session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>) -> Self {
+	let shift_diff = shift - old.shift;
+	
 	// keep scheduling, retain time
 	SchedulerData {
 	    start_time: old.start_time,
-	    stream_time: old.stream_time + shift,
-	    logical_time: old.logical_time + shift, 
+	    stream_time: old.stream_time + shift_diff,
+	    logical_time: old.logical_time + shift_diff,
+	    shift: shift,
 	    last_diff: 0.0,
 	    generator: data,
 	    ruffbox: sync::Arc::clone(ruffbox),
@@ -65,7 +72,8 @@ impl <const BUFSIZE:usize, const NCHAN:usize> SchedulerData<BUFSIZE, NCHAN> {
 	}
     }
     
-    pub fn from_data(data: Box<Generator>,		     
+    pub fn from_data(data: Box<Generator>,
+		     shift: f64,
 		     session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
 		     ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>,
 		     global_parameters: &sync::Arc<GlobalParameters>,
@@ -78,9 +86,10 @@ impl <const BUFSIZE:usize, const NCHAN:usize> SchedulerData<BUFSIZE, NCHAN> {
 	}
 	SchedulerData {
 	    start_time: Instant::now(),
-	    stream_time: stream_time,
-	    logical_time: 0.0, 
+	    stream_time: stream_time + shift,
+	    logical_time: shift, 
 	    last_diff: 0.0,
+	    shift: shift,
 	    generator: data,
 	    ruffbox: sync::Arc::clone(ruffbox),
 	    session: sync::Arc::clone(session),
@@ -114,7 +123,7 @@ impl <const BUFSIZE:usize, const NCHAN:usize> Scheduler<BUFSIZE, NCHAN> {
 		    let cur = sched_data.start_time.elapsed().as_secs_f64();		    
                     sched_data.last_diff = cur - sched_data.logical_time;
 		    next = (fun)(&mut sched_data);
-		    ldif = sched_data.last_diff;		    
+		    ldif = sched_data.last_diff ;		    
 		    sched_data.logical_time += next;				
 		    sched_data.stream_time += next;
 		}

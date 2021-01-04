@@ -185,7 +185,7 @@ impl <const BUFSIZE:usize, const NCHAN:usize> Session<BUFSIZE, NCHAN> {
 	    
 	    // keep the scheduler running, just replace the data ...
 	    let mut sched_data = data.lock();
-	    *sched_data = SchedulerData::<BUFSIZE, NCHAN>::from_previous(&sched_data, gen, ruffbox, session);
+	    *sched_data = SchedulerData::<BUFSIZE, NCHAN>::from_previous(&sched_data, shift, gen, ruffbox, session);
 	} else {
 	    print!("start generator \'");
 	    for tag in id_tags.iter() {
@@ -200,10 +200,10 @@ impl <const BUFSIZE:usize, const NCHAN:usize> Session<BUFSIZE, NCHAN> {
 		    // synchronize timing data
 		    sched_data = sync::Arc::new(Mutex::new(SchedulerData::<BUFSIZE, NCHAN>::from_time_data(&data.lock(), shift, gen, ruffbox, session)));	    
 		} else {
-		    sched_data = sync::Arc::new(Mutex::new(SchedulerData::<BUFSIZE, NCHAN>::from_data(gen, session, ruffbox, global_parameters, sess.output_mode)));
+		    sched_data = sync::Arc::new(Mutex::new(SchedulerData::<BUFSIZE, NCHAN>::from_data(gen, shift, session, ruffbox, global_parameters, sess.output_mode)));
 		}		
 	    } else {
-		sched_data = sync::Arc::new(Mutex::new(SchedulerData::<BUFSIZE, NCHAN>::from_data(gen, session, ruffbox, global_parameters, sess.output_mode)));
+		sched_data = sync::Arc::new(Mutex::new(SchedulerData::<BUFSIZE, NCHAN>::from_data(gen, shift, session, ruffbox, global_parameters, sess.output_mode)));
 	    }
 	    
 	    // otherwise, create new sched and data ...
