@@ -36,7 +36,7 @@ pub fn load_sample<const BUFSIZE:usize, const NCHAN:usize>(ruffbox: &sync::Arc<M
 	if let Some(str_filename) = os_filename.to_str() {
 	    let tokens = str_filename.split(|c| c == ' ' || c == '_' || c == '-');
 	    for token in tokens {
-		keyword_set.insert(token.to_string());
+		keyword_set.insert(token.to_lowercase().to_string());
 	    }	    
 	}
     }
