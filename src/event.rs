@@ -130,8 +130,10 @@ impl Event {
     }
 
     pub fn shake(&mut self, factor: f32) {
-	for (_,v) in self.params.iter_mut() {
-	    v.shake(factor);
+	for (k,v) in self.params.iter_mut() {
+	    if *k != SynthParameter::SampleBufferNumber {
+		v.shake(factor);
+	    }	    
 	}
     }
     
