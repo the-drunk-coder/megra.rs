@@ -1,4 +1,5 @@
 use std::collections::{HashMap, HashSet};
+use rand::seq::SliceRandom;
 
 pub struct SampleInfo {
     pub key: HashSet<String>,
@@ -6,7 +7,8 @@ pub struct SampleInfo {
 }
 
 impl SampleInfo {
-    pub fn is_superset(&self, key: &HashSet<String>) -> bool {
+    /// superset match, not absolute match 
+    pub fn matches(&self, key: &HashSet<String>) -> bool {
 	self.key.is_superset(key)
     }
 }
@@ -26,11 +28,32 @@ impl SampleSet {
     pub fn insert(&mut self, set: String, keyword_set: HashSet<String>, bufnum: usize) {
 	self.subsets.entry(set).or_insert(Vec::new()).push(SampleInfo{key: keyword_set, bufnum: bufnum});    
     }
+
+    pub fn exists_not_empty(&self, set: &String) -> bool {
+	self.subsets.contains_key(set) && !self.subsets.get(set).unwrap().is_empty()
+    }
+
+    pub fn keys(&self, set: &String, keywords: &HashSet<String>) -> Option<&SampleInfo> {
+	if let Some(subset) = self.subsets.get(set) {
+	    let choice:Vec<&SampleInfo> = subset.iter().filter(|i| i.matches(keywords)).collect();
+	    if !choice.is_empty() {
+		Some(choice.choose(&mut rand::thread_rng()).unwrap())
+	    } else if let Some(sample_info) = subset.get(0) { // fallback
+		Some(sample_info)
+	    } else {
+		None
+	    }
+	} else {
+	    None
+	}		
+    }
     
     /// get a sample bufnum by 
     pub fn pos(&self, set: &String, pos: usize) -> Option<&SampleInfo> {
-	if let Some(sample_subset) = self.subsets.get(set) {
-	    if let Some(sample_info) = sample_subset.get(pos) {
+	if let Some(subset) = self.subsets.get(set) {
+	    if let Some(sample_info) = subset.get(pos) {
+		Some(sample_info)
+	    } else if let Some(sample_info) = subset.get(0) { // fallback
 		Some(sample_info)
 	    } else {
 		None
