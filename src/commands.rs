@@ -34,7 +34,10 @@ pub fn load_sample<const BUFSIZE:usize, const NCHAN:usize>(ruffbox: &sync::Arc<M
     let path = Path::new(&path);
     if let Some(os_filename) = path.file_stem() {
 	if let Some(str_filename) = os_filename.to_str() {
-	    keyword_set.insert(str_filename.to_string());
+	    let tokens = str_filename.split(|c| c == ' ' || c == '_' || c == '-');
+	    for token in tokens {
+		keyword_set.insert(token.to_string());
+	    }	    
 	}
     }
     
