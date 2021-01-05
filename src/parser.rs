@@ -134,7 +134,7 @@ fn parse_events<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<&'a st
 
 fn parse_custom<'a>(i: &'a str) -> IResult<&'a str, Expr, VerboseError<&'a str>> {    
     map(
-	context("custom_fun", cut(alphanumeric1)),
+	context("custom_fun", cut(take_while(valid_fun_name_char))),
 	|fun_str: &str| Expr::Custom(fun_str.to_string()),
     )(i)
 }
@@ -176,6 +176,13 @@ pub fn valid_char(chr: char) -> bool {
 	chr == '-' ||
 	is_alphanumeric(chr as u8) ||
 	is_space(chr as u8)
+}
+
+pub fn valid_fun_name_char(chr: char) -> bool {
+    return	
+	chr == '_' ||	
+	chr == '-' ||
+	is_alphanumeric(chr as u8)
 }
 
 fn parse_string<'a>(i: &'a str) -> IResult<&'a str, Atom, VerboseError<&'a str>> {
