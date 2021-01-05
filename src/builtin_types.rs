@@ -4,11 +4,10 @@ use crate::parameter::*;
 use crate::generator_processor::GeneratorProcessor;
 use crate::generator::{Generator, GenModFun};
 use crate::session::SyncContext;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use dashmap::DashMap;
 
-/// maps an event type (like "bd") to a mapping between keywords and buffer number ...
-pub type SampleSet = HashMap<String, Vec<(HashSet<String>, usize)>>;
+//pub type SampleSet = HashMap<String, Vec<(HashSet<String>, usize)>>;
 pub type PartsStore = HashMap<String, Vec<Generator>>;
 
 // might be unified with event parameters at some point but

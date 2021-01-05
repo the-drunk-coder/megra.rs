@@ -6,6 +6,7 @@ mod megra_editor;
 use megra_editor::MegraEditor;
 
 use crate::session::{Session, OutputMode};
+use crate::sample_set::SampleSet;
 use crate::builtin_types::*;
 use crate::parser;
 use crate::interpreter;

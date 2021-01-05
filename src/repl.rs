@@ -6,6 +6,7 @@ use rustyline::Editor;
 use ruffbox_synth::ruffbox::Ruffbox;
 
 use crate::builtin_types::*;
+use crate::sample_set::SampleSet;
 use crate::session::{Session, OutputMode};
 use crate::parser;
 use crate::interpreter;

@@ -18,6 +18,7 @@ use nom::{
 use crate::builtin_types::*;
 use crate::event::*;
 use crate::session::OutputMode;
+use crate::sample_set::SampleSet;
 
 use parse_parameter_events::*;
 

@@ -14,6 +14,7 @@ pub mod scheduler;
 pub mod repl;
 pub mod editor;
 pub mod commands;
+pub mod sample_set;
 
 use getopts::Options;
 use std::{env, sync::Arc};

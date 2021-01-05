@@ -2,6 +2,8 @@ use std::{fs, sync, path::Path, collections::HashSet};
 use parking_lot::Mutex;
 
 use ruffbox_synth::ruffbox::Ruffbox;
+
+use crate::sample_set::SampleSet;
 use crate::builtin_types::*;
 use crate::generator::Generator;
 
@@ -41,7 +43,7 @@ pub fn load_sample<const BUFSIZE:usize, const NCHAN:usize>(ruffbox: &sync::Arc<M
 	}
     }
     
-    sample_set.entry(set).or_insert(Vec::new()).push((keyword_set, bufnum));    
+    sample_set.insert(set, keyword_set, bufnum);
 }
 
 pub fn load_sample_set<const BUFSIZE:usize, const NCHAN:usize>(ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>,
