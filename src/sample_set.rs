@@ -62,4 +62,12 @@ impl SampleSet {
 	    None
 	}
     }
+
+    pub fn random(&self, set: &String) -> Option<&SampleInfo> {
+	if let Some(subset) = self.subsets.get(set) {
+	    Some(subset.choose(&mut rand::thread_rng()).unwrap())
+	} else {
+	    None
+	}
+    }
 }

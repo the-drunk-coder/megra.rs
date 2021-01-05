@@ -12,14 +12,15 @@ pub fn handle(tail: &mut Vec<Expr>, set: String, sample_set: &SampleSet) -> Opti
 	    
     if sample_set.exists_not_empty(&set) {
 
-	let mut drain_idx = 1;
+	let mut drain_idx = 0;
 	let sample_info = if tail.len() == 0 {
-	    sample_set.pos(&set, 0).unwrap()
+	    sample_set.random(&set).unwrap()
 	} else {
 	    match &tail[0] {
 		Expr::Constant(Atom::Symbol(s)) => {
 		    let mut keyword_set:HashSet<String> = HashSet::new();
 		    keyword_set.insert(s.to_string());
+		    drain_idx += 1;
 		    for i in 1..tail.len() {
 			match &tail[i] {
 			    Expr::Constant(Atom::Symbol(s)) => {
@@ -32,10 +33,11 @@ pub fn handle(tail: &mut Vec<Expr>, set: String, sample_set: &SampleSet) -> Opti
 		    sample_set.keys(&set, &keyword_set).unwrap() // fallback
 		},
 		Expr::Constant(Atom::Float(f)) => {
-		    sample_set.pos(&set, *f as usize).unwrap()
+		    drain_idx += 1;
+		    sample_set.pos(&set, *f as usize).unwrap()			
 		}				
 		_ => {
-		    sample_set.pos(&set, 0).unwrap() // fallback
+		    sample_set.random(&set).unwrap() // fallback
 		}
 	    }		
 	}; 
