@@ -2,7 +2,7 @@ use std::collections::HashSet;
 use crate::event::*;
 use crate::builtin_types::*;
 
-pub fn handle_control_event(tail: &mut Vec<Expr>) -> Atom {
+pub fn handle(tail: &mut Vec<Expr>) -> Atom {
     let mut tail_drain = tail.drain(..);
     let mut sync_contexts = Vec::new();
 

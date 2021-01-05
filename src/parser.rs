@@ -1,6 +1,5 @@
 mod parse_parameter_events;
 mod parser_helpers;
-mod parser_handlers;
 mod handlers;
 
 use nom::{
@@ -21,7 +20,6 @@ use crate::event::*;
 use crate::session::OutputMode;
 
 use parse_parameter_events::*;
-use parser_handlers::*;
 
 fn parse_comment<'a>(i: &'a str) -> IResult<&'a str, Expr, VerboseError<&'a str>> {
     map(preceded(
@@ -281,7 +279,7 @@ fn eval_expression(e: Expr, sample_set: &SampleSet, parts_store: &PartsStore, ou
 			BuiltIn::SyncContext => handlers::builtin_sync_context::handle(&mut reduced_tail, parts_store),
 			BuiltIn::Parameter(par) => handlers::builtin_dynamic_parameter::handle(&par, &mut reduced_tail),
 			BuiltIn::SoundEvent(ev) => handlers::builtin_sound_event::handle(&ev, &mut reduced_tail),
-			BuiltIn::ControlEvent => handle_control_event(&mut reduced_tail),
+			BuiltIn::ControlEvent => handlers::builtin_control_event::handle(&mut reduced_tail),
 			BuiltIn::ParameterEvent(ev) => handlers::builtin_parameter_event::handle(&ev, &mut reduced_tail),
 			BuiltIn::GenProc(g) => handlers::builtin_generator_processor::handle(&g, &mut reduced_tail, parts_store),
 			BuiltIn::GenModFun(g) => handlers::builtin_generator_modifier_function::handle(&g, &mut reduced_tail, parts_store),
