@@ -67,6 +67,18 @@ fn handle_load_sample(tail: &mut Vec<Expr>) -> Atom {
     Atom::Command(Command::LoadSample((set, keywords, path)))
 }
 
+fn handle_load_sample_sets(tail: &mut Vec<Expr>) -> Atom {
+
+    let mut tail_drain = tail.drain(..);
+    let path = if let Expr::Constant(Atom::Description(n)) = tail_drain.next().unwrap() {
+	n
+    } else {
+	"".to_string()
+    };
+	
+    Atom::Command(Command::LoadSampleSets(path.to_string()))
+}
+
 fn handle_load_sample_set(tail: &mut Vec<Expr>) -> Atom {
 
     let mut tail_drain = tail.drain(..);
@@ -84,6 +96,7 @@ pub fn handle(cmd: BuiltInCommand, tail: &mut Vec<Expr>) -> Atom {
 	BuiltInCommand::Clear => Atom::Command(Command::Clear),
 	BuiltInCommand::LoadSample => handle_load_sample(tail),
 	BuiltInCommand::LoadSampleSet => handle_load_sample_set(tail),
+	BuiltInCommand::LoadSampleSets => handle_load_sample_sets(tail),
 	BuiltInCommand::LoadPart => handle_load_part(tail),
     }
 }

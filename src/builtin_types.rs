@@ -99,6 +99,7 @@ pub enum BuiltInConstructor {
 pub enum BuiltInCommand {
     Clear,
     LoadSample,
+    LoadSampleSets,
     LoadSampleSet,
     LoadPart,
 }
@@ -122,7 +123,8 @@ pub enum BuiltIn {
 pub enum Command {
     Clear,
     LoadSample((String, Vec<String>, String)) ,// set (events), keyword, path
-    LoadSampleSet(String) ,// set path
+    LoadSampleSet(String), // set path
+    LoadSampleSets(String), // top level sets set path
     LoadPart((String, Vec<Generator>)) // set (events), keyword, path
 }
 
