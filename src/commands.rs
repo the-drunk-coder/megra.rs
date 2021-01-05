@@ -1,8 +1,7 @@
-use std::{sync, collections::HashSet};
+use std::{sync, path::Path, collections::HashSet};
 use parking_lot::Mutex;
 
 use ruffbox_synth::ruffbox::Ruffbox;
-
 use crate::builtin_types::*;
 use crate::generator::Generator;
 
@@ -30,6 +29,13 @@ pub fn load_sample<const BUFSIZE:usize, const NCHAN:usize>(ruffbox: &sync::Arc<M
     let mut keyword_set = HashSet::new();
     for k in keywords.drain(..) {
 	keyword_set.insert(k);
+    }
+
+    let path = Path::new(&path);
+    if let Some(os_filename) = path.file_stem() {
+	if let Some(str_filename) = os_filename.to_str() {
+	    keyword_set.insert(str_filename.to_string());
+	}
     }
     
     sample_set.entry(set).or_insert(Vec::new()).push((keyword_set, bufnum));    
