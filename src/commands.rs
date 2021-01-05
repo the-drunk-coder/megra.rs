@@ -1,4 +1,4 @@
-use std::{sync, path::Path, collections::HashSet};
+use std::{fs, sync, path::Path, collections::HashSet};
 use parking_lot::Mutex;
 
 use ruffbox_synth::ruffbox::Ruffbox;
@@ -42,6 +42,55 @@ pub fn load_sample<const BUFSIZE:usize, const NCHAN:usize>(ruffbox: &sync::Arc<M
     }
     
     sample_set.entry(set).or_insert(Vec::new()).push((keyword_set, bufnum));    
+}
+
+pub fn load_sample_folder<const BUFSIZE:usize, const NCHAN:usize>(ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>,
+								  sample_set: &mut SampleSet,								  
+								  samples_path: &Path) {
+
+    // determine set name or use default
+    let set_name = if let Some(os_filename) = samples_path.file_stem() {
+	if let Some(str_filename) = os_filename.to_str() {
+	    str_filename.to_string()
+	} else {
+	    "default".to_string()
+	}
+    } else {
+	"default".to_string()
+    };
+
+    if let Ok(entries) = fs::read_dir(samples_path) {
+	for entry in entries {
+	    if let Ok(entry) = entry {
+		let path = entry.path();
+		// only consider files here ...
+		if path.is_file() {
+		    if let Some(ext) = path.extension() {
+			if ext == "flac" {
+			    load_sample(ruffbox, sample_set, set_name.clone(), &mut Vec::new(), path.to_str().unwrap().to_string());
+			}
+		    }
+		}
+	    }	    
+	}
+    }
+}
+
+pub fn load_sample_set<const BUFSIZE:usize, const NCHAN:usize>(ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>,
+							       sample_set: &mut SampleSet,								  
+							       folder_path: String) {
+
+    let root_path = Path::new(&folder_path);
+    if let Ok(entries) = fs::read_dir(root_path) {
+	for entry in entries {
+	    if let Ok(entry) = entry {
+		let path = entry.path();
+		if path.is_dir() {
+		    load_sample_folder(ruffbox, sample_set, &path);
+		}
+	    }	    
+	}
+    }
 }
 
 pub fn load_part(parts_store: &mut PartsStore, name: String, mut generators: Vec<Generator> ) {

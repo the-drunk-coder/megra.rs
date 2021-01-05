@@ -61,6 +61,10 @@ pub fn interpret<const BUFSIZE:usize, const NCHAN:usize>(parsed_in: Expr,
 		    commands::load_sample(ruffbox, sample_set, set, &mut keywords, path);		    		    
 		    println!("a command (load sample)");
 		},
+		Command::LoadSampleSet(path) => {
+		    commands::load_sample_set(ruffbox, sample_set, path);		    		    
+		    println!("a command (load sample)");
+		},
 		Command::LoadPart((name, generators)) => {
 		    commands::load_part(parts_store, name, generators);
 		    println!("a command (load part)");

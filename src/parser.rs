@@ -47,9 +47,10 @@ fn parse_builtin<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<&'a s
 
 fn parse_commands<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<&'a str>> {    
     alt((		
-	map(tag("clear"), |_| BuiltIn::Clear),
-	map(tag("load-sample"), |_| BuiltIn::LoadSample),
-	map(tag("defpart"), |_| BuiltIn::LoadPart),	
+	map(tag("clear"), |_| BuiltIn::Command(BuiltInCommand::Clear)),
+	map(tag("load-sets"), |_| BuiltIn::Command(BuiltInCommand::LoadSampleSet)),
+	map(tag("load-sample"), |_| BuiltIn::Command(BuiltInCommand::LoadSample)),
+	map(tag("defpart"), |_| BuiltIn::Command(BuiltInCommand::LoadPart)),	
     ))(i)
 }
 
@@ -266,9 +267,7 @@ fn eval_expression(e: Expr, sample_set: &SampleSet, parts_store: &PartsStore, ou
 	    match reduced_head {
 		Expr::Constant(Atom::BuiltIn(bi)) => {
 		    Some(Expr::Constant(match bi {
-			BuiltIn::Clear => Atom::Command(Command::Clear),
-			BuiltIn::LoadSample => handle_load_sample(&mut reduced_tail),
-			BuiltIn::LoadPart => handle_load_part(&mut reduced_tail),			
+			BuiltIn::Command(cmd) => handlers::builtin_commands::handle(cmd, &mut reduced_tail),		
 			BuiltIn::Silence => Atom::SoundEvent(Event::with_name("silence".to_string())),			
 			BuiltIn::Constructor(con) => handlers::builtin_constructors::handle(&con, &mut reduced_tail),
 			BuiltIn::SyncContext => handlers::builtin_sync_context::handle(&mut reduced_tail, parts_store),

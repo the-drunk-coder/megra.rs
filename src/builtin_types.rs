@@ -96,14 +96,19 @@ pub enum BuiltInConstructor {
     Nucleus,
 }
 
+pub enum BuiltInCommand {
+    Clear,
+    LoadSample,
+    LoadSampleSet,
+    LoadPart,
+}
+
 /// As this doesn't strive to be a turing-complete lisp, we'll start with the basic
 /// megra operations, learning and inferring, plus the built-in events
 pub enum BuiltIn {
     Constructor(BuiltInConstructor),
-    Clear,
     Silence,
-    LoadSample,
-    LoadPart,
+    Command(BuiltInCommand),
     SyncContext,
     Parameter(BuiltInDynamicParameter),
     SoundEvent(BuiltInSoundEvent),
@@ -117,6 +122,7 @@ pub enum BuiltIn {
 pub enum Command {
     Clear,
     LoadSample((String, Vec<String>, String)) ,// set (events), keyword, path
+    LoadSampleSet(String) ,// set path
     LoadPart((String, Vec<Generator>)) // set (events), keyword, path
 }
 
