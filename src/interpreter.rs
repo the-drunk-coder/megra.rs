@@ -1,10 +1,11 @@
-use std::{sync, collections::HashSet};
+use std::sync;
 use parking_lot::Mutex;
 
 use ruffbox_synth::ruffbox::Ruffbox;
 
 use crate::builtin_types::*;
 use crate::session::Session;
+use crate::commands;
 
 pub fn interpret<const BUFSIZE:usize, const NCHAN:usize>(parsed_in: Expr,							 
 							 session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
@@ -57,36 +58,11 @@ pub fn interpret<const BUFSIZE:usize, const NCHAN:usize>(parsed_in: Expr,
 		    println!("a command (stop session)");
 		},
 		Command::LoadSample((set, mut keywords, path)) => {
-		    
-		    let mut sample_buffer:Vec<f32> = Vec::new();
-		    let mut reader = claxon::FlacReader::open(path.clone()).unwrap();
-
-		    println!("sample path: {} channels: {}", path, reader.streaminfo().channels);
-
-		    // decode to f32
-		    let max_val = (i32::MAX >> (32 - reader.streaminfo().bits_per_sample)) as f32;
-		    for sample in reader.samples() {
-			let s = sample.unwrap() as f32 / max_val;
-			sample_buffer.push(s);				    
-		    }
-		    		    
-		    let mut ruff = ruffbox.lock();
-		    let bufnum = ruff.load_sample(&sample_buffer);
-
-		    let mut keyword_set = HashSet::new();
-		    for k in keywords.drain(..) {
-			keyword_set.insert(k);
-		    }
-		    
-		    sample_set.entry(set).or_insert(Vec::new()).push((keyword_set, bufnum));
-		    
+		    commands::load_sample(ruffbox, sample_set, set, &mut keywords, path);		    		    
 		    println!("a command (load sample)");
 		},
-		Command::LoadPart((name, mut generators)) => {
-		    for gen in generators.iter_mut() {
-			gen.id_tags.insert(name.clone());
-		    }
-		    parts_store.insert(name, generators);
+		Command::LoadPart((name, generators)) => {
+		    commands::load_part(parts_store, name, generators);
 		    println!("a command (load part)");
 		}
 	    };

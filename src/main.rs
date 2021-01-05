@@ -13,6 +13,7 @@ pub mod session;
 pub mod scheduler;
 pub mod repl;
 pub mod editor;
+pub mod commands;
 
 use getopts::Options;
 use std::{env, sync::Arc};
