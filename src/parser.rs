@@ -286,14 +286,7 @@ fn eval_expression(e: Expr, sample_set: &SampleSet, parts_store: &PartsStore, ou
 			BuiltIn::Multiplexer(m) => handlers::builtin_multiplexer::handle(&m, &mut reduced_tail, parts_store, out_mode)	
 		    }))
 		},
-		Expr::Custom(s) => {
-		    if let Some(sample_info) = sample_set.get(&s) {
-			// just choose first sample for now ...
-			Some(Expr::Constant(handlers::custom_sample_event::handle(&mut reduced_tail, sample_info[0].1, &s, &sample_info[0].0)))
-		    } else {
-			None
-		    }
-		}, // return custom function,
+		Expr::Custom(s) => handlers::custom_sample_event::handle(&mut reduced_tail, s, &sample_set), 
 		_ => {
 		    println!("something else");
 		    None
