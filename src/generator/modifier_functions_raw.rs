@@ -36,6 +36,9 @@ pub fn grow_raw(gen: &mut MarkovSequenceGenerator,
     if let Some(result) = match m.as_str() {
 	"flower" => gen.generator.grow_flower(),
 	"old" => gen.generator.grow_old(),
+	"loop" => gen.generator.grow_loop(),
+	"triloop" => gen.generator.grow_triloop(),
+	"quadloop" => gen.generator.grow_quadloop(),
 	_ => gen.generator.grow_old(),
     } {
 	//println!("grow!");
