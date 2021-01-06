@@ -75,9 +75,11 @@ pub enum BuiltInGenModFun {
     Relax,
     Grow,
     Shrink,
+    Blur,
+    Sharpen,
+    Shake,
     //Rew,
-    //Skip,
-    
+    //Skip,    
 }
 
 pub enum BuiltInMultiplexer {

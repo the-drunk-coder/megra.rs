@@ -98,3 +98,28 @@ pub fn shrink_raw(gen: &mut MarkovSequenceGenerator,
     }
     // remove eventual duration mappings ?
 }
+
+pub fn blur_raw(gen: &mut MarkovSequenceGenerator,		
+		factor: f32) {
+    gen.generator.blur(factor);
+}
+
+
+pub fn sharpen_raw(gen: &mut MarkovSequenceGenerator,		
+		   factor: f32) {
+    gen.generator.sharpen(factor);
+}
+
+pub fn shake_raw(gen: &mut MarkovSequenceGenerator,		
+		 factor: f32) {
+    gen.generator.blur(factor);
+    for (_, evs) in gen.event_mapping.iter_mut() {
+	for ev in evs {
+	    match ev {
+		SourceEvent::Sound(e) => e.shake(factor),
+		_ => {},
+	    }
+
+	}	    
+    }
+}

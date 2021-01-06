@@ -94,7 +94,10 @@ fn parse_generator_modifier_functions<'a>(i: &'a str) -> IResult<&'a str, BuiltI
 	map(tag("haste"), |_| BuiltIn::GenModFun(BuiltInGenModFun::Haste)),
 	map(tag("relax"), |_| BuiltIn::GenModFun(BuiltInGenModFun::Relax)),
 	map(tag("grow"), |_| BuiltIn::GenModFun(BuiltInGenModFun::Grow)),
-	map(tag("shrink"), |_| BuiltIn::GenModFun(BuiltInGenModFun::Shrink))
+	map(tag("shrink"), |_| BuiltIn::GenModFun(BuiltInGenModFun::Shrink)),
+	map(tag("blur"), |_| BuiltIn::GenModFun(BuiltInGenModFun::Blur)),
+	map(tag("sharpen"), |_| BuiltIn::GenModFun(BuiltInGenModFun::Sharpen)),
+	map(tag("shake"), |_| BuiltIn::GenModFun(BuiltInGenModFun::Shake))
     ))(i)
 }
 

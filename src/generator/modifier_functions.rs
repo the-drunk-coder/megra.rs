@@ -67,3 +67,31 @@ pub fn shrink(gen: &mut MarkovSequenceGenerator,
 	shrink_raw(gen, random_symbol, true);
     }	    
 }
+
+pub fn shake(gen: &mut MarkovSequenceGenerator,
+	     _: &mut Vec<TimeMod>,
+	     pos_args: &Vec<ConfigParameter>,
+	     _: &HashMap<String, ConfigParameter>) {
+    if let ConfigParameter::Numeric(f) = pos_args[0] {
+	shake_raw(gen, f);
+    }
+}
+
+pub fn sharpen(gen: &mut MarkovSequenceGenerator,
+	       _: &mut Vec<TimeMod>,
+	       pos_args: &Vec<ConfigParameter>,
+	       _: &HashMap<String, ConfigParameter>) {
+    if let ConfigParameter::Numeric(f) = pos_args[0] {
+	sharpen_raw(gen, f);
+    }
+}
+
+pub fn blur(gen: &mut MarkovSequenceGenerator,
+	    _: &mut Vec<TimeMod>,
+	    pos_args: &Vec<ConfigParameter>,
+	    _: &HashMap<String, ConfigParameter>) {
+    if let ConfigParameter::Numeric(f) = pos_args[0] {
+	blur_raw(gen, f);
+    }
+}
+
