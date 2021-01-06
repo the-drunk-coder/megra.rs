@@ -25,10 +25,10 @@ pub fn handle(tail: &mut Vec<Expr>, set: String, sample_set: &SampleSet) -> Opti
 			match &tail[i] {
 			    Expr::Constant(Atom::Symbol(s)) => {
 				keyword_set.insert(s.to_string());
+				drain_idx += 1;
 			    },
-			    _ => {}
-			}
-			drain_idx += 1;
+			    _ => {break;}
+			}			
 		    }
 		    sample_set.keys(&set, &keyword_set).unwrap() // fallback
 		},
