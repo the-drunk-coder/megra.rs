@@ -79,7 +79,7 @@ pub enum BuiltInGenModFun {
     Sharpen,
     Shake,
     Skip,
-    //Rew,
+    Rewind,
 }
 
 pub enum BuiltInMultiplexer {

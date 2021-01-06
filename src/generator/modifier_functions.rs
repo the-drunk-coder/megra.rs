@@ -104,3 +104,13 @@ pub fn skip(gen: &mut MarkovSequenceGenerator,
     }
 }
 
+
+pub fn rewind(gen: &mut MarkovSequenceGenerator,
+	      _: &mut Vec<TimeMod>,
+	      pos_args: &Vec<ConfigParameter>,
+	      _: &HashMap<String, ConfigParameter>) {
+    if let ConfigParameter::Numeric(f) = pos_args[0] {
+	rewind_raw(gen, f as usize);
+    }
+}
+

@@ -131,3 +131,8 @@ pub fn skip_raw(gen: &mut MarkovSequenceGenerator,
 	gen.current_transition();
     }    
 }
+
+pub fn rewind_raw(gen: &mut MarkovSequenceGenerator,		
+		  states: usize) {
+    gen.generator.rewind(states);        
+}
