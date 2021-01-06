@@ -95,3 +95,12 @@ pub fn blur(gen: &mut MarkovSequenceGenerator,
     }
 }
 
+pub fn skip(gen: &mut MarkovSequenceGenerator,
+	    _: &mut Vec<TimeMod>,
+	    pos_args: &Vec<ConfigParameter>,
+	    _: &HashMap<String, ConfigParameter>) {
+    if let ConfigParameter::Numeric(f) = pos_args[0] {
+	skip_raw(gen, f as usize);
+    }
+}
+

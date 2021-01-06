@@ -123,3 +123,11 @@ pub fn shake_raw(gen: &mut MarkovSequenceGenerator,
 	}	    
     }
 }
+
+pub fn skip_raw(gen: &mut MarkovSequenceGenerator,		
+		times: usize) {
+    for _ in 0..times {
+	gen.current_events();
+	gen.current_transition();
+    }    
+}

@@ -97,7 +97,8 @@ fn parse_generator_modifier_functions<'a>(i: &'a str) -> IResult<&'a str, BuiltI
 	map(tag("shrink"), |_| BuiltIn::GenModFun(BuiltInGenModFun::Shrink)),
 	map(tag("blur"), |_| BuiltIn::GenModFun(BuiltInGenModFun::Blur)),
 	map(tag("sharpen"), |_| BuiltIn::GenModFun(BuiltInGenModFun::Sharpen)),
-	map(tag("shake"), |_| BuiltIn::GenModFun(BuiltInGenModFun::Shake))
+	map(tag("shake"), |_| BuiltIn::GenModFun(BuiltInGenModFun::Shake)),
+	map(tag("skip"), |_| BuiltIn::GenModFun(BuiltInGenModFun::Skip))
     ))(i)
 }
 

@@ -78,8 +78,8 @@ pub enum BuiltInGenModFun {
     Blur,
     Sharpen,
     Shake,
+    Skip,
     //Rew,
-    //Skip,    
 }
 
 pub enum BuiltInMultiplexer {
