@@ -54,7 +54,7 @@ fn parse_commands<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<&'a 
     ))(i)
 }
 
-fn parse_dynamic_parameters<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<&'a str>> {
+pub fn parse_dynamic_parameters<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<&'a str>> {
     alt((		
 	map(tag("env"), |_| BuiltIn::Parameter(BuiltInDynamicParameter::Envelope)),
 	map(tag("fade"), |_| BuiltIn::Parameter(BuiltInDynamicParameter::Fade)),
@@ -113,7 +113,7 @@ fn parse_synth_event<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<&
     ))(i)
 }
 
-fn parse_events<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<&'a str>> {    
+pub fn parse_events<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<&'a str>> {    
     alt((
 	parse_pitch_frequency_event,
 	parse_level_event,
@@ -137,7 +137,7 @@ fn parse_events<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<&'a st
     ))(i)
 }
 
-fn parse_custom<'a>(i: &'a str) -> IResult<&'a str, Expr, VerboseError<&'a str>> {    
+pub fn parse_custom<'a>(i: &'a str) -> IResult<&'a str, Expr, VerboseError<&'a str>> {    
     map(
 	context("custom_fun", cut(take_while(valid_fun_name_char))),
 	|fun_str: &str| Expr::Custom(fun_str.to_string()),
@@ -145,7 +145,7 @@ fn parse_custom<'a>(i: &'a str) -> IResult<&'a str, Expr, VerboseError<&'a str>>
 }
 
 /// Our boolean values are also constant, so we can do it the same way
-fn parse_bool<'a>(i: &'a str) -> IResult<&'a str, Atom, VerboseError<&'a str>> {
+pub fn parse_bool<'a>(i: &'a str) -> IResult<&'a str, Atom, VerboseError<&'a str>> {
     alt((
 	map(tag("#t"), |_| Atom::Boolean(true)),
 	map(tag("#f"), |_| Atom::Boolean(false)),
@@ -159,14 +159,14 @@ fn parse_keyword<'a>(i: &'a str) -> IResult<&'a str, Atom, VerboseError<&'a str>
     )(i)
 }
 
-fn parse_symbol<'a>(i: &'a str) -> IResult<&'a str, Atom, VerboseError<&'a str>> {
+pub fn parse_symbol<'a>(i: &'a str) -> IResult<&'a str, Atom, VerboseError<&'a str>> {
     map(
 	context("symbol", preceded(tag("'"), cut(alphanumeric1))),
 	|sym_str: &str| Atom::Symbol(sym_str.to_string()),
     )(i)
 }
 
-fn parse_float<'a>(i: &'a str) -> IResult<&'a str, Atom, VerboseError<&'a str>> {
+pub fn parse_float<'a>(i: &'a str) -> IResult<&'a str, Atom, VerboseError<&'a str>> {
     map_res(recognize(float), |digit_str: &str| {
 	digit_str.parse::<f32>().map(Atom::Float)
     })(i)
@@ -255,7 +255,7 @@ fn parse_expr<'a>(i: &'a str) -> IResult<&'a str, Expr, VerboseError<&'a str>> {
 /// This function tries to reduce the AST.
 /// This has to return an Expression rather than an Atom because quoted s_expressions
 /// can't be reduced
-fn eval_expression(e: Expr, sample_set: &SampleSet, parts_store: &PartsStore, out_mode: OutputMode) -> Option<Expr> {
+pub fn eval_expression(e: Expr, sample_set: &SampleSet, parts_store: &PartsStore, out_mode: OutputMode) -> Option<Expr> {
     match e {
 	// Constants and quoted s-expressions are our base-case
 	Expr::Comment => Some(e),
@@ -309,5 +309,4 @@ pub fn eval_from_str(src: &str, sample_set: &SampleSet, parts_store: &PartsStore
 	.map_err(|e: nom::Err<VerboseError<&str>>| format!("{:#?}", e))
 	.and_then(|(_, exp)| eval_expression(exp, sample_set, parts_store, out_mode).ok_or("Eval failed".to_string()))
 }
-
 

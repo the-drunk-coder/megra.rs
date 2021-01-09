@@ -15,6 +15,7 @@ pub mod repl;
 pub mod editor;
 pub mod commands;
 pub mod sample_set;
+pub mod cyc_parser;
 
 use getopts::Options;
 use std::{env, sync::Arc};

@@ -7,6 +7,7 @@ pub trait Modifier: ModifierClone {
     fn evaluate(&mut self, input: f32) -> f32;
     fn shake(&mut self, factor: f32);
 }
+
 pub trait ModifierClone {
     fn clone_box(&self) -> Box<dyn Modifier + Send>;
 }
