@@ -77,6 +77,7 @@ fn parse_constructors<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<
 	map(tag("infer"), |_| BuiltIn::Constructor(BuiltInConstructor::Infer)),
 	map(tag("rule"), |_| BuiltIn::Constructor(BuiltInConstructor::Rule)),
 	map(tag("nuc"), |_| BuiltIn::Constructor(BuiltInConstructor::Nucleus)),
+	map(tag("cyc"), |_| BuiltIn::Constructor(BuiltInConstructor::Cycle)),
     ))(i)
 }
 
@@ -172,6 +173,7 @@ pub fn parse_float<'a>(i: &'a str) -> IResult<&'a str, Atom, VerboseError<&'a st
     })(i)
 }
 
+/// valid chars for a string
 pub fn valid_char(chr: char) -> bool {
     return
 	chr == '~' ||
@@ -179,10 +181,13 @@ pub fn valid_char(chr: char) -> bool {
 	chr == '_' ||
 	chr == '/' ||
 	chr == '-' ||
+	chr == ':' ||
+	chr == '=' ||
 	is_alphanumeric(chr as u8) ||
 	is_space(chr as u8)
 }
 
+/// valid chars for a function name
 pub fn valid_fun_name_char(chr: char) -> bool {
     return	
 	chr == '_' ||	
@@ -281,7 +286,7 @@ pub fn eval_expression(e: Expr, sample_set: &SampleSet, parts_store: &PartsStore
 		    Some(Expr::Constant(match bi {
 			BuiltIn::Command(cmd) => handlers::builtin_commands::handle(cmd, &mut reduced_tail),		
 			BuiltIn::Silence => Atom::SoundEvent(Event::with_name("silence".to_string())),			
-			BuiltIn::Constructor(con) => handlers::builtin_constructors::handle(&con, &mut reduced_tail),
+			BuiltIn::Constructor(con) => handlers::builtin_constructors::handle(&con, &mut reduced_tail, sample_set, parts_store, out_mode),
 			BuiltIn::SyncContext => handlers::builtin_sync_context::handle(&mut reduced_tail, parts_store),
 			BuiltIn::Parameter(par) => handlers::builtin_dynamic_parameter::handle(&par, &mut reduced_tail),
 			BuiltIn::SoundEvent(ev) => handlers::builtin_sound_event::handle(&ev, &mut reduced_tail),

@@ -95,6 +95,7 @@ pub enum BuiltInConstructor {
     Infer,    
     Rule,
     Nucleus,
+    Cycle,
 }
 
 pub enum BuiltInCommand {
