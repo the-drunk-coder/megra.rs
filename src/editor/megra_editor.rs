@@ -1,5 +1,6 @@
 use std::sync::*;
 use parking_lot::Mutex;
+use egui::ScrollArea;
 
 /// We derive Deserialize/Serialize so we can persist app state on shutdown.
 #[derive(serde::Deserialize, serde::Serialize)]
@@ -56,33 +57,31 @@ impl epi::App for MegraEditor {
     fn update(
         &mut self,
 	ctx: &egui::CtxRef,
-	frame: &mut epi::Frame<'_>
-    ) {
+	_: &mut epi::Frame<'_>) {
        	
-        // Example used in `README.md`.
         egui::CentralPanel::default().show(ctx, |ui| {
-            
-	    let tx = if let Some(cb) = self.callback.as_ref() {		
-		egui::CallbackTextEdit::multiline(&mut self.content, &mut self.selection_toggle)
-		    .desired_rows(34)
-		    .text_style(egui::TextStyle::Monospace)
-		    .desired_width(640.0)
-		    .eval_callback(&cb)		
-	    } else {
-		egui::CallbackTextEdit::multiline(&mut self.content, &mut self.selection_toggle)
-		    .desired_rows(34)
-		    .desired_width(640.0)
-		    .text_style(egui::TextStyle::Monospace)
-	    };
+            ScrollArea::auto_sized().show(ui, |ui| {    
 
-	    ui.add(egui::Label::new("Mégra Editor").text_color(egui::Color32::from_rgb(150, 250, 100)).monospace());
-	    ui.horizontal(|ui| {
-	
-		ui.add(tx)
+		let tx = if let Some(cb) = self.callback.as_ref() {		
+		    egui::CallbackTextEdit::multiline(&mut self.content, &mut self.selection_toggle)
+			.desired_rows(20)
+			.text_style(egui::TextStyle::Monospace)
+			.desired_width(800.0)
+			.eval_callback(&cb)		
+		} else {
+		    egui::CallbackTextEdit::multiline(&mut self.content, &mut self.selection_toggle)
+			.desired_rows(20)
+			.desired_width(800.0)
+			.text_style(egui::TextStyle::Monospace)
+		};
+		
+		ui.add(egui::Label::new("Mégra Editor").text_color(egui::Color32::from_rgb(150, 250, 100)).monospace());
+		ui.horizontal(|ui| {	
+		    ui.add(tx)
+		});
+		
             });
-            
-        });
+	});
 	
-	//integration_context.output.window_size = Some(egui::Vec2::new(640.0, 480.0)); // resize the window to be just the size we need it to be
     }    
 }
