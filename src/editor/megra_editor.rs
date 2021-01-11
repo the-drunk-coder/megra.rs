@@ -58,10 +58,11 @@ impl epi::App for MegraEditor {
         &mut self,
 	ctx: &egui::CtxRef,
 	_: &mut epi::Frame<'_>) {
-       	
+	       	
         egui::CentralPanel::default().show(ctx, |ui| {
-            ScrollArea::auto_sized().show(ui, |ui| {    
-
+	    ui.add(egui::Label::new("Mégra Editor").text_color(egui::Color32::from_rgb(150, 250, 100)).monospace());
+	    ui.separator();
+	    ScrollArea::auto_sized().show(ui, |ui| {    
 		let tx = if let Some(cb) = self.callback.as_ref() {		
 		    egui::CallbackTextEdit::multiline(&mut self.content, &mut self.selection_toggle)
 			.desired_rows(20)
@@ -73,15 +74,10 @@ impl epi::App for MegraEditor {
 			.desired_rows(20)
 			.desired_width(800.0)
 			.text_style(egui::TextStyle::Monospace)
-		};
-		
-		ui.add(egui::Label::new("Mégra Editor").text_color(egui::Color32::from_rgb(150, 250, 100)).monospace());
-		ui.horizontal(|ui| {	
-		    ui.add(tx)
-		});
-		
+		};						    
+
+		ui.add(tx);
             });
-	});
-	
+	});	
     }    
 }
