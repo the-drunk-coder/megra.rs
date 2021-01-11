@@ -27,12 +27,12 @@ impl MegraEditor {
     }    
 }
 
-impl egui::app::App for MegraEditor {
+impl epi::App for MegraEditor {
     fn name(&self) -> &str {
         "Mégra Editor"
     }
 
-    fn load(&mut self, storage: &dyn egui::app::Storage) {
+    fn load(&mut self, storage: &dyn epi::Storage) {
 	// make sure callback is carried over after loading
 	let callback = if let Some(tmp_callback) = &self.callback {
 	    Some(Arc::clone(&tmp_callback))
@@ -40,23 +40,23 @@ impl egui::app::App for MegraEditor {
 	    None
 	};
 	   
-        *self = egui::app::get_value(storage, egui::app::APP_KEY).unwrap_or_default();
+        *self = epi::get_value(storage, epi::APP_KEY).unwrap_or_default();
 
 	if let Some(tmp_callback) = callback {
 	    self.set_callback(&tmp_callback);
 	}
     }
 
-    fn save(&mut self, storage: &mut dyn egui::app::Storage) {
-        egui::app::set_value(storage, egui::app::APP_KEY, self);
+    fn save(&mut self, storage: &mut dyn epi::Storage) {
+        epi::set_value(storage, epi::APP_KEY, self);
     }
         
     /// Called each time the UI needs repainting, which may be many times per second.
     /// Put your widgets into a `SidePanel`, `TopPanel`, `CentralPanel`, `Window` or `Area`.
-    fn ui(
+    fn update(
         &mut self,
-        ctx: &egui::CtxRef,
-        integration_context: &mut egui::app::IntegrationContext,
+	ctx: &egui::CtxRef,
+	frame: &mut epi::Frame<'_>
     ) {
        	
         // Example used in `README.md`.
@@ -75,7 +75,7 @@ impl egui::app::App for MegraEditor {
 		    .text_style(egui::TextStyle::Monospace)
 	    };
 
-	    ui.add(egui::Label::new("Mégra Editor").text_color(egui::Srgba::from_rgb(150, 250, 100)).monospace());
+	    ui.add(egui::Label::new("Mégra Editor").text_color(egui::Color32::from_rgb(150, 250, 100)).monospace());
 	    ui.horizontal(|ui| {
 	
 		ui.add(tx)
@@ -83,6 +83,6 @@ impl egui::app::App for MegraEditor {
             
         });
 	
-	integration_context.output.window_size = Some(egui::Vec2::new(640.0, 480.0)); // resize the window to be just the size we need it to be
+	//integration_context.output.window_size = Some(egui::Vec2::new(640.0, 480.0)); // resize the window to be just the size we need it to be
     }    
 }
