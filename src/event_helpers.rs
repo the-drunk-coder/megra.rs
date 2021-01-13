@@ -24,6 +24,8 @@ pub fn map_parameter(name: &str) -> SynthParameter {
 	"lpf" => SynthParameter::LowpassCutoffFrequency,
 	"lpd" => SynthParameter::LowpassFilterDistortion,
 	"lpq" => SynthParameter::LowpassQFactor,
+	"hpf" => SynthParameter::HighpassCutoffFrequency,	
+	"hpq" => SynthParameter::HighpassQFactor,
 	"pf" => SynthParameter::PeakFrequency,
 	"pfq" => SynthParameter::PeakQFactor,
 	"pfg" => SynthParameter::PeakGain,

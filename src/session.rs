@@ -242,6 +242,7 @@ impl <const BUFSIZE:usize, const NCHAN:usize> Session<BUFSIZE, NCHAN> {
 					    ruff.set_instance_parameter(inst, *k, *v);
 					}
 				    },
+				    // convert milliseconds to seconds
 				    SynthParameter::Duration => ruff.set_instance_parameter(inst, *k, *v * 0.001),
 				    SynthParameter::Attack => ruff.set_instance_parameter(inst, *k, *v * 0.001),
 				    SynthParameter::Sustain => ruff.set_instance_parameter(inst, *k, *v * 0.001),
