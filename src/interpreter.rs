@@ -81,8 +81,7 @@ pub fn interpret<const BUFSIZE:usize, const NCHAN:usize>(parsed_in: Expr,
 		    thread::spawn(move || {
 			commands::load_sample_set_string(&ruffbox2, &sample_set2, path);
 			println!("a command (load sample sets)");
-		    });		    
-		    println!("a command (load sample set)");
+		    });		    		    
 		},
 		Command::LoadPart((name, generators)) => {
 		    commands::load_part(parts_store, name, generators);

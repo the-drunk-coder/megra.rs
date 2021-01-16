@@ -17,14 +17,16 @@ pub mod commands;
 pub mod sample_set;
 pub mod cyc_parser;
 
+use directories_next::ProjectDirs;
 use getopts::Options;
-use std::{env, sync};
+use std::{env, sync, thread};
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use parking_lot::Mutex;
 use ruffbox_synth::ruffbox::Ruffbox;
 use crate::session::{Session, OutputMode};
 use crate::sample_set::SampleSet;
 use crate::builtin_types::*;
+
 
 fn print_help(program: &str, opts: Options) {
     let description = format!(
@@ -49,7 +51,9 @@ fn main() -> Result<(), anyhow::Error> {
     opts.optflag("v", "version", "Print version");
     opts.optflag("e", "editor", "Use integrated editor (experimental)");
     opts.optflag("h", "help", "Print this help");
+    opts.optflag("n", "no-samples", "don't load default samples");
     opts.optopt("o", "output-mode", "output mode (stereo, 8ch)", "stereo");
+    
 
     let matches = match opts.parse(argv) {
         Ok(m) => m,
@@ -58,17 +62,14 @@ fn main() -> Result<(), anyhow::Error> {
 	    return Ok(());
         }
     };
-
-    let mut editor = false;
     
     if matches.opt_present("v") {
         println!("{}", "0.0.1");
         return Ok(());
     }
 
-    if matches.opt_present("e") {
-	editor = true;
-    }
+    let editor:bool = matches.opt_present("e");
+    let load_samples:bool = !matches.opt_present("n");
 
     if matches.opt_present("h") {
         print_help(&program, opts);
@@ -105,27 +106,27 @@ fn main() -> Result<(), anyhow::Error> {
 	    let mut conf: cpal::StreamConfig = config.into();
 	    conf.channels = 2;
 	    match sample_format  {		
-		cpal::SampleFormat::F32 => run::<f32, 2>(&device, &conf, out_mode, editor)?,
-		cpal::SampleFormat::I16 => run::<i16, 2>(&device, &conf, out_mode, editor)?,
-		cpal::SampleFormat::U16 => run::<u16, 2>(&device, &conf, out_mode, editor)?,
+		cpal::SampleFormat::F32 => run::<f32, 2>(&device, &conf, out_mode, editor, load_samples)?,
+		cpal::SampleFormat::I16 => run::<i16, 2>(&device, &conf, out_mode, editor, load_samples)?,
+		cpal::SampleFormat::U16 => run::<u16, 2>(&device, &conf, out_mode, editor, load_samples)?,
 	    }
 	},
 	OutputMode::FourChannel => {
 	    let mut conf: cpal::StreamConfig = config.into();
 	    conf.channels = 4;
 	    match sample_format  {
-		cpal::SampleFormat::F32 => run::<f32, 4>(&device, &conf, out_mode, editor)?,
-		cpal::SampleFormat::I16 => run::<i16, 4>(&device, &conf, out_mode, editor)?,
-		cpal::SampleFormat::U16 => run::<u16, 4>(&device, &conf, out_mode, editor)?,
+		cpal::SampleFormat::F32 => run::<f32, 4>(&device, &conf, out_mode, editor, load_samples)?,
+		cpal::SampleFormat::I16 => run::<i16, 4>(&device, &conf, out_mode, editor, load_samples)?,
+		cpal::SampleFormat::U16 => run::<u16, 4>(&device, &conf, out_mode, editor, load_samples)?,
 	    }
 	},
 	OutputMode::EightChannel => {
 	    let mut conf: cpal::StreamConfig = config.into();
 	    conf.channels = 8;
 	    match sample_format  {
-		cpal::SampleFormat::F32 => run::<f32, 8>(&device, &conf, out_mode, editor)?,
-		cpal::SampleFormat::I16 => run::<i16, 8>(&device, &conf, out_mode, editor)?,
-		cpal::SampleFormat::U16 => run::<u16, 8>(&device, &conf, out_mode, editor)?,
+		cpal::SampleFormat::F32 => run::<f32, 8>(&device, &conf, out_mode, editor, load_samples)?,
+		cpal::SampleFormat::I16 => run::<i16, 8>(&device, &conf, out_mode, editor, load_samples)?,
+		cpal::SampleFormat::U16 => run::<u16, 8>(&device, &conf, out_mode, editor, load_samples)?,
 	    }
 	}
     }
@@ -133,7 +134,11 @@ fn main() -> Result<(), anyhow::Error> {
     Ok(())
 }
 
-fn run<T, const NCHAN:usize>(device: &cpal::Device, config: &cpal::StreamConfig, mode: OutputMode, editor: bool) -> Result<(), anyhow::Error>
+fn run<T, const NCHAN:usize>(device: &cpal::Device,
+			     config: &cpal::StreamConfig,
+			     mode: OutputMode,
+			     editor: bool,
+			     load_samples: bool) -> Result<(), anyhow::Error>
 where
     T: cpal::Sample,
 {
@@ -172,6 +177,20 @@ where
     let session = sync::Arc::new(Mutex::new(Session::with_mode(mode)));
     let global_parameters = sync::Arc::new(GlobalParameters::with_capacity(1));
     let sample_set = sync::Arc::new(Mutex::new(SampleSet::new()));
+
+    // load the default sample set ...
+    if load_samples {
+	if let Some(proj_dirs) = ProjectDirs::from("de", "parkellipsen",  "megra") {
+	    let path = proj_dirs.config_dir().join("samples");
+	    println!("{:?}", path);
+	    let ruffbox2 = sync::Arc::clone(&ruffbox);
+	    let sample_set2 = sync::Arc::clone(&sample_set);
+	    thread::spawn(move || {
+		commands::load_sample_sets_path(&ruffbox2, &sample_set2, &path);
+		println!("a command (load default sample sets)");
+	    });		    
+	}
+    }
     
     if editor {
 	editor::run_editor(&session, &ruffbox, &global_parameters, &sample_set, mode);	

@@ -89,6 +89,13 @@ pub fn load_sample_sets<const BUFSIZE:usize, const NCHAN:usize>(ruffbox: &sync::
 								folder_path: String) {
 
     let root_path = Path::new(&folder_path);
+    load_sample_sets_path(ruffbox, sample_set, root_path);
+}
+
+pub fn load_sample_sets_path<const BUFSIZE:usize, const NCHAN:usize>(ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>,
+								sample_set: &sync::Arc<Mutex<SampleSet>>,
+								root_path: &Path) {
+
     if let Ok(entries) = fs::read_dir(root_path) {
 	for entry in entries {
 	    if let Ok(entry) = entry {
