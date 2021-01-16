@@ -1,6 +1,6 @@
 use std::sync;
 use parking_lot::Mutex;
-use std::thread;
+//use std::thread;
 
 use ruffbox_synth::ruffbox::Ruffbox;
 
@@ -59,24 +59,16 @@ pub fn interpret<const BUFSIZE:usize, const NCHAN:usize>(parsed_in: Expr,
 		    Session::clear_session(session);
 		    println!("a command (stop session)");
 		},
-		Command::LoadSample((set, mut keywords, path)) => {
-
-		    let rb2 = ruffbox.clone();
-		    let sase2 = sample_set.clone();
-		    thread::spawn(move || {
-			// some work here
-			commands::load_sample(rb2,sase2 , set, &mut keywords, path);		    		    
-			println!("a command (load sample)");
-		    });
-		    
+		Command::LoadSample((set, mut keywords, path)) => {		    
+		    commands::load_sample(ruffbox, &mut sample_set.lock(), set, &mut keywords, path);		    		    
 		    println!("a command (load sample)");
 		},
 		Command::LoadSampleSets(path) => {
-		    commands::load_sample_sets(ruffbox.clone(), sample_set.clone(), path);		    		    
+		    commands::load_sample_sets(ruffbox, &mut sample_set.lock(), path);		    		    
 		    println!("a command (load sample sets)");
 		},
 		Command::LoadSampleSet(path) => {
-		    commands::load_sample_set_string(ruffbox.clone(), sample_set.clone(), path);		    		    
+		    commands::load_sample_set_string(ruffbox, &mut sample_set.lock(), path);		    		    
 		    println!("a command (load sample set)");
 		},
 		Command::LoadPart((name, generators)) => {
