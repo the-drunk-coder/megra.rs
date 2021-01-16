@@ -59,6 +59,7 @@ impl epi::App for MegraEditor {
 	ctx: &egui::CtxRef,
 	_: &mut epi::Frame<'_>) {
 
+	// some frame options ...
        	let mut frame = egui::Frame::none();
 	frame.fill = egui::Color32::BLACK;
 	frame.margin = egui::Vec2::new(3.0, 3.0);
