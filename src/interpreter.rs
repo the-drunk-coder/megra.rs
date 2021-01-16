@@ -1,5 +1,6 @@
 use std::sync;
 use parking_lot::Mutex;
+use std::thread;
 
 use ruffbox_synth::ruffbox::Ruffbox;
 
@@ -12,7 +13,7 @@ pub fn interpret<const BUFSIZE:usize, const NCHAN:usize>(parsed_in: Expr,
 							 session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
 							 ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>,
 							 global_parameters: &sync::Arc<GlobalParameters>,
-							 sample_set: &mut SampleSet,
+							 sample_set: &sync::Arc<Mutex<SampleSet>>,
 							 parts_store: &mut PartsStore) {
     match parsed_in {
 	Expr::Comment => {println!("a comment")},
@@ -59,15 +60,23 @@ pub fn interpret<const BUFSIZE:usize, const NCHAN:usize>(parsed_in: Expr,
 		    println!("a command (stop session)");
 		},
 		Command::LoadSample((set, mut keywords, path)) => {
-		    commands::load_sample(ruffbox, sample_set, set, &mut keywords, path);		    		    
+
+		    let rb2 = ruffbox.clone();
+		    let sase2 = sample_set.clone();
+		    thread::spawn(move || {
+			// some work here
+			commands::load_sample(rb2,sase2 , set, &mut keywords, path);		    		    
+			println!("a command (load sample)");
+		    });
+		    
 		    println!("a command (load sample)");
 		},
 		Command::LoadSampleSets(path) => {
-		    commands::load_sample_sets(ruffbox, sample_set, path);		    		    
+		    commands::load_sample_sets(ruffbox.clone(), sample_set.clone(), path);		    		    
 		    println!("a command (load sample sets)");
 		},
 		Command::LoadSampleSet(path) => {
-		    commands::load_sample_set_string(ruffbox, sample_set, path);		    		    
+		    commands::load_sample_set_string(ruffbox.clone(), sample_set.clone(), path);		    		    
 		    println!("a command (load sample set)");
 		},
 		Command::LoadPart((name, generators)) => {

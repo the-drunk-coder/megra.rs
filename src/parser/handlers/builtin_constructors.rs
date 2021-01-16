@@ -1,4 +1,7 @@
 use std::collections::{HashMap, BTreeSet};
+use std::sync;
+
+use parking_lot::Mutex;
 use vom_rs::pfa::Pfa;
 use ruffbox_synth::ruffbox::synth::SynthParameter;
 use crate::builtin_types::*;
@@ -252,7 +255,7 @@ pub fn construct_rule(tail: &mut Vec<Expr>) -> Atom {
     })
 }
 
-pub fn construct_cycle(tail: &mut Vec<Expr>, sample_set: &SampleSet, parts_store: &PartsStore, out_mode: OutputMode) -> Atom {
+pub fn construct_cycle(tail: &mut Vec<Expr>, sample_set: &sync::Arc<Mutex<SampleSet>>, parts_store: &PartsStore, out_mode: OutputMode) -> Atom {
 
     let mut tail_drain = tail.drain(..);
 
@@ -366,7 +369,11 @@ pub fn construct_cycle(tail: &mut Vec<Expr>, sample_set: &SampleSet, parts_store
     })  
 }
 
-pub fn handle(constructor_type: &BuiltInConstructor, tail: &mut Vec<Expr>, sample_set: &SampleSet, parts_store: &PartsStore, out_mode: OutputMode) -> Atom {
+pub fn handle(constructor_type: &BuiltInConstructor,
+	      tail: &mut Vec<Expr>,
+	      sample_set: &sync::Arc<Mutex<SampleSet>>,
+	      parts_store: &PartsStore,
+	      out_mode: OutputMode) -> Atom {
     match constructor_type {
 	BuiltInConstructor::Infer => construct_infer(tail),
 	BuiltInConstructor::Learn => construct_learn(tail),

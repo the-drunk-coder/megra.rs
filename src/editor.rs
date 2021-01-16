@@ -16,7 +16,7 @@ pub fn run_editor<const BUFSIZE:usize, const NCHAN:usize>(ruffbox: &Arc<Mutex<Ru
     // Restore editor from file, or create new editor:
     let mut app: MegraEditor = MegraEditor::default();
 
-    let mut sample_set = SampleSet::new();
+    let mut sample_set = Arc::new(Mutex::new(SampleSet::new()));
     let mut parts_store = PartsStore::new();
     let session = Arc::new(Mutex::new(Session::with_mode(mode)));
     let ruffbox2 = Arc::clone(ruffbox);

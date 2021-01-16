@@ -1,3 +1,6 @@
+use std::sync;
+use parking_lot::Mutex;
+
 use std::collections::HashSet;
 use crate::builtin_types::*;
 use crate::sample_set::SampleSet;
@@ -8,12 +11,13 @@ use ruffbox_synth::ruffbox::synth::SynthParameter;
 
 // this works a bit different than the others in that it returns an option, not the plain
 // atom ...
-pub fn handle(tail: &mut Vec<Expr>, set: String, sample_set: &SampleSet) -> Option<Expr> {
-	    
+pub fn handle(tail: &mut Vec<Expr>, set: String, sample_set_sync: &sync::Arc<Mutex<SampleSet>>) -> Option<Expr> {
+
+    let sample_set = sample_set_sync.lock();
     if sample_set.exists_not_empty(&set) {
 
 	let mut drain_idx = 0;
-	let sample_info = if tail.len() == 0 {
+	let sample_info = if tail.len() == 0 {	   
 	    sample_set.random(&set).unwrap()
 	} else {
 	    match &tail[0] {
