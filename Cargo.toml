@@ -19,8 +19,8 @@ rustyline = "6.3.0"
 claxon = "0.4.3"
 getopts = "0.2"
 rand = "0.7"
-egui = { path = "../thirdparty/egui/egui" }
-egui_glium = { path = "../thirdparty/egui/egui_glium" }
+egui = { path = "../thirdparty/egui/egui", features = ["persistence"]}
+egui_glium = { path = "../thirdparty/egui/egui_glium", features = ["persistence"]}
 epi = { path = "../thirdparty/egui/epi", features = ["persistence"]}
 serde = { version = "1", features = ["derive"] }
 dashmap = "4.0.0"
