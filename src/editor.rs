@@ -1,4 +1,4 @@
-use std::sync::*;
+use std::sync;
 use parking_lot::Mutex;
 use ruffbox_synth::ruffbox::Ruffbox;
 
@@ -11,23 +11,28 @@ use crate::builtin_types::*;
 use crate::parser;
 use crate::interpreter;
 
-pub fn run_editor<const BUFSIZE:usize, const NCHAN:usize>(ruffbox: &Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>, mode: OutputMode) {
-    
+pub fn run_editor<const BUFSIZE:usize, const NCHAN:usize>(session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
+							  ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>,
+							  global_parameters: &sync::Arc<GlobalParameters>,
+							  sample_set: &sync::Arc<Mutex<SampleSet>>,
+							  mode: OutputMode) {
+
+    let mut parts_store = PartsStore::new();
+
     // Restore editor from file, or create new editor:
     let mut app: MegraEditor = MegraEditor::default();
 
-    let mut sample_set = Arc::new(Mutex::new(SampleSet::new()));
-    let mut parts_store = PartsStore::new();
-    let session = Arc::new(Mutex::new(Session::with_mode(mode)));
-    let ruffbox2 = Arc::clone(ruffbox);
-    let global_parameters = Arc::new(GlobalParameters::with_capacity(1));
+    let session2 = sync::Arc::clone(session);
+    let ruffbox2 = sync::Arc::clone(ruffbox);
+    let sample_set2 = sync::Arc::clone(sample_set);
+    let global_parameters2 = sync::Arc::clone(global_parameters);
         
-    let callback_ref:Arc<Mutex<dyn FnMut(&String)>> = Arc::new(Mutex::new(	
+    let callback_ref:sync::Arc<Mutex<dyn FnMut(&String)>> = sync::Arc::new(Mutex::new(	
 	move |text: &String| {
-	    let pfa_in = parser::eval_from_str(text, &sample_set, &parts_store, mode);
+	    let pfa_in = parser::eval_from_str(text, &sample_set2, &parts_store, mode);
 	    match pfa_in {
 		Ok(pfa) => {
-		    interpreter::interpret(pfa, &session, &ruffbox2, &global_parameters, &mut sample_set, &mut parts_store);
+		    interpreter::interpret(pfa, &session2, &ruffbox2, &global_parameters2, &sample_set2, &mut parts_store);
 		},
 		Err(_) => {println!("could not parse this! {}", text)},
 	    }

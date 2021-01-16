@@ -11,12 +11,13 @@ use crate::session::{Session, OutputMode};
 use crate::parser;
 use crate::interpreter;
 
-pub fn start_repl<const BUFSIZE:usize, const NCHAN:usize>(ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>, mode: OutputMode) -> Result<(), anyhow::Error> {
-    let session = sync::Arc::new(Mutex::new(Session::with_mode(mode)));
-    let global_parameters = sync::Arc::new(GlobalParameters::with_capacity(1));
-    let mut sample_set = sync::Arc::new(Mutex::new(SampleSet::new()));
+pub fn start_repl<const BUFSIZE:usize, const NCHAN:usize>(session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
+							  ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>,
+							  global_parameters: &sync::Arc<GlobalParameters>,
+							  sample_set: &sync::Arc<Mutex<SampleSet>>,
+							  mode: OutputMode) -> Result<(), anyhow::Error> {    
     let mut parts_store = PartsStore::new();
-    
+        
     // `()` can be used when no completer is required
     let mut rl = Editor::<()>::new();
     if rl.load_history("history.txt").is_err() {
@@ -50,10 +51,10 @@ pub fn start_repl<const BUFSIZE:usize, const NCHAN:usize>(ruffbox: &sync::Arc<Mu
 				match readline_inner {
 				    Ok(line) => {
 					line_buffer.push_str(&line.as_str());
-					let inner_pfa_in = parser::eval_from_str(&line_buffer.as_str(), &sample_set, &parts_store, mode);
+					let inner_pfa_in = parser::eval_from_str(&line_buffer.as_str(), sample_set, &parts_store, mode);
 					match inner_pfa_in {
 					    Ok(pfa) => {
-						interpreter::interpret(pfa, &session, &ruffbox, &global_parameters, &mut sample_set, &mut parts_store);			
+						interpreter::interpret(pfa, session, ruffbox, global_parameters, sample_set, &mut parts_store);			
 						rl.add_history_entry(line_buffer.as_str());
 						break;
 					    },
@@ -74,7 +75,7 @@ pub fn start_repl<const BUFSIZE:usize, const NCHAN:usize>(ruffbox: &sync::Arc<Mu
 			}
 		    },
 		    Ok(pfa) => {
-			interpreter::interpret(pfa, &session, &ruffbox, &global_parameters, &mut sample_set, &mut parts_store);			
+			interpreter::interpret(pfa, session, ruffbox, global_parameters, sample_set, &mut parts_store);			
 			rl.add_history_entry(line.as_str());						
 		    }
 		}

@@ -8,7 +8,7 @@ use crate::builtin_types::*;
 use crate::generator::Generator;
 
 pub fn load_sample<const BUFSIZE:usize, const NCHAN:usize>(ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>,
-							   sample_set: &mut SampleSet,
+							   sample_set: &sync::Arc<Mutex<SampleSet>>,
 							   set:String,
 							   keywords: &mut Vec<String>,
 							   path: String) {
@@ -43,11 +43,11 @@ pub fn load_sample<const BUFSIZE:usize, const NCHAN:usize>(ruffbox: &sync::Arc<M
 	}
     }
     
-    sample_set.insert(set, keyword_set, bufnum);
+    sample_set.lock().insert(set, keyword_set, bufnum);
 }
 
 pub fn load_sample_set<const BUFSIZE:usize, const NCHAN:usize>(ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>,
-							       sample_set: &mut SampleSet,								  
+							       sample_set: &sync::Arc<Mutex<SampleSet>>,
 							       samples_path: &Path) {
 
     // determine set name or use default
@@ -78,14 +78,14 @@ pub fn load_sample_set<const BUFSIZE:usize, const NCHAN:usize>(ruffbox: &sync::A
     }
 }
 pub fn load_sample_set_string<const BUFSIZE:usize, const NCHAN:usize>(ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>,
-								      sample_set: &mut SampleSet,								  
+								      sample_set: &sync::Arc<Mutex<SampleSet>>,
 								      samples_path: String) {
     let path = Path::new(&samples_path);
     load_sample_set(ruffbox, sample_set, path);
 }
 
 pub fn load_sample_sets<const BUFSIZE:usize, const NCHAN:usize>(ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>,
-								sample_set: &mut SampleSet,								  
+								sample_set: &sync::Arc<Mutex<SampleSet>>,
 								folder_path: String) {
 
     let root_path = Path::new(&folder_path);

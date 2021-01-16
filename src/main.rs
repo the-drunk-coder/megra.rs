@@ -18,11 +18,13 @@ pub mod sample_set;
 pub mod cyc_parser;
 
 use getopts::Options;
-use std::{env, sync::Arc};
+use std::{env, sync};
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use parking_lot::Mutex;
 use ruffbox_synth::ruffbox::Ruffbox;
-use crate::session::OutputMode;
+use crate::session::{Session, OutputMode};
+use crate::sample_set::SampleSet;
+use crate::builtin_types::*;
 
 fn print_help(program: &str, opts: Options) {
     let description = format!(
@@ -141,8 +143,8 @@ where
     
     let err_fn = |err| eprintln!("an error occurred on stream: {}", err);
 
-    let ruffbox = Arc::new(Mutex::new(Ruffbox::<512, NCHAN>::new()));
-    let ruffbox2 = Arc::clone(&ruffbox); // the one for the audio thread ...
+    let ruffbox = sync::Arc::new(Mutex::new(Ruffbox::<512, NCHAN>::new()));
+    let ruffbox2 = sync::Arc::clone(&ruffbox); // the one for the audio thread ...
     
     let stream = device.build_output_stream(
         config,
@@ -166,11 +168,16 @@ where
     )?;
     stream.play()?;
 
+    // global data
+    let session = sync::Arc::new(Mutex::new(Session::with_mode(mode)));
+    let global_parameters = sync::Arc::new(GlobalParameters::with_capacity(1));
+    let sample_set = sync::Arc::new(Mutex::new(SampleSet::new()));
+    
     if editor {
-	editor::run_editor(&ruffbox, mode);	
+	editor::run_editor(&session, &ruffbox, &global_parameters, &sample_set, mode);	
 	Ok(())		
     } else {
-	// start the megra repl
-	repl::start_repl(&ruffbox, mode)
+	// star1t the megra repl
+	repl::start_repl(&session, &ruffbox, &global_parameters, &sample_set, mode)
     }    
 }
