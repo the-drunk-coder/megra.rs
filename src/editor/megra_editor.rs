@@ -58,8 +58,12 @@ impl epi::App for MegraEditor {
         &mut self,
 	ctx: &egui::CtxRef,
 	_: &mut epi::Frame<'_>) {
-	       	
-        egui::CentralPanel::default().show(ctx, |ui| {
+
+       	let mut frame = egui::Frame::none();
+	frame.fill = egui::Color32::BLACK;
+	frame.margin = egui::Vec2::new(3.0, 3.0);
+	
+        egui::CentralPanel::default().frame(frame).show(ctx, |ui| {
 	    ui.add(egui::Label::new("Mégra Editor").text_color(egui::Color32::from_rgb(150, 250, 100)).monospace());
 	    ui.separator();
 	    ScrollArea::auto_sized().show(ui, |ui| {    
