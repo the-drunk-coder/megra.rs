@@ -96,6 +96,12 @@ pub enum BuiltInConstructor {
     Rule,
     Nucleus,
     Cycle,
+    // Flower,
+    // Friendship,
+    // Fully,
+    // Chop,
+    // Pseq, ?
+    
 }
 
 pub enum BuiltInCommand {
