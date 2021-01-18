@@ -7,17 +7,14 @@ use egui::ScrollArea;
 pub struct MegraEditor {
     content: String,
     #[serde(skip)]
-    callback: Option<Arc<Mutex<dyn FnMut(&String)>>>,
-    #[serde(skip)]
-    selection_toggle: atomic::AtomicBool,
+    callback: Option<Arc<Mutex<dyn FnMut(&String)>>>,    
 }
 
 impl Default for MegraEditor {
     fn default() -> Self {
         Self {
             content: "(sx 'ga #t (infer 'troll :events 'a (saw 400) :rules (rule 'a 'a 100 400)))".to_owned(),
-	    callback: None,
-	    selection_toggle: atomic::AtomicBool::new(false),
+	    callback: None,	    
         }
     }
 }
@@ -69,13 +66,13 @@ impl epi::App for MegraEditor {
 	    ui.separator();
 	    ScrollArea::auto_sized().show(ui, |ui| {    
 		let tx = if let Some(cb) = self.callback.as_ref() {		
-		    egui::CallbackTextEdit::multiline(&mut self.content, &mut self.selection_toggle)
+		    egui::CallbackTextEdit::multiline(&mut self.content)
 			.desired_rows(20)
 			.text_style(egui::TextStyle::Monospace)
 			.desired_width(800.0)
 			.eval_callback(&cb)		
 		} else {
-		    egui::CallbackTextEdit::multiline(&mut self.content, &mut self.selection_toggle)
+		    egui::CallbackTextEdit::multiline(&mut self.content)
 			.desired_rows(20)
 			.desired_width(800.0)
 			.text_style(egui::TextStyle::Monospace)
