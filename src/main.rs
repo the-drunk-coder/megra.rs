@@ -53,6 +53,8 @@ fn main() -> Result<(), anyhow::Error> {
     opts.optflag("h", "help", "Print this help");
     opts.optflag("n", "no-samples", "don't load default samples");
     opts.optopt("o", "output-mode", "output mode (stereo, 8ch)", "stereo");
+    opts.optflag("l", "list-devices", "list available devices");
+    opts.optopt("d", "device", "choose device", "default");
     
 
     let matches = match opts.parse(argv) {
@@ -75,6 +77,7 @@ fn main() -> Result<(), anyhow::Error> {
         print_help(&program, opts);
         return Ok(());
     }
+    
 
     let out_mode = match matches.opt_str("o").as_deref() {
 	Some("8ch") => OutputMode::EightChannel,
@@ -85,18 +88,36 @@ fn main() -> Result<(), anyhow::Error> {
 	    OutputMode::Stereo
 	},
     };
-
-
+    
     let host = cpal::host_from_id(cpal::available_hosts()
 				  .into_iter()
 				  .find(|id| *id == cpal::HostId::Jack)
 				  .expect(
 				      "make sure --features jack is specified. only works on OSes where jack is available",
 				  )).expect("jack host unavailable");
+    
+    //let host = cpal::default_host();
 
-    let device = host
-        .default_output_device()
-        .expect("failed to find a default output device");
+    if matches.opt_present("l") {
+	for dev in host.output_devices()? {
+	    println!("{:?}", dev.name());
+	}        
+        return Ok(());
+    }
+
+    let out_device = if let Some(dev) = matches.opt_str("d") {
+	dev
+    } else {
+	"default".to_string()
+    };
+
+    let device = if out_device == "default" {
+        host.default_output_device()
+    } else {
+        host.output_devices()?
+            .find(|x| x.name().map(|y| y == out_device).unwrap_or(false))
+    }
+    .expect("failed to find output device");
 
     let config:cpal::SupportedStreamConfig = device.default_output_config().unwrap();
     let sample_format = config.sample_format();
