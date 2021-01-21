@@ -88,15 +88,17 @@ fn main() -> Result<(), anyhow::Error> {
 	    OutputMode::Stereo
 	},
     };
-    
+
+    #[cfg(any(target_os = "linux", target_os = "dragonfly", target_os = "freebsd"))]
     let host = cpal::host_from_id(cpal::available_hosts()
 				  .into_iter()
 				  .find(|id| *id == cpal::HostId::Jack)
 				  .expect(
 				      "make sure --features jack is specified. only works on OSes where jack is available",
 				  )).expect("jack host unavailable");
-    
-    //let host = cpal::default_host();
+
+    #[cfg(not(any(target_os = "linux", target_os = "dragonfly", target_os = "freebsd")))]
+    let host = cpal::default_host();
 
     if matches.opt_present("l") {
 	for dev in host.output_devices()? {
