@@ -6,7 +6,7 @@ edition = "2018"
 license = "GPL-3.0+"
 
 [dependencies]
-cpal = { path = "../thirdparty/cpal", features = ["jack"]}
+cpal = { version="0.13", features = ["jack"] }
 directories-next = "2.0"
 anyhow = "1.0"
 crossbeam = "0.8"
