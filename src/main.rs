@@ -168,7 +168,6 @@ where
     // at some point i'll need to implement more samplerates i suppose ...
     let _sample_rate = config.sample_rate.0 as f32;
     let channels = config.channels as usize;
-    
     let err_fn = |err| eprintln!("an error occurred on stream: {}", err);
 
     let ruffbox = sync::Arc::new(Mutex::new(Ruffbox::<512, NCHAN>::new()));
@@ -203,13 +202,31 @@ where
 
     // load the default sample set ...
     if load_samples {
-	if let Some(proj_dirs) = ProjectDirs::from("de", "parkellipsen",  "megra") {
-	    let path = proj_dirs.config_dir().join("samples");
-	    println!("{:?}", path);
+	
+	
+	if let Some(proj_dirs) = ProjectDirs::from("de", "parkellipsen", "megra") {
+	    if !proj_dirs.config_dir().exists() {
+		println!("create megra resource directory {:?}", proj_dirs.config_dir());
+		std::fs::create_dir(proj_dirs.config_dir().to_str().unwrap())?;
+	    }
+	    
+	    let samples_path = proj_dirs.config_dir().join("samples");
+	    if !samples_path.exists() {
+		println!("create megra samples directory {:?}", samples_path);
+		std::fs::create_dir(samples_path.to_str().unwrap())?;
+	    }
+
+	    let sketchbook_path = proj_dirs.config_dir().join("sketchbook");
+	    if !sketchbook_path.exists() {
+		println!("create megra sketchbook directory {:?}", sketchbook_path);
+		std::fs::create_dir(sketchbook_path.to_str().unwrap())?;
+	    }
+	    
+	    println!("load samples from path: {:?}", samples_path);
 	    let ruffbox2 = sync::Arc::clone(&ruffbox);
 	    let sample_set2 = sync::Arc::clone(&sample_set);
 	    thread::spawn(move || {
-		commands::load_sample_sets_path(&ruffbox2, &sample_set2, &path);
+		commands::load_sample_sets_path(&ruffbox2, &sample_set2, &samples_path);
 		println!("a command (load default sample sets)");
 	    });		    
 	}
