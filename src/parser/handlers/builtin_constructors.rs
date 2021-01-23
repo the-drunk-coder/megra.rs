@@ -17,8 +17,12 @@ use crate::sample_set::SampleSet;
 pub fn construct_learn(tail: &mut Vec<Expr>) -> Atom {
     let mut tail_drain = tail.drain(..);
     
-    // name is the first symbol
-    let name: String = get_string_from_expr(&tail_drain.next().unwrap()).unwrap();
+    // name is the first symbol    
+    let name = if let Some(n) = get_string_from_expr(&tail_drain.next().unwrap()) {
+	n
+    } else {
+	"".to_string()
+    };
     
     let mut sample:String = "".to_string();
     let mut event_mapping = HashMap::<char, Vec<SourceEvent>>::new();
@@ -90,8 +94,12 @@ pub fn construct_learn(tail: &mut Vec<Expr>) -> Atom {
 pub fn construct_infer(tail: &mut Vec<Expr>) -> Atom {
     let mut tail_drain = tail.drain(..);
     
-    // name is the first symbol
-    let name: String = get_string_from_expr(&tail_drain.next().unwrap()).unwrap();
+    // name is the first symbol    
+    let name = if let Some(n) = get_string_from_expr(&tail_drain.next().unwrap()) {
+	n
+    } else {
+	"".to_string()
+    };
     
     let mut event_mapping = HashMap::<char, Vec<SourceEvent>>::new();
     let mut duration_mapping = HashMap::<(char,char), Event>::new();
