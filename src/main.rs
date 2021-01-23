@@ -215,7 +215,7 @@ where
 		println!("create megra samples directory {:?}", samples_path);
 		std::fs::create_dir(samples_path.to_str().unwrap())?;
 	    }
-
+	    
 	    let sketchbook_path = proj_dirs.config_dir().join("sketchbook");
 	    if !sketchbook_path.exists() {
 		println!("create megra sketchbook directory {:?}", sketchbook_path);

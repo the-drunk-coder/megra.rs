@@ -24,6 +24,7 @@ egui_glium = { path = "../thirdparty/egui/egui_glium", features = ["persistence"
 epi = { path = "../thirdparty/egui/epi", features = ["persistence"]}
 serde = { version = "1", features = ["derive"] }
 dashmap = "4.0.0"
+chrono = "0.4"
 
 [dev-dependencies]
 assert_approx_eq = "1.1.0"
