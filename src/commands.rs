@@ -17,6 +17,16 @@ pub fn load_sample<const BUFSIZE:usize, const NCHAN:usize>(ruffbox: &sync::Arc<M
     let mut reader = claxon::FlacReader::open(path.clone()).unwrap();
     
     println!("sample path: {} channels: {}", path, reader.streaminfo().channels);
+    let mut duration = if let Some(samples) = reader.streaminfo().samples {
+	1000 * ((samples / reader.streaminfo().channels as u64) / reader.streaminfo().sample_rate as u64) as usize
+    } else {
+	200
+    };
+    // max ten seconds
+    if duration > 10000 {
+	duration = 10000;
+    }
+    
     
     // decode to f32
     let max_val = (i32::MAX >> (32 - reader.streaminfo().bits_per_sample)) as f32;
@@ -43,7 +53,7 @@ pub fn load_sample<const BUFSIZE:usize, const NCHAN:usize>(ruffbox: &sync::Arc<M
 	}
     }
     
-    sample_set.lock().insert(set, keyword_set, bufnum);
+    sample_set.lock().insert(set, keyword_set, bufnum, duration);
 }
 
 pub fn load_sample_set<const BUFSIZE:usize, const NCHAN:usize>(ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>,

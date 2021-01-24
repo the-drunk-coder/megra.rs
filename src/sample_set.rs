@@ -4,6 +4,7 @@ use rand::seq::SliceRandom;
 pub struct SampleInfo {
     pub key: HashSet<String>,
     pub bufnum: usize,
+    pub duration: usize // duration in ms ..
 }
 
 impl SampleInfo {
@@ -25,8 +26,8 @@ impl SampleSet {
 	}
     }
 
-    pub fn insert(&mut self, set: String, keyword_set: HashSet<String>, bufnum: usize) {
-	self.subsets.entry(set).or_insert(Vec::new()).push(SampleInfo{key: keyword_set, bufnum: bufnum});    
+    pub fn insert(&mut self, set: String, keyword_set: HashSet<String>, bufnum: usize, dur: usize) {
+	self.subsets.entry(set).or_insert(Vec::new()).push(SampleInfo{key: keyword_set, bufnum: bufnum, duration: dur});    
     }
 
     pub fn exists_not_empty(&self, set: &String) -> bool {

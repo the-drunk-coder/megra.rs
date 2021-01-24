@@ -57,7 +57,7 @@ pub fn handle(tail: &mut Vec<Expr>, set: String, sample_set_sync: &sync::Arc<Mut
 	// set some defaults
 	ev.params.insert(SynthParameter::Level, Box::new(Parameter::with_value(0.4)));
 	ev.params.insert(SynthParameter::Attack, Box::new(Parameter::with_value(1.0)));
-	ev.params.insert(SynthParameter::Sustain, Box::new(Parameter::with_value(200.0)));
+	ev.params.insert(SynthParameter::Sustain, Box::new(Parameter::with_value((sample_info.duration - 2) as f32)));
 	ev.params.insert(SynthParameter::Release, Box::new(Parameter::with_value(1.0)));
 	ev.params.insert(SynthParameter::ChannelPosition, Box::new(Parameter::with_value(0.00)));
 	ev.params.insert(SynthParameter::PlaybackRate, Box::new(Parameter::with_value(1.0)));
