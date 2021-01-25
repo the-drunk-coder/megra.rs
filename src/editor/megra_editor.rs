@@ -1,4 +1,4 @@
-use std::{fs, path, sync::*};
+use std::{fs, path, sync::*, collections::HashMap};
 use parking_lot::Mutex;
 use egui::ScrollArea;
 use directories_next::ProjectDirs;
@@ -11,7 +11,7 @@ enum SketchNumber {
 
 /// We derive Deserialize/Serialize so we can persist app state on shutdown.
 #[derive(serde::Deserialize, serde::Serialize)]
-pub struct MegraEditor {
+pub struct MegraEditor<'a> {
     content: String,
     #[serde(skip)]
     callback: Option<Arc<Mutex<dyn FnMut(&String)>>>,
@@ -21,29 +21,34 @@ pub struct MegraEditor {
     current_sketch: String,
     #[serde(skip)]
     sketch_number: usize,
+    #[serde(skip)]
+    function_names: Vec<&'a str>,
+    #[serde(skip)]
+    colors: HashMap<egui::CodeColors, egui::Color32>
+    
 }
 
-impl Default for MegraEditor {
-    fn default() -> Self {
+impl <'a> Default for MegraEditor<'a> {
+    fn default() -> Self {			
         Self {
             content: "(sx 'ga #t (infer 'troll :events 'a (saw 400) :rules (rule 'a 'a 100 400)))".to_owned(),
 	    callback: None,
 	    sketch_list: Vec::new(),
 	    current_sketch: "".to_string(),
-	    sketch_number: 0,		
+	    sketch_number: 0,
+	    function_names: Vec::new(),
+	    colors: HashMap::new()
         }
     }
 }
 
-impl MegraEditor {
+impl<'a> MegraEditor<'a> {
     pub fn set_callback(&mut self, callback: &Arc<Mutex<dyn FnMut(&String)>>) {	
 	self.callback = Some(Arc::clone(callback));
     }    
 }
 
-
-
-impl epi::App for MegraEditor {
+impl<'a> epi::App for MegraEditor<'a> {
     fn name(&self) -> &str {
         "Mégra Editor"
     }
@@ -67,7 +72,27 @@ impl epi::App for MegraEditor {
 	}
 
 	self.content = format!(";; Created {}", Local::now().format("%A, %F, %H:%M:%S ... good luck!"));
-	
+
+	self.function_names.push("apple");
+	self.function_names.push("learn");
+	self.function_names.push("pear");
+	self.function_names.push("nuc");
+	self.function_names.push("sx");
+	self.function_names.push("cyc");
+	self.function_names.push("xspread");
+	self.function_names.push("xdup");
+	self.function_names.push("life");
+	self.function_names.push("every");
+
+	self.colors.insert(egui::CodeColors::Function,
+			   egui::Color32::from_rgb(200,20,200));
+	self.colors.insert(egui::CodeColors::Keyword,
+			   egui::Color32::from_rgb(220,20,100));
+	self.colors.insert(egui::CodeColors::Comment,
+			   egui::Color32::from_rgb(20,200,100));
+	self.colors.insert(egui::CodeColors::Boolean,
+			   egui::Color32::from_rgb(0,200,100));
+
 	// create sketch and load sketch file list ...
 	if let Some(proj_dirs) = ProjectDirs::from("de", "parkellipsen", "megra") {
 	    let sketchbook_path = proj_dirs.config_dir().join("sketchbook");
@@ -162,15 +187,16 @@ impl epi::App for MegraEditor {
 	    }
 	    	    
 	    ui.separator();
+	    
 	    ScrollArea::auto_sized().show(ui, |ui| {    
 		let tx = if let Some(cb) = self.callback.as_ref() {		
-		    egui::CallbackTextEdit::multiline(&mut self.content)
+		    egui::LivecodeTextEdit::multiline(&mut self.content, &self.function_names, &self.colors)
 			.desired_rows(20)
 			.text_style(egui::TextStyle::Monospace)
 			.desired_width(800.0)
 			.eval_callback(&cb)		
 		} else {
-		    egui::CallbackTextEdit::multiline(&mut self.content)
+		    egui::LivecodeTextEdit::multiline(&mut self.content, &self.function_names, &self.colors)
 			.desired_rows(20)
 			.desired_width(800.0)
 			.text_style(egui::TextStyle::Monospace)
