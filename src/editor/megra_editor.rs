@@ -84,16 +84,16 @@ impl<'a> epi::App for MegraEditor<'a> {
 	self.function_names.push("life");
 	self.function_names.push("every");
 
-	self.colors.insert(egui::CodeColors::Function,
-			   egui::Color32::from_rgb(200,20,200));
 	self.colors.insert(egui::CodeColors::Keyword,
+			   egui::Color32::from_rgb(200,20,200));
+	self.colors.insert(egui::CodeColors::Function,
 			   egui::Color32::from_rgb(220,20,100));
 	self.colors.insert(egui::CodeColors::Comment,
-			   egui::Color32::from_rgb(20,200,100));
+			   egui::Color32::from_gray(128));
 	self.colors.insert(egui::CodeColors::Boolean,
 			   egui::Color32::from_rgb(0,200,100));
 	self.colors.insert(egui::CodeColors::String,
-			   egui::Color32::from_rgb(0,200,100));
+			   egui::Color32::from_rgb(200,200,10));
 
 	// create sketch and load sketch file list ...
 	if let Some(proj_dirs) = ProjectDirs::from("de", "parkellipsen", "megra") {
