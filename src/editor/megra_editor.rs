@@ -92,6 +92,8 @@ impl<'a> epi::App for MegraEditor<'a> {
 			   egui::Color32::from_rgb(20,200,100));
 	self.colors.insert(egui::CodeColors::Boolean,
 			   egui::Color32::from_rgb(0,200,100));
+	self.colors.insert(egui::CodeColors::String,
+			   egui::Color32::from_rgb(0,200,100));
 
 	// create sketch and load sketch file list ...
 	if let Some(proj_dirs) = ProjectDirs::from("de", "parkellipsen", "megra") {
