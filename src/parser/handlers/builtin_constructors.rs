@@ -35,8 +35,10 @@ pub fn construct_learn(tail: &mut Vec<Expr>) -> Atom {
 	if collect_events {
 	    if let Atom::Symbol(ref s) = c {
 		let mut ev_vec = Vec::new();
-		if let Expr::Constant(Atom::SoundEvent(e)) = tail_drain.next().unwrap() {
-		    ev_vec.push(SourceEvent::Sound(e));
+		match tail_drain.next().unwrap() {
+		    Expr::Constant(Atom::SoundEvent(e)) => ev_vec.push(SourceEvent::Sound(e)),
+		    Expr::Constant(Atom::ControlEvent(e)) => ev_vec.push(SourceEvent::Control(e)),
+		    _ => { /* ignore */ },
 		}
 		event_mapping.insert(s.chars().next().unwrap(), ev_vec);
 		continue;
