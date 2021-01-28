@@ -27,26 +27,44 @@ pub fn construct_learn(tail: &mut Vec<Expr>) -> Atom {
     let mut sample:String = "".to_string();
     let mut event_mapping = HashMap::<char, Vec<SourceEvent>>::new();
     
-    let mut collect_events = false;			
-    let mut dur = 200;
+    let mut collect_events = false;
 
+    let mut dur = 200;
+    
+    let mut ev_vec = Vec::new();
+    let mut cur_key:String = "".to_string();
+    
     while let Some(Expr::Constant(c)) = tail_drain.next() {
 	
 	if collect_events {
-	    if let Atom::Symbol(ref s) = c {
-		let mut ev_vec = Vec::new();
-		match tail_drain.next().unwrap() {
-		    Expr::Constant(Atom::SoundEvent(e)) => ev_vec.push(SourceEvent::Sound(e)),
-		    Expr::Constant(Atom::ControlEvent(e)) => ev_vec.push(SourceEvent::Control(e)),
-		    _ => { /* ignore */ },
-		}
-		event_mapping.insert(s.chars().next().unwrap(), ev_vec);
-		continue;
-	    } else {
-		collect_events = false;
-	    }				    
+	    match c {
+		Atom::Symbol(ref s) => {
+		    if cur_key != "" && ev_vec.len() != 0 {
+			println!("found event {}", cur_key);
+			event_mapping.insert(cur_key.chars().next().unwrap(), ev_vec.clone());
+			ev_vec.clear();			
+		    }
+		    cur_key = s.clone();
+		    continue;
+		},
+		Atom::SoundEvent(e) => {
+		    ev_vec.push(SourceEvent::Sound(e));
+		    continue;
+		},
+		Atom::ControlEvent(e) => {
+		    ev_vec.push(SourceEvent::Control(e));
+		    continue;
+		},
+		_ => {
+		    if cur_key != "" && ev_vec.len() != 0 {
+			println!("found event {}", cur_key);
+			event_mapping.insert(cur_key.chars().next().unwrap(), ev_vec.clone());
+		    }
+		    collect_events = false;
+		},
+	    }
 	}
-	
+		    			        	
 	match c {
 	    Atom::Keyword(k) => {
 		match k.as_str() {
@@ -110,23 +128,39 @@ pub fn construct_infer(tail: &mut Vec<Expr>) -> Atom {
     let mut collect_events = false;
     let mut collect_rules = false;
     let mut dur:f32 = 200.0;
-        
+
+    let mut ev_vec = Vec::new();
+    let mut cur_key:String = "".to_string();
+    
     while let Some(Expr::Constant(c)) = tail_drain.next() {
 	
 	if collect_events {
-	    if let Atom::Symbol(ref s) = c {
-		let mut ev_vec = Vec::new();
-		match tail_drain.next().unwrap() {
-		    Expr::Constant(Atom::SoundEvent(e)) => ev_vec.push(SourceEvent::Sound(e)),
-		    Expr::Constant(Atom::ControlEvent(c)) => ev_vec.push(SourceEvent::Control(c)),
-		    _ => {}
-		}		
-		let sym = s.chars().next().unwrap();
-		event_mapping.insert(sym, ev_vec);		
-		continue;
-	    } else {
-		collect_events = false;
-	    }				    
+	    match c {
+		Atom::Symbol(ref s) => {
+		    if cur_key != "" && ev_vec.len() != 0 {
+			println!("found event {}", cur_key);
+			event_mapping.insert(cur_key.chars().next().unwrap(), ev_vec.clone());
+			ev_vec.clear();			
+		    }
+		    cur_key = s.clone();
+		    continue;
+		},
+		Atom::SoundEvent(e) => {
+		    ev_vec.push(SourceEvent::Sound(e));
+		    continue;
+		},
+		Atom::ControlEvent(e) => {
+		    ev_vec.push(SourceEvent::Control(e));
+		    continue;
+		},
+		_ => {
+		    if cur_key != "" && ev_vec.len() != 0 {
+			println!("found event {}", cur_key);
+			event_mapping.insert(cur_key.chars().next().unwrap(), ev_vec.clone());
+		    }
+		    collect_events = false;
+		},
+	    }
 	}
 	
 	if collect_rules {
