@@ -83,6 +83,8 @@ impl<'a> epi::App for MegraEditor<'a> {
 	self.function_names.push("xdup");
 	self.function_names.push("life");
 	self.function_names.push("every");
+	self.function_names.push("defpart");
+	self.function_names.push("infer");
 
 	self.colors.insert(egui::CodeColors::Keyword,
 			   egui::Color32::from_rgb(200,20,200));

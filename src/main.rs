@@ -202,8 +202,7 @@ where
 
     // load the default sample set ...
     if load_samples {
-	
-	
+		
 	if let Some(proj_dirs) = ProjectDirs::from("de", "parkellipsen", "megra") {
 	    if !proj_dirs.config_dir().exists() {
 		println!("create megra resource directory {:?}", proj_dirs.config_dir());
