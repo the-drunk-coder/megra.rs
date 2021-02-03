@@ -170,6 +170,7 @@ impl<'a> epi::App for MegraEditor<'a> {
 		SketchNumber::Num(i) => i
 	    };
 
+	    let mut sketch_switched = false;
 	    if sk_num != self.sketch_number {
 		println!("switch sketch from {} to {}", self.sketch_number, sk_num);
 		self.sketch_number = sk_num;
@@ -188,21 +189,26 @@ impl<'a> epi::App for MegraEditor<'a> {
 		match fs::read_to_string(p) {
 		    Ok(s) => {self.content = s},
 		    Err(e) => {println!("couldn't read sketch {}", e);}		   
-		}	
+		}
+		sketch_switched = true;
 	    }
 	    	    
 	    ui.separator();
 	    
-	    ScrollArea::auto_sized().show(ui, |ui| {    
+	    ScrollArea::auto_sized()
+		.always_show_scroll(true)
+		.show(ui, |ui| {    
 		let tx = if let Some(cb) = self.callback.as_ref() {		
 		    egui::LivecodeTextEdit::multiline(&mut self.content, &self.function_names, &self.colors)
 			.desired_rows(20)
+			.reset_cursor(sketch_switched)
 			.text_style(egui::TextStyle::Monospace)
 			.desired_width(800.0)
 			.eval_callback(&cb)		
 		} else {
 		    egui::LivecodeTextEdit::multiline(&mut self.content, &self.function_names, &self.colors)
 			.desired_rows(20)
+			.reset_cursor(sketch_switched)
 			.desired_width(800.0)
 			.text_style(egui::TextStyle::Monospace)
 		};						    
