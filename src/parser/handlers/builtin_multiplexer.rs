@@ -1,3 +1,6 @@
+use std::sync;
+use parking_lot::Mutex;
+
 use std::collections::{BTreeSet, HashMap};
 
 use ruffbox_synth::ruffbox::synth::SynthParameter;
@@ -9,7 +12,7 @@ use crate::event::{Event, EventOperation};
 use crate::generator_processor::PearProcessor;
 
 
-pub fn handle(mul: &BuiltInMultiplexer, tail: &mut Vec<Expr>, parts_store: &PartsStore, out_mode: OutputMode) -> Atom {
+pub fn handle(mul: &BuiltInMultiplexer, tail: &mut Vec<Expr>, parts_store: &sync::Arc<Mutex<PartsStore>>, out_mode: OutputMode) -> Atom {
     let last = tail.pop(); // generator or generator list ...
 
     let mut gen_proc_list_list = Vec::new();
@@ -36,7 +39,8 @@ pub fn handle(mul: &BuiltInMultiplexer, tail: &mut Vec<Expr>, parts_store: &Part
 
     match last {
 	Some(Expr::Constant(Atom::Symbol(s))) => {
-	    if let Some(kl) = parts_store.get(&s) {
+	    let ps = parts_store.lock();
+	    if let Some(kl) = ps.get(&s) {
 		let mut klc = kl.clone();
 		// collect tags ... make sure the multiplexing process leaves
 		// each generator individually, but deterministically tagged ...

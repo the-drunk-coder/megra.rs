@@ -299,7 +299,7 @@ pub fn construct_rule(tail: &mut Vec<Expr>) -> Atom {
     })
 }
 
-pub fn construct_cycle(tail: &mut Vec<Expr>, sample_set: &sync::Arc<Mutex<SampleSet>>, parts_store: &PartsStore, out_mode: OutputMode) -> Atom {
+pub fn construct_cycle(tail: &mut Vec<Expr>, sample_set: &sync::Arc<Mutex<SampleSet>>, parts_store: &sync::Arc<Mutex<PartsStore>>, out_mode: OutputMode) -> Atom {
 
     let mut tail_drain = tail.drain(..);
 
@@ -416,7 +416,7 @@ pub fn construct_cycle(tail: &mut Vec<Expr>, sample_set: &sync::Arc<Mutex<Sample
 pub fn handle(constructor_type: &BuiltInConstructor,
 	      tail: &mut Vec<Expr>,
 	      sample_set: &sync::Arc<Mutex<SampleSet>>,
-	      parts_store: &PartsStore,
+	      parts_store: &sync::Arc<Mutex<PartsStore>>,
 	      out_mode: OutputMode) -> Atom {
     match constructor_type {
 	BuiltInConstructor::Infer => construct_infer(tail),

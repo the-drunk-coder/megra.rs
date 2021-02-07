@@ -199,6 +199,7 @@ where
     let session = sync::Arc::new(Mutex::new(Session::with_mode(mode)));
     let global_parameters = sync::Arc::new(GlobalParameters::with_capacity(1));
     let sample_set = sync::Arc::new(Mutex::new(SampleSet::new()));
+    let parts_store = sync::Arc::new(Mutex::new(PartsStore::new()));
 
     // load the default sample set ...
     if load_samples {
@@ -232,10 +233,10 @@ where
     }
     
     if editor {
-	editor::run_editor(&session, &ruffbox, &global_parameters, &sample_set, mode);	
+	editor::run_editor(&session, &ruffbox, &global_parameters, &sample_set, &parts_store, mode);	
 	Ok(())		
     } else {
 	// star1t the megra repl
-	repl::start_repl(&session, &ruffbox, &global_parameters, &sample_set, mode)
+	repl::start_repl(&session, &ruffbox, &global_parameters, &sample_set, &parts_store, mode)
     }    
 }

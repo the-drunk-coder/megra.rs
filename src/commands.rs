@@ -118,10 +118,11 @@ pub fn load_sample_sets_path<const BUFSIZE:usize, const NCHAN:usize>(ruffbox: &s
     }
 }
 
-pub fn load_part(parts_store: &mut PartsStore, name: String, mut generators: Vec<Generator> ) {
+pub fn load_part(parts_store: &sync::Arc<Mutex<PartsStore>>, name: String, mut generators: Vec<Generator> ) {
     for gen in generators.iter_mut() {
 	gen.id_tags.insert(name.clone());
     }
-    parts_store.insert(name, generators);
+    let mut ps = parts_store.lock();
+    ps.insert(name, generators);
 }
     

@@ -1,9 +1,12 @@
+use std::sync;
+use parking_lot::Mutex;
+
 use crate::builtin_types::*;
 use crate::session::SyncContext;
 use crate::generator::Generator;
 use crate::parser::parser_helpers::*;
 
-pub fn handle(tail: &mut Vec<Expr>, parts_store: &PartsStore) -> Atom {
+pub fn handle(tail: &mut Vec<Expr>, parts_store: &sync::Arc<Mutex<PartsStore>>) -> Atom {
     let mut tail_drain = tail.drain(..);
     
     // name is the first symbol
@@ -42,7 +45,8 @@ pub fn handle(tail: &mut Vec<Expr>, parts_store: &PartsStore) -> Atom {
 		}
 	    },
 	    Atom::Symbol(s) => {
-		if let Some(kl) = parts_store.get(&s) {
+		let ps = parts_store.lock();
+		if let Some(kl) = ps.get(&s) {
 		    let mut klc = kl.clone();
 		    for k in klc.iter_mut() {
 			k.id_tags.insert(name.clone());

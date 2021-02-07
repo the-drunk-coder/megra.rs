@@ -263,7 +263,7 @@ fn parse_expr<'a>(i: &'a str) -> IResult<&'a str, Expr, VerboseError<&'a str>> {
 /// This function tries to reduce the AST.
 /// This has to return an Expression rather than an Atom because quoted s_expressions
 /// can't be reduced
-pub fn eval_expression(e: Expr, sample_set: &sync::Arc<Mutex<SampleSet>>, parts_store: &PartsStore, out_mode: OutputMode) -> Option<Expr> {
+pub fn eval_expression(e: Expr, sample_set: &sync::Arc<Mutex<SampleSet>>, parts_store: &sync::Arc<Mutex<PartsStore>>, out_mode: OutputMode) -> Option<Expr> {
     match e {
 	// Constants and quoted s-expressions are our base-case
 	Expr::Comment => Some(e),
@@ -312,7 +312,7 @@ pub fn eval_expression(e: Expr, sample_set: &sync::Arc<Mutex<SampleSet>>, parts_
 
 /// And we add one more top-level function to tie everything together, letting
 /// us call eval on a string directly
-pub fn eval_from_str(src: &str, sample_set: &sync::Arc<Mutex<SampleSet>>, parts_store: &PartsStore, out_mode: OutputMode) -> Result<Expr, String> {
+pub fn eval_from_str(src: &str, sample_set: &sync::Arc<Mutex<SampleSet>>, parts_store: &sync::Arc<Mutex<PartsStore>>, out_mode: OutputMode) -> Result<Expr, String> {
     parse_expr(src)
 	.map_err(|e: nom::Err<VerboseError<&str>>| format!("{:#?}", e))
 	.and_then(|(_, exp)| eval_expression(exp, sample_set, parts_store, out_mode).ok_or("Eval failed".to_string()))

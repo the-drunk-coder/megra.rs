@@ -15,8 +15,8 @@ pub fn start_repl<const BUFSIZE:usize, const NCHAN:usize>(session: &sync::Arc<Mu
 							  ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>,
 							  global_parameters: &sync::Arc<GlobalParameters>,
 							  sample_set: &sync::Arc<Mutex<SampleSet>>,
+							  parts_store: &sync::Arc<Mutex<PartsStore>>,
 							  mode: OutputMode) -> Result<(), anyhow::Error> {    
-    let mut parts_store = PartsStore::new();
         
     // `()` can be used when no completer is required
     let mut rl = Editor::<()>::new();
@@ -32,7 +32,7 @@ pub fn start_repl<const BUFSIZE:usize, const NCHAN:usize>(session: &sync::Arc<Mu
 		// ignore empty lines ...
 		if line.len() == 0 { continue; }
 		
-		let pfa_in = parser::eval_from_str(&line.as_str(), &sample_set, &parts_store, mode);
+		let pfa_in = parser::eval_from_str(&line.as_str(), sample_set, parts_store, mode);
 		
 		match pfa_in {
 		    Err(e) => {
@@ -51,10 +51,10 @@ pub fn start_repl<const BUFSIZE:usize, const NCHAN:usize>(session: &sync::Arc<Mu
 				match readline_inner {
 				    Ok(line) => {
 					line_buffer.push_str(&line.as_str());
-					let inner_pfa_in = parser::eval_from_str(&line_buffer.as_str(), sample_set, &parts_store, mode);
+					let inner_pfa_in = parser::eval_from_str(&line_buffer.as_str(), sample_set, parts_store, mode);
 					match inner_pfa_in {
 					    Ok(pfa) => {
-						interpreter::interpret(pfa, session, ruffbox, global_parameters, sample_set, &mut parts_store);			
+						interpreter::interpret(pfa, session, ruffbox, global_parameters, sample_set, parts_store);			
 						rl.add_history_entry(line_buffer.as_str());
 						break;
 					    },
@@ -75,7 +75,7 @@ pub fn start_repl<const BUFSIZE:usize, const NCHAN:usize>(session: &sync::Arc<Mu
 			}
 		    },
 		    Ok(pfa) => {
-			interpreter::interpret(pfa, session, ruffbox, global_parameters, sample_set, &mut parts_store);			
+			interpreter::interpret(pfa, session, ruffbox, global_parameters, sample_set, parts_store);			
 			rl.add_history_entry(line.as_str());						
 		    }
 		}

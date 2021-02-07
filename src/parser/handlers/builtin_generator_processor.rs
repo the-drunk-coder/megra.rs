@@ -1,3 +1,6 @@
+use std::sync;
+use parking_lot::Mutex;
+
 use std::collections::HashMap;
 
 use crate::builtin_types::*;
@@ -289,7 +292,7 @@ pub fn collect_generator_processor(proc_type: &BuiltInGenProc, tail: &mut Vec<Ex
 }
 
 // store list of genProcs in a vec if there's no root gen ???
-pub fn handle(proc_type: &BuiltInGenProc, tail: &mut Vec<Expr>, parts_store: &PartsStore) -> Atom {    
+pub fn handle(proc_type: &BuiltInGenProc, tail: &mut Vec<Expr>, parts_store: &sync::Arc<Mutex<PartsStore>>) -> Atom {    
     let last = tail.pop();
     match last {
 	Some(Expr::Constant(Atom::Generator(mut g))) => {
@@ -297,7 +300,8 @@ pub fn handle(proc_type: &BuiltInGenProc, tail: &mut Vec<Expr>, parts_store: &Pa
 	    Atom::Generator(g)
 	},
 	Some(Expr::Constant(Atom::Symbol(s))) => {
-	    if let Some(gl) = parts_store.get(&s) {
+	    let ps = parts_store.lock();
+	    if let Some(gl) = ps.get(&s) {
 		let gp = collect_generator_processor(proc_type, tail);
 		let mut glc = gl.clone();
 		for gen in glc.iter_mut() { // clone here

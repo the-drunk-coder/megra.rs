@@ -14,7 +14,7 @@ pub fn interpret<const BUFSIZE:usize, const NCHAN:usize>(parsed_in: Expr,
 							 ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>,
 							 global_parameters: &sync::Arc<GlobalParameters>,
 							 sample_set: &sync::Arc<Mutex<SampleSet>>,
-							 parts_store: &mut PartsStore) {
+							 parts_store: &sync::Arc<Mutex<PartsStore>>) {
     match parsed_in {
 	Expr::Comment => {println!("a comment")},
 	Expr::Constant(Atom::Generator(g)) => {	    
