@@ -9,7 +9,7 @@ use crate::scheduler::{Scheduler, SchedulerData};
 use crate::generator::Generator;
 use crate::event::{InterpretableEvent};
 use crate::event_helpers::*;
-use crate::builtin_types::{PartProxy, GlobalParameters};
+use crate::builtin_types::{PartProxy, PartsStore, GlobalParameters};
 
 #[derive(Clone,Copy,PartialEq)]
 pub enum OutputMode {
@@ -39,7 +39,7 @@ pub struct Session <const BUFSIZE:usize, const NCHAN:usize> {
 }
 
 impl <const BUFSIZE:usize, const NCHAN:usize> Session<BUFSIZE, NCHAN> {
-
+    
     pub fn with_mode(mode: OutputMode) -> Self {
 	Session {
 	    schedulers: HashMap::new(),
@@ -51,56 +51,31 @@ impl <const BUFSIZE:usize, const NCHAN:usize> Session<BUFSIZE, NCHAN> {
     pub fn handle_context(ctx: &mut SyncContext,
 			  session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,			  
 			  ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>,
+			  parts_store: &sync::Arc<Mutex<PartsStore>>,
 			  global_parameters: &sync::Arc<GlobalParameters> ) {
 
 
-	/* // resolve part proxies ..
-	let ps = parts_store.lock();
-	if let Some(kl) = ps.get(&s) {
-	let mut klc = kl.clone();
-	for k in klc.iter_mut() {
-	k.id_tags.insert(name.clone());
-    }
-	gens.append(&mut klc);
-    } else {
-	println!("warning: '{} not defined!", s);
-    }
-let ps = parts_store.lock();
-	    if let Some(kl) = ps.get(&s) {
-		let mut klc = kl.clone();
-		// collect tags ... make sure the multiplexing process leaves
-		// each generator individually, but deterministically tagged ...
-		let mut all_tags:BTreeSet<String> = BTreeSet::new();
-		
-		for gen in klc.iter() {
-		    all_tags.append(&mut gen.id_tags.clone());
-		}
-
-		let mut idx:usize = 0;
-		for gen in klc.drain(..) {
-		    // multiplex into duplicates by cloning ...		
-		    for gpl in gen_proc_list_list.iter() {
-			let mut pclone = gen.clone();
-			
-			// this isn't super elegant but hey ... 
-			for i in idx..100 {
-			    let tag = format!("mpx-{}", i);
-			    if !all_tags.contains(&tag) {
-				pclone.id_tags.insert(tag);
-				idx = i + 1;
-				break;
-			    } 		    
-			}
-			
-			pclone.processors.append(&mut gpl.clone());
-			gens.push(pclone);
+	// resolve part proxies ..
+	{
+	    let ps = parts_store.lock();
+	    let mut gens = Vec::new();
+	    let mut prox_drain = ctx.part_proxies.drain(..);
+	    while let Some(PartProxy::Proxy(s, tags, procs)) = prox_drain.next() {
+		if let Some(kl) = ps.get(&s) {
+		    let mut klc = kl.clone();
+		    for k in klc.iter_mut() {
+			k.id_tags.insert(ctx.name.clone());
+			k.id_tags.append(&mut tags.clone());
+			k.id_tags.insert(s.clone()); // make sure we let everybody know from which part this is ...
+			k.processors.append(&mut procs.clone());
 		    }
-		    gens.push(gen);		
+		    gens.append(&mut klc);
+		} else {
+		    println!("warning: '{} not defined!", s);
 		}
-	    } else {
-		println!("warning: '{} not defined!", s);
 	    }
-	 */
+	    ctx.generators.append(&mut gens);
+	}
 	
 	let name = ctx.name.clone();
 	if ctx.active {	    
@@ -155,7 +130,7 @@ let ps = parts_store.lock();
 
 		for c in ctx.generators.drain(..) {
 		    // sync to what is most likely the root generator 
-		    Session::start_generator(Box::new(c), session, ruffbox, global_parameters, &smallest_id, ctx.shift as f64 * 0.001);
+		    Session::start_generator(Box::new(c), session, ruffbox, parts_store, global_parameters, &smallest_id, ctx.shift as f64 * 0.001);
 		}
 		
 	    } else if !remainders.is_empty() && !difference.is_empty() {
@@ -179,12 +154,12 @@ let ps = parts_store.lock();
 		
 		for c in ctx.generators.drain(..) {
 		    // sync to what is most likely the root generator 
-		    Session::start_generator(Box::new(c), session, ruffbox, global_parameters, &smallest_id, ctx.shift as f64 * 0.001);
+		    Session::start_generator(Box::new(c), session, ruffbox, parts_store, global_parameters, &smallest_id, ctx.shift as f64 * 0.001);
 		}
 	    } else {
 		for c in ctx.generators.drain(..) {
 		    // nothing to sync to in that case ...
-		    Session::start_generator(Box::new(c), session, ruffbox, global_parameters, &None, ctx.shift as f64 * 0.001);
+		    Session::start_generator(Box::new(c), session, ruffbox, parts_store, global_parameters, &None, ctx.shift as f64 * 0.001);
 		}
 	    }
 
@@ -218,6 +193,7 @@ let ps = parts_store.lock();
     pub fn start_generator(gen: Box<Generator>,			   
 			   session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,			   
 			   ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>,
+			   parts_store: &sync::Arc<Mutex<PartsStore>>,
 			   global_parameters: &sync::Arc<GlobalParameters>,
 			   sync: &Option<BTreeSet<String>>,
 			   shift: f64) {
@@ -235,7 +211,7 @@ let ps = parts_store.lock();
 	    
 	    // keep the scheduler running, just replace the data ...
 	    let mut sched_data = data.lock();
-	    *sched_data = SchedulerData::<BUFSIZE, NCHAN>::from_previous(&sched_data, shift, gen, ruffbox, session);
+	    *sched_data = SchedulerData::<BUFSIZE, NCHAN>::from_previous(&sched_data, shift, gen, ruffbox, session, parts_store);
 	} else {
 	    print!("start generator \'");
 	    for tag in id_tags.iter() {
@@ -248,12 +224,12 @@ let ps = parts_store.lock();
 		//this is prob kinda redundant 
 		if let Some((_, data)) = sess.schedulers.get_mut(&id_tags) {
 		    // synchronize timing data
-		    sched_data = sync::Arc::new(Mutex::new(SchedulerData::<BUFSIZE, NCHAN>::from_time_data(&data.lock(), shift, gen, ruffbox, session)));	    
+		    sched_data = sync::Arc::new(Mutex::new(SchedulerData::<BUFSIZE, NCHAN>::from_time_data(&data.lock(), shift, gen, ruffbox, session, parts_store)));	
 		} else {
-		    sched_data = sync::Arc::new(Mutex::new(SchedulerData::<BUFSIZE, NCHAN>::from_data(gen, shift, session, ruffbox, global_parameters, sess.output_mode)));
+		    sched_data = sync::Arc::new(Mutex::new(SchedulerData::<BUFSIZE, NCHAN>::from_data(gen, shift, session, ruffbox, parts_store, global_parameters, sess.output_mode)));
 		}		
 	    } else {
-		sched_data = sync::Arc::new(Mutex::new(SchedulerData::<BUFSIZE, NCHAN>::from_data(gen, shift, session, ruffbox, global_parameters, sess.output_mode)));
+		sched_data = sync::Arc::new(Mutex::new(SchedulerData::<BUFSIZE, NCHAN>::from_data(gen, shift, session, ruffbox, parts_store, global_parameters, sess.output_mode)));
 	    }
 	    
 	    // otherwise, create new sched and data ...
@@ -307,7 +283,7 @@ let ps = parts_store.lock();
 			    
 			    if let Some(mut contexts) = c.ctx.clone() { // this is the worst clone .... 
 				for mut sx in contexts.drain(..) {				    
-				    Session::handle_context(&mut sx, &data.session, &data.ruffbox, &data.global_parameters);
+				    Session::handle_context(&mut sx, &data.session, &data.ruffbox, &data.parts_store, &data.global_parameters);
 				}
 			    }			    
 			}

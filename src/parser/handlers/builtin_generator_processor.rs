@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{BTreeSet, HashMap};
 
 use crate::builtin_types::*;
 
@@ -300,12 +300,22 @@ pub fn handle(proc_type: &BuiltInGenProc, tail: &mut Vec<Expr>) -> Atom {
 	    let gp = collect_generator_processor(proc_type, tail);
 	    let mut proxy_mods = Vec::new();
 	    proxy_mods.push(gp);
-	    Atom::PartProxy(PartProxy::Proxy(s, proxy_mods))
+	    Atom::PartProxy(PartProxy::Proxy(s, BTreeSet::new(), proxy_mods))
 	},
-	Some(Expr::Constant(Atom::PartProxy(PartProxy::Proxy(s, mut proxy_mods)))) => {
+	Some(Expr::Constant(Atom::PartProxy(PartProxy::Proxy(s, tags, mut proxy_mods)))) => {
 	    let gp = collect_generator_processor(proc_type, tail);
 	    proxy_mods.push(gp);
-	    Atom::PartProxy(PartProxy::Proxy(s, proxy_mods))
+	    Atom::PartProxy(PartProxy::Proxy(s, tags, proxy_mods))
+	},
+	Some(Expr::Constant(Atom::ProxyList(mut l))) => {
+	    let gp = collect_generator_processor(proc_type, tail);
+	    let mut pdrain = l.drain(..);
+	    let mut new_list = Vec::new();
+	    while let Some(PartProxy::Proxy(s, tags, mut proxy_mods)) = pdrain.next() {
+		proxy_mods.push(gp.clone());
+		new_list.push(PartProxy::Proxy(s, tags, proxy_mods));
+	    }	    
+	    Atom::ProxyList(new_list)
 	},
 	Some(Expr::Constant(Atom::GeneratorList(mut gl))) => {
 	    let gp = collect_generator_processor(proc_type, tail);

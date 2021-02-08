@@ -22,6 +22,7 @@ pub struct SchedulerData<const BUFSIZE:usize, const NCHAN:usize> {
     pub generator: Box<Generator>,
     pub ruffbox: sync::Arc<Mutex<Ruffbox<BUFSIZE,NCHAN>>>,
     pub session: sync::Arc<Mutex<Session<BUFSIZE,NCHAN>>>,
+    pub parts_store: sync::Arc<Mutex<PartsStore>>,
     pub global_parameters: sync::Arc<GlobalParameters>,
     pub mode: OutputMode
 }
@@ -32,7 +33,8 @@ impl <const BUFSIZE:usize, const NCHAN:usize> SchedulerData<BUFSIZE, NCHAN> {
 			 shift: f64,
 			 mut data: Box<Generator>,
 			 ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>,
-			 session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>) -> Self {
+			 session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
+			 parts_store: &sync::Arc<Mutex<PartsStore>>) -> Self {
 	let shift_diff = shift - old.shift;
 	data.transfer_state(&old.generator);
 	// keep scheduling, retain data
@@ -45,6 +47,7 @@ impl <const BUFSIZE:usize, const NCHAN:usize> SchedulerData<BUFSIZE, NCHAN> {
 	    generator: data,
 	    ruffbox: sync::Arc::clone(ruffbox),
 	    session: sync::Arc::clone(session),
+	    parts_store: sync::Arc::clone(parts_store),
 	    global_parameters: sync::Arc::clone(&old.global_parameters),
 	    mode: old.mode
 	}
@@ -54,7 +57,8 @@ impl <const BUFSIZE:usize, const NCHAN:usize> SchedulerData<BUFSIZE, NCHAN> {
 			  shift: f64,
 			  data: Box<Generator>,
 			  ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>,
-			  session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>) -> Self {
+			  session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
+			  parts_store: &sync::Arc<Mutex<PartsStore>>) -> Self {
 	let shift_diff = shift - old.shift;
 	
 	// keep scheduling, retain time
@@ -67,6 +71,7 @@ impl <const BUFSIZE:usize, const NCHAN:usize> SchedulerData<BUFSIZE, NCHAN> {
 	    generator: data,
 	    ruffbox: sync::Arc::clone(ruffbox),
 	    session: sync::Arc::clone(session),
+	    parts_store: sync::Arc::clone(parts_store),
 	    global_parameters: sync::Arc::clone(&old.global_parameters),
 	    mode: old.mode
 	}
@@ -76,6 +81,7 @@ impl <const BUFSIZE:usize, const NCHAN:usize> SchedulerData<BUFSIZE, NCHAN> {
 		     shift: f64,
 		     session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
 		     ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>,
+		     parts_store: &sync::Arc<Mutex<PartsStore>>,
 		     global_parameters: &sync::Arc<GlobalParameters>,
 		     mode: OutputMode) -> Self {
 	// get logical time since start from ruffbox
@@ -93,6 +99,7 @@ impl <const BUFSIZE:usize, const NCHAN:usize> SchedulerData<BUFSIZE, NCHAN> {
 	    generator: data,
 	    ruffbox: sync::Arc::clone(ruffbox),
 	    session: sync::Arc::clone(session),
+	    parts_store: sync::Arc::clone(parts_store),
 	    global_parameters: sync::Arc::clone(global_parameters),
 	    mode: mode
 	}
