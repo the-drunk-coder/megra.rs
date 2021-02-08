@@ -299,7 +299,7 @@ pub fn construct_rule(tail: &mut Vec<Expr>) -> Atom {
     })
 }
 
-pub fn construct_cycle(tail: &mut Vec<Expr>, sample_set: &sync::Arc<Mutex<SampleSet>>, parts_store: &sync::Arc<Mutex<PartsStore>>, out_mode: OutputMode) -> Atom {
+pub fn construct_cycle(tail: &mut Vec<Expr>, sample_set: &sync::Arc<Mutex<SampleSet>>, out_mode: OutputMode) -> Atom {
 
     let mut tail_drain = tail.drain(..);
 
@@ -327,7 +327,7 @@ pub fn construct_cycle(tail: &mut Vec<Expr>, sample_set: &sync::Arc<Mutex<Sample
 		
 	    },
 	    Atom::Description(d) => {
-		let parsed_cycle = cyc_parser::eval_cyc_from_str(&d, sample_set, parts_store, out_mode);
+		let parsed_cycle = cyc_parser::eval_cyc_from_str(&d, sample_set, out_mode);
 		match parsed_cycle {
 		    Ok(mut c) => {
 			let mut cycle_drain = c.drain(..);
@@ -415,14 +415,13 @@ pub fn construct_cycle(tail: &mut Vec<Expr>, sample_set: &sync::Arc<Mutex<Sample
 
 pub fn handle(constructor_type: &BuiltInConstructor,
 	      tail: &mut Vec<Expr>,
-	      sample_set: &sync::Arc<Mutex<SampleSet>>,
-	      parts_store: &sync::Arc<Mutex<PartsStore>>,
+	      sample_set: &sync::Arc<Mutex<SampleSet>>,	      
 	      out_mode: OutputMode) -> Atom {
     match constructor_type {
 	BuiltInConstructor::Infer => construct_infer(tail),
 	BuiltInConstructor::Learn => construct_learn(tail),
 	BuiltInConstructor::Rule => construct_rule(tail),
 	BuiltInConstructor::Nucleus => construct_nucleus(tail),
-	BuiltInConstructor::Cycle => construct_cycle(tail, sample_set, parts_store, out_mode),
+	BuiltInConstructor::Cycle => construct_cycle(tail, sample_set, out_mode),
     }        
 }

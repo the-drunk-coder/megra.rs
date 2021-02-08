@@ -263,7 +263,7 @@ fn parse_expr<'a>(i: &'a str) -> IResult<&'a str, Expr, VerboseError<&'a str>> {
 /// This function tries to reduce the AST.
 /// This has to return an Expression rather than an Atom because quoted s_expressions
 /// can't be reduced
-pub fn eval_expression(e: Expr, sample_set: &sync::Arc<Mutex<SampleSet>>, parts_store: &sync::Arc<Mutex<PartsStore>>, out_mode: OutputMode) -> Option<Expr> {
+pub fn eval_expression(e: Expr, sample_set: &sync::Arc<Mutex<SampleSet>>, out_mode: OutputMode) -> Option<Expr> {
     match e {
 	// Constants and quoted s-expressions are our base-case
 	Expr::Comment => Some(e),
@@ -271,11 +271,11 @@ pub fn eval_expression(e: Expr, sample_set: &sync::Arc<Mutex<SampleSet>>, parts_
 	Expr::Custom(_) => Some(e),	
 	Expr::Application(head, tail) => {
 
-	    let reduced_head = eval_expression(*head, sample_set, parts_store, out_mode)?;
+	    let reduced_head = eval_expression(*head, sample_set, out_mode)?;
 
 	    let mut reduced_tail = tail
 		.into_iter()
-		.map(|expr| eval_expression(expr, sample_set, parts_store, out_mode))
+		.map(|expr| eval_expression(expr, sample_set, out_mode))
 		.collect::<Option<Vec<Expr>>>()?;
 
 	    // filter out reduced comments ...
@@ -289,7 +289,7 @@ pub fn eval_expression(e: Expr, sample_set: &sync::Arc<Mutex<SampleSet>>, parts_
 		    Some(Expr::Constant(match bi {
 			BuiltIn::Command(cmd) => handlers::builtin_commands::handle(cmd, &mut reduced_tail),		
 			BuiltIn::Silence => Atom::SoundEvent(Event::with_name("silence".to_string())),			
-			BuiltIn::Constructor(con) => handlers::builtin_constructors::handle(&con, &mut reduced_tail, sample_set, parts_store, out_mode),
+			BuiltIn::Constructor(con) => handlers::builtin_constructors::handle(&con, &mut reduced_tail, sample_set, out_mode),
 			BuiltIn::SyncContext => handlers::builtin_sync_context::handle(&mut reduced_tail),
 			BuiltIn::Parameter(par) => handlers::builtin_dynamic_parameter::handle(&par, &mut reduced_tail),
 			BuiltIn::SoundEvent(ev) => handlers::builtin_sound_event::handle(&ev, &mut reduced_tail),
@@ -312,9 +312,9 @@ pub fn eval_expression(e: Expr, sample_set: &sync::Arc<Mutex<SampleSet>>, parts_
 
 /// And we add one more top-level function to tie everything together, letting
 /// us call eval on a string directly
-pub fn eval_from_str(src: &str, sample_set: &sync::Arc<Mutex<SampleSet>>, parts_store: &sync::Arc<Mutex<PartsStore>>, out_mode: OutputMode) -> Result<Expr, String> {
+pub fn eval_from_str(src: &str, sample_set: &sync::Arc<Mutex<SampleSet>>, out_mode: OutputMode) -> Result<Expr, String> {
     parse_expr(src)
 	.map_err(|e: nom::Err<VerboseError<&str>>| format!("{:#?}", e))
-	.and_then(|(_, exp)| eval_expression(exp, sample_set, parts_store, out_mode).ok_or("Eval failed".to_string()))
+	.and_then(|(_, exp)| eval_expression(exp, sample_set, out_mode).ok_or("Eval failed".to_string()))
 }
 

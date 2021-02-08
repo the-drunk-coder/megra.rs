@@ -1,6 +1,3 @@
-use std::sync;
-use parking_lot::Mutex;
-
 use std::collections::{BTreeSet, HashMap};
 
 use ruffbox_synth::ruffbox::synth::SynthParameter;
