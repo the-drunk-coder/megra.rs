@@ -82,6 +82,7 @@ pub enum BuiltInGenModFun {
     Rewind,
 }
 
+#[derive(Clone, Copy)]
 pub enum BuiltInMultiplexer {
     XDup,
     XSpread,
@@ -136,6 +137,11 @@ pub enum Command {
     LoadPart((String, Vec<Generator>)) // set (events), keyword, path
 }
 
+#[derive(Clone)]
+pub enum PartProxy {
+    Proxy(String, Vec<Box<dyn GeneratorProcessor + Send>>),    
+}
+
 pub enum Atom { // atom might not be the right word any longer 
     Float(f32),
     Description(String), // pfa descriptions
@@ -149,7 +155,9 @@ pub enum Atom { // atom might not be the right word any longer
     Rule(Rule),
     Command(Command),
     SyncContext(SyncContext),
-    Generator(Generator),
+    PartProxy(PartProxy),
+    MultiplexerProxy(BuiltInMultiplexer, Vec<PartProxy>),
+    Generator(Generator),    
     GeneratorProcessor(Box<dyn GeneratorProcessor + Send>),
     GeneratorProcessorList(Vec<Box<dyn GeneratorProcessor + Send>>),
     GeneratorList(Vec<Generator>),

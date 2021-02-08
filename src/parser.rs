@@ -290,14 +290,14 @@ pub fn eval_expression(e: Expr, sample_set: &sync::Arc<Mutex<SampleSet>>, parts_
 			BuiltIn::Command(cmd) => handlers::builtin_commands::handle(cmd, &mut reduced_tail),		
 			BuiltIn::Silence => Atom::SoundEvent(Event::with_name("silence".to_string())),			
 			BuiltIn::Constructor(con) => handlers::builtin_constructors::handle(&con, &mut reduced_tail, sample_set, parts_store, out_mode),
-			BuiltIn::SyncContext => handlers::builtin_sync_context::handle(&mut reduced_tail, parts_store),
+			BuiltIn::SyncContext => handlers::builtin_sync_context::handle(&mut reduced_tail),
 			BuiltIn::Parameter(par) => handlers::builtin_dynamic_parameter::handle(&par, &mut reduced_tail),
 			BuiltIn::SoundEvent(ev) => handlers::builtin_sound_event::handle(&ev, &mut reduced_tail),
 			BuiltIn::ControlEvent => handlers::builtin_control_event::handle(&mut reduced_tail),
 			BuiltIn::ParameterEvent(ev) => handlers::builtin_parameter_event::handle(&ev, &mut reduced_tail),
-			BuiltIn::GenProc(g) => handlers::builtin_generator_processor::handle(&g, &mut reduced_tail, parts_store),
-			BuiltIn::GenModFun(g) => handlers::builtin_generator_modifier_function::handle(&g, &mut reduced_tail, parts_store),
-			BuiltIn::Multiplexer(m) => handlers::builtin_multiplexer::handle(&m, &mut reduced_tail, parts_store, out_mode)	
+			BuiltIn::GenProc(g) => handlers::builtin_generator_processor::handle(&g, &mut reduced_tail),
+			BuiltIn::GenModFun(g) => handlers::builtin_generator_modifier_function::handle(&g, &mut reduced_tail),
+			BuiltIn::Multiplexer(m) => handlers::builtin_multiplexer::handle(&m, &mut reduced_tail, out_mode)	
 		    }))
 		},
 		Expr::Custom(s) => handlers::custom_sample_event::handle(&mut reduced_tail, s, &sample_set), 

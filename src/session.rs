@@ -9,7 +9,7 @@ use crate::scheduler::{Scheduler, SchedulerData};
 use crate::generator::Generator;
 use crate::event::{InterpretableEvent};
 use crate::event_helpers::*;
-use crate::builtin_types::GlobalParameters;
+use crate::builtin_types::{PartProxy, GlobalParameters};
 
 #[derive(Clone,Copy,PartialEq)]
 pub enum OutputMode {
@@ -28,6 +28,7 @@ pub struct SyncContext {
     pub sync_to: Option<String>,
     pub active: bool,
     pub generators: Vec<Generator>,
+    pub part_proxies: Vec<PartProxy>,
     pub shift: i32
 }
 
@@ -51,6 +52,56 @@ impl <const BUFSIZE:usize, const NCHAN:usize> Session<BUFSIZE, NCHAN> {
 			  session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,			  
 			  ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>,
 			  global_parameters: &sync::Arc<GlobalParameters> ) {
+
+
+	/* // resolve part proxies ..
+	let ps = parts_store.lock();
+	if let Some(kl) = ps.get(&s) {
+	let mut klc = kl.clone();
+	for k in klc.iter_mut() {
+	k.id_tags.insert(name.clone());
+    }
+	gens.append(&mut klc);
+    } else {
+	println!("warning: '{} not defined!", s);
+    }
+let ps = parts_store.lock();
+	    if let Some(kl) = ps.get(&s) {
+		let mut klc = kl.clone();
+		// collect tags ... make sure the multiplexing process leaves
+		// each generator individually, but deterministically tagged ...
+		let mut all_tags:BTreeSet<String> = BTreeSet::new();
+		
+		for gen in klc.iter() {
+		    all_tags.append(&mut gen.id_tags.clone());
+		}
+
+		let mut idx:usize = 0;
+		for gen in klc.drain(..) {
+		    // multiplex into duplicates by cloning ...		
+		    for gpl in gen_proc_list_list.iter() {
+			let mut pclone = gen.clone();
+			
+			// this isn't super elegant but hey ... 
+			for i in idx..100 {
+			    let tag = format!("mpx-{}", i);
+			    if !all_tags.contains(&tag) {
+				pclone.id_tags.insert(tag);
+				idx = i + 1;
+				break;
+			    } 		    
+			}
+			
+			pclone.processors.append(&mut gpl.clone());
+			gens.push(pclone);
+		    }
+		    gens.push(gen);		
+		}
+	    } else {
+		println!("warning: '{} not defined!", s);
+	    }
+	 */
+	
 	let name = ctx.name.clone();
 	if ctx.active {	    
 	    let mut new_gens = BTreeSet::new();
@@ -63,7 +114,6 @@ impl <const BUFSIZE:usize, const NCHAN:usize> Session<BUFSIZE, NCHAN> {
 	    // calc difference, stop vanished ones, sync new ones ...
 	    let mut difference:Vec<_> = Vec::new();
 	    let mut remainders:Vec<_> = Vec::new();
-
 	    {
 		let sess = session.lock();
 		if let Some(old_gens) = sess.contexts.get(&name) { // this means context is running		

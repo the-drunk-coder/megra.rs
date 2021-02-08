@@ -11,8 +11,7 @@ use crate::parameter::Parameter;
 use crate::event::{Event, EventOperation};
 use crate::generator_processor::PearProcessor;
 
-
-pub fn handle(mul: &BuiltInMultiplexer, tail: &mut Vec<Expr>, parts_store: &sync::Arc<Mutex<PartsStore>>, out_mode: OutputMode) -> Atom {
+pub fn handle(mul: &BuiltInMultiplexer, tail: &mut Vec<Expr>, out_mode: OutputMode) -> Atom {
     let last = tail.pop(); // generator or generator list ...
 
     let mut gen_proc_list_list = Vec::new();
@@ -39,41 +38,12 @@ pub fn handle(mul: &BuiltInMultiplexer, tail: &mut Vec<Expr>, parts_store: &sync
 
     match last {
 	Some(Expr::Constant(Atom::Symbol(s))) => {
-	    let ps = parts_store.lock();
-	    if let Some(kl) = ps.get(&s) {
-		let mut klc = kl.clone();
-		// collect tags ... make sure the multiplexing process leaves
-		// each generator individually, but deterministically tagged ...
-		let mut all_tags:BTreeSet<String> = BTreeSet::new();
-		
-		for gen in klc.iter() {
-		    all_tags.append(&mut gen.id_tags.clone());
-		}
-
-		let mut idx:usize = 0;
-		for gen in klc.drain(..) {
-		    // multiplex into duplicates by cloning ...		
-		    for gpl in gen_proc_list_list.iter() {
-			let mut pclone = gen.clone();
-			
-			// this isn't super elegant but hey ... 
-			for i in idx..100 {
-			    let tag = format!("mpx-{}", i);
-			    if !all_tags.contains(&tag) {
-				pclone.id_tags.insert(tag);
-				idx = i + 1;
-				break;
-			    } 		    
-			}
-			
-			pclone.processors.append(&mut gpl.clone());
-			gens.push(pclone);
-		    }
-		    gens.push(gen);		
-		}
-	    } else {
-		println!("warning: '{} not defined!", s);
+	    let mut proxies = Vec::new();
+	    for gpl in gen_proc_list_list.drain(..) {
+		proxies.push(PartProxy::Proxy(s.clone(), gpl));
 	    }
+	    // return early, this will be resolved in session handling ! 
+	    return Atom::MultiplexerProxy(*mul, proxies);
 	},
 	Some(Expr::Constant(Atom::Generator(g))) => {	    
 	    // multiplex into duplicates by cloning ...

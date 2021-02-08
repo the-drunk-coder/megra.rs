@@ -1,11 +1,8 @@
-use std::sync;
-use parking_lot::Mutex;
-
 use std::collections::HashMap;
 use crate::builtin_types::*;
 use crate::generator::*;
 
-pub fn handle(gen_mod: &BuiltInGenModFun, tail: &mut Vec<Expr>, _parts_store: &sync::Arc<Mutex<PartsStore>>) -> Atom {
+pub fn handle(gen_mod: &BuiltInGenModFun, tail: &mut Vec<Expr>) -> Atom {
 
     let last = tail.pop();
     match last {

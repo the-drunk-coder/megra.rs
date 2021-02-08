@@ -1,12 +1,9 @@
-use std::sync;
-use parking_lot::Mutex;
-
 use crate::builtin_types::*;
 use crate::session::SyncContext;
 use crate::generator::Generator;
 use crate::parser::parser_helpers::*;
 
-pub fn handle(tail: &mut Vec<Expr>, parts_store: &sync::Arc<Mutex<PartsStore>>) -> Atom {
+pub fn handle(tail: &mut Vec<Expr>) -> Atom {
     let mut tail_drain = tail.drain(..);
     
     // name is the first symbol
@@ -16,7 +13,8 @@ pub fn handle(tail: &mut Vec<Expr>, parts_store: &sync::Arc<Mutex<PartsStore>>) 
     if !active {
 	return Atom::SyncContext(SyncContext {
 	    name: name,
-	    generators: Vec::new(),	    
+	    generators: Vec::new(),
+	    part_proxies: Vec::new(),	    
 	    sync_to: None,
 	    active: false,
 	    shift: 0
@@ -24,6 +22,7 @@ pub fn handle(tail: &mut Vec<Expr>, parts_store: &sync::Arc<Mutex<PartsStore>>) 
     }
 
     let mut gens: Vec<Generator> = Vec::new();
+    let mut proxies: Vec<PartProxy> = Vec::new();
     let mut sync_to = None;
     let mut shift:i32 = 0;
     
@@ -45,16 +44,12 @@ pub fn handle(tail: &mut Vec<Expr>, parts_store: &sync::Arc<Mutex<PartsStore>>) 
 		}
 	    },
 	    Atom::Symbol(s) => {
-		let ps = parts_store.lock();
-		if let Some(kl) = ps.get(&s) {
-		    let mut klc = kl.clone();
-		    for k in klc.iter_mut() {
-			k.id_tags.insert(name.clone());
-		    }
-		    gens.append(&mut klc);
-		} else {
-		    println!("warning: '{} not defined!", s);
-		}
+		// part proxy without additional modifiers 
+		proxies.push(PartProxy::Proxy(s, Vec::new()));
+	    },
+	    Atom::PartProxy(p) => {
+		// part proxy without additional modifiers 
+		proxies.push(p);
 	    },
 	    Atom::Generator(mut k) => {
 		k.id_tags.insert(name.clone());
@@ -73,6 +68,7 @@ pub fn handle(tail: &mut Vec<Expr>, parts_store: &sync::Arc<Mutex<PartsStore>>) 
     Atom::SyncContext(SyncContext {
 	name: name,
 	generators: gens,
+	part_proxies: proxies,
 	sync_to: sync_to,
 	active: true,
 	shift: shift

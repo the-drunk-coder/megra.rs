@@ -1,6 +1,3 @@
-use std::sync;
-use parking_lot::Mutex;
-
 use std::collections::HashMap;
 
 use crate::builtin_types::*;
@@ -292,7 +289,7 @@ pub fn collect_generator_processor(proc_type: &BuiltInGenProc, tail: &mut Vec<Ex
 }
 
 // store list of genProcs in a vec if there's no root gen ???
-pub fn handle(proc_type: &BuiltInGenProc, tail: &mut Vec<Expr>, parts_store: &sync::Arc<Mutex<PartsStore>>) -> Atom {    
+pub fn handle(proc_type: &BuiltInGenProc, tail: &mut Vec<Expr>) -> Atom {    
     let last = tail.pop();
     match last {
 	Some(Expr::Constant(Atom::Generator(mut g))) => {
@@ -300,18 +297,15 @@ pub fn handle(proc_type: &BuiltInGenProc, tail: &mut Vec<Expr>, parts_store: &sy
 	    Atom::Generator(g)
 	},
 	Some(Expr::Constant(Atom::Symbol(s))) => {
-	    let ps = parts_store.lock();
-	    if let Some(gl) = ps.get(&s) {
-		let gp = collect_generator_processor(proc_type, tail);
-		let mut glc = gl.clone();
-		for gen in glc.iter_mut() { // clone here
-		    gen.processors.push(gp.clone());		    
-		}	    
-		Atom::GeneratorList(glc)
-	    } else {
-		println!("warning: '{} not defined!", s);
-		Atom::GeneratorProcessor(collect_generator_processor(proc_type, tail)) // ignore symbol
-	    }
+	    let gp = collect_generator_processor(proc_type, tail);
+	    let mut proxy_mods = Vec::new();
+	    proxy_mods.push(gp);
+	    Atom::PartProxy(PartProxy::Proxy(s, proxy_mods))
+	},
+	Some(Expr::Constant(Atom::PartProxy(PartProxy::Proxy(s, mut proxy_mods)))) => {
+	    let gp = collect_generator_processor(proc_type, tail);
+	    proxy_mods.push(gp);
+	    Atom::PartProxy(PartProxy::Proxy(s, proxy_mods))
 	},
 	Some(Expr::Constant(Atom::GeneratorList(mut gl))) => {
 	    let gp = collect_generator_processor(proc_type, tail);
