@@ -119,7 +119,7 @@ fn spread_proxies(mul: &BuiltInMultiplexer, proxies: &mut Vec<PartProxy>, out_mo
 		filtered_events.insert(vec!["".to_string()], vec![ev]);
 		p.events_to_be_applied.push((Parameter::with_value(100.0), filtered_events));
 		match prox {
-		    PartProxy::Proxy(_,_, ref mut procs) => procs.push(Box::new(p))
+		    PartProxy::Proxy(_, ref mut procs) => procs.push(Box::new(p))
 		}		
 		i += 1;		
 	    }
@@ -154,96 +154,50 @@ pub fn handle(mul: &BuiltInMultiplexer, tail: &mut Vec<Expr>, out_mode: OutputMo
     match last {
 	// create a proxy ...
 	Some(Expr::Constant(Atom::Symbol(s))) => {
-	    let mut proxies = Vec::new();
-	    let mut idx:usize = 0;
-	    for gpl in gen_proc_list_list.drain(..) {
-		let mut tags:BTreeSet<String> = BTreeSet::new();
-		// this isn't super elegant but hey ... 
-		for i in idx..100 {
-		    let tag = format!("mpx-{}", i);
-		    if !tags.contains(&tag) {
-			tags.insert(tag);
-			idx = i + 1;
-			break;
-		    } 		    
-		}
-		proxies.push(PartProxy::Proxy(s.clone(), tags, gpl));
+	    println!("create proxy {}",s);
+	    let mut proxies = Vec::new();	    
+	    for gpl in gen_proc_list_list.drain(..) {		
+		proxies.push(PartProxy::Proxy(s.clone(), gpl));
 	    }
-	    proxies.push(PartProxy::Proxy(s, BTreeSet::new(), Vec::new()));
+	    proxies.push(PartProxy::Proxy(s, Vec::new()));
 	    // return early, this will be resolved in session handling !
 	    spread_proxies(mul, &mut proxies, &out_mode);
 	    Atom::ProxyList(proxies)
 	},
-	Some(Expr::Constant(Atom::PartProxy(PartProxy::Proxy(s, tags, procs)))) => {
-	    let mut proxies = Vec::new();
-	    let mut idx:usize = 0;
+	Some(Expr::Constant(Atom::PartProxy(PartProxy::Proxy(s, procs)))) => {
+	    println!("create proxy list from proxy {}", s);
+	    let mut proxies = Vec::new();	    
 	    for mut gpl in gen_proc_list_list.drain(..) {
 		let mut ngpl = procs.clone();
-		ngpl.append(&mut gpl);
-		let mut ntags = tags.clone();
-		// this isn't super elegant but hey ... 
-		for i in idx..100 {
-		    let tag = format!("mpx-{}", i);
-		    if !ntags.contains(&tag) {
-			ntags.insert(tag);
-			idx = i + 1;
-			break;
-		    } 		    
-		}
-		proxies.push(PartProxy::Proxy(s.clone(), ntags, ngpl));
+		ngpl.append(&mut gpl);		
+		proxies.push(PartProxy::Proxy(s.clone(), ngpl));
 	    }
-	    proxies.push(PartProxy::Proxy(s, tags, procs));
-	    // return early, this will be resolved in session handling !
+	    proxies.push(PartProxy::Proxy(s, procs));
 	    spread_proxies(mul, &mut proxies, &out_mode);
 	    Atom::ProxyList(proxies)
 	},
 	Some(Expr::Constant(Atom::ProxyList(mut l))) => {
-	    
-	    let mut proxies = Vec::new();
-
-	    // collect tags ... make sure the multiplexing process leaves
-	    // each generator individually, but deterministically tagged ...
-	    let mut all_tags:BTreeSet<String> = BTreeSet::new();
-	    
+	    println!("propagate proxy list");
+	    let mut proxies = Vec::new();	    	    
 	    for prox in l.iter() {
 		match prox {
-		    PartProxy::Proxy(_, tags, _) => {
-			all_tags.append(&mut tags.clone());
-		    }
-		}		
-	    }
-	    
-	    let mut idx:usize = 0;
-	    for prox in l.iter() {
-		match prox {
-		    PartProxy::Proxy(s, tags, procs) => {
+		    PartProxy::Proxy(s, procs) => {
 			for gpl in gen_proc_list_list.iter() {
 			    let mut ngpl = procs.clone();
-			    ngpl.append(&mut gpl.clone());
-			    let mut ntags = tags.clone();
-			    // this isn't super elegant but hey ... 
-			    for i in idx..100 {
-				let tag = format!("mpx-{}", i);
-				if !ntags.contains(&tag) {
-				    ntags.insert(tag);
-				    idx = i + 1;
-				    break;
-				} 		    
-			    }
-			    proxies.push(PartProxy::Proxy(s.clone(), ntags, ngpl));
+			    ngpl.append(&mut gpl.clone());			   
+			    proxies.push(PartProxy::Proxy(s.clone(), ngpl));
 			}
 		    }
-		}		
+		}
 	    }
 	    proxies.append(&mut l);
-	    // return early, this will be resolved in session handling !
 	    spread_proxies(mul, &mut proxies, &out_mode);
 	    Atom::ProxyList(proxies)
 	},
 	Some(Expr::Constant(Atom::Generator(g))) => {
 	    let mut gens = Vec::new();
-	    // multiplex into duplicates by cloning ...
 	    let mut idx:usize = 0;
+	    // multiplex into duplicates by cloning ...	    
 	    for mut gpl in gen_proc_list_list.drain(..) {
 		let mut pclone = g.clone();
 

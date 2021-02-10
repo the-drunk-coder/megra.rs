@@ -2,7 +2,6 @@ use crate::builtin_types::*;
 use crate::session::SyncContext;
 use crate::generator::Generator;
 use crate::parser::parser_helpers::*;
-use std::collections::BTreeSet;
 
 pub fn handle(tail: &mut Vec<Expr>) -> Atom {
     let mut tail_drain = tail.drain(..);
@@ -45,10 +44,8 @@ pub fn handle(tail: &mut Vec<Expr>) -> Atom {
 		}
 	    },
 	    Atom::Symbol(s) => {
-		// part proxy without additional modifiers
-		let mut tags = BTreeSet::new();
-		tags.insert(name.clone());
-		proxies.push(PartProxy::Proxy(s, tags, Vec::new()));
+		// part proxy without additional modifiers		
+		proxies.push(PartProxy::Proxy(s, Vec::new()));
 	    },
 	    Atom::PartProxy(p) => {
 		// part proxy without additional modifiers 

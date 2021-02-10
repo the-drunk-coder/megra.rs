@@ -60,12 +60,15 @@ impl <const BUFSIZE:usize, const NCHAN:usize> Session<BUFSIZE, NCHAN> {
 	    let ps = parts_store.lock();
 	    let mut gens = Vec::new();
 	    let mut prox_drain = ctx.part_proxies.drain(..);
-	    while let Some(PartProxy::Proxy(s, tags, procs)) = prox_drain.next() {
+	    let mut i = 0;
+	    while let Some(PartProxy::Proxy(s, procs)) = prox_drain.next() {
 		if let Some(kl) = ps.get(&s) {
 		    let mut klc = kl.clone();
 		    for k in klc.iter_mut() {
-			k.id_tags.insert(ctx.name.clone());
-			k.id_tags.append(&mut tags.clone());
+			let tag = format!("prox-{}", i);
+			k.id_tags.insert(tag);
+			i += 1;
+			k.id_tags.insert(ctx.name.clone());			
 			k.id_tags.insert(s.clone()); // make sure we let everybody know from which part this is ...
 			k.processors.append(&mut procs.clone());
 		    }

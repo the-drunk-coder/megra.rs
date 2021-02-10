@@ -4,7 +4,7 @@ use crate::parameter::*;
 use crate::generator_processor::GeneratorProcessor;
 use crate::generator::{Generator, GenModFun};
 use crate::session::SyncContext;
-use std::collections::{HashMap, BTreeSet};
+use std::collections::HashMap;
 use dashmap::DashMap;
 
 //pub type SampleSet = HashMap<String, Vec<(HashSet<String>, usize)>>;
@@ -139,8 +139,8 @@ pub enum Command {
 
 #[derive(Clone)]
 pub enum PartProxy {
-    // part, tags, mods
-    Proxy(String, BTreeSet<String>, Vec<Box<dyn GeneratorProcessor + Send>>),    
+    // part, mods
+    Proxy(String, Vec<Box<dyn GeneratorProcessor + Send>>),    
 }
 
 pub enum Atom { // atom might not be the right word any longer 
