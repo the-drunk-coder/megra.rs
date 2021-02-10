@@ -4,6 +4,7 @@ use crate::parser::parser_helpers::*;
 fn handle_load_part(tail: &mut Vec<Expr>) -> Atom {
     let mut tail_drain = tail.drain(..);
     let mut gens = Vec::new();
+    let mut proxies = Vec::new();
 
     let name: String = get_string_from_expr(&tail_drain.next().unwrap()).unwrap();
     
@@ -11,11 +12,13 @@ fn handle_load_part(tail: &mut Vec<Expr>) -> Atom {
 	match c {
 	    Atom::Generator(g) => gens.push(g),
 	    Atom::GeneratorList(mut gl) => gens.append(&mut gl),
+	    Atom::PartProxy(p) => proxies.push(p),
+	    Atom::ProxyList(mut pl) => proxies.append(&mut pl),
 	    _ => {}
 	}
     }
     
-    Atom::Command(Command::LoadPart((name, gens)))
+    Atom::Command(Command::LoadPart((name, Part::Combined(gens, proxies))))
 }
 
 fn handle_load_sample(tail: &mut Vec<Expr>) -> Atom {

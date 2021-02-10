@@ -83,8 +83,8 @@ pub fn interpret<const BUFSIZE:usize, const NCHAN:usize>(parsed_in: Expr,
 			println!("a command (load sample sets)");
 		    });		    		    
 		},
-		Command::LoadPart((name, generators)) => {
-		    commands::load_part(parts_store, name, generators);
+		Command::LoadPart((name, part)) => {
+		    commands::load_part(parts_store, name, part);
 		    println!("a command (load part)");
 		}
 	    };

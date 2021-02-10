@@ -5,7 +5,6 @@ use ruffbox_synth::ruffbox::Ruffbox;
 
 use crate::sample_set::SampleSet;
 use crate::builtin_types::*;
-use crate::generator::Generator;
 
 pub fn load_sample<const BUFSIZE:usize, const NCHAN:usize>(ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>,
 							   sample_set: &sync::Arc<Mutex<SampleSet>>,
@@ -118,11 +117,8 @@ pub fn load_sample_sets_path<const BUFSIZE:usize, const NCHAN:usize>(ruffbox: &s
     }
 }
 
-pub fn load_part(parts_store: &sync::Arc<Mutex<PartsStore>>, name: String, mut generators: Vec<Generator> ) {
-    for gen in generators.iter_mut() {
-	gen.id_tags.insert(name.clone());
-    }
+pub fn load_part(parts_store: &sync::Arc<Mutex<PartsStore>>, name: String, part: Part) {    
     let mut ps = parts_store.lock();
-    ps.insert(name, generators);
+    ps.insert(name, part);
 }
     

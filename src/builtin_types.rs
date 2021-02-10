@@ -8,7 +8,11 @@ use std::collections::HashMap;
 use dashmap::DashMap;
 
 //pub type SampleSet = HashMap<String, Vec<(HashSet<String>, usize)>>;
-pub type PartsStore = HashMap<String, Vec<Generator>>;
+pub enum Part {
+    Combined(Vec<Generator>, Vec<PartProxy>)
+}
+
+pub type PartsStore = HashMap<String, Part>;
 
 // might be unified with event parameters at some point but
 // i'm not sure how yet ...
@@ -134,7 +138,7 @@ pub enum Command {
     LoadSample((String, Vec<String>, String)) ,// set (events), keyword, path
     LoadSampleSet(String), // set path
     LoadSampleSets(String), // top level sets set path
-    LoadPart((String, Vec<Generator>)) // set (events), keyword, path
+    LoadPart((String, Part)) // set (events), keyword, path
 }
 
 #[derive(Clone)]

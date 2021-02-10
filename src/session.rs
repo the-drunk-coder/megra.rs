@@ -9,7 +9,7 @@ use crate::scheduler::{Scheduler, SchedulerData};
 use crate::generator::Generator;
 use crate::event::{InterpretableEvent};
 use crate::event_helpers::*;
-use crate::builtin_types::{PartProxy, PartsStore, GlobalParameters};
+use crate::builtin_types::{Part, PartProxy, PartsStore, GlobalParameters};
 
 #[derive(Clone,Copy,PartialEq)]
 pub enum OutputMode {
@@ -38,6 +38,37 @@ pub struct Session <const BUFSIZE:usize, const NCHAN:usize> {
     contexts: HashMap<String, BTreeSet<BTreeSet<String>>>,
 }
 
+// basically a bfs on a dag ! 
+fn resolve_proxy(parts_store: &PartsStore,
+		 //visited: &mut BTreeSet<String>,
+		 proxy: PartProxy,
+		 generators: &mut Vec<Generator>) {
+    match proxy {
+	PartProxy::Proxy(s, procs) => {
+	    //visited.push(s);
+	    if let Some(Part::Combined(part_generators, proxies)) = parts_store.get(&s) {
+
+		// this can be done for sure ...
+		for mut gen in part_generators.clone().drain(..) {
+		    gen.processors.append(&mut procs.clone());
+		    gen.id_tags.insert(s.clone());
+		    generators.push(gen);		    
+		}
+
+		for sub_proxy in proxies.clone().drain(..) {
+		    let mut sub_gens = Vec::new();
+		    resolve_proxy(parts_store, sub_proxy, &mut sub_gens);
+		    for mut gen in sub_gens.drain(..) {
+			gen.processors.append(&mut procs.clone());
+			gen.id_tags.insert(s.clone());
+			generators.push(gen);		    
+		    }
+		}		
+	    }
+	}
+    }        
+}
+
 impl <const BUFSIZE:usize, const NCHAN:usize> Session<BUFSIZE, NCHAN> {
     
     pub fn with_mode(mode: OutputMode) -> Self {
@@ -53,30 +84,25 @@ impl <const BUFSIZE:usize, const NCHAN:usize> Session<BUFSIZE, NCHAN> {
 			  ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>,
 			  parts_store: &sync::Arc<Mutex<PartsStore>>,
 			  global_parameters: &sync::Arc<GlobalParameters> ) {
-
-
+	
 	// resolve part proxies ..
+	// at some point this should probably check if
+	// there's loops and so on ...
 	{
 	    let ps = parts_store.lock();
+	    
 	    let mut gens = Vec::new();
 	    let mut prox_drain = ctx.part_proxies.drain(..);
-	    let mut i = 0;
-	    while let Some(PartProxy::Proxy(s, procs)) = prox_drain.next() {
-		if let Some(kl) = ps.get(&s) {
-		    let mut klc = kl.clone();
-		    for k in klc.iter_mut() {
-			let tag = format!("prox-{}", i);
-			k.id_tags.insert(tag);
-			i += 1;
-			k.id_tags.insert(ctx.name.clone());			
-			k.id_tags.insert(s.clone()); // make sure we let everybody know from which part this is ...
-			k.processors.append(&mut procs.clone());
-		    }
-		    gens.append(&mut klc);
-		} else {
-		    println!("warning: '{} not defined!", s);
-		}
+	    
+	    while let Some(p) = prox_drain.next() {
+		resolve_proxy(&ps, p, &mut gens);
 	    }
+
+	    for i in 0..gens.len() {
+		gens[i].id_tags.insert(format!("prox-{}", i));
+		gens[i].id_tags.insert(ctx.name.clone());
+	    }
+	    
 	    ctx.generators.append(&mut gens);
 	}
 	
