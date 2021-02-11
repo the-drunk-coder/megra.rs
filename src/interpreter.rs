@@ -55,9 +55,13 @@ pub fn interpret<const BUFSIZE:usize, const NCHAN:usize>(parsed_in: Expr,
 	},
 	Expr::Constant(Atom::Command(c)) => {
 	    match c {
-		Command::Clear => {		    
-		    Session::clear_session(session);
-		    println!("a command (stop session)");
+		Command::Clear => {
+		    let session2 = sync::Arc::clone(session);
+		    thread::spawn(move || {
+			Session::clear_session(&session2);
+			println!("a command (stop session)");
+			
+		    });
 		},
 		Command::LoadSample((set, mut keywords, path)) => {
 		    let ruffbox2 = sync::Arc::clone(ruffbox);
