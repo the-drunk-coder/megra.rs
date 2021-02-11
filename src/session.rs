@@ -346,7 +346,7 @@ impl <const BUFSIZE:usize, const NCHAN:usize> Session<BUFSIZE, NCHAN> {
 	}
     }
 
-    pub fn clear_session(session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>) {
+    pub fn clear_session(session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>, parts_store: &sync::Arc<Mutex<PartsStore>>) {
 	let mut sess = session.lock();
 	for (k,(sched, _)) in sess.schedulers.iter_mut() {	    
 	    sched.stop();
@@ -358,6 +358,8 @@ impl <const BUFSIZE:usize, const NCHAN:usize> Session<BUFSIZE, NCHAN> {
 	    println!("\'");	    
 	}
 	sess.schedulers = HashMap::new();
+	let mut ps = parts_store.lock();
+	*ps = HashMap::new();
     }
 }
 

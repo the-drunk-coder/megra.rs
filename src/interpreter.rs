@@ -57,8 +57,9 @@ pub fn interpret<const BUFSIZE:usize, const NCHAN:usize>(parsed_in: Expr,
 	    match c {
 		Command::Clear => {
 		    let session2 = sync::Arc::clone(session);
+		    let parts_store2 = sync::Arc::clone(parts_store);
 		    thread::spawn(move || {
-			Session::clear_session(&session2);
+			Session::clear_session(&session2, &parts_store2);
 			println!("a command (stop session)");
 			
 		    });
