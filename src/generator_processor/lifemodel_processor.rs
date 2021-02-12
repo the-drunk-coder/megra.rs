@@ -43,7 +43,8 @@ pub struct LifemodelProcessor {
     pub autophagia_regain: f32,
     pub durations: Vec<Parameter>,
     pub dont_let_die: bool,
-    pub keep_param: HashSet<SynthParameter>
+    pub keep_param: HashSet<SynthParameter>,
+    pub global_contrib: bool,    	
 }
 
 impl LifemodelProcessor {
@@ -64,6 +65,7 @@ impl LifemodelProcessor {
 	    durations: Vec::new(),
 	    dont_let_die: true,
 	    keep_param: HashSet::new(),
+	    global_contrib: false
 	}	    
     }
 }
@@ -124,7 +126,20 @@ impl GeneratorProcessor for LifemodelProcessor {
 			//println!("lm auto {} {:?}", random_symbol, gen.generator.alphabet);
 			// don't rebalance yet ...
 			shrink_raw(gen, random_symbol, false);
-			self.local_resources += self.autophagia_regain;
+
+			if self.global_contrib {
+			    if let ConfigParameter::Numeric(global_resources) = global_parameters	    
+				.entry(BuiltinGlobalParameters::LifemodelGlobalResources)
+				.or_insert(ConfigParameter::Numeric(LifemodelDefaults::GLOBAL_INIT_RESOURCES)) // init on first attempt 
+				.value_mut()
+			    {
+				// get global resources, init value if it doesn't exist 				
+				*global_resources += self.autophagia_regain;				
+			    }
+			} else {
+			    self.local_resources += self.autophagia_regain;
+			}
+			
 			something_happened = true;
 		    }		    
 		}		
@@ -151,7 +166,19 @@ impl GeneratorProcessor for LifemodelProcessor {
 
 	    if let Some(symbol_to_remove) = sym {
 		//println!("lm apop {} {:?}", symbol_to_remove, gen.generator.alphabet);
-		shrink_raw(gen, symbol_to_remove, false);						
+		shrink_raw(gen, symbol_to_remove, false);
+		if self.global_contrib {
+		    if let ConfigParameter::Numeric(global_resources) = global_parameters	    
+			.entry(BuiltinGlobalParameters::LifemodelGlobalResources)
+			.or_insert(ConfigParameter::Numeric(LifemodelDefaults::GLOBAL_INIT_RESOURCES)) // init on first attempt 
+			.value_mut()
+		    {
+			// get global resources, init value if it doesn't exist 				
+			*global_resources += self.apoptosis_regain;				
+		    }
+		} else {
+		    self.local_resources += self.apoptosis_regain;
+		}
 		something_happened = true;
 	    }
 	}

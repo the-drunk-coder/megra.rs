@@ -283,6 +283,11 @@ fn collect_lifemodel (tail: &mut Vec<Expr>) -> Box<LifemodelProcessor> {
 			    proc.growth_cost = f;
 			}
 		    },
+		    "global-contrib" => {
+			if let Expr::Constant(Atom::Boolean(b)) = tail_drain.next().unwrap() {
+			    proc.global_contrib = b;
+			}
+		    },
 		    _ => {}
 		}
 	    },	    
