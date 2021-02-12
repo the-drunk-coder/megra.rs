@@ -1,5 +1,5 @@
 use ruffbox_synth::ruffbox::synth::SynthParameter;
-use std::collections::HashMap;
+use std::collections::{HashSet, HashMap};
 use rand::seq::SliceRandom;
 use crate::{event::{Event, EventOperation, SourceEvent},
 	    generator::TimeMod,
@@ -31,6 +31,7 @@ pub fn relax_raw(time_mods: &mut Vec<TimeMod>,
 pub fn grow_raw(gen: &mut MarkovSequenceGenerator,
 		m: &String, // method
 		variance: f32,
+		keep: &HashSet<SynthParameter>,
 		durations: &Vec<Parameter>) {
        
     if let Some(result) = match m.as_str() {
@@ -48,7 +49,7 @@ pub fn grow_raw(gen: &mut MarkovSequenceGenerator,
 	    let mut new_evs = old_evs.clone();
 	    for ev in new_evs.iter_mut() {
 		match ev {
-		    SourceEvent::Sound(s) => s.shake(variance),
+		    SourceEvent::Sound(s) => s.shake(variance, keep),
 		    SourceEvent::Control(_) => {}
 		}
 	    }
@@ -132,13 +133,14 @@ pub fn sharpen_raw(gen: &mut MarkovSequenceGenerator,
     gen.generator.sharpen(factor);
 }
 
-pub fn shake_raw(gen: &mut MarkovSequenceGenerator,		
+pub fn shake_raw(gen: &mut MarkovSequenceGenerator,
+		 keep: &HashSet<SynthParameter>,
 		 factor: f32) {
     gen.generator.blur(factor);
     for (_, evs) in gen.event_mapping.iter_mut() {
 	for ev in evs {
 	    match ev {
-		SourceEvent::Sound(e) => e.shake(factor),
+		SourceEvent::Sound(e) => e.shake(factor, keep),
 		_ => {},
 	    }	   
 	}	    

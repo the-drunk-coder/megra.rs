@@ -129,9 +129,9 @@ impl Event {
 	map
     }
 
-    pub fn shake(&mut self, factor: f32) {
+    pub fn shake(&mut self, factor: f32, keep: &HashSet<SynthParameter>) {
 	for (k,v) in self.params.iter_mut() {
-	    if *k != SynthParameter::SampleBufferNumber {
+	    if !keep.contains(k) && *k != SynthParameter::SampleBufferNumber {
 		v.shake(factor);
 	    }	    
 	}

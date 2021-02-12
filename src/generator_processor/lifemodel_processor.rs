@@ -1,6 +1,8 @@
-use std::sync::*;
+use std::{collections::HashSet, sync::*};
 use rand::seq::SliceRandom;
 use rand::Rng;
+
+use ruffbox_synth::ruffbox::synth::SynthParameter;
 
 use crate::{ builtin_types::{BuiltinGlobalParameters, GlobalParameters},
              event::{StaticEvent, InterpretableEvent},
@@ -41,6 +43,7 @@ pub struct LifemodelProcessor {
     pub autophagia_regain: f32,
     pub durations: Vec<Parameter>,
     pub dont_let_die: bool,
+    pub keep_param: HashSet<SynthParameter>
 }
 
 impl LifemodelProcessor {
@@ -60,6 +63,7 @@ impl LifemodelProcessor {
 	    autophagia_regain: LifemodelDefaults::AUTOPHAGIA_REGAIN,
 	    durations: Vec::new(),
 	    dont_let_die: true,
+	    keep_param: HashSet::new(),
 	}	    
     }
 }
@@ -101,7 +105,7 @@ impl GeneratorProcessor for LifemodelProcessor {
 	    };
 	    
 	    if grow {		
-		grow_raw(gen, &self.growth_method, self.variance, &self.durations);
+		grow_raw(gen, &self.growth_method, self.variance, &self.keep_param, &self.durations);
 		//println!("lm grow {:?}", gen.generator.alphabet);
 		something_happened = true;
 	    } else if self.autophagia {

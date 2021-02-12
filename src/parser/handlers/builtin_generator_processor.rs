@@ -1,6 +1,8 @@
 use std::collections::HashMap;
+//use ruffbox_synth::ruffbox::synth::SynthParameter;
 
 use crate::builtin_types::*;
+use crate::event_helpers::*;
 
 use crate::parameter::Parameter;
 use crate::generator_processor::*;
@@ -214,6 +216,7 @@ fn collect_lifemodel (tail: &mut Vec<Expr>) -> Box<LifemodelProcessor> {
     }
 
     let mut collect_durations = false;
+    let mut collect_keeps = false;
 
     while let Some(Expr::Constant(c)) = tail_drain.next() {
 	if collect_durations {
@@ -223,11 +226,22 @@ fn collect_lifemodel (tail: &mut Vec<Expr>) -> Box<LifemodelProcessor> {
 		_ => {collect_durations = false;}
 	    }
 	}
+	
+	if collect_keeps {
+	    match c {
+		Atom::Symbol(ref s) => {proc.keep_param.insert(map_parameter(&s));},
+		_ => {collect_keeps = false;}
+	    }
+	}
+	
 	match c {
 	    Atom::Keyword(k) => {
 		match k.as_str() {
 		    "durs" => {
 			collect_durations = true;
+		    },
+		    "keep" => {
+			collect_keeps = true;
 		    },
 		    "apoptosis" => {
 			if let Expr::Constant(Atom::Boolean(b)) = tail_drain.next().unwrap() {

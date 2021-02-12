@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashSet, HashMap};
 use rand::seq::SliceRandom;
 
 use crate::{builtin_types::ConfigParameter,
@@ -49,7 +49,7 @@ pub fn grow(gen: &mut MarkovSequenceGenerator,
 	    "flower".to_string()
 	};
 	
-	grow_raw(gen, &m, f, &Vec::<Parameter>::new());
+	grow_raw(gen, &m, f, &HashSet::new(), &Vec::<Parameter>::new());
     }
 }
 
@@ -73,7 +73,7 @@ pub fn shake(gen: &mut MarkovSequenceGenerator,
 	     pos_args: &Vec<ConfigParameter>,
 	     _: &HashMap<String, ConfigParameter>) {
     if let ConfigParameter::Numeric(f) = pos_args[0] {
-	shake_raw(gen, f);
+	shake_raw(gen, &HashSet::new(), f);
     }
 }
 
