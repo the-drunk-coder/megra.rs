@@ -147,14 +147,16 @@ impl GeneratorProcessor for LifemodelProcessor {
 
 	    if let Some(symbol_to_remove) = sym {
 		//println!("lm apop {} {:?}", symbol_to_remove, gen.generator.alphabet);
-		shrink_raw(gen, symbol_to_remove, false);
+		shrink_raw(gen, symbol_to_remove, false);						
 		something_happened = true;
 	    }
 	}
+	
 	// now rebalance
 	if something_happened {
-	    gen.generator.rebalance();
+	    gen.generator.rebalance();	    
 	}
+	
 	self.step_count += 1;
     }        
 }

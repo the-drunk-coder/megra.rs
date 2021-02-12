@@ -50,6 +50,9 @@ impl Generator {
 	    proc.process_events(&mut events, global_parameters);
 	    proc.process_generator(&mut self.root_generator, global_parameters, &mut self.time_mods);
 	}
+	if events.len() == 0 {
+	    println!("no events");
+	}
 	events
     }
     

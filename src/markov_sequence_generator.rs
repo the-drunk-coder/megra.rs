@@ -48,6 +48,12 @@ impl MarkovSequenceGenerator {
 	// that'd mean it's probably the initial one, or there's something wrong ... 
 	if self.last_transition.is_none() {	    
 	    self.last_transition = self.generator.next_transition();
+	    //println!("no last_trans");
+	} else if let Some(trans) = self.last_transition.clone() {
+	    if !self.event_mapping.contains_key(&trans.last_symbol) {
+		// if transition was invalidated by shrink, for example ...
+		self.last_transition = self.generator.next_transition();
+	    }
 	}
 	
 	if let Some(trans) = &self.last_transition {	    
@@ -63,7 +69,10 @@ impl MarkovSequenceGenerator {
 			SourceEvent::Control(e) => InterpretableEvent::Control(e.clone()), 
 		    });
 		}		
-	    }	    	 
+	    }
+	    //else {
+	    //	println!("no events for sym");
+	    // }	    	 
 	} 
 	
 	interpretable_events
@@ -75,12 +84,18 @@ impl MarkovSequenceGenerator {
 	if let Some(trans) = &self.last_transition {
 	    if let Some(dur) = self.duration_mapping.get_mut(&(trans.last_symbol, trans.next_symbol)) {
 		transition = Some(dur.to_static());
-	    } else {		
+	    } else {
+		
+		// println!("no dur");
+		
 		let mut t = Event::with_name("transition".to_string()).to_static();
 		t.params.insert(SynthParameter::Duration, self.default_duration as f32);
 		transition = Some(t);
 	    }
 	}
+	//else {	    
+	//  println!("no old trans");	    
+	//}
 
 	// advance pfa ...
 	self.last_transition = self.generator.next_transition();
@@ -88,6 +103,7 @@ impl MarkovSequenceGenerator {
 	if let Some(t) = transition {
 	    t
 	} else {
+	    //println!("no new trans");
 	    let mut t = Event::with_name("transition".to_string()).to_static();
 	    t.params.insert(SynthParameter::Duration, self.default_duration as f32);
 	    t
