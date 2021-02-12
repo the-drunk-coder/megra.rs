@@ -61,9 +61,12 @@ pub fn grow_raw(gen: &mut MarkovSequenceGenerator,
 		if let Some(dur) = gen.duration_mapping.get(&(*sym, template_sym)) {
 		    if !durations.is_empty() {			
 			let mut dur_ev =  Event::with_name("transition".to_string());
-			dur_ev.params.insert(SynthParameter::Duration, Box::new(durations.choose(&mut rand::thread_rng()).unwrap().clone()));
-			dur_mapping_to_add.insert((*sym, added_sym), dur_ev);
-		    } else  {
+			let dur_val = durations.choose(&mut rand::thread_rng()).unwrap().clone();
+			//println!("add from stash {} {} {}", sym, added_sym, dur_val.static_val);
+			dur_ev.params.insert(SynthParameter::Duration, Box::new(dur_val));
+			dur_mapping_to_add.insert((*sym, added_sym), dur_ev);			
+		    } else {
+			//println!("add from prev {} {}", sym, added_sym);
 			dur_mapping_to_add.insert((*sym, added_sym), dur.clone());
 		    }		    
 		}
@@ -71,13 +74,32 @@ pub fn grow_raw(gen: &mut MarkovSequenceGenerator,
 		if let Some(dur) = gen.duration_mapping.get(&(template_sym, *sym)) {
 		    if !durations.is_empty() {			
 			let mut dur_ev =  Event::with_name("transition".to_string());
-			dur_ev.params.insert(SynthParameter::Duration, Box::new(durations.choose(&mut rand::thread_rng()).unwrap().clone()));
+			let dur_val = durations.choose(&mut rand::thread_rng()).unwrap().clone();
+			//println!("add from stash {} {} {}", added_sym, sym, dur_val.static_val);
+			dur_ev.params.insert(SynthParameter::Duration, Box::new(dur_val));
 			dur_mapping_to_add.insert((added_sym, *sym), dur_ev);
-		    } else  {
+		    } else {
+			//println!("add from prev {} {}", added_sym, sym);
 			dur_mapping_to_add.insert((added_sym, *sym), dur.clone());
 		    }		    
 		}	   	    
 	    }
+
+	    // add from the durations stash for newly added information ...
+	    if !durations.is_empty() {
+		for t in result.added_transitions.iter() {
+		    if let Some(src) = t.source.last() {
+			if let Some(dest) = t.destination.last() {
+			    let mut dur_ev =  Event::with_name("transition".to_string());
+			    let dur_val = durations.choose(&mut rand::thread_rng()).unwrap().clone();
+			    //println!("add from stash {} {} {}", sym, added_sym, dur_val.static_val);
+			    dur_ev.params.insert(SynthParameter::Duration, Box::new(dur_val));
+			    dur_mapping_to_add.insert((*src, *dest), dur_ev);			
+			}
+		    }		    		    
+		}		
+	    }
+		
 	    for (k, v) in dur_mapping_to_add.drain() {
 		gen.duration_mapping.insert(k,v);
 	    }
@@ -118,8 +140,7 @@ pub fn shake_raw(gen: &mut MarkovSequenceGenerator,
 	    match ev {
 		SourceEvent::Sound(e) => e.shake(factor),
 		_ => {},
-	    }
-
+	    }	   
 	}	    
     }
 }

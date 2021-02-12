@@ -86,7 +86,7 @@ impl GeneratorProcessor for LifemodelProcessor {
 		true		
 	    } else if let ConfigParameter::Numeric(global_resources) = global_parameters	    
 		.entry(BuiltinGlobalParameters::LifemodelGlobalResources)
-		.or_insert(ConfigParameter::Numeric(LifemodelDefaults::GLOBAL_INIT_RESOURCES))
+		.or_insert(ConfigParameter::Numeric(LifemodelDefaults::GLOBAL_INIT_RESOURCES)) // init on first attempt 
 		.value_mut()
 	    {
 		// get global resources, init value if it doesn't exist 
