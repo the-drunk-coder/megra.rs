@@ -7,7 +7,8 @@ use nom::{
     combinator::map,
     error::VerboseError,
     multi::{separated_list0, separated_list1},
-    sequence::{preceded, separated_pair},
+    sequence::{delimited, preceded, separated_pair},
+    character::complete::{multispace0, char},
     IResult,
 };
 
@@ -52,21 +53,33 @@ fn parse_cyc_param<'a>(i: &'a str) -> IResult<&'a str, Expr, VerboseError<&'a st
 }
 
 /// We tie them all together again, making a top-level expression parser!
-fn parse_cyc_expr<'a>(i: &'a str) -> IResult<&'a str, Expr, VerboseError<&'a str>> {
-    alt((parse_cyc_param, parse_cyc_application))(i)
+fn parse_cyc_expr<'a>(i: &'a str) -> IResult<&'a str, Vec<Expr>, VerboseError<&'a str>> {
+    alt((
+    delimited(
+	char('['),
+	preceded(multispace0, separated_list1(tag(" "), alt((parse_cyc_param, parse_cyc_application)))),
+	preceded(multispace0, char(']'))),
+	map(alt((parse_cyc_param, parse_cyc_application)), |x| vec![x])
+    ))(i)
+    
 }
 
-fn parse_cyc<'a>(i: &'a str) -> IResult<&'a str, Vec<Expr>, VerboseError<&'a str>> {
+fn parse_cyc<'a>(i: &'a str) -> IResult<&'a str, Vec<Vec<Expr>>, VerboseError<&'a str>> {
     separated_list1(tag(" "), parse_cyc_expr)(i)
 }
 
 /// eval cyc substrings ...
-pub fn eval_cyc_from_str(src: &str, sample_set: &sync::Arc<Mutex<SampleSet>>, out_mode: OutputMode) -> Result<Vec<Option<Expr>>, String> {
+pub fn eval_cyc_from_str(src: &str, sample_set: &sync::Arc<Mutex<SampleSet>>, out_mode: OutputMode) -> Result<Vec<Vec<Option<Expr>>>, String> {
     parse_cyc(src)
-	.map_err(|e: nom::Err<VerboseError<&str>>| format!("{:#?}", e))
-	.and_then(|(_, exps)| Ok(exps.into_iter().map(|exp| eval_expression(exp, sample_set, out_mode)).collect()))
+	.map_err(|e: nom::Err<VerboseError<&str>>| {let ret = format!("{:#?}", e); println!("{}", ret); ret})
+	.and_then(|(_, exp_vecs)| Ok(exp_vecs.into_iter().map(|exp_vec| {
+	    let mut eval_exps = Vec::new();	    
+	    for exp in exp_vec.into_iter() {
+		eval_exps.push(eval_expression(exp, sample_set, out_mode));
+	    }
+	    eval_exps	    
+	}).collect()))
 }
-
 
 // TEST TEST TEST 
 #[cfg(test)]
@@ -76,12 +89,11 @@ mod tests {
     
     #[test]
     fn test_basic_cyc_elem() {
-	let sample_set = SampleSet::new();
-	let parts_store = PartsStore::new();
-	
-	match eval_cyc_from_str("saw:200", &sample_set, &parts_store, OutputMode::Stereo) {
+	let sample_set = sync::Arc::new(Mutex::new(SampleSet::new()));
+		
+	match eval_cyc_from_str("[saw:200]", &sample_set, OutputMode::Stereo) {
 	    Ok(o) => {
-		match &o[0] {
+		match &o[0][0] {
 		    Some(Expr::Constant(Atom::SoundEvent(_))) => assert!(true),
 		    _ => {
 			assert!(false)
@@ -94,29 +106,28 @@ mod tests {
 
     #[test]
     fn test_basic_cyc() {
-	let sample_set = SampleSet::new();
-	let parts_store = PartsStore::new();
+	let sample_set = sync::Arc::new(Mutex::new(SampleSet::new()));
 	
-	match eval_cyc_from_str("saw:200 ~ ~ ~", &sample_set, &parts_store, OutputMode::Stereo) {
+	match eval_cyc_from_str("saw:200 ~ ~ ~", &sample_set, OutputMode::Stereo) {
 	    Ok(o) => {
 		assert!(o.len() == 4);
 		
-		match &o[0] {
+		match &o[0][0] {
 		    Some(Expr::Constant(Atom::SoundEvent(e))) => assert!(e.name == "saw"),
 		    _ => assert!(false)					    
 		}
 
-		match &o[1] {
+		match &o[1][0] {
 		    Some(Expr::Constant(Atom::SoundEvent(e))) => assert!(e.name == "silence"),
 		    _ => assert!(false)
 		}
 
-		match &o[2] {
+		match &o[2][0] {
 		    Some(Expr::Constant(Atom::SoundEvent(e))) => assert!(e.name == "silence"),
 		    _ => assert!(false)
 		}
 		
-		match &o[3] {
+		match &o[3][0] {
 		    Some(Expr::Constant(Atom::SoundEvent(e))) => assert!(e.name == "silence"),
 		    _ => assert!(false)
 		}
@@ -127,29 +138,28 @@ mod tests {
 
     #[test]
     fn test_basic_cyc_noparam() {
-	let sample_set = SampleSet::new();
-	let parts_store = PartsStore::new();
+	let sample_set = sync::Arc::new(Mutex::new(SampleSet::new()));
 	
-	match eval_cyc_from_str("saw ~ ~ ~", &sample_set, &parts_store, OutputMode::Stereo) {
+	match eval_cyc_from_str("saw ~ ~ ~", &sample_set, OutputMode::Stereo) {
 	    Ok(o) => {
 		assert!(o.len() == 4);
 		
-		match &o[0] {
+		match &o[0][0] {
 		    Some(Expr::Constant(Atom::SoundEvent(e))) => assert!(e.name == "saw"),
 		    _ => assert!(false)					    
 		}
 
-		match &o[1] {
+		match &o[1][0] {
 		    Some(Expr::Constant(Atom::SoundEvent(e))) => assert!(e.name == "silence"),
 		    _ => assert!(false)
 		}
 
-		match &o[2] {
+		match &o[2][0] {
 		    Some(Expr::Constant(Atom::SoundEvent(e))) => assert!(e.name == "silence"),
 		    _ => assert!(false)
 		}
 		
-		match &o[3] {
+		match &o[3][0] {
 		    Some(Expr::Constant(Atom::SoundEvent(e))) => assert!(e.name == "silence"),
 		    _ => assert!(false)
 		}
@@ -160,27 +170,26 @@ mod tests {
 
     #[test]
     fn test_param_only() {
-	let sample_set = SampleSet::new();
-	let parts_store = PartsStore::new();
+	let sample_set = sync::Arc::new(Mutex::new(SampleSet::new()));
 	
-	match eval_cyc_from_str(":200 ~ ~ ~", &sample_set, &parts_store, OutputMode::Stereo) {
+	match eval_cyc_from_str(":200 ~ ~ ~", &sample_set, OutputMode::Stereo) {
 	    Ok(o) => {
-		match &o[0] {
+		match &o[0][0] {
 		    Some(Expr::Constant(Atom::Float(f))) => assert!(*f == 200.0),
 		    _ => assert!(false)					    
 		}
 
-		match &o[1] {
+		match &o[1][0] {
 		    Some(Expr::Constant(Atom::SoundEvent(e))) => assert!(e.name == "silence"),
 		    _ => assert!(false)
 		}
 
-		match &o[2] {
+		match &o[2][0] {
 		    Some(Expr::Constant(Atom::SoundEvent(e))) => assert!(e.name == "silence"),
 		    _ => assert!(false)
 		}
 		
-		match &o[3] {
+		match &o[3][0] {
 		    Some(Expr::Constant(Atom::SoundEvent(e))) => assert!(e.name == "silence"),
 		    _ => assert!(false)
 		}

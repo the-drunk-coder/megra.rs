@@ -310,7 +310,7 @@ pub fn construct_cycle(tail: &mut Vec<Expr>, sample_set: &sync::Arc<Mutex<Sample
     let mut duration_mapping = HashMap::<(char,char), Event>::new();    
     
     let mut dur:f32 = 200.0;
-    let mut ev_vec = Vec::new();
+    let mut ev_vecs = Vec::new();
     
     while let Some(Expr::Constant(c)) = tail_drain.next() {
 			
@@ -331,13 +331,16 @@ pub fn construct_cycle(tail: &mut Vec<Expr>, sample_set: &sync::Arc<Mutex<Sample
 		match parsed_cycle {
 		    Ok(mut c) => {
 			let mut cycle_drain = c.drain(..);
-			while let Some(Some(Expr::Constant(cc))) = cycle_drain.next() {
-			    
-			    match cc {
-				Atom::SoundEvent(e) => {				  
-				    ev_vec.push(e)
-				},				
-				_ => {/* ignore */}
+			while let Some(mut cyc_evs) = cycle_drain.next() {
+			    ev_vecs.push(Vec::new());
+			    let mut cyc_evs_drain = cyc_evs.drain(..);
+			    while let Some(Some(Expr::Constant(cc))) = cyc_evs_drain.next() {
+				match cc {
+				    Atom::SoundEvent(e) => {					
+					ev_vecs.last_mut().unwrap().push(SourceEvent::Sound(e))
+				    },				
+				    _ => {/* ignore */}
+				}
 			    }
 			}
 		    },
@@ -356,11 +359,11 @@ pub fn construct_cycle(tail: &mut Vec<Expr>, sample_set: &sync::Arc<Mutex<Sample
     let first_char = last_char;
 
     let mut count = 0;
-    let num_events = ev_vec.len();
-    for ev in ev_vec.drain(..) {
+    let num_events = ev_vecs.len();
+    for ev in ev_vecs.drain(..) {
 	let next_char:char = std::char::from_u32(last_char as u32 + 1).unwrap();
 	
-	event_mapping.insert(last_char, vec![SourceEvent::Sound(ev)]);
+	event_mapping.insert(last_char, ev);
 	
 	let mut dur_ev =  Event::with_name("transition".to_string());
 	dur_ev.params.insert(SynthParameter::Duration, Box::new(Parameter::with_value(dur)));
