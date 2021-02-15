@@ -64,7 +64,7 @@ pub fn construct_learn(tail: &mut Vec<Expr>) -> Atom {
 		},
 	    }
 	}
-		    			        	
+	
 	match c {
 	    Atom::Keyword(k) => {
 		match k.as_str() {
@@ -233,7 +233,7 @@ pub fn construct_nucleus(tail: &mut Vec<Expr>) -> Atom {
     let mut ev_vec = Vec::new();
     
     while let Some(Expr::Constant(c)) = tail_drain.next() {
-			
+	
 	match c {
 	    Atom::SoundEvent(e) => ev_vec.push(SourceEvent::Sound(e)),
 	    Atom::ControlEvent(c) => ev_vec.push(SourceEvent::Control(c)),
@@ -305,14 +305,47 @@ pub fn construct_cycle(tail: &mut Vec<Expr>, sample_set: &sync::Arc<Mutex<Sample
 
     // name is the first symbol
     let name: String = get_string_from_expr(&tail_drain.next().unwrap()).unwrap();
-
-    let mut event_mapping = HashMap::<char, Vec<SourceEvent>>::new();
-    let mut duration_mapping = HashMap::<(char,char), Event>::new();    
     
     let mut dur:f32 = 200.0;
+
+    let mut collect_events = false;
+    // collect mapped events, i.e. :events 'a (saw 200) ...
+    let mut collected_evs = Vec::new();    
+    let mut collected_mapping = HashMap::<char, Vec<SourceEvent>>::new();
+    let mut cur_key:String = "".to_string();
+
+    // collect final events in their position in the cycle
     let mut ev_vecs = Vec::new();
     
     while let Some(Expr::Constant(c)) = tail_drain.next() {
+	if collect_events {
+	    match c {
+		Atom::Symbol(ref s) => {
+		    if cur_key != "" && collected_evs.len() != 0 {
+			println!("found event {}", cur_key);
+			collected_mapping.insert(cur_key.chars().next().unwrap(), collected_evs.clone());
+			collected_evs.clear();			
+		    }
+		    cur_key = s.clone();
+		    continue;
+		},
+		Atom::SoundEvent(e) => {
+		    collected_evs.push(SourceEvent::Sound(e));
+		    continue;
+		},
+		Atom::ControlEvent(e) => {
+		    collected_evs.push(SourceEvent::Control(e));
+		    continue;
+		},
+		_ => {
+		    if cur_key != "" && collected_evs.len() != 0 {
+			println!("found event {}", cur_key);
+			collected_mapping.insert(cur_key.chars().next().unwrap(), collected_evs.clone());
+		    }
+		    collect_events = false;
+		},
+	    }
+	}
 			
 	match c {
 	    Atom::Keyword(k) => {
@@ -321,11 +354,14 @@ pub fn construct_cycle(tail: &mut Vec<Expr>, sample_set: &sync::Arc<Mutex<Sample
 			if let Expr::Constant(Atom::Float(n)) = tail_drain.next().unwrap() {
 			    dur = n;
 			}
-		    },		    
+		    },
+		    "events" => {
+			collect_events = true;
+			continue;
+		    },
 		    _ => println!("{}", k)
-		}
-		
-	    },
+		}				
+	    },	    
 	    Atom::Description(d) => {
 		let parsed_cycle = cyc_parser::eval_cyc_from_str(&d, sample_set, out_mode);
 		match parsed_cycle {
@@ -336,12 +372,24 @@ pub fn construct_cycle(tail: &mut Vec<Expr>, sample_set: &sync::Arc<Mutex<Sample
 			    let mut cyc_evs_drain = cyc_evs.drain(..);
 			    while let Some(Some(Expr::Constant(cc))) = cyc_evs_drain.next() {
 				match cc {
+				    Atom::Symbol(s) => {
+					if collected_mapping.contains_key(&s.chars().next().unwrap()) {
+					    ev_vecs
+						.last_mut()
+						.unwrap()
+						.append(collected_mapping
+							.get_mut(&s.chars()
+								 .next()
+								 .unwrap())
+							.unwrap());
+					}
+				    },
 				    Atom::SoundEvent(e) => {					
-					ev_vecs.last_mut().unwrap().push(SourceEvent::Sound(e))
+					ev_vecs.last_mut().unwrap().push(SourceEvent::Sound(e));
 				    },				
 				    _ => {/* ignore */}
 				}
-			    }
+			    }			    
 			}
 		    },
 		    _ => {
@@ -352,11 +400,16 @@ pub fn construct_cycle(tail: &mut Vec<Expr>, sample_set: &sync::Arc<Mutex<Sample
 	    _ => println!{"ignored"}
 	}
     }
-    
-    // collect cycle rules 
-    let mut rules = Vec::new();
+
+    // generated ids
     let mut last_char:char = '!';
     let first_char = last_char;
+    
+    let mut event_mapping = HashMap::<char, Vec<SourceEvent>>::new();
+    let mut duration_mapping = HashMap::<(char,char), Event>::new();    
+    
+    // collect cycle rules 
+    let mut rules = Vec::new();    
 
     let mut count = 0;
     let num_events = ev_vecs.len();

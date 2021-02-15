@@ -181,6 +181,7 @@ pub fn valid_char(chr: char) -> bool {
     return
 	chr == '~' ||
 	chr == '.' ||
+	chr == '\'' ||
 	chr == '_' ||
 	chr == '/' ||
 	chr == '-' ||
