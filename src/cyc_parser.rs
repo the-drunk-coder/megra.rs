@@ -43,6 +43,10 @@ fn parse_cyc_symbol<'a>(i: &'a str) -> IResult<&'a str, Expr, VerboseError<&'a s
     map(parse_symbol, |atom| Expr::Constant(atom))(i)
 }
 
+fn parse_cyc_float<'a>(i: &'a str) -> IResult<&'a str, Expr, VerboseError<&'a str>> {
+    map(parse_float, |atom| Expr::Constant(atom))(i)
+}
+
 fn parse_cyc_application<'a>(i: &'a str) -> IResult<&'a str, Expr, VerboseError<&'a str>> {
     alt((map(separated_pair(alt((parse_cyc_event, parse_custom)), tag(":"), separated_list0(tag(":"), parse_cyc_constant)),
 	     |(head, tail)| {
@@ -63,7 +67,7 @@ fn parse_cyc_expr<'a>(i: &'a str) -> IResult<&'a str, Vec<Expr>, VerboseError<&'
 	char('['),
 	preceded(multispace0, separated_list1(tag(" "), alt((parse_cyc_symbol, parse_cyc_param, parse_cyc_application)))),
 	preceded(multispace0, char(']'))),
-	map(alt((parse_cyc_symbol, parse_cyc_param, parse_cyc_application)), |x| vec![x])
+	map(alt((parse_cyc_symbol, parse_cyc_float, parse_cyc_param, parse_cyc_application)), |x| vec![x])
     ))(i)
     
 }
