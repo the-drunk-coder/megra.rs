@@ -308,6 +308,7 @@ pub fn construct_cycle(tail: &mut Vec<Expr>, sample_set: &sync::Arc<Mutex<Sample
     
     let mut dur:f32 = 200.0;
     let mut repetition_chance:f32 = 0.0;
+    let mut randomize_chance:f32 = 0.0;
     let mut max_repetitions:f32 = 0.0;
 
     let mut dur_vec:Vec<f32> = Vec::new();
@@ -381,6 +382,11 @@ pub fn construct_cycle(tail: &mut Vec<Expr>, sample_set: &sync::Arc<Mutex<Sample
 		    "rep" => {
 			if let Expr::Constant(Atom::Float(n)) = tail_drain.next().unwrap() {
 			    repetition_chance = n;
+			}
+		    },
+		    "rnd" => {
+			if let Expr::Constant(Atom::Float(n)) = tail_drain.next().unwrap() {
+			    randomize_chance = n;
 			}
 		    },
 		    "max-rep" => {
@@ -532,7 +538,15 @@ pub fn construct_cycle(tail: &mut Vec<Expr>, sample_set: &sync::Arc<Mutex<Sample
 	}.to_pfa_rule());
     }
         
-    let pfa = Pfa::<char>::infer_from_rules(&mut rules);
+    let mut pfa = Pfa::<char>::infer_from_rules(&mut rules);
+
+    // this seems to be heavy ...
+    // what's so heavy here ??
+    if randomize_chance >= 0.0 {
+	pfa.randomize_edges(randomize_chance, randomize_chance);
+	pfa.rebalance();
+    }
+    
     let mut id_tags = BTreeSet::new();
     id_tags.insert(name.clone());
 
