@@ -78,7 +78,7 @@ fn parse_cyc<'a>(i: &'a str) -> IResult<&'a str, Vec<Vec<Expr>>, VerboseError<&'
 
 /// eval cyc substrings ...
 pub fn eval_cyc_from_str(src: &str, sample_set: &sync::Arc<Mutex<SampleSet>>, out_mode: OutputMode) -> Result<Vec<Vec<Option<Expr>>>, String> {
-    parse_cyc(src)
+    parse_cyc(src.trim())
 	.map_err(|e: nom::Err<VerboseError<&str>>| {let ret = format!("{:#?}", e); println!("{}", ret); ret})
 	.and_then(|(_, exp_vecs)| Ok(exp_vecs.into_iter().map(|exp_vec| {
 	    let mut eval_exps = Vec::new();	    
