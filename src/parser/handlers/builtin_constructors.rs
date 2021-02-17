@@ -14,6 +14,7 @@ use crate::cyc_parser;
 use crate::session::OutputMode;
 use crate::sample_set::SampleSet;
 
+
 pub fn construct_learn(tail: &mut Vec<Expr>) -> Atom {
     let mut tail_drain = tail.drain(..);
     
@@ -306,6 +307,8 @@ pub fn construct_cycle(tail: &mut Vec<Expr>, sample_set: &sync::Arc<Mutex<Sample
     let name: String = get_string_from_expr(&tail_drain.next().unwrap()).unwrap();
     
     let mut dur:f32 = 200.0;
+    let mut repetition_chance:f32 = 0.0;
+    let mut max_repetitions:f32 = 0.0;
 
     let mut dur_vec:Vec<f32> = Vec::new();
     
@@ -373,6 +376,16 @@ pub fn construct_cycle(tail: &mut Vec<Expr>, sample_set: &sync::Arc<Mutex<Sample
 		    "dur" => {
 			if let Expr::Constant(Atom::Float(n)) = tail_drain.next().unwrap() {
 			    dur = n;
+			}
+		    },
+		    "rep" => {
+			if let Expr::Constant(Atom::Float(n)) = tail_drain.next().unwrap() {
+			    repetition_chance = n;
+			}
+		    },
+		    "max-rep" => {
+			if let Expr::Constant(Atom::Float(n)) = tail_drain.next().unwrap() {
+			    max_repetitions = n;
 			}
 		    },
 		    "events" => {
@@ -457,13 +470,46 @@ pub fn construct_cycle(tail: &mut Vec<Expr>, sample_set: &sync::Arc<Mutex<Sample
 	dur_ev.params.insert(SynthParameter::Duration, Box::new(Parameter::with_value(dur_vec[count])));
 	duration_mapping.insert((last_char, next_char), dur_ev);
 
-	if count < num_events - 1 {	    
-	    rules.push(Rule {
-		source: vec![last_char],
-		symbol: next_char,
-		probability: 1.0,
-		duration: dur as u64,
-	    }.to_pfa_rule());
+	if count < num_events - 1 {	    	    
+	    if repetition_chance > 0.0 {		
+		// repetition rule
+		rules.push(Rule {
+		    source: vec![last_char],
+		    symbol: last_char,
+		    probability: repetition_chance / 100.0,
+		    duration: dur as u64,
+		}.to_pfa_rule());
+
+		// next rule
+		rules.push(Rule {
+		    source: vec![last_char],
+		    symbol: next_char,
+		    probability: 1.0 - (repetition_chance / 100.0),
+		    duration: dur as u64,
+		}.to_pfa_rule());
+
+		// endless repetition allowed per default ...
+		if max_repetitions >= 2.0 {
+		    let mut max_rep_source = Vec::new();
+		    for _ in 0..max_repetitions as usize {
+			max_rep_source.push(last_char);
+		    }
+		    // max repetition rule
+		    rules.push(Rule {
+			source: max_rep_source,
+			symbol: next_char,
+			probability: 1.0,
+			duration: dur as u64,
+		    }.to_pfa_rule());
+		}				
+	    } else {
+		rules.push(Rule {
+		    source: vec![last_char],
+		    symbol: next_char,
+		    probability: 1.0,
+		    duration: dur as u64,
+		}.to_pfa_rule());	
+	    }
 	    
 	    last_char = next_char;
 	}

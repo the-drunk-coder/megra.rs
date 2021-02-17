@@ -8,7 +8,7 @@ use parking_lot::Mutex;
 use nom::{
     branch::alt,
     bytes::complete::{tag, take_while},
-    character::complete::{alphanumeric1, char, multispace0},
+    character::complete::{char, multispace0},
     number::complete::float,
     character::{is_alphanumeric, is_space},
     combinator::{cut, map, map_res, recognize},
@@ -158,14 +158,14 @@ pub fn parse_bool<'a>(i: &'a str) -> IResult<&'a str, Atom, VerboseError<&'a str
 
 fn parse_keyword<'a>(i: &'a str) -> IResult<&'a str, Atom, VerboseError<&'a str>> {
     map(
-	context("keyword", preceded(tag(":"), cut(alphanumeric1))),
+	context("keyword", preceded(tag(":"), take_while(valid_fun_name_char))),
 	|sym_str: &str| Atom::Keyword(sym_str.to_string()),
     )(i)
 }
 
 pub fn parse_symbol<'a>(i: &'a str) -> IResult<&'a str, Atom, VerboseError<&'a str>> {
     map(
-	context("symbol", preceded(tag("'"), cut(alphanumeric1))),
+	context("symbol", preceded(tag("'"), take_while(valid_fun_name_char))),
 	|sym_str: &str| Atom::Symbol(sym_str.to_string()),
     )(i)
 }
