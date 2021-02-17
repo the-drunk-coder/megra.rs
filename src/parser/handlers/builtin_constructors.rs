@@ -224,7 +224,12 @@ pub fn construct_nucleus(tail: &mut Vec<Expr>) -> Atom {
     let mut tail_drain = tail.drain(..);
     
     // name is the first symbol
-    let name: String = get_string_from_expr(&tail_drain.next().unwrap()).unwrap();
+    // name is the first symbol    
+    let name = if let Some(n) = get_string_from_expr(&tail_drain.next().unwrap()) {
+	n
+    } else {
+	"".to_string()
+    };
 
     let mut event_mapping = HashMap::<char, Vec<SourceEvent>>::new();
     let mut duration_mapping = HashMap::<(char,char), Event>::new();
@@ -303,8 +308,12 @@ pub fn construct_cycle(tail: &mut Vec<Expr>, sample_set: &sync::Arc<Mutex<Sample
 
     let mut tail_drain = tail.drain(..);
 
-    // name is the first symbol
-    let name: String = get_string_from_expr(&tail_drain.next().unwrap()).unwrap();
+    // name is the first symbol    
+    let name = if let Some(n) = get_string_from_expr(&tail_drain.next().unwrap()) {
+	n
+    } else {
+	"".to_string()
+    };
     
     let mut dur:f32 = 200.0;
     let mut repetition_chance:f32 = 0.0;
@@ -478,6 +487,7 @@ pub fn construct_cycle(tail: &mut Vec<Expr>, sample_set: &sync::Arc<Mutex<Sample
 
 	if count < num_events - 1 {	    	    
 	    if repetition_chance > 0.0 {		
+		println!("add rep chance");
 		// repetition rule
 		rules.push(Rule {
 		    source: vec![last_char],
@@ -542,7 +552,8 @@ pub fn construct_cycle(tail: &mut Vec<Expr>, sample_set: &sync::Arc<Mutex<Sample
 
     // this seems to be heavy ...
     // what's so heavy here ??
-    if randomize_chance >= 0.0 {
+    if randomize_chance > 0.0 {
+	//println!("add rnd chance");
 	pfa.randomize_edges(randomize_chance, randomize_chance);
 	pfa.rebalance();
     }
