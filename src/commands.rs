@@ -15,18 +15,20 @@ pub fn load_sample<const BUFSIZE:usize, const NCHAN:usize>(ruffbox: &sync::Arc<M
     let mut sample_buffer:Vec<f32> = Vec::new();
     let mut reader = claxon::FlacReader::open(path.clone()).unwrap();
     
-    println!("sample path: {} channels: {}", path, reader.streaminfo().channels);
     let mut duration = if let Some(samples) = reader.streaminfo().samples {
-	1000 * ((samples / reader.streaminfo().channels as u64) / reader.streaminfo().sample_rate as u64) as usize
+	let tmp_dur = 1000.0 * ((samples as f32 / reader.streaminfo().channels as f32) / reader.streaminfo().sample_rate as f32);
+	tmp_dur as usize	    	    
     } else {
 	200
     };
+    
     // max ten seconds
     if duration > 10000 {
 	duration = 10000;
     }
-    
-    
+
+    println!("sample path: {} channels: {} dur: {}", path, reader.streaminfo().channels, duration);
+        
     // decode to f32
     let max_val = (i32::MAX >> (32 - reader.streaminfo().bits_per_sample)) as f32;
     for sample in reader.samples() {
