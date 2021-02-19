@@ -77,6 +77,7 @@ impl<'a> epi::App for MegraEditor<'a> {
 	self.function_names.push("learn");
 	self.function_names.push("pear");
 	self.function_names.push("nuc");
+	self.function_names.push("fully");
 	self.function_names.push("sx");
 	self.function_names.push("cyc");
 	self.function_names.push("xspread");

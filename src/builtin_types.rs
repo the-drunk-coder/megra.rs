@@ -101,9 +101,10 @@ pub enum BuiltInConstructor {
     Rule,
     Nucleus,
     Cycle,
+    Fully,
     // Flower,
     // Friendship,
-    // Fully,
+    
     // Chop,
     // Pseq, ?
     
