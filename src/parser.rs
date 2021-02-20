@@ -82,6 +82,7 @@ fn parse_constructors<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<
 	map(tag("nuc"), |_| BuiltIn::Constructor(BuiltInConstructor::Nucleus)),
 	map(tag("cyc"), |_| BuiltIn::Constructor(BuiltInConstructor::Cycle)),
 	map(tag("fully"), |_| BuiltIn::Constructor(BuiltInConstructor::Fully)),
+	map(tag("flower"), |_| BuiltIn::Constructor(BuiltInConstructor::Flower)),
     ))(i)
 }
 
