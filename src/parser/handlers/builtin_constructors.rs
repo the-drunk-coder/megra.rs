@@ -36,6 +36,8 @@ pub fn construct_learn(tail: &mut Vec<Expr>) -> Atom {
     
     let mut ev_vec = Vec::new();
     let mut cur_key:String = "".to_string();
+
+    let mut autosilence = false;
     
     while let Some(Expr::Constant(c)) = tail_drain.next() {
 	
@@ -100,11 +102,20 @@ pub fn construct_learn(tail: &mut Vec<Expr>) -> Atom {
 			    pfa_size = n as usize;
 			}
 		    },
+		    "autosilence" => {
+			if let Expr::Constant(Atom::Boolean(b)) = tail_drain.next().unwrap() {
+			    autosilence = b;
+			}
+		    },
 		    _ => println!("{}", k)
 		}
 	    }
 	    _ => println!{"ignored"}
 	}
+    }
+
+    if autosilence {
+	event_mapping.insert('~', vec![SourceEvent::Sound(Event::with_name("silence".to_string()))]);
     }
     
     let s_v: std::vec::Vec<char> = sample.chars().collect();
