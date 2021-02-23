@@ -28,7 +28,10 @@ pub fn construct_learn(tail: &mut Vec<Expr>) -> Atom {
     let mut event_mapping = HashMap::<char, Vec<SourceEvent>>::new();
     
     let mut collect_events = false;
-
+    let mut bound = 3;
+    let mut epsilon = 0.01;
+    let mut pfa_size = 30;
+    
     let mut dur = 200;
     
     let mut ev_vec = Vec::new();
@@ -82,6 +85,21 @@ pub fn construct_learn(tail: &mut Vec<Expr>) -> Atom {
 			    dur = n as i32;
 			}
 		    },
+		    "bound" => {
+			if let Expr::Constant(Atom::Float(n)) = tail_drain.next().unwrap() {
+			    bound = n as usize;
+			}
+		    },
+		    "epsilon" => {
+			if let Expr::Constant(Atom::Float(n)) = tail_drain.next().unwrap() {
+			    epsilon = n;
+			}
+		    },
+		    "size" => {
+			if let Expr::Constant(Atom::Float(n)) = tail_drain.next().unwrap() {
+			    pfa_size = n as usize;
+			}
+		    },
 		    _ => println!("{}", k)
 		}
 	    }
@@ -90,7 +108,7 @@ pub fn construct_learn(tail: &mut Vec<Expr>) -> Atom {
     }
     
     let s_v: std::vec::Vec<char> = sample.chars().collect();
-    let pfa = Pfa::<char>::learn(&s_v, 3, 0.01, 30);
+    let pfa = Pfa::<char>::learn(&s_v, bound, epsilon, pfa_size);
     let mut id_tags = BTreeSet::new();
     id_tags.insert(name.clone());
     
