@@ -97,7 +97,10 @@ pub fn interpret<const BUFSIZE:usize, const NCHAN:usize>(parsed_in: Expr,
 		},
 		Command::GlobRes(v) => {
 		    commands::set_global_lifemodel_resources(global_parameters, v);
-		}		
+		}
+		Command::GlobalRuffboxParams(m) => {
+		    commands::set_global_ruffbox_parameters(ruffbox, &m);
+		}
 	    };	    
 	},
 	Expr::Constant(Atom::Float(f)) => {

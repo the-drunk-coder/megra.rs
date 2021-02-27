@@ -7,6 +7,8 @@ use crate::session::SyncContext;
 use std::collections::HashMap;
 use dashmap::DashMap;
 
+use ruffbox_synth::ruffbox::synth::SynthParameter;
+
 pub enum Part {
     Combined(Vec<Generator>, Vec<PartProxy>)
 }
@@ -113,6 +115,8 @@ pub enum BuiltInCommand {
     Clear,
     Tmod,
     GlobRes,
+    Delay,
+    Reverb,
     LoadSample,
     LoadSampleSets,
     LoadSampleSet,
@@ -136,9 +140,10 @@ pub enum BuiltIn {
 }
 
 pub enum Command {
-    Clear,
-    Tmod(Parameter),
-    GlobRes(f32),
+    Clear, // clear the entire session
+    Tmod(Parameter), // set global time mod parameter 
+    GlobRes(f32), // global resources for lifemodel algorithm
+    GlobalRuffboxParams(HashMap<SynthParameter, f32>), // global ruffbox params    
     LoadSample((String, Vec<String>, String)) ,// set (events), keyword, path
     LoadSampleSet(String), // set path
     LoadSampleSets(String), // top level sets set path

@@ -76,6 +76,8 @@ impl<'a> epi::App for MegraEditor<'a> {
 	self.function_names.push("tmod");
 	self.function_names.push("global-resources");
 	self.function_names.push("learn");
+	self.function_names.push("delay");
+	self.function_names.push("reverb");
 	self.function_names.push("pear");
 	self.function_names.push("nuc");
 	self.function_names.push("fully");

@@ -1,7 +1,7 @@
-use std::{fs, sync, path::Path, collections::HashSet};
+use std::{fs, sync, path::Path, collections::{HashSet, HashMap}};
 use parking_lot::Mutex;
 
-use ruffbox_synth::ruffbox::Ruffbox;
+use ruffbox_synth::ruffbox::{Ruffbox, synth::SynthParameter};
 
 use crate::sample_set::SampleSet;
 use crate::builtin_types::*;
@@ -133,4 +133,12 @@ pub fn set_global_tmod(global_parameters: &sync::Arc<GlobalParameters>, p: Param
 pub fn set_global_lifemodel_resources(global_parameters: &sync::Arc<GlobalParameters>, val: f32) {    
     global_parameters.insert(BuiltinGlobalParameters::LifemodelGlobalResources,
 			     ConfigParameter::Numeric(val)); // init on first attempt 
+}
+
+pub fn set_global_ruffbox_parameters<const BUFSIZE:usize, const NCHAN:usize>(ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>,
+									     params: &HashMap<SynthParameter, f32>) {
+    let mut rb = ruffbox.lock();
+    for (k,v) in params.iter() {
+	rb.set_master_parameter(*k,*v);
+    }
 }

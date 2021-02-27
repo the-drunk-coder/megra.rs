@@ -267,6 +267,7 @@ impl <const BUFSIZE:usize, const NCHAN:usize> Session<BUFSIZE, NCHAN> {
 	    //////////////////////////////////////
 	    // THE MAIN TIME RECURSION LOOP!!!  //
 	    //////////////////////////////////////
+
 	    // yes, here it is ... the evaluation function ...
 	    // or better, the inside part of the time recursion
 	    let eval_loop = |data: &mut SchedulerData<BUFSIZE, NCHAN>| -> f64 {
@@ -322,6 +323,8 @@ impl <const BUFSIZE:usize, const NCHAN:usize> Session<BUFSIZE, NCHAN> {
 		    }
 		}
 
+		// global tempo modifier, allows us to do weird stuff with the
+		// global tempo ...
 		let mut tmod:f64 = 1.0;
 		
 		if let ConfigParameter::Dynamic(global_tmod) = data.global_parameters	    

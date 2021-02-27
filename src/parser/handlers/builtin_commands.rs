@@ -1,6 +1,10 @@
+use std::collections::HashMap;
+
 use crate::builtin_types::*;
 use crate::parser::parser_helpers::*;
 use crate::parameter::*;
+
+use ruffbox_synth::ruffbox::synth::SynthParameter;
 
 fn handle_load_part(tail: &mut Vec<Expr>) -> Atom {
     let mut tail_drain = tail.drain(..);
@@ -112,10 +116,87 @@ fn handle_globres(tail: &mut Vec<Expr>) -> Atom {
     }))
 }
 
+fn handle_reverb(tail: &mut Vec<Expr>) -> Atom {
+
+    let mut tail_drain = tail.drain(..);
+    let mut param_map = HashMap::new();
+    
+    while let Some(Expr::Constant(c)) = tail_drain.next() {		
+	match c {
+	    Atom::Keyword(k) => {
+		match k.as_str() {
+		    "damp" => {
+			if let Some(Expr::Constant(Atom::Float(f))) = tail_drain.next() {
+			    param_map.insert(SynthParameter::ReverbDampening, f);
+			}			
+		    },
+		    "mix" => {
+			if let Some(Expr::Constant(Atom::Float(f))) = tail_drain.next() {
+			    param_map.insert(SynthParameter::ReverbMix, f.clamp(0.01, 0.99));
+			}			
+		    },
+		    "roomsize" => {
+			if let Some(Expr::Constant(Atom::Float(f))) = tail_drain.next() {
+			    param_map.insert(SynthParameter::ReverbRoomsize, f.clamp(0.01, 0.99));
+			}			
+		    },
+		    
+		    _ => println!("{}", k)
+		}
+	    }
+	    _ => println!{"ignored"}
+	}
+    }
+    
+    Atom::Command(Command::GlobalRuffboxParams(param_map))
+}
+
+fn handle_delay(tail: &mut Vec<Expr>) -> Atom {
+
+    let mut tail_drain = tail.drain(..);
+    let mut param_map = HashMap::new();
+    
+    while let Some(Expr::Constant(c)) = tail_drain.next() {		
+	match c {
+	    Atom::Keyword(k) => {
+		match k.as_str() {
+		    "damp-freq" => {
+			if let Some(Expr::Constant(Atom::Float(f))) = tail_drain.next() {
+			    param_map.insert(SynthParameter::DelayDampeningFrequency, f.clamp(20.0, 18000.0));
+			}			
+		    },
+		    "feedback" => {
+			if let Some(Expr::Constant(Atom::Float(f))) = tail_drain.next() {
+			    param_map.insert(SynthParameter::DelayFeedback, f.clamp(0.01, 0.99));
+			}			
+		    },
+		    "mix" => {
+			if let Some(Expr::Constant(Atom::Float(f))) = tail_drain.next() {
+			    param_map.insert(SynthParameter::DelayMix, f.clamp(0.01, 0.99));
+			}			
+		    },
+		    "time" => {
+			if let Some(Expr::Constant(Atom::Float(f))) = tail_drain.next() {
+			    param_map.insert(SynthParameter::DelayTime, (f / 1000.0).clamp(0.01, 1.99));
+			}			
+		    },
+		    
+		    _ => println!("{}", k)
+		}
+	    }
+	    _ => println!{"ignored"}
+	}
+    }
+    
+    Atom::Command(Command::GlobalRuffboxParams(param_map))
+}
+
 pub fn handle(cmd: BuiltInCommand, tail: &mut Vec<Expr>) -> Atom {
     match cmd {
 	BuiltInCommand::Clear => Atom::Command(Command::Clear),
 	BuiltInCommand::Tmod => handle_tmod(tail),
+	BuiltInCommand::Reverb => handle_reverb(tail),
+	BuiltInCommand::Delay => handle_delay(tail),
 	BuiltInCommand::GlobRes => handle_globres(tail),
 	BuiltInCommand::LoadSample => handle_load_sample(tail),
 	BuiltInCommand::LoadSampleSet => handle_load_sample_set(tail),
