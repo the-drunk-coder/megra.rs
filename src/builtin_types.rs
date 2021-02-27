@@ -112,6 +112,7 @@ pub enum BuiltInConstructor {
 pub enum BuiltInCommand {
     Clear,
     Tmod,
+    GlobRes,
     LoadSample,
     LoadSampleSets,
     LoadSampleSet,
@@ -137,6 +138,7 @@ pub enum BuiltIn {
 pub enum Command {
     Clear,
     Tmod(Parameter),
+    GlobRes(f32),
     LoadSample((String, Vec<String>, String)) ,// set (events), keyword, path
     LoadSampleSet(String), // set path
     LoadSampleSets(String), // top level sets set path

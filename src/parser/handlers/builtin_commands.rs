@@ -96,7 +96,6 @@ fn handle_load_sample_set(tail: &mut Vec<Expr>) -> Atom {
 }
 
 fn handle_tmod(tail: &mut Vec<Expr>) -> Atom {
-
     let mut tail_drain = tail.drain(..);    	
     Atom::Command(Command::Tmod(match tail_drain.next() {
 	Some(Expr::Constant(Atom::Parameter(p))) => p,
@@ -105,10 +104,19 @@ fn handle_tmod(tail: &mut Vec<Expr>) -> Atom {
     }))
 }
 
+fn handle_globres(tail: &mut Vec<Expr>) -> Atom {
+    let mut tail_drain = tail.drain(..);    	
+    Atom::Command(Command::GlobRes(match tail_drain.next() {	
+	Some(Expr::Constant(Atom::Float(f))) => f,
+	_ => 400000.0,
+    }))
+}
+
 pub fn handle(cmd: BuiltInCommand, tail: &mut Vec<Expr>) -> Atom {
     match cmd {
 	BuiltInCommand::Clear => Atom::Command(Command::Clear),
 	BuiltInCommand::Tmod => handle_tmod(tail),
+	BuiltInCommand::GlobRes => handle_globres(tail),
 	BuiltInCommand::LoadSample => handle_load_sample(tail),
 	BuiltInCommand::LoadSampleSet => handle_load_sample_set(tail),
 	BuiltInCommand::LoadSampleSets => handle_load_sample_sets(tail),

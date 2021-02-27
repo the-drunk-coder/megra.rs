@@ -24,8 +24,7 @@ pub struct MegraEditor<'a> {
     #[serde(skip)]
     function_names: Vec<&'a str>,
     #[serde(skip)]
-    colors: HashMap<egui::CodeColors, egui::Color32>
-    
+    colors: HashMap<egui::CodeColors, egui::Color32>    
 }
 
 impl <'a> Default for MegraEditor<'a> {
@@ -75,6 +74,7 @@ impl<'a> epi::App for MegraEditor<'a> {
 
 	self.function_names.push("apple");
 	self.function_names.push("tmod");
+	self.function_names.push("global-resources");
 	self.function_names.push("learn");
 	self.function_names.push("pear");
 	self.function_names.push("nuc");

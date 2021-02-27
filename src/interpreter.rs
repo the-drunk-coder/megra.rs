@@ -94,10 +94,11 @@ pub fn interpret<const BUFSIZE:usize, const NCHAN:usize>(parsed_in: Expr,
 		},
 		Command::Tmod(p) => {
 		    commands::set_global_tmod(global_parameters, p);
-		}
-		
-	    };
-	    
+		},
+		Command::GlobRes(v) => {
+		    commands::set_global_lifemodel_resources(global_parameters, v);
+		}		
+	    };	    
 	},
 	Expr::Constant(Atom::Float(f)) => {
 	    println!("a number: {}", f)

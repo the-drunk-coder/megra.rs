@@ -51,6 +51,7 @@ fn parse_commands<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<&'a 
     alt((		
 	map(tag("clear"), |_| BuiltIn::Command(BuiltInCommand::Clear)),
 	map(tag("tmod"), |_| BuiltIn::Command(BuiltInCommand::Tmod)),
+	map(tag("global-resources"), |_| BuiltIn::Command(BuiltInCommand::GlobRes)),
 	map(tag("load-sets"), |_| BuiltIn::Command(BuiltInCommand::LoadSampleSets)),
 	map(tag("load-set"), |_| BuiltIn::Command(BuiltInCommand::LoadSampleSet)),
 	map(tag("load-sample"), |_| BuiltIn::Command(BuiltInCommand::LoadSample)),

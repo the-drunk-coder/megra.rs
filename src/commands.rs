@@ -129,3 +129,8 @@ pub fn set_global_tmod(global_parameters: &sync::Arc<GlobalParameters>, p: Param
     global_parameters.insert(BuiltinGlobalParameters::GlobalTimeModifier,
 			     ConfigParameter::Dynamic(p)); // init on first attempt 
 }
+
+pub fn set_global_lifemodel_resources(global_parameters: &sync::Arc<GlobalParameters>, val: f32) {    
+    global_parameters.insert(BuiltinGlobalParameters::LifemodelGlobalResources,
+			     ConfigParameter::Numeric(val)); // init on first attempt 
+}
