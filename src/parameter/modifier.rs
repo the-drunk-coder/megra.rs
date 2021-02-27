@@ -9,20 +9,20 @@ pub trait Modifier: ModifierClone {
 }
 
 pub trait ModifierClone {
-    fn clone_box(&self) -> Box<dyn Modifier + Send>;
+    fn clone_box(&self) -> Box<dyn Modifier + Send + Sync>;
 }
 
 impl<T> ModifierClone for T
 where
-    T: 'static + Modifier + Clone + Send,
+    T: 'static + Modifier + Clone + Send + Sync,
 {
-    fn clone_box(&self) -> Box<dyn Modifier + Send> {
+    fn clone_box(&self) -> Box<dyn Modifier + Send + Sync> {
         Box::new(self.clone())
     }
 }
 
-impl Clone for Box<dyn Modifier + Send> {
-    fn clone(&self) -> Box<dyn Modifier + Send> {
+impl Clone for Box<dyn Modifier + Send + Sync> {
+    fn clone(&self) -> Box<dyn Modifier + Send + Sync> {
         self.clone_box()
     }
 }

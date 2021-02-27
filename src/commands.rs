@@ -5,6 +5,7 @@ use ruffbox_synth::ruffbox::Ruffbox;
 
 use crate::sample_set::SampleSet;
 use crate::builtin_types::*;
+use crate::parameter::*;
 
 pub fn load_sample<const BUFSIZE:usize, const NCHAN:usize>(ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>,
 							   sample_set: &sync::Arc<Mutex<SampleSet>>,
@@ -123,4 +124,8 @@ pub fn load_part(parts_store: &sync::Arc<Mutex<PartsStore>>, name: String, part:
     let mut ps = parts_store.lock();
     ps.insert(name, part);
 }
-    
+
+pub fn set_global_tmod(global_parameters: &sync::Arc<GlobalParameters>, p: Parameter) {    
+    global_parameters.insert(BuiltinGlobalParameters::GlobalTimeModifier,
+			     ConfigParameter::Dynamic(p)); // init on first attempt 
+}

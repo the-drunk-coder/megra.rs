@@ -9,7 +9,8 @@ use crate::scheduler::{Scheduler, SchedulerData};
 use crate::generator::Generator;
 use crate::event::{InterpretableEvent};
 use crate::event_helpers::*;
-use crate::builtin_types::{Part, PartProxy, PartsStore, GlobalParameters};
+use crate::builtin_types::{Part, PartProxy, PartsStore, GlobalParameters, BuiltinGlobalParameters, ConfigParameter};
+use crate::parameter::*;
 
 #[derive(Clone,Copy,PartialEq)]
 pub enum OutputMode {
@@ -39,8 +40,7 @@ pub struct Session <const BUFSIZE:usize, const NCHAN:usize> {
 }
 
 // basically a bfs on a dag ! 
-fn resolve_proxy(parts_store: &PartsStore,
-		 //visited: &mut BTreeSet<String>,
+fn resolve_proxy(parts_store: &PartsStore,		 
 		 proxy: PartProxy,
 		 generators: &mut Vec<Generator>) {
     match proxy {
@@ -263,8 +263,11 @@ impl <const BUFSIZE:usize, const NCHAN:usize> Session<BUFSIZE, NCHAN> {
 	    
 	    // otherwise, create new sched and data ...
 	    let mut sched = Scheduler::<BUFSIZE, NCHAN>::new();
-	    
-	    // the evaluation function ...
+
+	    //////////////////////////////////////
+	    // THE MAIN TIME RECURSION LOOP!!!  //
+	    //////////////////////////////////////
+	    // yes, here it is ... the evaluation function ...
 	    // or better, the inside part of the time recursion
 	    let eval_loop = |data: &mut SchedulerData<BUFSIZE, NCHAN>| -> f64 {
 		
@@ -318,8 +321,18 @@ impl <const BUFSIZE:usize, const NCHAN:usize> Session<BUFSIZE, NCHAN> {
 			}
 		    }
 		}
+
+		let mut tmod:f64 = 1.0;
+		
+		if let ConfigParameter::Dynamic(global_tmod) = data.global_parameters	    
+		    .entry(BuiltinGlobalParameters::GlobalTimeModifier)
+		    .or_insert(ConfigParameter::Dynamic(Parameter::with_value(1.0))) // init on first attempt 
+		    .value_mut()
+		{		    
+		    tmod = global_tmod.evaluate() as f64;		    
+		}
 				
-		(data.generator.current_transition(&data.global_parameters).params[&SynthParameter::Duration] as f64 * 0.001) as f64
+		(data.generator.current_transition(&data.global_parameters).params[&SynthParameter::Duration] as f64 * 0.001 * tmod) as f64
 	    };
 	    
 	    sched.start(eval_loop, sync::Arc::clone(&sched_data));

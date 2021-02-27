@@ -8,7 +8,7 @@ use rand::Rng;
 pub struct Parameter {
     pub val: f32,
     pub static_val: f32,
-    pub modifier: Option<Box<dyn Modifier + Send>>,
+    pub modifier: Option<Box<dyn Modifier + Send + Sync>>,
 }
 
 impl Parameter {

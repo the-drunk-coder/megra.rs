@@ -7,7 +7,6 @@ use crate::session::SyncContext;
 use std::collections::HashMap;
 use dashmap::DashMap;
 
-//pub type SampleSet = HashMap<String, Vec<(HashSet<String>, usize)>>;
 pub enum Part {
     Combined(Vec<Generator>, Vec<PartProxy>)
 }
@@ -19,13 +18,15 @@ pub type PartsStore = HashMap<String, Part>;
 #[derive(Clone)]
 pub enum ConfigParameter {
     Numeric(f32),
+    Dynamic(Parameter),
     Symbolic(String)
 }
 
 // only one so far 
 #[derive(Clone, PartialEq, Eq, Hash)]
 pub enum BuiltinGlobalParameters {
-    LifemodelGlobalResources,    
+    LifemodelGlobalResources,
+    GlobalTimeModifier,
 }
 
 pub type GlobalParameters = DashMap<BuiltinGlobalParameters, ConfigParameter>;
@@ -38,7 +39,7 @@ pub enum BuiltInParameterEvent {
     Sustain(EventOperation),
     ChannelPosition(EventOperation),    
     Level(EventOperation),
-    Duration(EventOperation),    
+    Duration(EventOperation),
     Reverb(EventOperation),
     Delay(EventOperation),
     LpFreq(EventOperation),
@@ -110,6 +111,7 @@ pub enum BuiltInConstructor {
 
 pub enum BuiltInCommand {
     Clear,
+    Tmod,
     LoadSample,
     LoadSampleSets,
     LoadSampleSet,
@@ -134,6 +136,7 @@ pub enum BuiltIn {
 
 pub enum Command {
     Clear,
+    Tmod(Parameter),
     LoadSample((String, Vec<String>, String)) ,// set (events), keyword, path
     LoadSampleSet(String), // set path
     LoadSampleSets(String), // top level sets set path

@@ -1,5 +1,6 @@
 use crate::builtin_types::*;
 use crate::parser::parser_helpers::*;
+use crate::parameter::*;
 
 fn handle_load_part(tail: &mut Vec<Expr>) -> Atom {
     let mut tail_drain = tail.drain(..);
@@ -94,9 +95,20 @@ fn handle_load_sample_set(tail: &mut Vec<Expr>) -> Atom {
     Atom::Command(Command::LoadSampleSet(path.to_string()))
 }
 
+fn handle_tmod(tail: &mut Vec<Expr>) -> Atom {
+
+    let mut tail_drain = tail.drain(..);    	
+    Atom::Command(Command::Tmod(match tail_drain.next() {
+	Some(Expr::Constant(Atom::Parameter(p))) => p,
+	Some(Expr::Constant(Atom::Float(f))) => Parameter::with_value(f),
+	_ => Parameter::with_value(1.0)
+    }))
+}
+
 pub fn handle(cmd: BuiltInCommand, tail: &mut Vec<Expr>) -> Atom {
     match cmd {
 	BuiltInCommand::Clear => Atom::Command(Command::Clear),
+	BuiltInCommand::Tmod => handle_tmod(tail),
 	BuiltInCommand::LoadSample => handle_load_sample(tail),
 	BuiltInCommand::LoadSampleSet => handle_load_sample_set(tail),
 	BuiltInCommand::LoadSampleSets => handle_load_sample_sets(tail),

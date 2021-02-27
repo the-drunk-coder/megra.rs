@@ -91,7 +91,11 @@ pub fn interpret<const BUFSIZE:usize, const NCHAN:usize>(parsed_in: Expr,
 		Command::LoadPart((name, part)) => {
 		    commands::load_part(parts_store, name, part);
 		    println!("a command (load part)");
+		},
+		Command::Tmod(p) => {
+		    commands::set_global_tmod(global_parameters, p);
 		}
+		
 	    };
 	    
 	},
