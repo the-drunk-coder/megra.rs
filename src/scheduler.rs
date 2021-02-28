@@ -13,6 +13,12 @@ pub struct Scheduler<const BUFSIZE: usize, const NCHAN: usize> {
     pub running: sync::Arc<AtomicBool>,
 }
 
+impl<const BUFSIZE: usize, const NCHAN: usize> Default for Scheduler<BUFSIZE, NCHAN> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 pub struct SchedulerData<const BUFSIZE: usize, const NCHAN: usize> {
     pub start_time: Instant,
     pub stream_time: f64,

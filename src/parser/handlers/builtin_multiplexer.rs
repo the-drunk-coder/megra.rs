@@ -115,8 +115,7 @@ fn spread_proxies(mul: &BuiltInMultiplexer, proxies: &mut Vec<PartProxy>, out_mo
                 }
             };
 
-            let mut i = 0;
-            for prox in proxies.iter_mut() {
+            for (i, prox) in proxies.iter_mut().enumerate() {
                 let mut p = PearProcessor::new();
                 let mut ev =
                     Event::with_name_and_operation("pos".to_string(), EventOperation::Replace);
@@ -131,7 +130,6 @@ fn spread_proxies(mul: &BuiltInMultiplexer, proxies: &mut Vec<PartProxy>, out_mo
                 match prox {
                     PartProxy::Proxy(_, ref mut procs) => procs.push(Box::new(p)),
                 }
-                i += 1;
             }
         }
         _ => {}
@@ -150,8 +148,7 @@ pub fn handle(mul: &BuiltInMultiplexer, tail: &mut Vec<Expr>, out_mode: OutputMo
                 gen_proc_list_list.push(gpl);
             }
             Atom::GeneratorProcessor(gp) => {
-                let mut gpl = Vec::new();
-                gpl.push(gp);
+                let gpl = vec![gp];
                 gen_proc_list_list.push(gpl);
             }
             Atom::GeneratorModifierFunction(_gm) => {

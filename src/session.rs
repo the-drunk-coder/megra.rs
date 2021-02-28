@@ -97,15 +97,14 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
             let ps = parts_store.lock();
 
             let mut gens = Vec::new();
-            let mut prox_drain = ctx.part_proxies.drain(..);
 
-            while let Some(p) = prox_drain.next() {
+            for p in ctx.part_proxies.drain(..) {
                 resolve_proxy(&ps, p, &mut gens);
             }
 
-            for i in 0..gens.len() {
-                gens[i].id_tags.insert(format!("prox-{}", i));
-                gens[i].id_tags.insert(ctx.name.clone());
+            for (i, gen) in gens.iter_mut().enumerate() {
+                gen.id_tags.insert(format!("prox-{}", i));
+                gen.id_tags.insert(ctx.name.clone());
             }
 
             ctx.generators.append(&mut gens);

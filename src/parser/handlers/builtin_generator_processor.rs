@@ -335,14 +335,10 @@ pub fn handle(proc_type: &BuiltInGenProc, tail: &mut Vec<Expr>) -> Atom {
             Atom::Generator(g)
         }
         Some(Expr::Constant(Atom::Symbol(s))) => {
-            let gp = collect_generator_processor(proc_type, tail);
-            let mut proxy_mods = Vec::new();
-            proxy_mods.push(gp);
-            Atom::PartProxy(PartProxy::Proxy(s, proxy_mods))
+            Atom::PartProxy(PartProxy::Proxy(s, vec![collect_generator_processor(proc_type, tail)]))
         }
         Some(Expr::Constant(Atom::PartProxy(PartProxy::Proxy(s, mut proxy_mods)))) => {
-            let gp = collect_generator_processor(proc_type, tail);
-            proxy_mods.push(gp);
+            proxy_mods.push(collect_generator_processor(proc_type, tail));
             Atom::PartProxy(PartProxy::Proxy(s, proxy_mods))
         }
         Some(Expr::Constant(Atom::ProxyList(mut l))) => {

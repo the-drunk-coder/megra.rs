@@ -202,7 +202,7 @@ where
                 for ch in 0..channels {
                     frame[ch] = ruff_out[ch][frame_count];
                 }
-                frame_count = frame_count + 1;
+                frame_count += frame_count;
             }
         },
         err_fn,

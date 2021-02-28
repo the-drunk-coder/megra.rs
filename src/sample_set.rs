@@ -19,6 +19,12 @@ pub struct SampleSet {
     subsets: HashMap<String, Vec<SampleInfo>>,
 }
 
+impl Default for SampleSet {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl SampleSet {
     pub fn new() -> Self {
         SampleSet {
@@ -29,7 +35,7 @@ impl SampleSet {
     pub fn insert(&mut self, set: String, keyword_set: HashSet<String>, bufnum: usize, dur: usize) {
         self.subsets
             .entry(set)
-            .or_insert(Vec::new())
+            .or_insert_with(Vec::new)
             .push(SampleInfo {
                 key: keyword_set,
                 bufnum: bufnum,
@@ -37,20 +43,17 @@ impl SampleSet {
             });
     }
 
-    pub fn exists_not_empty(&self, set: &String) -> bool {
+    pub fn exists_not_empty(&self, set: &str) -> bool {
         self.subsets.contains_key(set) && !self.subsets.get(set).unwrap().is_empty()
     }
 
-    pub fn keys(&self, set: &String, keywords: &HashSet<String>) -> Option<&SampleInfo> {
+    pub fn keys(&self, set: &str, keywords: &HashSet<String>) -> Option<&SampleInfo> {
         if let Some(subset) = self.subsets.get(set) {
             let choice: Vec<&SampleInfo> = subset.iter().filter(|i| i.matches(keywords)).collect();
             if !choice.is_empty() {
                 Some(choice.choose(&mut rand::thread_rng()).unwrap())
-            } else if let Some(sample_info) = subset.get(0) {
-                // fallback
-                Some(sample_info)
             } else {
-                None
+                subset.get(0)
             }
         } else {
             None
@@ -58,26 +61,21 @@ impl SampleSet {
     }
 
     /// get a sample bufnum by
-    pub fn pos(&self, set: &String, pos: usize) -> Option<&SampleInfo> {
+    pub fn pos(&self, set: &str, pos: usize) -> Option<&SampleInfo> {
         if let Some(subset) = self.subsets.get(set) {
             if let Some(sample_info) = subset.get(pos) {
                 Some(sample_info)
-            } else if let Some(sample_info) = subset.get(0) {
-                // fallback
-                Some(sample_info)
             } else {
-                None
+                subset.get(0)
             }
         } else {
             None
         }
     }
 
-    pub fn random(&self, set: &String) -> Option<&SampleInfo> {
-        if let Some(subset) = self.subsets.get(set) {
-            Some(subset.choose(&mut rand::thread_rng()).unwrap())
-        } else {
-            None
-        }
+    pub fn random(&self, set: &str) -> Option<&SampleInfo> {
+        self.subsets
+            .get(set)
+            .map(|subset| subset.choose(&mut rand::thread_rng()).unwrap())
     }
 }

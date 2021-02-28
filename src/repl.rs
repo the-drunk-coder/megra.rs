@@ -30,7 +30,7 @@ pub fn start_repl<const BUFSIZE: usize, const NCHAN: usize>(
         match readline {
             Ok(line) => {
                 // ignore empty lines ...
-                if line.len() == 0 {
+                if line.is_empty() {
                     continue;
                 }
 

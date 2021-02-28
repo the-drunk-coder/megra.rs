@@ -270,7 +270,7 @@ pub fn valid_char(chr: char) -> bool {
 
 /// valid chars for a function name
 pub fn valid_fun_name_char(chr: char) -> bool {
-    return chr == '_' || chr == '-' || is_alphanumeric(chr as u8);
+    chr == '_' || chr == '-' || is_alphanumeric(chr as u8)
 }
 
 fn parse_string<'a>(i: &'a str) -> IResult<&'a str, Atom, VerboseError<&'a str>> {
@@ -292,7 +292,7 @@ fn parse_atom<'a>(i: &'a str) -> IResult<&'a str, Atom, VerboseError<&'a str>> {
 }
 
 fn parse_constant<'a>(i: &'a str) -> IResult<&'a str, Expr, VerboseError<&'a str>> {
-    map(parse_atom, |atom| Expr::Constant(atom))(i)
+    map(parse_atom, Expr::Constant)(i)
 }
 
 /// Unlike the previous functions, this function doesn't take or consume input, instead it
