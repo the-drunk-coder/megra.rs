@@ -101,6 +101,9 @@ pub fn interpret<const BUFSIZE:usize, const NCHAN:usize>(parsed_in: Expr,
 		Command::GlobalRuffboxParams(m) => {
 		    commands::set_global_ruffbox_parameters(ruffbox, &m);
 		}
+		Command::ExportDot((f, g)) => {
+		    commands::export_dot(&f, &g);
+		}
 	    };	    
 	},
 	Expr::Constant(Atom::Float(f)) => {

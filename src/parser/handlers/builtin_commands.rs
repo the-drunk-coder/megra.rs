@@ -191,6 +191,26 @@ fn handle_delay(tail: &mut Vec<Expr>) -> Atom {
     Atom::Command(Command::GlobalRuffboxParams(param_map))
 }
 
+fn handle_export_dot(tail: &mut Vec<Expr>) -> Atom {
+
+    let mut tail_drain = tail.drain(..);
+
+    // filename
+    let filename = if let Some(Expr::Constant(Atom::Description(s))) = tail_drain.next() {
+	s
+    } else {
+	return Atom::Nothing
+    };
+
+    let gen = if let Some(Expr::Constant(Atom::Generator(g))) = tail_drain.next() {
+	g
+    } else {
+	return Atom::Nothing
+    };
+    
+    Atom::Command(Command::ExportDot((filename, gen)))
+}
+
 pub fn handle(cmd: BuiltInCommand, tail: &mut Vec<Expr>) -> Atom {
     match cmd {
 	BuiltInCommand::Clear => Atom::Command(Command::Clear),
@@ -202,5 +222,6 @@ pub fn handle(cmd: BuiltInCommand, tail: &mut Vec<Expr>) -> Atom {
 	BuiltInCommand::LoadSampleSet => handle_load_sample_set(tail),
 	BuiltInCommand::LoadSampleSets => handle_load_sample_sets(tail),
 	BuiltInCommand::LoadPart => handle_load_part(tail),
+	BuiltInCommand::ExportDot => handle_export_dot(tail),
     }
 }

@@ -1,11 +1,13 @@
 use std::{fs, sync, path::Path, collections::{HashSet, HashMap}};
 use parking_lot::Mutex;
+use vom_rs::pfa;
 
 use ruffbox_synth::ruffbox::{Ruffbox, synth::SynthParameter};
 
 use crate::sample_set::SampleSet;
 use crate::builtin_types::*;
 use crate::parameter::*;
+use crate::generator::*;
 
 pub fn load_sample<const BUFSIZE:usize, const NCHAN:usize>(ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>,
 							   sample_set: &sync::Arc<Mutex<SampleSet>>,
@@ -141,4 +143,9 @@ pub fn set_global_ruffbox_parameters<const BUFSIZE:usize, const NCHAN:usize>(ruf
     for (k,v) in params.iter() {
 	rb.set_master_parameter(*k,*v);
     }
+}
+
+pub fn export_dot(filename: &String, generator: &Generator) {
+    let dot_string = pfa::to_dot::<char>(&generator.root_generator.generator);
+    fs::write(filename, dot_string).expect("Unable to write file");    
 }

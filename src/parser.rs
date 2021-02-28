@@ -57,7 +57,8 @@ fn parse_commands<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<&'a 
 	map(tag("load-sets"), |_| BuiltIn::Command(BuiltInCommand::LoadSampleSets)),
 	map(tag("load-set"), |_| BuiltIn::Command(BuiltInCommand::LoadSampleSet)),
 	map(tag("load-sample"), |_| BuiltIn::Command(BuiltInCommand::LoadSample)),
-	map(tag("defpart"), |_| BuiltIn::Command(BuiltInCommand::LoadPart)),	
+	map(tag("defpart"), |_| BuiltIn::Command(BuiltInCommand::LoadPart)),
+	map(tag("export-dot"), |_| BuiltIn::Command(BuiltInCommand::ExportDot)),	
     ))(i)
 }
 
@@ -87,6 +88,7 @@ fn parse_constructors<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<
 	map(tag("cyc"), |_| BuiltIn::Constructor(BuiltInConstructor::Cycle)),
 	map(tag("fully"), |_| BuiltIn::Constructor(BuiltInConstructor::Fully)),
 	map(tag("flower"), |_| BuiltIn::Constructor(BuiltInConstructor::Flower)),
+	map(tag("friendship"), |_| BuiltIn::Constructor(BuiltInConstructor::Friendship)),
     ))(i)
 }
 

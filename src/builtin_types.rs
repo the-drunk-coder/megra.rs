@@ -106,7 +106,7 @@ pub enum BuiltInConstructor {
     Cycle,
     Fully,
     Flower,
-    // Friendship,    
+    Friendship,    
     // Chop,
     // Pseq, ?    
 }
@@ -117,6 +117,7 @@ pub enum BuiltInCommand {
     GlobRes,
     Delay,
     Reverb,
+    ExportDot,
     LoadSample,
     LoadSampleSets,
     LoadSampleSet,
@@ -147,7 +148,8 @@ pub enum Command {
     LoadSample((String, Vec<String>, String)) ,// set (events), keyword, path
     LoadSampleSet(String), // set path
     LoadSampleSets(String), // top level sets set path
-    LoadPart((String, Part)) // set (events), keyword, path
+    LoadPart((String, Part)), // set (events), keyword, path
+    ExportDot((String, Generator)), // filename, generator
 }
 
 #[derive(Clone)]
