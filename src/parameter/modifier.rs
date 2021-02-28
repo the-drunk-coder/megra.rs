@@ -26,5 +26,3 @@ impl Clone for Box<dyn Modifier + Send + Sync> {
         self.clone_box()
     }
 }
-
-

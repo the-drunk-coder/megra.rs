@@ -1,30 +1,29 @@
 pub mod builtin_types;
-pub mod parser;
-pub mod interpreter;
-pub mod parameter;
+pub mod commands;
+pub mod cyc_parser;
+pub mod editor;
 pub mod event;
 pub mod event_helpers;
-pub mod markov_sequence_generator;
-pub mod generator_processor;
 pub mod generator;
-pub mod session;
-pub mod scheduler;
+pub mod generator_processor;
+pub mod interpreter;
+pub mod markov_sequence_generator;
+pub mod parameter;
+pub mod parser;
 pub mod repl;
-pub mod editor;
-pub mod commands;
 pub mod sample_set;
-pub mod cyc_parser;
+pub mod scheduler;
+pub mod session;
 
+use crate::builtin_types::*;
+use crate::sample_set::SampleSet;
+use crate::session::{OutputMode, Session};
+use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use directories_next::ProjectDirs;
 use getopts::Options;
-use std::{env, sync, thread};
-use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use parking_lot::Mutex;
 use ruffbox_synth::ruffbox::Ruffbox;
-use crate::session::{Session, OutputMode};
-use crate::sample_set::SampleSet;
-use crate::builtin_types::*;
-
+use std::{env, sync, thread};
 
 fn print_help(program: &str, opts: Options) {
     let description = format!(
@@ -41,7 +40,6 @@ Usage:
 }
 
 fn main() -> Result<(), anyhow::Error> {
-
     let mut argv = env::args();
     let program = argv.next().unwrap();
 
@@ -53,38 +51,36 @@ fn main() -> Result<(), anyhow::Error> {
     opts.optopt("o", "output-mode", "output mode (stereo, 8ch)", "stereo");
     opts.optflag("l", "list-devices", "list available devices");
     opts.optopt("d", "device", "choose device", "default");
-    
 
     let matches = match opts.parse(argv) {
         Ok(m) => m,
         Err(e) => {
             eprintln!("Error: {}. Please see --help for more details", e);
-	    return Ok(());
+            return Ok(());
         }
     };
-    
+
     if matches.opt_present("v") {
         println!("{}", "0.0.1");
         return Ok(());
     }
 
-    let editor:bool = matches.opt_present("e");
-    let load_samples:bool = !matches.opt_present("n");
+    let editor: bool = matches.opt_present("e");
+    let load_samples: bool = !matches.opt_present("n");
 
     if matches.opt_present("h") {
         print_help(&program, opts);
         return Ok(());
     }
-    
 
     let out_mode = match matches.opt_str("o").as_deref() {
-	Some("8ch") => OutputMode::EightChannel,
-	Some("4ch") => OutputMode::FourChannel,
-	Some("stereo") => OutputMode::Stereo,
-	_ => {
-	    println!("invalid output mode, assume stereo");
-	    OutputMode::Stereo
-	},
+        Some("8ch") => OutputMode::EightChannel,
+        Some("4ch") => OutputMode::FourChannel,
+        Some("stereo") => OutputMode::Stereo,
+        _ => {
+            println!("invalid output mode, assume stereo");
+            OutputMode::Stereo
+        }
     };
 
     #[cfg(any(target_os = "linux", target_os = "dragonfly", target_os = "freebsd"))]
@@ -99,16 +95,16 @@ fn main() -> Result<(), anyhow::Error> {
     let host = cpal::default_host();
 
     if matches.opt_present("l") {
-	for dev in host.output_devices()? {
-	    println!("{:?}", dev.name());
-	}        
+        for dev in host.output_devices()? {
+            println!("{:?}", dev.name());
+        }
         return Ok(());
     }
 
     let out_device = if let Some(dev) = matches.opt_str("d") {
-	dev
+        dev
     } else {
-	"default".to_string()
+        "default".to_string()
     };
 
     let device = if out_device == "default" {
@@ -119,47 +115,67 @@ fn main() -> Result<(), anyhow::Error> {
     }
     .expect("failed to find output device");
 
-    let config:cpal::SupportedStreamConfig = device.default_output_config().unwrap();
+    let config: cpal::SupportedStreamConfig = device.default_output_config().unwrap();
     let sample_format = config.sample_format();
-        
+
     match out_mode {
-	OutputMode::Stereo => {
-	    let mut conf: cpal::StreamConfig = config.into();
-	    conf.channels = 2;
-	    match sample_format  {		
-		cpal::SampleFormat::F32 => run::<f32, 2>(&device, &conf, out_mode, editor, load_samples)?,
-		cpal::SampleFormat::I16 => run::<i16, 2>(&device, &conf, out_mode, editor, load_samples)?,
-		cpal::SampleFormat::U16 => run::<u16, 2>(&device, &conf, out_mode, editor, load_samples)?,
-	    }
-	},
-	OutputMode::FourChannel => {
-	    let mut conf: cpal::StreamConfig = config.into();
-	    conf.channels = 4;
-	    match sample_format  {
-		cpal::SampleFormat::F32 => run::<f32, 4>(&device, &conf, out_mode, editor, load_samples)?,
-		cpal::SampleFormat::I16 => run::<i16, 4>(&device, &conf, out_mode, editor, load_samples)?,
-		cpal::SampleFormat::U16 => run::<u16, 4>(&device, &conf, out_mode, editor, load_samples)?,
-	    }
-	},
-	OutputMode::EightChannel => {
-	    let mut conf: cpal::StreamConfig = config.into();
-	    conf.channels = 8;
-	    match sample_format  {
-		cpal::SampleFormat::F32 => run::<f32, 8>(&device, &conf, out_mode, editor, load_samples)?,
-		cpal::SampleFormat::I16 => run::<i16, 8>(&device, &conf, out_mode, editor, load_samples)?,
-		cpal::SampleFormat::U16 => run::<u16, 8>(&device, &conf, out_mode, editor, load_samples)?,
-	    }
-	}
+        OutputMode::Stereo => {
+            let mut conf: cpal::StreamConfig = config.into();
+            conf.channels = 2;
+            match sample_format {
+                cpal::SampleFormat::F32 => {
+                    run::<f32, 2>(&device, &conf, out_mode, editor, load_samples)?
+                }
+                cpal::SampleFormat::I16 => {
+                    run::<i16, 2>(&device, &conf, out_mode, editor, load_samples)?
+                }
+                cpal::SampleFormat::U16 => {
+                    run::<u16, 2>(&device, &conf, out_mode, editor, load_samples)?
+                }
+            }
+        }
+        OutputMode::FourChannel => {
+            let mut conf: cpal::StreamConfig = config.into();
+            conf.channels = 4;
+            match sample_format {
+                cpal::SampleFormat::F32 => {
+                    run::<f32, 4>(&device, &conf, out_mode, editor, load_samples)?
+                }
+                cpal::SampleFormat::I16 => {
+                    run::<i16, 4>(&device, &conf, out_mode, editor, load_samples)?
+                }
+                cpal::SampleFormat::U16 => {
+                    run::<u16, 4>(&device, &conf, out_mode, editor, load_samples)?
+                }
+            }
+        }
+        OutputMode::EightChannel => {
+            let mut conf: cpal::StreamConfig = config.into();
+            conf.channels = 8;
+            match sample_format {
+                cpal::SampleFormat::F32 => {
+                    run::<f32, 8>(&device, &conf, out_mode, editor, load_samples)?
+                }
+                cpal::SampleFormat::I16 => {
+                    run::<i16, 8>(&device, &conf, out_mode, editor, load_samples)?
+                }
+                cpal::SampleFormat::U16 => {
+                    run::<u16, 8>(&device, &conf, out_mode, editor, load_samples)?
+                }
+            }
+        }
     }
-    
+
     Ok(())
 }
 
-fn run<T, const NCHAN:usize>(device: &cpal::Device,
-			     config: &cpal::StreamConfig,
-			     mode: OutputMode,
-			     editor: bool,
-			     load_samples: bool) -> Result<(), anyhow::Error>
+fn run<T, const NCHAN: usize>(
+    device: &cpal::Device,
+    config: &cpal::StreamConfig,
+    mode: OutputMode,
+    editor: bool,
+    load_samples: bool,
+) -> Result<(), anyhow::Error>
 where
     T: cpal::Sample,
 {
@@ -170,24 +186,24 @@ where
 
     let ruffbox = sync::Arc::new(Mutex::new(Ruffbox::<512, NCHAN>::new()));
     let ruffbox2 = sync::Arc::clone(&ruffbox); // the one for the audio thread ...
-    
+
     let stream = device.build_output_stream(
         config,
         move |data: &mut [f32], _: &cpal::OutputCallbackInfo| {
-	    let mut ruff = ruffbox2.lock();
+            let mut ruff = ruffbox2.lock();
 
-	    // as the jack timing from cpal can't be trusted right now, the
-	    // ruffbox handles it's own logical time ...
+            // as the jack timing from cpal can't be trusted right now, the
+            // ruffbox handles it's own logical time ...
             let ruff_out = ruff.process(0.0, true);
-	    let mut frame_count = 0;
+            let mut frame_count = 0;
 
-	    // there might be a faster way to de-interleave here ... 
-	    for frame in data.chunks_mut(channels) {
-		for ch in 0..channels {
-		    frame[ch] = ruff_out[ch][frame_count];
-		}				
-		frame_count = frame_count + 1;
-	    }
+            // there might be a faster way to de-interleave here ...
+            for frame in data.chunks_mut(channels) {
+                for ch in 0..channels {
+                    frame[ch] = ruff_out[ch][frame_count];
+                }
+                frame_count = frame_count + 1;
+            }
         },
         err_fn,
     )?;
@@ -201,40 +217,56 @@ where
 
     // load the default sample set ...
     if load_samples {
-		
-	if let Some(proj_dirs) = ProjectDirs::from("de", "parkellipsen", "megra") {
-	    if !proj_dirs.config_dir().exists() {
-		println!("create megra resource directory {:?}", proj_dirs.config_dir());
-		std::fs::create_dir(proj_dirs.config_dir().to_str().unwrap())?;
-	    }
-	    
-	    let samples_path = proj_dirs.config_dir().join("samples");
-	    if !samples_path.exists() {
-		println!("create megra samples directory {:?}", samples_path);
-		std::fs::create_dir(samples_path.to_str().unwrap())?;
-	    }
-	    
-	    let sketchbook_path = proj_dirs.config_dir().join("sketchbook");
-	    if !sketchbook_path.exists() {
-		println!("create megra sketchbook directory {:?}", sketchbook_path);
-		std::fs::create_dir(sketchbook_path.to_str().unwrap())?;
-	    }
-	    
-	    println!("load samples from path: {:?}", samples_path);
-	    let ruffbox2 = sync::Arc::clone(&ruffbox);
-	    let sample_set2 = sync::Arc::clone(&sample_set);
-	    thread::spawn(move || {
-		commands::load_sample_sets_path(&ruffbox2, &sample_set2, &samples_path);
-		println!("a command (load default sample sets)");
-	    });		    
-	}
+        if let Some(proj_dirs) = ProjectDirs::from("de", "parkellipsen", "megra") {
+            if !proj_dirs.config_dir().exists() {
+                println!(
+                    "create megra resource directory {:?}",
+                    proj_dirs.config_dir()
+                );
+                std::fs::create_dir(proj_dirs.config_dir().to_str().unwrap())?;
+            }
+
+            let samples_path = proj_dirs.config_dir().join("samples");
+            if !samples_path.exists() {
+                println!("create megra samples directory {:?}", samples_path);
+                std::fs::create_dir(samples_path.to_str().unwrap())?;
+            }
+
+            let sketchbook_path = proj_dirs.config_dir().join("sketchbook");
+            if !sketchbook_path.exists() {
+                println!("create megra sketchbook directory {:?}", sketchbook_path);
+                std::fs::create_dir(sketchbook_path.to_str().unwrap())?;
+            }
+
+            println!("load samples from path: {:?}", samples_path);
+            let ruffbox2 = sync::Arc::clone(&ruffbox);
+            let sample_set2 = sync::Arc::clone(&sample_set);
+            thread::spawn(move || {
+                commands::load_sample_sets_path(&ruffbox2, &sample_set2, &samples_path);
+                println!("a command (load default sample sets)");
+            });
+        }
     }
-    
+
     if editor {
-	editor::run_editor(&session, &ruffbox, &global_parameters, &sample_set, &parts_store, mode);	
-	Ok(())		
+        editor::run_editor(
+            &session,
+            &ruffbox,
+            &global_parameters,
+            &sample_set,
+            &parts_store,
+            mode,
+        );
+        Ok(())
     } else {
-	// star1t the megra repl
-	repl::start_repl(&session, &ruffbox, &global_parameters, &sample_set, &parts_store, mode)
-    }    
+        // star1t the megra repl
+        repl::start_repl(
+            &session,
+            &ruffbox,
+            &global_parameters,
+            &sample_set,
+            &parts_store,
+            mode,
+        )
+    }
 }

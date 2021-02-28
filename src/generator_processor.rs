@@ -1,16 +1,31 @@
-use std::sync::*;
 use std::collections::HashMap;
+use std::sync::*;
 
-use crate::{ builtin_types::{GlobalParameters, ConfigParameter},
-             event::{StaticEvent, InterpretableEvent, Event},
-	     parameter::Parameter,
-	     generator::{TimeMod, GenModFun},
-	     markov_sequence_generator::MarkovSequenceGenerator};
+use crate::{
+    builtin_types::{ConfigParameter, GlobalParameters},
+    event::{Event, InterpretableEvent, StaticEvent},
+    generator::{GenModFun, TimeMod},
+    markov_sequence_generator::MarkovSequenceGenerator,
+    parameter::Parameter,
+};
 
-pub trait GeneratorProcessor: GeneratorProcessorClone {    
-    fn process_events(&mut self, events: &mut Vec<InterpretableEvent>, global_parameters: &Arc<GlobalParameters>);
-    fn process_generator(&mut self, generator: &mut MarkovSequenceGenerator, global_parameters: &Arc<GlobalParameters>, time_mods: &mut Vec<TimeMod>);    
-    fn process_transition(&mut self, transition: &mut StaticEvent, global_parameters: &Arc<GlobalParameters>);    
+pub trait GeneratorProcessor: GeneratorProcessorClone {
+    fn process_events(
+        &mut self,
+        events: &mut Vec<InterpretableEvent>,
+        global_parameters: &Arc<GlobalParameters>,
+    );
+    fn process_generator(
+        &mut self,
+        generator: &mut MarkovSequenceGenerator,
+        global_parameters: &Arc<GlobalParameters>,
+        time_mods: &mut Vec<TimeMod>,
+    );
+    fn process_transition(
+        &mut self,
+        transition: &mut StaticEvent,
+        global_parameters: &Arc<GlobalParameters>,
+    );
 }
 
 pub trait GeneratorProcessorClone {
@@ -34,7 +49,11 @@ impl Clone for Box<dyn GeneratorProcessor + Send> {
 
 type StaticEventsAndFilters = HashMap<Vec<String>, Vec<StaticEvent>>;
 type EventsAndFilters = HashMap<Vec<String>, Vec<Event>>;
-type GenModFunsAndArgs = Vec<(GenModFun, Vec<ConfigParameter>, HashMap<String, ConfigParameter>)>;
+type GenModFunsAndArgs = Vec<(
+    GenModFun,
+    Vec<ConfigParameter>,
+    HashMap<String, ConfigParameter>,
+)>;
 
 mod pear_processor;
 pub use pear_processor::*;
@@ -47,4 +66,3 @@ pub use every_processor::*;
 
 mod lifemodel_processor;
 pub use lifemodel_processor::*;
-

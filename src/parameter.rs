@@ -1,8 +1,8 @@
 pub mod modifier;
 use modifier::*;
 
-use std::boxed::Box;
 use rand::Rng;
+use std::boxed::Box;
 
 #[derive(Clone)]
 pub struct Parameter {
@@ -13,49 +13,49 @@ pub struct Parameter {
 
 impl Parameter {
     pub fn with_value(val: f32) -> Self {
-	Parameter {
-	    val: val,
-	    static_val: val,
-	    modifier: None
-	}
+        Parameter {
+            val: val,
+            static_val: val,
+            modifier: None,
+        }
     }
-    
+
     pub fn evaluate(&mut self) -> f32 {
-	if let Some(m) = &mut self.modifier {
-	    self.static_val = m.evaluate(self.val);
-	    self.static_val
-	} else {
-	    self.val
-	}
+        if let Some(m) = &mut self.modifier {
+            self.static_val = m.evaluate(self.val);
+            self.static_val
+        } else {
+            self.val
+        }
     }
 
     pub fn shake(&mut self, mut factor: f32) {
-	factor = factor.clamp(0.0, 1.0);
-	let mut rng = rand::thread_rng();
-	// heuristic ... from old megra ... not sure what i thought back then, let's see ...
-	let rand = (factor * (1000.0 - rng.gen_range(0.0, 2000.0))) * (self.val / 1000.0); 
-	self.val += rand;
-	if let Some(m) = self.modifier.as_mut() {
-	    m.shake(factor);
-	}
+        factor = factor.clamp(0.0, 1.0);
+        let mut rng = rand::thread_rng();
+        // heuristic ... from old megra ... not sure what i thought back then, let's see ...
+        let rand = (factor * (1000.0 - rng.gen_range(0.0, 2000.0))) * (self.val / 1000.0);
+        self.val += rand;
+        if let Some(m) = self.modifier.as_mut() {
+            m.shake(factor);
+        }
     }
 }
 
-// TEST TEST TEST 
+// TEST TEST TEST
 #[cfg(test)]
 mod tests {
     // Note this useful idiom: importing names from outer (for mod tests) scope.
     use super::*;
-    
+
     #[test]
     fn test_shake() {
-	for _ in 0..20 {
-	    let mut a = Parameter::with_value(1000.0);
-	    a.shake(0.5);
-	    println!("val after shake: {}", a.evaluate());
-	    assert!(a.evaluate() != 1000.0);
-	    assert!(a.evaluate() >= 500.0);
-	    assert!(a.evaluate() <= 1500.0);	    	
-	}	
+        for _ in 0..20 {
+            let mut a = Parameter::with_value(1000.0);
+            a.shake(0.5);
+            println!("val after shake: {}", a.evaluate());
+            assert!(a.evaluate() != 1000.0);
+            assert!(a.evaluate() >= 500.0);
+            assert!(a.evaluate() <= 1500.0);
+        }
     }
 }

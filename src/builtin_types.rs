@@ -1,16 +1,16 @@
-use crate::markov_sequence_generator::{Rule, MarkovSequenceGenerator};
 use crate::event::*;
-use crate::parameter::*;
+use crate::generator::{GenModFun, Generator};
 use crate::generator_processor::GeneratorProcessor;
-use crate::generator::{Generator, GenModFun};
+use crate::markov_sequence_generator::{MarkovSequenceGenerator, Rule};
+use crate::parameter::*;
 use crate::session::SyncContext;
-use std::collections::HashMap;
 use dashmap::DashMap;
+use std::collections::HashMap;
 
 use ruffbox_synth::ruffbox::synth::SynthParameter;
 
 pub enum Part {
-    Combined(Vec<Generator>, Vec<PartProxy>)
+    Combined(Vec<Generator>, Vec<PartProxy>),
 }
 
 pub type PartsStore = HashMap<String, Part>;
@@ -21,10 +21,10 @@ pub type PartsStore = HashMap<String, Part>;
 pub enum ConfigParameter {
     Numeric(f32),
     Dynamic(Parameter),
-    Symbolic(String)
+    Symbolic(String),
 }
 
-// only one so far 
+// only one so far
 #[derive(Clone, PartialEq, Eq, Hash)]
 pub enum BuiltinGlobalParameters {
     LifemodelGlobalResources,
@@ -39,7 +39,7 @@ pub enum BuiltInParameterEvent {
     Attack(EventOperation),
     Release(EventOperation),
     Sustain(EventOperation),
-    ChannelPosition(EventOperation),    
+    ChannelPosition(EventOperation),
     Level(EventOperation),
     Duration(EventOperation),
     Reverb(EventOperation),
@@ -52,7 +52,7 @@ pub enum BuiltInParameterEvent {
     PeakGain(EventOperation),
     Pulsewidth(EventOperation),
     PlaybackStart(EventOperation),
-    PlaybackRate(EventOperation),    
+    PlaybackRate(EventOperation),
 }
 
 pub enum BuiltInSoundEvent {
@@ -66,15 +66,14 @@ pub enum BuiltInDynamicParameter {
     Brownian,
     Envelope,
     Fade,
-    RandRange
-    //Oscil,    
+    RandRange, //Oscil,
 }
 
 pub enum BuiltInGenProc {
     Pear,
     Apple,
     Every,
-    Lifemodel
+    Lifemodel,
 }
 
 pub enum BuiltInGenModFun {
@@ -100,15 +99,15 @@ pub enum BuiltInMultiplexer {
 /// constructor for generators ...
 pub enum BuiltInConstructor {
     Learn,
-    Infer,    
+    Infer,
     Rule,
     Nucleus,
     Cycle,
     Fully,
     Flower,
-    Friendship,    
+    Friendship,
     // Chop,
-    // Pseq, ?    
+    // Pseq, ?
 }
 
 pub enum BuiltInCommand {
@@ -141,24 +140,25 @@ pub enum BuiltIn {
 }
 
 pub enum Command {
-    Clear, // clear the entire session
-    Tmod(Parameter), // set global time mod parameter 
-    GlobRes(f32), // global resources for lifemodel algorithm
-    GlobalRuffboxParams(HashMap<SynthParameter, f32>), // global ruffbox params    
-    LoadSample((String, Vec<String>, String)) ,// set (events), keyword, path
-    LoadSampleSet(String), // set path
-    LoadSampleSets(String), // top level sets set path
-    LoadPart((String, Part)), // set (events), keyword, path
-    ExportDot((String, Generator)), // filename, generator
+    Clear,                                             // clear the entire session
+    Tmod(Parameter),                                   // set global time mod parameter
+    GlobRes(f32),                                      // global resources for lifemodel algorithm
+    GlobalRuffboxParams(HashMap<SynthParameter, f32>), // global ruffbox params
+    LoadSample((String, Vec<String>, String)),         // set (events), keyword, path
+    LoadSampleSet(String),                             // set path
+    LoadSampleSets(String),                            // top level sets set path
+    LoadPart((String, Part)),                          // set (events), keyword, path
+    ExportDot((String, Generator)),                    // filename, generator
 }
 
 #[derive(Clone)]
 pub enum PartProxy {
     // part, mods
-    Proxy(String, Vec<Box<dyn GeneratorProcessor + Send>>),    
+    Proxy(String, Vec<Box<dyn GeneratorProcessor + Send>>),
 }
 
-pub enum Atom { // atom might not be the right word any longer 
+pub enum Atom {
+    // atom might not be the right word any longer
     Float(f32),
     Description(String), // pfa descriptions
     Keyword(String),
@@ -173,18 +173,24 @@ pub enum Atom { // atom might not be the right word any longer
     SyncContext(SyncContext),
     PartProxy(PartProxy),
     ProxyList(Vec<PartProxy>),
-    Generator(Generator),    
+    Generator(Generator),
     GeneratorProcessor(Box<dyn GeneratorProcessor + Send>),
     GeneratorProcessorList(Vec<Box<dyn GeneratorProcessor + Send>>),
     GeneratorList(Vec<Generator>),
     Parameter(Parameter),
-    GeneratorModifierFunction((GenModFun, Vec<ConfigParameter>, HashMap<String, ConfigParameter>)),
-    Nothing
+    GeneratorModifierFunction(
+        (
+            GenModFun,
+            Vec<ConfigParameter>,
+            HashMap<String, ConfigParameter>,
+        ),
+    ),
+    Nothing,
 }
 
 pub enum Expr {
     Comment,
     Constant(Atom),
     Custom(String),
-    Application(Box<Expr>, Vec<Expr>),    
+    Application(Box<Expr>, Vec<Expr>),
 }

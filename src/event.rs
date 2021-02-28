@@ -1,17 +1,17 @@
-use std::collections::{HashMap, HashSet};
-use std::boxed::Box;
 use ruffbox_synth::ruffbox::synth::SynthParameter;
+use std::boxed::Box;
+use std::collections::{HashMap, HashSet};
 
 use crate::parameter::Parameter;
 use crate::session::SyncContext;
 
-#[derive(Clone,Copy)]
+#[derive(Clone, Copy)]
 pub enum EventOperation {
     Replace,
     Add,
     Subtract,
     Multiply,
-    Divide
+    Divide,
 }
 
 #[derive(Clone)]
@@ -41,109 +41,107 @@ pub struct ControlEvent {
 #[derive(Clone)]
 pub enum SourceEvent {
     Sound(Event),
-    Control(ControlEvent)
+    Control(ControlEvent),
 }
 
 #[derive(Clone)]
 pub enum InterpretableEvent {
     Sound(StaticEvent),
-    Control(ControlEvent)
+    Control(ControlEvent),
 }
 
 impl StaticEvent {
     pub fn apply(&mut self, other: &StaticEvent, filters: &Vec<String>) {
+        let mut apply = false;
 
-	let mut apply = false;
+        // check if tags contain one of the filters (filters are always or-matched)
+        for f in filters.into_iter() {
+            if f == "" || self.tags.contains(f) {
+                apply = true;
+            }
+        }
 
-	// check if tags contain one of the filters (filters are always or-matched)
-	for f in filters.into_iter() {	    
-	    if f == "" || self.tags.contains(f) {
-		apply = true;
-	    }
-	}
+        if !apply {
+            return;
+        }
 
-	if !apply {
-	    return;
-	}
-	
-	for (k,v) in other.params.iter() {
-	    if self.params.contains_key(k) {
-		match other.op {
-		    EventOperation::Replace => {
-			self.params.insert(*k, *v);
-		    },
-		    EventOperation::Add => {
-			let new_val = self.params[k] + *v;
-			self.params.insert(*k, new_val);
-		    },
-		    EventOperation::Subtract => {
-			let new_val = self.params[k] - *v;
-			self.params.insert(*k, new_val);
-		    },
-		    EventOperation::Multiply => {
-			let new_val = self.params[k] * *v;
-			self.params.insert(*k, new_val);
-		    },
-		    EventOperation::Divide => {
-			let new_val = self.params[k] / *v;
-			self.params.insert(*k, new_val);
-		    },
-		}
-	    } else {
-		self.params.insert(*k, *v);
-	    }	    
-	}
+        for (k, v) in other.params.iter() {
+            if self.params.contains_key(k) {
+                match other.op {
+                    EventOperation::Replace => {
+                        self.params.insert(*k, *v);
+                    }
+                    EventOperation::Add => {
+                        let new_val = self.params[k] + *v;
+                        self.params.insert(*k, new_val);
+                    }
+                    EventOperation::Subtract => {
+                        let new_val = self.params[k] - *v;
+                        self.params.insert(*k, new_val);
+                    }
+                    EventOperation::Multiply => {
+                        let new_val = self.params[k] * *v;
+                        self.params.insert(*k, new_val);
+                    }
+                    EventOperation::Divide => {
+                        let new_val = self.params[k] / *v;
+                        self.params.insert(*k, new_val);
+                    }
+                }
+            } else {
+                self.params.insert(*k, *v);
+            }
+        }
     }
 }
 
 impl Event {
     pub fn with_name_and_operation(name: String, op: EventOperation) -> Self {
-	let mut tags = HashSet::new();
-	tags.insert(name.clone()); // add to tags, for subsequent filters ...
-	Event {
-	    name: name,
-	    params: HashMap::new(),
-	    tags: tags,
-	    op: op,
-	}
+        let mut tags = HashSet::new();
+        tags.insert(name.clone()); // add to tags, for subsequent filters ...
+        Event {
+            name: name,
+            params: HashMap::new(),
+            tags: tags,
+            op: op,
+        }
     }
 
     pub fn with_name(name: String) -> Self {
-	let mut tags = HashSet::new();
-	tags.insert(name.clone()); // add to tags, for subsequent filters ...
-	Event {
-	    name: name,
-	    params: HashMap::new(),
-	    tags: tags,
-	    op: EventOperation::Replace,
-	}
+        let mut tags = HashSet::new();
+        tags.insert(name.clone()); // add to tags, for subsequent filters ...
+        Event {
+            name: name,
+            params: HashMap::new(),
+            tags: tags,
+            op: EventOperation::Replace,
+        }
     }
 
     pub fn evaluate_parameters(&mut self) -> HashMap<SynthParameter, f32> {
-	let mut map = HashMap::new();
-	
-	for (k,v) in self.params.iter_mut() {
-	    map.insert(*k, v.evaluate());
-	}
-	
-	map
+        let mut map = HashMap::new();
+
+        for (k, v) in self.params.iter_mut() {
+            map.insert(*k, v.evaluate());
+        }
+
+        map
     }
 
     pub fn shake(&mut self, factor: f32, keep: &HashSet<SynthParameter>) {
-	for (k,v) in self.params.iter_mut() {
-	    if !keep.contains(k) && *k != SynthParameter::SampleBufferNumber {
-		v.shake(factor);
-	    }	    
-	}
+        for (k, v) in self.params.iter_mut() {
+            if !keep.contains(k) && *k != SynthParameter::SampleBufferNumber {
+                v.shake(factor);
+            }
+        }
     }
-    
+
     pub fn to_static(&mut self) -> StaticEvent {
-	StaticEvent {
-	    name: self.name.clone(),
-	    params: self.evaluate_parameters(),
-	    tags: self.tags.clone(),
-	    op: self.op.clone(),
-	}		    
+        StaticEvent {
+            name: self.name.clone(),
+            params: self.evaluate_parameters(),
+            tags: self.tags.clone(),
+            op: self.op.clone(),
+        }
     }
 }
-
