@@ -28,12 +28,12 @@ pub fn relax_raw(time_mods: &mut Vec<TimeMod>, v: f32, n: usize) {
 
 pub fn grow_raw(
     gen: &mut MarkovSequenceGenerator,
-    m: &String, // method
+    m: &str, // method
     variance: f32,
     keep: &HashSet<SynthParameter>,
-    durations: &Vec<Parameter>,
+    durations: &[Parameter],
 ) {
-    if let Some(result) = match m.as_str() {
+    if let Some(result) = match m {
         "flower" => gen.generator.grow_flower(),
         "old" => gen.generator.grow_old(),
         "loop" => gen.generator.grow_loop(),
@@ -138,9 +138,8 @@ pub fn shake_raw(gen: &mut MarkovSequenceGenerator, keep: &HashSet<SynthParamete
     gen.generator.blur(factor);
     for (_, evs) in gen.event_mapping.iter_mut() {
         for ev in evs {
-            match ev {
-                SourceEvent::Sound(e) => e.shake(factor, keep),
-                _ => {}
+            if let SourceEvent::Sound(e) = ev {
+                e.shake(factor, keep)
             }
         }
     }

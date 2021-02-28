@@ -57,7 +57,7 @@ impl Generator {
                 &mut self.time_mods,
             );
         }
-        if events.len() == 0 {
+        if events.is_empty() {
             println!("no events");
         }
         events

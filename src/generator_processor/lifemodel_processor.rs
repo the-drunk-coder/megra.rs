@@ -129,19 +129,13 @@ impl GeneratorProcessor for LifemodelProcessor {
                 // in the future ...
                 if gen.generator.alphabet.len() > 1 || !self.dont_let_die {
                     // if there's something left to prune ...
-                    let mut rand = None;
-
-                    // sometimes the borrow checker makes you do really strange things ...
                     if let Some(random_symbol) =
                         gen.generator.alphabet.choose(&mut rand::thread_rng())
                     {
-                        rand = Some(random_symbol.clone());
-                    }
-
-                    if let Some(random_symbol) = rand {
                         //println!("lm auto {} {:?}", random_symbol, gen.generator.alphabet);
                         // don't rebalance yet ...
-                        shrink_raw(gen, random_symbol, false);
+                        let r2 = *random_symbol; // sometimes the borrow checker makes you do really strange things ...
+                        shrink_raw(gen, r2, false);
 
                         if self.global_contrib {
                             if let ConfigParameter::Numeric(global_resources) = global_parameters
@@ -181,7 +175,7 @@ impl GeneratorProcessor for LifemodelProcessor {
                     self.node_lifespan_variance,
                 );
                 if relevant_age >= self.node_lifespan {
-                    sym = Some(res.last_symbol.clone())
+                    sym = Some(res.last_symbol)
                 }
             };
 

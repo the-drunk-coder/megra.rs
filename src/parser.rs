@@ -254,7 +254,7 @@ pub fn parse_float<'a>(i: &'a str) -> IResult<&'a str, Atom, VerboseError<&'a st
 
 /// valid chars for a string
 pub fn valid_char(chr: char) -> bool {
-    return chr == '~'
+    chr == '~'
         || chr == '.'
         || chr == '\''
         || chr == '_'
@@ -265,7 +265,7 @@ pub fn valid_char(chr: char) -> bool {
         || chr == '['
         || chr == ']'
         || is_alphanumeric(chr as u8)
-        || is_space(chr as u8);
+        || is_space(chr as u8)
 }
 
 /// valid chars for a function name
@@ -356,10 +356,7 @@ pub fn eval_expression(
                 .collect::<Option<Vec<Expr>>>()?;
 
             // filter out reduced comments ...
-            reduced_tail.retain(|x| match x {
-                Expr::Comment => false,
-                _ => true,
-            });
+            reduced_tail.retain(|x| !matches!(x, Expr::Comment));
 
             match reduced_head {
                 Expr::Constant(Atom::BuiltIn(bi)) => Some(Expr::Constant(match bi {

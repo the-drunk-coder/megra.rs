@@ -23,7 +23,7 @@ pub fn handle(par: &BuiltInDynamicParameter, tail: &mut Vec<Expr>) -> Atom {
                     min: min,
                     max: max,
                     steps: steps,
-                    step_count: (0.0).into(),
+                    step_count: (0.0),
                 })
             }
             BuiltInDynamicParameter::Brownian => {
@@ -76,30 +76,27 @@ pub fn handle(par: &BuiltInDynamicParameter, tail: &mut Vec<Expr>) -> Atom {
                             }
                         }
                     }
-                    match c {
-                        Atom::Keyword(k) => {
-                            match k.as_str() {
-                                "v" => {
-                                    collect_values = true;
-                                }
-                                "values" => {
-                                    collect_values = true;
-                                }
-                                "s" => {
-                                    collect_steps = true;
-                                }
-                                "steps" => {
-                                    collect_steps = true;
-                                }
-                                "repeat" => {
-                                    if let Some(b) = get_bool_from_expr_opt(&tail_drain.next()) {
-                                        repeat = b;
-                                    }
-                                }
-                                _ => {} // ignore
+                    if let Atom::Keyword(k) = c {
+                        match k.as_str() {
+                            "v" => {
+                                collect_values = true;
                             }
+                            "values" => {
+                                collect_values = true;
+                            }
+                            "s" => {
+                                collect_steps = true;
+                            }
+                            "steps" => {
+                                collect_steps = true;
+                            }
+                            "repeat" => {
+                                if let Some(b) = get_bool_from_expr_opt(&tail_drain.next()) {
+                                    repeat = b;
+                                }
+                            }
+                            _ => {} // ignore
                         }
-                        _ => {}
                     }
                 }
                 Box::new(EnvelopeModifier::from_data(&values, &steps, repeat))
@@ -115,13 +112,10 @@ pub fn handle(par: &BuiltInDynamicParameter, tail: &mut Vec<Expr>) -> Atom {
                 values.push(to);
 
                 if let Some(Expr::Constant(Atom::Keyword(k))) = tail_drain.next() {
-                    match k.as_str() {
-                        "steps" => {
-                            if let Some(f) = get_float_from_expr_opt(&tail_drain.next()) {
-                                steps.push(Parameter::with_value(f));
-                            }
+                    if k == "steps" {
+                        if let Some(f) = get_float_from_expr_opt(&tail_drain.next()) {
+                            steps.push(Parameter::with_value(f));
                         }
-                        _ => {} // ignore
                     }
                 }
 

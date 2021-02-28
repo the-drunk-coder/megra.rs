@@ -59,11 +59,10 @@ impl<'a> epi::App for MegraEditor<'a> {
 
     fn load(&mut self, storage: &dyn epi::Storage) {
         // make sure callback is carried over after loading
-        let callback = if let Some(tmp_callback) = &self.callback {
-            Some(Arc::clone(&tmp_callback))
-        } else {
-            None
-        };
+        let callback = self
+            .callback
+            .as_ref()
+            .map(|tmp_callback| Arc::clone(&tmp_callback));
 
         *self = epi::get_value(storage, epi::APP_KEY).unwrap_or_default();
 
@@ -129,15 +128,13 @@ impl<'a> epi::App for MegraEditor<'a> {
                 self.sketch_list.push(self.current_sketch.clone());
 
                 if let Ok(entries) = fs::read_dir(sketchbook_path) {
-                    for entry in entries {
-                        if let Ok(entry) = entry {
-                            let path = entry.path();
-                            // only consider files here ...
-                            if path.is_file() {
-                                if let Some(ext) = path.extension() {
-                                    if ext == "megra3" {
-                                        self.sketch_list.push(path.to_str().unwrap().to_string());
-                                    }
+                    for entry in entries.flatten() {
+                        let path = entry.path();
+                        // only consider files here ...
+                        if path.is_file() {
+                            if let Some(ext) = path.extension() {
+                                if ext == "megra3" {
+                                    self.sketch_list.push(path.to_str().unwrap().to_string());
                                 }
                             }
                         }
@@ -148,7 +145,7 @@ impl<'a> epi::App for MegraEditor<'a> {
     }
 
     fn save(&mut self, storage: &mut dyn epi::Storage) {
-        if self.current_sketch != "" {
+        if !self.current_sketch.is_empty() {
             let p = path::Path::new(&self.current_sketch);
             match fs::write(p, &self.content.as_bytes()) {
                 Ok(_) => {}
@@ -190,9 +187,7 @@ impl<'a> epi::App for MegraEditor<'a> {
                 });
             });
 
-            let sk_num = match sketch_number {
-                SketchNumber::Num(i) => i,
-            };
+            let SketchNumber::Num(sk_num) = sketch_number;
 
             let mut sketch_switched = false;
             if sk_num != self.sketch_number {
@@ -200,7 +195,7 @@ impl<'a> epi::App for MegraEditor<'a> {
                 self.sketch_number = sk_num;
 
                 // store content explicitly when changing ...
-                if self.current_sketch != "" {
+                if !self.current_sketch.is_empty() {
                     let p = path::Path::new(&self.current_sketch);
                     match fs::write(p, &self.content.as_bytes()) {
                         Ok(_) => {}

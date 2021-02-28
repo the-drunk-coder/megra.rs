@@ -51,12 +51,12 @@ pub enum InterpretableEvent {
 }
 
 impl StaticEvent {
-    pub fn apply(&mut self, other: &StaticEvent, filters: &Vec<String>) {
+    pub fn apply(&mut self, other: &StaticEvent, filters: &[String]) {
         let mut apply = false;
 
         // check if tags contain one of the filters (filters are always or-matched)
-        for f in filters.into_iter() {
-            if f == "" || self.tags.contains(f) {
+        for f in filters.iter() {
+            if f.is_empty() || self.tags.contains(f) {
                 apply = true;
             }
         }
@@ -141,7 +141,7 @@ impl Event {
             name: self.name.clone(),
             params: self.evaluate_parameters(),
             tags: self.tags.clone(),
-            op: self.op.clone(),
+            op: self.op,
         }
     }
 }

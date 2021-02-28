@@ -14,7 +14,7 @@ pub struct Parameter {
 impl Parameter {
     pub fn with_value(val: f32) -> Self {
         Parameter {
-            val: val,
+            val,
             static_val: val,
             modifier: None,
         }

@@ -12,8 +12,7 @@ fn collect_every(tail: &mut Vec<Expr>) -> Box<EveryProcessor> {
     let mut tail_drain = tail.drain(..);
     let mut proc = EveryProcessor::new();
 
-    let mut last_filters = Vec::new();
-    last_filters.push("".to_string());
+    let mut last_filters = vec!["".to_string()];
 
     let mut cur_step = Parameter::with_value(1.0); // if nothing is specified, it's always applied
     let mut gen_mod_funs = Vec::new();
@@ -102,8 +101,7 @@ fn collect_pear(tail: &mut Vec<Expr>) -> Box<PearProcessor> {
     let mut tail_drain = tail.drain(..);
     let mut proc = PearProcessor::new();
 
-    let mut last_filters = Vec::new();
-    last_filters.push("".to_string());
+    let mut last_filters = vec!["".to_string()];
 
     let mut evs = Vec::new();
     let mut collect_filters = false;
@@ -183,18 +181,15 @@ fn collect_apple(tail: &mut Vec<Expr>) -> Box<AppleProcessor> {
                 gen_mod_funs.push(g);
             }
             Atom::Keyword(k) => {
-                match k.as_str() {
-                    "p" => {
-                        if !gen_mod_funs.is_empty() {
-                            let mut new_mods = Vec::new();
-                            new_mods.append(&mut gen_mod_funs);
-                            proc.modifiers_to_be_applied
-                                .push((cur_prob.clone(), new_mods));
-                        }
-                        // grab new probability
-                        cur_prob = get_next_param(&mut tail_drain, 100.0);
+                if k == "p" {
+                    if !gen_mod_funs.is_empty() {
+                        let mut new_mods = Vec::new();
+                        new_mods.append(&mut gen_mod_funs);
+                        proc.modifiers_to_be_applied
+                            .push((cur_prob.clone(), new_mods));
                     }
-                    _ => {}
+                    // grab new probability
+                    cur_prob = get_next_param(&mut tail_drain, 100.0);
                 }
             }
             _ => {}
@@ -251,8 +246,8 @@ fn collect_lifemodel(tail: &mut Vec<Expr>) -> Box<LifemodelProcessor> {
             }
         }
 
-        match c {
-            Atom::Keyword(k) => match k.as_str() {
+        if let Atom::Keyword(k) = c {
+            match k.as_str() {
                 "durs" => {
                     collect_durations = true;
                 }
@@ -305,8 +300,7 @@ fn collect_lifemodel(tail: &mut Vec<Expr>) -> Box<LifemodelProcessor> {
                     }
                 }
                 _ => {}
-            },
-            _ => {}
+            }
         }
     }
 
@@ -334,9 +328,10 @@ pub fn handle(proc_type: &BuiltInGenProc, tail: &mut Vec<Expr>) -> Atom {
                 .push(collect_generator_processor(proc_type, tail));
             Atom::Generator(g)
         }
-        Some(Expr::Constant(Atom::Symbol(s))) => {
-            Atom::PartProxy(PartProxy::Proxy(s, vec![collect_generator_processor(proc_type, tail)]))
-        }
+        Some(Expr::Constant(Atom::Symbol(s))) => Atom::PartProxy(PartProxy::Proxy(
+            s,
+            vec![collect_generator_processor(proc_type, tail)],
+        )),
         Some(Expr::Constant(Atom::PartProxy(PartProxy::Proxy(s, mut proxy_mods)))) => {
             proxy_mods.push(collect_generator_processor(proc_type, tail));
             Atom::PartProxy(PartProxy::Proxy(s, proxy_mods))
@@ -359,10 +354,7 @@ pub fn handle(proc_type: &BuiltInGenProc, tail: &mut Vec<Expr>) -> Atom {
             Atom::GeneratorList(gl)
         }
         Some(Expr::Constant(Atom::GeneratorProcessor(gp))) => {
-            let mut v = Vec::new();
-            v.push(gp);
-            v.push(collect_generator_processor(proc_type, tail));
-            Atom::GeneratorProcessorList(v)
+            Atom::GeneratorProcessorList(vec![gp, collect_generator_processor(proc_type, tail)])
         }
         Some(Expr::Constant(Atom::GeneratorProcessorList(mut l))) => {
             l.push(collect_generator_processor(proc_type, tail));

@@ -45,8 +45,8 @@ fn handle_load_sample(tail: &mut Vec<Expr>) -> Atom {
             }
         }
 
-        match c {
-            Atom::Keyword(k) => match k.as_str() {
+        if let Atom::Keyword(k) = c {
+            match k.as_str() {
                 "keywords" => {
                     collect_keywords = true;
                     continue;
@@ -62,8 +62,7 @@ fn handle_load_sample(tail: &mut Vec<Expr>) -> Atom {
                     }
                 }
                 _ => println!("{}", k),
-            },
-            _ => println! {"ignored"},
+            }
         }
     }
 
@@ -78,7 +77,7 @@ fn handle_load_sample_sets(tail: &mut Vec<Expr>) -> Atom {
         "".to_string()
     };
 
-    Atom::Command(Command::LoadSampleSets(path.to_string()))
+    Atom::Command(Command::LoadSampleSets(path))
 }
 
 fn handle_load_sample_set(tail: &mut Vec<Expr>) -> Atom {
@@ -89,7 +88,7 @@ fn handle_load_sample_set(tail: &mut Vec<Expr>) -> Atom {
         "".to_string()
     };
 
-    Atom::Command(Command::LoadSampleSet(path.to_string()))
+    Atom::Command(Command::LoadSampleSet(path))
 }
 
 fn handle_tmod(tail: &mut Vec<Expr>) -> Atom {

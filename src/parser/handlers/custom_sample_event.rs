@@ -19,7 +19,7 @@ pub fn handle(
     let sample_set = sample_set_sync.lock();
     if sample_set.exists_not_empty(&set) {
         let mut drain_idx = 0;
-        let sample_info = if tail.len() == 0 {
+        let sample_info = if tail.is_empty() {
             sample_set.random(&set).unwrap()
         } else {
             match &tail[0] {
@@ -27,8 +27,8 @@ pub fn handle(
                     let mut keyword_set: HashSet<String> = HashSet::new();
                     keyword_set.insert(s.to_string());
                     drain_idx += 1;
-                    for i in 1..tail.len() {
-                        match &tail[i] {
+                    for t in tail.iter().skip(1) {
+                        match t {
                             Expr::Constant(Atom::Symbol(s)) => {
                                 keyword_set.insert(s.to_string());
                                 drain_idx += 1;

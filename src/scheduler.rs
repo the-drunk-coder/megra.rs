@@ -106,13 +106,13 @@ impl<const BUFSIZE: usize, const NCHAN: usize> SchedulerData<BUFSIZE, NCHAN> {
             stream_time: stream_time + shift,
             logical_time: shift,
             last_diff: 0.0,
-            shift: shift,
+            shift,
             generator: data,
             ruffbox: sync::Arc::clone(ruffbox),
             session: sync::Arc::clone(session),
             parts_store: sync::Arc::clone(parts_store),
             global_parameters: sync::Arc::clone(global_parameters),
-            mode: mode,
+            mode,
         }
     }
 }

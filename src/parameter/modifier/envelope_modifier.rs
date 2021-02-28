@@ -16,7 +16,7 @@ pub struct EnvelopeModifier {
 }
 
 impl EnvelopeModifier {
-    pub fn from_data(values: &Vec<Parameter>, steps: &Vec<Parameter>, repeat: bool) -> Self {
+    pub fn from_data(values: &[Parameter], steps: &[Parameter], repeat: bool) -> Self {
         let mut env = EnvelopeModifier {
             values: values.to_vec(),
             steps: steps.to_vec(),
@@ -99,7 +99,8 @@ impl Modifier for EnvelopeModifier {
             //println!("from: {} to: {} step: {} done: {}", self.current_from, self.current_to, self.current_steps, self.done);
         }
 
-        let val = if self.current_from == self.current_to || self.done {
+        let val = if (self.current_from - self.current_to).abs() < f32::EPSILON || self.done {
+            // self.current_to == self.current_from
             self.current_to
         } else {
             let current_range = self.current_to - self.current_from;

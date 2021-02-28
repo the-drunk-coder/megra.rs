@@ -19,7 +19,8 @@ impl Modifier for RandRangeModifier {
         let min = self.min.evaluate();
         let max = self.max.evaluate();
         let mut rng = rand::thread_rng();
-        if min == max {
+        if (min - max).abs() < f32::EPSILON {
+            // min == max
             max
         } else if min > max {
             rng.gen_range(max, min)

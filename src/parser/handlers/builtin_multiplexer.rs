@@ -136,6 +136,7 @@ fn spread_proxies(mul: &BuiltInMultiplexer, proxies: &mut Vec<PartProxy>, out_mo
     }
 }
 
+#[allow(clippy::mut_range_bound)]
 pub fn handle(mul: &BuiltInMultiplexer, tail: &mut Vec<Expr>, out_mode: OutputMode) -> Atom {
     let last = tail.pop(); // generator or generator list ...
 
@@ -206,6 +207,7 @@ pub fn handle(mul: &BuiltInMultiplexer, tail: &mut Vec<Expr>, out_mode: OutputMo
         Some(Expr::Constant(Atom::Generator(g))) => {
             let mut gens = Vec::new();
             let mut idx: usize = 0;
+
             // multiplex into duplicates by cloning ...
             for mut gpl in gen_proc_list_list.drain(..) {
                 let mut pclone = g.clone();

@@ -11,14 +11,14 @@ use crate::{
 pub type GenModFun = fn(
     &mut MarkovSequenceGenerator,
     &mut Vec<TimeMod>,
-    &Vec<ConfigParameter>,
+    &[ConfigParameter],
     &HashMap<String, ConfigParameter>,
 );
 
 pub fn haste(
     _: &mut MarkovSequenceGenerator,
     time_mods: &mut Vec<TimeMod>,
-    pos_args: &Vec<ConfigParameter>,
+    pos_args: &[ConfigParameter],
     _: &HashMap<String, ConfigParameter>,
 ) {
     // sanity check, otherwise nothing happens ...
@@ -32,7 +32,7 @@ pub fn haste(
 pub fn relax(
     _: &mut MarkovSequenceGenerator,
     time_mods: &mut Vec<TimeMod>,
-    pos_args: &Vec<ConfigParameter>,
+    pos_args: &[ConfigParameter],
     _: &HashMap<String, ConfigParameter>,
 ) {
     if let ConfigParameter::Numeric(n) = pos_args[0] {
@@ -45,7 +45,7 @@ pub fn relax(
 pub fn grow(
     gen: &mut MarkovSequenceGenerator,
     _: &mut Vec<TimeMod>,
-    pos_args: &Vec<ConfigParameter>,
+    pos_args: &[ConfigParameter],
     named_args: &HashMap<String, ConfigParameter>,
 ) {
     if let ConfigParameter::Numeric(f) = pos_args[0] {
@@ -63,23 +63,19 @@ pub fn grow(
 pub fn shrink(
     gen: &mut MarkovSequenceGenerator,
     _: &mut Vec<TimeMod>,
-    _: &Vec<ConfigParameter>,
+    _: &[ConfigParameter],
     _: &HashMap<String, ConfigParameter>,
 ) {
-    let mut rand = None;
     if let Some(random_symbol) = gen.generator.alphabet.choose(&mut rand::thread_rng()) {
-        rand = Some(random_symbol.clone());
-    }
-
-    if let Some(random_symbol) = rand {
-        shrink_raw(gen, random_symbol, true);
+        let r2 = *random_symbol;
+        shrink_raw(gen, r2, true);
     }
 }
 
 pub fn shake(
     gen: &mut MarkovSequenceGenerator,
     _: &mut Vec<TimeMod>,
-    pos_args: &Vec<ConfigParameter>,
+    pos_args: &[ConfigParameter],
     _: &HashMap<String, ConfigParameter>,
 ) {
     if let ConfigParameter::Numeric(f) = pos_args[0] {
@@ -90,7 +86,7 @@ pub fn shake(
 pub fn sharpen(
     gen: &mut MarkovSequenceGenerator,
     _: &mut Vec<TimeMod>,
-    pos_args: &Vec<ConfigParameter>,
+    pos_args: &[ConfigParameter],
     _: &HashMap<String, ConfigParameter>,
 ) {
     if let ConfigParameter::Numeric(f) = pos_args[0] {
@@ -101,7 +97,7 @@ pub fn sharpen(
 pub fn blur(
     gen: &mut MarkovSequenceGenerator,
     _: &mut Vec<TimeMod>,
-    pos_args: &Vec<ConfigParameter>,
+    pos_args: &[ConfigParameter],
     _: &HashMap<String, ConfigParameter>,
 ) {
     if let ConfigParameter::Numeric(f) = pos_args[0] {
@@ -112,7 +108,7 @@ pub fn blur(
 pub fn skip(
     gen: &mut MarkovSequenceGenerator,
     _: &mut Vec<TimeMod>,
-    pos_args: &Vec<ConfigParameter>,
+    pos_args: &[ConfigParameter],
     _: &HashMap<String, ConfigParameter>,
 ) {
     if let ConfigParameter::Numeric(f) = pos_args[0] {
@@ -123,7 +119,7 @@ pub fn skip(
 pub fn rewind(
     gen: &mut MarkovSequenceGenerator,
     _: &mut Vec<TimeMod>,
-    pos_args: &Vec<ConfigParameter>,
+    pos_args: &[ConfigParameter],
     _: &HashMap<String, ConfigParameter>,
 ) {
     if let ConfigParameter::Numeric(f) = pos_args[0] {

@@ -43,7 +43,7 @@ pub fn construct_learn(tail: &mut Vec<Expr>) -> Atom {
         if collect_events {
             match c {
                 Atom::Symbol(ref s) => {
-                    if cur_key != "" && ev_vec.len() != 0 {
+                    if !cur_key.is_empty() && !ev_vec.is_empty() {
                         println!("found event {}", cur_key);
                         event_mapping.insert(cur_key.chars().next().unwrap(), ev_vec.clone());
                         ev_vec.clear();
@@ -60,7 +60,7 @@ pub fn construct_learn(tail: &mut Vec<Expr>) -> Atom {
                     continue;
                 }
                 _ => {
-                    if cur_key != "" && ev_vec.len() != 0 {
+                    if !cur_key.is_empty() && !ev_vec.is_empty() {
                         println!("found event {}", cur_key);
                         event_mapping.insert(cur_key.chars().next().unwrap(), ev_vec.clone());
                     }
@@ -124,11 +124,11 @@ pub fn construct_learn(tail: &mut Vec<Expr>) -> Atom {
     id_tags.insert(name.clone());
 
     Atom::Generator(Generator {
-        id_tags: id_tags,
+        id_tags,
         root_generator: MarkovSequenceGenerator {
             name: name,
             generator: pfa,
-            event_mapping: event_mapping,
+            event_mapping,
             duration_mapping: HashMap::new(),
             modified: false,
             symbol_ages: HashMap::new(),
@@ -165,7 +165,7 @@ pub fn construct_infer(tail: &mut Vec<Expr>) -> Atom {
         if collect_events {
             match c {
                 Atom::Symbol(ref s) => {
-                    if cur_key != "" && ev_vec.len() != 0 {
+                    if !cur_key.is_empty() && !ev_vec.is_empty() {
                         println!("found event {}", cur_key);
                         event_mapping.insert(cur_key.chars().next().unwrap(), ev_vec.clone());
                         ev_vec.clear();
@@ -182,7 +182,7 @@ pub fn construct_infer(tail: &mut Vec<Expr>) -> Atom {
                     continue;
                 }
                 _ => {
-                    if cur_key != "" && ev_vec.len() != 0 {
+                    if !cur_key.is_empty() && !ev_vec.is_empty() {
                         println!("found event {}", cur_key);
                         event_mapping.insert(cur_key.chars().next().unwrap(), ev_vec.clone());
                     }
@@ -232,7 +232,7 @@ pub fn construct_infer(tail: &mut Vec<Expr>) -> Atom {
     id_tags.insert(name.clone());
 
     Atom::Generator(Generator {
-        id_tags: id_tags.clone(),
+        id_tags,
         root_generator: MarkovSequenceGenerator {
             name: name,
             generator: pfa,
@@ -306,7 +306,7 @@ pub fn construct_nucleus(tail: &mut Vec<Expr>) -> Atom {
     id_tags.insert(name.clone());
 
     Atom::Generator(Generator {
-        id_tags: id_tags.clone(),
+        id_tags,
         root_generator: MarkovSequenceGenerator {
             name: name,
             generator: pfa,
@@ -348,7 +348,7 @@ pub fn construct_fully(tail: &mut Vec<Expr>) -> Atom {
         if collect_labeled {
             match c {
                 Atom::Symbol(ref s) => {
-                    if cur_key != "" && collected_evs.len() != 0 {
+                    if !cur_key.is_empty() && !collected_evs.is_empty() {
                         println!("found event {}", cur_key);
                         collected_mapping
                             .insert(cur_key.chars().next().unwrap(), collected_evs.clone());
@@ -366,7 +366,7 @@ pub fn construct_fully(tail: &mut Vec<Expr>) -> Atom {
                     continue;
                 }
                 _ => {
-                    if cur_key != "" && collected_evs.len() != 0 {
+                    if !cur_key.is_empty() && !collected_evs.is_empty() {
                         println!("found event {}", cur_key);
                         collected_mapping
                             .insert(cur_key.chars().next().unwrap(), collected_evs.clone());
@@ -402,8 +402,8 @@ pub fn construct_fully(tail: &mut Vec<Expr>) -> Atom {
             continue;
         }
 
-        match c {
-            Atom::Keyword(k) => match k.as_str() {
+        if let Atom::Keyword(k) = c {
+            match k.as_str() {
                 "dur" => {
                     if let Expr::Constant(Atom::Float(n)) = tail_drain.next().unwrap() {
                         dur = n;
@@ -418,8 +418,7 @@ pub fn construct_fully(tail: &mut Vec<Expr>) -> Atom {
                     continue;
                 }
                 _ => println!("{}", k),
-            },
-            _ => {}
+            }
         }
     }
 
@@ -454,7 +453,7 @@ pub fn construct_fully(tail: &mut Vec<Expr>) -> Atom {
     id_tags.insert(name.clone());
 
     Atom::Generator(Generator {
-        id_tags: id_tags.clone(),
+        id_tags,
         root_generator: MarkovSequenceGenerator {
             name: name,
             generator: pfa,
@@ -498,7 +497,7 @@ pub fn construct_flower(tail: &mut Vec<Expr>) -> Atom {
         if collect_labeled {
             match c {
                 Atom::Symbol(ref s) => {
-                    if cur_key != "" && collected_evs.len() != 0 {
+                    if !cur_key.is_empty() && !collected_evs.is_empty() {
                         collected_mapping
                             .insert(cur_key.chars().next().unwrap(), collected_evs.clone());
                         collected_evs.clear();
@@ -515,7 +514,7 @@ pub fn construct_flower(tail: &mut Vec<Expr>) -> Atom {
                     continue;
                 }
                 _ => {
-                    if cur_key != "" && collected_evs.len() != 0 {
+                    if !cur_key.is_empty() && !collected_evs.is_empty() {
                         collected_mapping
                             .insert(cur_key.chars().next().unwrap(), collected_evs.clone());
                     }
@@ -550,8 +549,8 @@ pub fn construct_flower(tail: &mut Vec<Expr>) -> Atom {
             continue;
         }
 
-        match c {
-            Atom::Keyword(k) => match k.as_str() {
+        if let Atom::Keyword(k) = c {
+            match k.as_str() {
                 "dur" => {
                     if let Expr::Constant(Atom::Float(n)) = tail_drain.next().unwrap() {
                         dur = n;
@@ -600,8 +599,7 @@ pub fn construct_flower(tail: &mut Vec<Expr>) -> Atom {
                     continue;
                 }
                 _ => println!("{}", k),
-            },
-            _ => {}
+            }
         }
     }
 
@@ -672,7 +670,7 @@ pub fn construct_flower(tail: &mut Vec<Expr>) -> Atom {
     id_tags.insert(name.clone());
 
     Atom::Generator(Generator {
-        id_tags: id_tags.clone(),
+        id_tags,
         root_generator: MarkovSequenceGenerator {
             name: name,
             generator: pfa,
@@ -716,7 +714,7 @@ pub fn construct_friendship(tail: &mut Vec<Expr>) -> Atom {
         if collect_labeled {
             match c {
                 Atom::Symbol(ref s) => {
-                    if cur_key != "" && collected_evs.len() != 0 {
+                    if !cur_key.is_empty() && !collected_evs.is_empty() {
                         collected_mapping
                             .insert(cur_key.chars().next().unwrap(), collected_evs.clone());
                         collected_evs.clear();
@@ -733,7 +731,7 @@ pub fn construct_friendship(tail: &mut Vec<Expr>) -> Atom {
                     continue;
                 }
                 _ => {
-                    if cur_key != "" && collected_evs.len() != 0 {
+                    if !cur_key.is_empty() && !collected_evs.is_empty() {
                         collected_mapping
                             .insert(cur_key.chars().next().unwrap(), collected_evs.clone());
                     }
@@ -768,61 +766,57 @@ pub fn construct_friendship(tail: &mut Vec<Expr>) -> Atom {
             continue;
         }
 
-        match c {
-            Atom::Keyword(k) => {
-                match k.as_str() {
-                    "dur" => {
-                        if let Expr::Constant(Atom::Float(n)) = tail_drain.next().unwrap() {
-                            dur = n;
-                        }
+        if let Atom::Keyword(k) = c {
+            match k.as_str() {
+                "dur" => {
+                    if let Expr::Constant(Atom::Float(n)) = tail_drain.next().unwrap() {
+                        dur = n;
                     }
-                    "events" => {
-                        collect_labeled = true;
-                        continue;
-                    }
-                    //"layers" => {
-                    //	if let Some(Expr::Constant(Atom::Float(n))) = tail_drain.next() {
-                    //	    num_layers = n as usize;
-                    //	}
-                    // }
-                    "center" => {
-                        if let Some(Expr::Constant(c)) = tail_drain.next() {
-                            let next_char: char =
-                                std::char::from_u32(last_char as u32 + 1).unwrap();
-                            last_char = next_char;
-                            center_label = next_char;
-                            let mut final_vec = Vec::new();
-
-                            match c {
-                                Atom::Symbol(ref s) => {
-                                    let label = s.chars().next().unwrap();
-                                    if collected_mapping.contains_key(&label) {
-                                        final_vec.append(
-                                            &mut collected_mapping.get(&label).unwrap().clone(),
-                                        );
-                                    }
-                                }
-                                Atom::SoundEvent(e) => {
-                                    final_vec.push(SourceEvent::Sound(e));
-                                }
-                                Atom::ControlEvent(e) => {
-                                    final_vec.push(SourceEvent::Control(e));
-                                }
-                                _ => {}
-                            }
-
-                            final_mapping.insert(next_char, final_vec);
-                        }
-                        continue;
-                    }
-                    "friends" => {
-                        collect_final = true;
-                        continue;
-                    }
-                    _ => println!("{}", k),
                 }
+                "events" => {
+                    collect_labeled = true;
+                    continue;
+                }
+                //"layers" => {
+                //	if let Some(Expr::Constant(Atom::Float(n))) = tail_drain.next() {
+                //	    num_layers = n as usize;
+                //	}
+                // }
+                "center" => {
+                    if let Some(Expr::Constant(c)) = tail_drain.next() {
+                        let next_char: char = std::char::from_u32(last_char as u32 + 1).unwrap();
+                        last_char = next_char;
+                        center_label = next_char;
+                        let mut final_vec = Vec::new();
+
+                        match c {
+                            Atom::Symbol(ref s) => {
+                                let label = s.chars().next().unwrap();
+                                if collected_mapping.contains_key(&label) {
+                                    final_vec.append(
+                                        &mut collected_mapping.get(&label).unwrap().clone(),
+                                    );
+                                }
+                            }
+                            Atom::SoundEvent(e) => {
+                                final_vec.push(SourceEvent::Sound(e));
+                            }
+                            Atom::ControlEvent(e) => {
+                                final_vec.push(SourceEvent::Control(e));
+                            }
+                            _ => {}
+                        }
+
+                        final_mapping.insert(next_char, final_vec);
+                    }
+                    continue;
+                }
+                "friends" => {
+                    collect_final = true;
+                    continue;
+                }
+                _ => println!("{}", k),
             }
-            _ => {}
         }
     }
 
@@ -903,7 +897,7 @@ pub fn construct_friendship(tail: &mut Vec<Expr>) -> Atom {
     id_tags.insert(name.clone());
 
     Atom::Generator(Generator {
-        id_tags: id_tags.clone(),
+        id_tags,
         root_generator: MarkovSequenceGenerator {
             name: name,
             generator: pfa,
@@ -991,7 +985,7 @@ pub fn construct_cycle(
         if collect_events {
             match c {
                 Atom::Symbol(ref s) => {
-                    if cur_key != "" && collected_evs.len() != 0 {
+                    if !cur_key.is_empty() && !collected_evs.is_empty() {
                         println!("found event {}", cur_key);
                         collected_mapping
                             .insert(cur_key.chars().next().unwrap(), collected_evs.clone());
@@ -1009,7 +1003,7 @@ pub fn construct_cycle(
                     continue;
                 }
                 _ => {
-                    if cur_key != "" && collected_evs.len() != 0 {
+                    if !cur_key.is_empty() && !collected_evs.is_empty() {
                         println!("found event {}", cur_key);
                         collected_mapping
                             .insert(cur_key.chars().next().unwrap(), collected_evs.clone());
@@ -1055,10 +1049,9 @@ pub fn construct_cycle(
                 let parsed_cycle = cyc_parser::eval_cyc_from_str(&d, sample_set, out_mode);
                 match parsed_cycle {
                     Ok(mut c) => {
-                        let mut cycle_drain = c.drain(..);
-                        while let Some(mut cyc_evs) = cycle_drain.next() {
-                            match cyc_evs.as_slice() {
-                                &[Some(Expr::Constant(Atom::Float(f)))] => {
+                        for mut cyc_evs in c.drain(..) {
+                            match *cyc_evs.as_slice() {
+                                [Some(Expr::Constant(Atom::Float(f)))] => {
                                     // slice pattern are awesome !
                                     if !dur_vec.is_empty() {
                                         // replace last value, but vec can't start with duration !
@@ -1224,7 +1217,7 @@ pub fn construct_cycle(
     id_tags.insert(name.clone());
 
     Atom::Generator(Generator {
-        id_tags: id_tags.clone(),
+        id_tags,
         root_generator: MarkovSequenceGenerator {
             name: name,
             generator: pfa,

@@ -1,3 +1,6 @@
+#![allow(clippy::new_without_default)]
+#![allow(clippy::needless_lifetimes)]
+
 pub mod builtin_types;
 pub mod commands;
 pub mod cyc_parser;
@@ -202,7 +205,7 @@ where
                 for ch in 0..channels {
                     frame[ch] = ruff_out[ch][frame_count];
                 }
-                frame_count += frame_count;
+                frame_count += 1;
             }
         },
         err_fn,

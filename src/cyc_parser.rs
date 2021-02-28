@@ -22,9 +22,7 @@ use crate::session::OutputMode;
 ///////////////////////////
 
 fn parse_cyc_event<'a>(i: &'a str) -> IResult<&'a str, Expr, VerboseError<&'a str>> {
-    map(map(parse_events, Atom::BuiltIn), |atom| {
-        Expr::Constant(atom)
-    })(i)
+    map(map(parse_events, Atom::BuiltIn), Expr::Constant)(i)
 }
 
 /// atoms within the cyc sublanguage
@@ -37,15 +35,15 @@ fn parse_cyc_atom<'a>(i: &'a str) -> IResult<&'a str, Atom, VerboseError<&'a str
 }
 
 fn parse_cyc_constant<'a>(i: &'a str) -> IResult<&'a str, Expr, VerboseError<&'a str>> {
-    map(parse_cyc_atom, |atom| Expr::Constant(atom))(i)
+    map(parse_cyc_atom, Expr::Constant)(i)
 }
 
 fn parse_cyc_symbol<'a>(i: &'a str) -> IResult<&'a str, Expr, VerboseError<&'a str>> {
-    map(parse_symbol, |atom| Expr::Constant(atom))(i)
+    map(parse_symbol, Expr::Constant)(i)
 }
 
 fn parse_cyc_float<'a>(i: &'a str) -> IResult<&'a str, Expr, VerboseError<&'a str>> {
-    map(parse_float, |atom| Expr::Constant(atom))(i)
+    map(parse_float, Expr::Constant)(i)
 }
 
 fn parse_cyc_application<'a>(i: &'a str) -> IResult<&'a str, Expr, VerboseError<&'a str>> {
