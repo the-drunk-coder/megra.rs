@@ -24,7 +24,7 @@ impl EnvelopeModifier {
             current_from: 0.0,
             current_to: 0.0,
             done: false,
-            repeat: repeat,
+            repeat,
             step_count: 0,
             value_idx: 1,
             steps_idx: 1,

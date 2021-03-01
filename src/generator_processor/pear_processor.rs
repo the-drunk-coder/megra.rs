@@ -49,7 +49,7 @@ impl GeneratorProcessor for PearProcessor {
             for (filter, evs) in filtered_events.iter_mut() {
                 let mut evs_static = Vec::new();
                 for ev in evs.iter_mut() {
-                    let ev_static = ev.to_static();
+                    let ev_static = ev.get_static();
                     for in_ev in events.iter_mut() {
                         match in_ev {
                             InterpretableEvent::Sound(s) => {

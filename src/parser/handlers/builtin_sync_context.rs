@@ -12,7 +12,7 @@ pub fn handle(tail: &mut Vec<Expr>) -> Atom {
 
     if !active {
         return Atom::SyncContext(SyncContext {
-            name: name,
+            name,
             generators: Vec::new(),
             part_proxies: Vec::new(),
             sync_to: None,
@@ -70,11 +70,11 @@ pub fn handle(tail: &mut Vec<Expr>) -> Atom {
     }
 
     Atom::SyncContext(SyncContext {
-        name: name,
+        name,
         generators: gens,
         part_proxies: proxies,
-        sync_to: sync_to,
+        sync_to,
         active: true,
-        shift: shift,
+        shift,
     })
 }

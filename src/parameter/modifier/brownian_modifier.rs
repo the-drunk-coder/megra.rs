@@ -29,14 +29,12 @@ impl Modifier for BrownianModifier {
 
         if !self.wrap {
             self.current = self.current.clamp(min, max);
-        } else {
-            if self.current < min {
-                let diff = min - self.current;
-                self.current = max - diff;
-            } else if self.current > max {
-                let diff = self.current - max;
-                self.current = min + diff;
-            }
+        } else if self.current < min {
+            let diff = min - self.current;
+            self.current = max - diff;
+        } else if self.current > max {
+            let diff = self.current - max;
+            self.current = min + diff;
         }
 
         self.current

@@ -108,8 +108,8 @@ pub fn eval_cyc_from_str(
             println!("{}", ret);
             ret
         })
-        .and_then(|(_, exp_vecs)| {
-            Ok(exp_vecs
+        .map(|(_, exp_vecs)| {
+            exp_vecs
                 .into_iter()
                 .map(|exp_vec| {
                     let mut eval_exps = Vec::new();
@@ -118,7 +118,7 @@ pub fn eval_cyc_from_str(
                     }
                     eval_exps
                 })
-                .collect())
+                .collect()
         })
 }
 

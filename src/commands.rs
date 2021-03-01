@@ -90,21 +90,19 @@ pub fn load_sample_set<const BUFSIZE: usize, const NCHAN: usize>(
     };
 
     if let Ok(entries) = fs::read_dir(samples_path) {
-        for entry in entries {
-            if let Ok(entry) = entry {
-                let path = entry.path();
-                // only consider files here ...
-                if path.is_file() {
-                    if let Some(ext) = path.extension() {
-                        if ext == "flac" {
-                            load_sample(
-                                ruffbox,
-                                sample_set,
-                                set_name.clone(),
-                                &mut Vec::new(),
-                                path.to_str().unwrap().to_string(),
-                            );
-                        }
+        for entry in entries.flatten() {
+            let path = entry.path();
+            // only consider files here ...
+            if path.is_file() {
+                if let Some(ext) = path.extension() {
+                    if ext == "flac" {
+                        load_sample(
+                            ruffbox,
+                            sample_set,
+                            set_name.clone(),
+                            &mut Vec::new(),
+                            path.to_str().unwrap().to_string(),
+                        );
                     }
                 }
             }
@@ -135,12 +133,10 @@ pub fn load_sample_sets_path<const BUFSIZE: usize, const NCHAN: usize>(
     root_path: &Path,
 ) {
     if let Ok(entries) = fs::read_dir(root_path) {
-        for entry in entries {
-            if let Ok(entry) = entry {
-                let path = entry.path();
-                if path.is_dir() {
-                    load_sample_set(ruffbox, sample_set, &path);
-                }
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.is_dir() {
+                load_sample_set(ruffbox, sample_set, &path);
             }
         }
     }

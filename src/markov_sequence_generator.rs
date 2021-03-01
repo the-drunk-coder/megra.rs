@@ -62,7 +62,7 @@ impl MarkovSequenceGenerator {
             if let Some(events) = self.event_mapping.get_mut(&trans.last_symbol) {
                 for e in events.iter_mut() {
                     interpretable_events.push(match e {
-                        SourceEvent::Sound(e) => InterpretableEvent::Sound(e.to_static()),
+                        SourceEvent::Sound(e) => InterpretableEvent::Sound(e.get_static()),
                         // this is quite an effort to copy the whole sync ctx all the time.
                         // i hope i can find a mor efficient method later ...
                         SourceEvent::Control(e) => InterpretableEvent::Control(e.clone()),
@@ -85,11 +85,11 @@ impl MarkovSequenceGenerator {
                 .duration_mapping
                 .get_mut(&(trans.last_symbol, trans.next_symbol))
             {
-                transition = Some(dur.to_static());
+                transition = Some(dur.get_static());
             } else {
                 // println!("no dur");
 
-                let mut t = Event::with_name("transition".to_string()).to_static();
+                let mut t = Event::with_name("transition".to_string()).get_static();
                 t.params
                     .insert(SynthParameter::Duration, self.default_duration as f32);
                 transition = Some(t);
@@ -106,7 +106,7 @@ impl MarkovSequenceGenerator {
             t
         } else {
             //println!("no new trans");
-            let mut t = Event::with_name("transition".to_string()).to_static();
+            let mut t = Event::with_name("transition".to_string()).get_static();
             t.params
                 .insert(SynthParameter::Duration, self.default_duration as f32);
             t

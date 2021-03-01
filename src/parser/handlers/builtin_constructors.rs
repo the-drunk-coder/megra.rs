@@ -126,7 +126,7 @@ pub fn construct_learn(tail: &mut Vec<Expr>) -> Atom {
     Atom::Generator(Generator {
         id_tags,
         root_generator: MarkovSequenceGenerator {
-            name: name,
+            name,
             generator: pfa,
             event_mapping,
             duration_mapping: HashMap::new(),
@@ -234,10 +234,10 @@ pub fn construct_infer(tail: &mut Vec<Expr>) -> Atom {
     Atom::Generator(Generator {
         id_tags,
         root_generator: MarkovSequenceGenerator {
-            name: name,
+            name,
             generator: pfa,
-            event_mapping: event_mapping,
-            duration_mapping: duration_mapping,
+            event_mapping,
+            duration_mapping,
             modified: false,
             symbol_ages: HashMap::new(),
             default_duration: dur as u64,
@@ -308,10 +308,10 @@ pub fn construct_nucleus(tail: &mut Vec<Expr>) -> Atom {
     Atom::Generator(Generator {
         id_tags,
         root_generator: MarkovSequenceGenerator {
-            name: name,
+            name,
             generator: pfa,
-            event_mapping: event_mapping,
-            duration_mapping: duration_mapping,
+            event_mapping,
+            duration_mapping,
             modified: false,
             symbol_ages: HashMap::new(),
             default_duration: dur as u64,
@@ -455,10 +455,10 @@ pub fn construct_fully(tail: &mut Vec<Expr>) -> Atom {
     Atom::Generator(Generator {
         id_tags,
         root_generator: MarkovSequenceGenerator {
-            name: name,
+            name,
             generator: pfa,
             event_mapping: final_mapping,
-            duration_mapping: duration_mapping,
+            duration_mapping,
             modified: false,
             symbol_ages: HashMap::new(),
             default_duration: dur as u64,
@@ -672,10 +672,10 @@ pub fn construct_flower(tail: &mut Vec<Expr>) -> Atom {
     Atom::Generator(Generator {
         id_tags,
         root_generator: MarkovSequenceGenerator {
-            name: name,
+            name,
             generator: pfa,
             event_mapping: final_mapping,
-            duration_mapping: duration_mapping,
+            duration_mapping,
             modified: false,
             symbol_ages: HashMap::new(),
             default_duration: dur as u64,
@@ -899,10 +899,10 @@ pub fn construct_friendship(tail: &mut Vec<Expr>) -> Atom {
     Atom::Generator(Generator {
         id_tags,
         root_generator: MarkovSequenceGenerator {
-            name: name,
+            name,
             generator: pfa,
             event_mapping: final_mapping,
-            duration_mapping: duration_mapping,
+            duration_mapping,
             modified: false,
             symbol_ages: HashMap::new(),
             default_duration: dur as u64,
@@ -1219,10 +1219,10 @@ pub fn construct_cycle(
     Atom::Generator(Generator {
         id_tags,
         root_generator: MarkovSequenceGenerator {
-            name: name,
+            name,
             generator: pfa,
-            event_mapping: event_mapping,
-            duration_mapping: duration_mapping,
+            event_mapping,
+            duration_mapping,
             modified: false,
             symbol_ages: HashMap::new(),
             default_duration: dur as u64,

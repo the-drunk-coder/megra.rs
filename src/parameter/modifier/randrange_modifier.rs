@@ -10,7 +10,7 @@ pub struct RandRangeModifier {
 
 impl RandRangeModifier {
     pub fn from_data(min: Parameter, max: Parameter) -> Self {
-        RandRangeModifier { min: min, max: max }
+        RandRangeModifier { min, max }
     }
 }
 

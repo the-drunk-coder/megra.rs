@@ -100,10 +100,10 @@ impl Event {
         let mut tags = HashSet::new();
         tags.insert(name.clone()); // add to tags, for subsequent filters ...
         Event {
-            name: name,
+            name,
             params: HashMap::new(),
-            tags: tags,
-            op: op,
+            tags,
+            op,
         }
     }
 
@@ -111,9 +111,9 @@ impl Event {
         let mut tags = HashSet::new();
         tags.insert(name.clone()); // add to tags, for subsequent filters ...
         Event {
-            name: name,
+            name,
             params: HashMap::new(),
-            tags: tags,
+            tags,
             op: EventOperation::Replace,
         }
     }
@@ -136,7 +136,7 @@ impl Event {
         }
     }
 
-    pub fn to_static(&mut self) -> StaticEvent {
+    pub fn get_static(&mut self) -> StaticEvent {
         StaticEvent {
             name: self.name.clone(),
             params: self.evaluate_parameters(),

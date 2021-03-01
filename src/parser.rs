@@ -417,6 +417,6 @@ pub fn eval_from_str(
     parse_expr(src)
         .map_err(|e: nom::Err<VerboseError<&str>>| format!("{:#?}", e))
         .and_then(|(_, exp)| {
-            eval_expression(exp, sample_set, out_mode).ok_or("Eval failed".to_string())
+            eval_expression(exp, sample_set, out_mode).ok_or_else(|| "Eval failed".to_string())
         })
 }

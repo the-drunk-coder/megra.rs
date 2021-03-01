@@ -20,9 +20,9 @@ pub fn handle(par: &BuiltInDynamicParameter, tail: &mut Vec<Expr>) -> Atom {
                 let steps = get_next_keyword_param("steps".to_string(), &mut tail_drain, 128.0);
 
                 Box::new(BounceModifier {
-                    min: min,
-                    max: max,
-                    steps: steps,
+                    min,
+                    max,
+                    steps,
                     step_count: (0.0),
                 })
             }
@@ -41,11 +41,11 @@ pub fn handle(par: &BuiltInDynamicParameter, tail: &mut Vec<Expr>) -> Atom {
                 let wrap = find_keyword_bool_value(&raw_params, "wrap".to_string(), true);
 
                 Box::new(BrownianModifier {
-                    min: min,
-                    max: max,
-                    step_size: step_size,
-                    wrap: wrap,
-                    current: current,
+                    min,
+                    max,
+                    step_size,
+                    current,
+                    wrap,
                 })
             }
 

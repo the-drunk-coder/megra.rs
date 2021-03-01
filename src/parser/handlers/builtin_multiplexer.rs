@@ -9,6 +9,8 @@ use crate::generator_processor::PearProcessor;
 use crate::parameter::Parameter;
 use crate::session::OutputMode;
 
+// there'll be more later !
+#[allow(clippy::single_match)]
 fn spread_gens(mul: &BuiltInMultiplexer, gens: &mut Vec<Generator>, out_mode: &OutputMode) {
     // for xdup, this would be enough ... for xspread etc, we need to prepend another processor ...
     match mul {
@@ -72,6 +74,8 @@ fn spread_gens(mul: &BuiltInMultiplexer, gens: &mut Vec<Generator>, out_mode: &O
     }
 }
 
+// there'll be more later !
+#[allow(clippy::single_match)]
 fn spread_proxies(mul: &BuiltInMultiplexer, proxies: &mut Vec<PartProxy>, out_mode: &OutputMode) {
     // for xdup, this would be enough ... for xspread etc, we need to prepend another processor ...
     match mul {

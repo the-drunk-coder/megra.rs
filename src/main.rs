@@ -1,5 +1,8 @@
+// take care of these later ...
 #![allow(clippy::new_without_default)]
 #![allow(clippy::needless_lifetimes)]
+#![allow(clippy::large_enum_variant)]
+#![allow(clippy::type_complexity)]
 
 pub mod builtin_types;
 pub mod commands;
@@ -64,7 +67,7 @@ fn main() -> Result<(), anyhow::Error> {
     };
 
     if matches.opt_present("v") {
-        println!("{}", "0.0.1");
+        println!("0.0.1");
         return Ok(());
     }
 
@@ -198,14 +201,12 @@ where
             // as the jack timing from cpal can't be trusted right now, the
             // ruffbox handles it's own logical time ...
             let ruff_out = ruff.process(0.0, true);
-            let mut frame_count = 0;
 
             // there might be a faster way to de-interleave here ...
-            for frame in data.chunks_mut(channels) {
+            for (frame_count, frame) in data.chunks_mut(channels).enumerate() {
                 for ch in 0..channels {
                     frame[ch] = ruff_out[ch][frame_count];
                 }
-                frame_count += 1;
             }
         },
         err_fn,

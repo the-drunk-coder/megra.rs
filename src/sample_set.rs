@@ -38,7 +38,7 @@ impl SampleSet {
             .or_insert_with(Vec::new)
             .push(SampleInfo {
                 key: keyword_set,
-                bufnum: bufnum,
+                bufnum,
                 duration: dur,
             });
     }
