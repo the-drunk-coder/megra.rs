@@ -56,7 +56,7 @@ fn resolve_proxy(parts_store: &PartsStore, proxy: PartProxy, generators: &mut Ve
                 // this can be done for sure ...
                 for mut gen in part_generators.clone().drain(..) {
                     gen.processors.append(&mut procs.clone());
-                    gen.id_tags.insert(s.clone());
+                    //gen.id_tags.insert(s.clone());
                     generators.push(gen);
                 }
 
@@ -65,7 +65,7 @@ fn resolve_proxy(parts_store: &PartsStore, proxy: PartProxy, generators: &mut Ve
                     resolve_proxy(parts_store, sub_proxy, &mut sub_gens);
                     for mut gen in sub_gens.drain(..) {
                         gen.processors.append(&mut procs.clone());
-                        gen.id_tags.insert(s.clone());
+                        //gen.id_tags.insert(s.clone());
                         generators.push(gen);
                     }
                 }

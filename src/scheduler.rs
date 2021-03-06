@@ -143,9 +143,10 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Scheduler<BUFSIZE, NCHAN> {
                     while running.load(Ordering::SeqCst) {
                         let next: f64;
                         let ldif: f64;
+                        let cur: f64;
                         {
                             let mut sched_data = data.lock();
-                            let cur = sched_data.start_time.elapsed().as_secs_f64();
+                            cur = sched_data.start_time.elapsed().as_secs_f64();
                             sched_data.last_diff = cur - sched_data.logical_time;
                             next = (fun)(&mut sched_data);
                             ldif = sched_data.last_diff;
@@ -154,8 +155,9 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Scheduler<BUFSIZE, NCHAN> {
                         }
                         // compensate for eventual lateness ...
                         if (next - ldif) < 0.0 {
-                            println!("negative duration found: {} {}", next, ldif);
+                            println!("negative duration found: {} {} {}", cur, next, ldif);
                         }
+
                         thread::sleep(Duration::from_secs_f64(next - ldif));
                     }
                 })
