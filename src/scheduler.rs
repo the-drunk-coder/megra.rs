@@ -128,28 +128,39 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Scheduler<BUFSIZE, NCHAN> {
     /// Start this scheduler.
     pub fn start(
         &mut self,
+        name: &str,
         fun: fn(&mut SchedulerData<BUFSIZE, NCHAN>) -> f64,
         data: sync::Arc<Mutex<SchedulerData<BUFSIZE, NCHAN>>>,
     ) {
         self.running.store(true, Ordering::SeqCst);
         let running = self.running.clone();
-        self.handle = Some(thread::spawn(move || {
-            while running.load(Ordering::SeqCst) {
-                let next: f64;
-                let ldif: f64;
-                {
-                    let mut sched_data = data.lock();
-                    let cur = sched_data.start_time.elapsed().as_secs_f64();
-                    sched_data.last_diff = cur - sched_data.logical_time;
-                    next = (fun)(&mut sched_data);
-                    ldif = sched_data.last_diff;
-                    sched_data.logical_time += next;
-                    sched_data.stream_time += next;
-                }
-                // compensate for eventual lateness ...
-                thread::sleep(Duration::from_secs_f64(next - ldif));
-            }
-        }));
+
+        let builder = thread::Builder::new().name(name.into());
+
+        self.handle = Some(
+            builder
+                .spawn(move || {
+                    while running.load(Ordering::SeqCst) {
+                        let next: f64;
+                        let ldif: f64;
+                        {
+                            let mut sched_data = data.lock();
+                            let cur = sched_data.start_time.elapsed().as_secs_f64();
+                            sched_data.last_diff = cur - sched_data.logical_time;
+                            next = (fun)(&mut sched_data);
+                            ldif = sched_data.last_diff;
+                            sched_data.logical_time += next;
+                            sched_data.stream_time += next;
+                        }
+                        // compensate for eventual lateness ...
+                        if (next - ldif) < 0.0 {
+                            println!("negative duration found: {} {}", next, ldif);
+                        }
+                        thread::sleep(Duration::from_secs_f64(next - ldif));
+                    }
+                })
+                .unwrap(),
+        );
     }
 
     /// Stop this scheduler.

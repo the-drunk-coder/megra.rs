@@ -423,7 +423,17 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                     * tmod) as f64
             };
 
-            sched.start(eval_loop, sync::Arc::clone(&sched_data));
+            // assemble name for thread ...
+            let mut thread_name: String = "".to_owned();
+            for tag in id_tags.iter() {
+                thread_name.push_str(&(format!("{} ", tag)));
+            }
+
+            sched.start(
+                &thread_name.trim(),
+                eval_loop,
+                sync::Arc::clone(&sched_data),
+            );
             sess.schedulers.insert(id_tags, (sched, sched_data));
         }
     }
