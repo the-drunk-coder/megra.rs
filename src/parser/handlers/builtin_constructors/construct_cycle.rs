@@ -205,7 +205,7 @@ pub fn construct_cycle(
 
         if count < num_events - 1 {
             if repetition_chance > 0.0 {
-                println!("add rep chance");
+                //println!("add rep chance");
                 // repetition rule
                 rules.push(
                     Rule {

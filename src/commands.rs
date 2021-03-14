@@ -173,5 +173,6 @@ pub fn set_global_ruffbox_parameters<const BUFSIZE: usize, const NCHAN: usize>(
 
 pub fn export_dot(filename: &str, generator: &Generator) {
     let dot_string = pfa::to_dot::<char>(&generator.root_generator.generator);
+    println!("export to {}", filename);
     fs::write(filename, dot_string).expect("Unable to write file");
 }
