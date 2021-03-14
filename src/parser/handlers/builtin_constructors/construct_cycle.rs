@@ -132,7 +132,7 @@ pub fn construct_cycle(
                 _ => println!("{}", k),
             },
             Atom::Description(d) => {
-                parsed_cycle = Some(cyc_parser::eval_cyc_from_str(&d, sample_set, out_mode));               
+                parsed_cycle = Some(cyc_parser::eval_cyc_from_str(&d, sample_set, out_mode));
             }
             _ => println! {"ignored"},
         }
@@ -153,13 +153,10 @@ pub fn construct_cycle(
                         ev_vecs.push(Vec::new());
                         dur_vec.push(dur.clone().unwrap());
                         let mut cyc_evs_drain = cyc_evs.drain(..);
-                        while let Some(Some(Expr::Constant(cc))) = cyc_evs_drain.next()
-                        {
+                        while let Some(Some(Expr::Constant(cc))) = cyc_evs_drain.next() {
                             match cc {
                                 Atom::Symbol(s) => {
-                                    if collected_mapping
-                                        .contains_key(&s.chars().next().unwrap())
-                                    {
+                                    if collected_mapping.contains_key(&s.chars().next().unwrap()) {
                                         ev_vecs.last_mut().unwrap().append(
                                             collected_mapping
                                                 .get_mut(&s.chars().next().unwrap())
@@ -168,10 +165,7 @@ pub fn construct_cycle(
                                     }
                                 }
                                 Atom::SoundEvent(e) => {
-                                    ev_vecs
-                                        .last_mut()
-                                        .unwrap()
-                                        .push(SourceEvent::Sound(e));
+                                    ev_vecs.last_mut().unwrap().push(SourceEvent::Sound(e));
                                 }
                                 _ => { /* ignore */ }
                             }
@@ -203,10 +197,9 @@ pub fn construct_cycle(
         event_mapping.insert(last_char, ev);
 
         let mut dur_ev = Event::with_name("transition".to_string());
-        dur_ev.params.insert(
-            SynthParameter::Duration,
-            Box::new(dur_vec[count].clone()),
-        );
+        dur_ev
+            .params
+            .insert(SynthParameter::Duration, Box::new(dur_vec[count].clone()));
         duration_mapping.insert((last_char, next_char), dur_ev);
 
         if count < num_events - 1 {
