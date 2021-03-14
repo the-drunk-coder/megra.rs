@@ -100,8 +100,8 @@ pub fn construct_friendship(tail: &mut Vec<Expr>) -> Atom {
                 "events" => {
                     collect_labeled = true;
                     continue;
-                }                
-		"rep" => {
+                }
+                "rep" => {
                     if let Expr::Constant(Atom::Float(n)) = tail_drain.next().unwrap() {
                         repetition_chance = n;
                     }
@@ -169,9 +169,9 @@ pub fn construct_friendship(tail: &mut Vec<Expr>) -> Atom {
 
     // convert repetition chance
     if repetition_chance > 0.0 {
-	repetition_chance = repetition_chance / 100.0;
+        repetition_chance /= 100.0;
     }
-    
+
     let mut duration_mapping = HashMap::new();
     let center_exit_prob = (1.0 - repetition_chance) / (friends_labels.len() as f32 / 2.0);
     let norep_center_exit_prob = 1.0 / (friends_labels.len() as f32 / 2.0);
@@ -188,17 +188,17 @@ pub fn construct_friendship(tail: &mut Vec<Expr>) -> Atom {
 
     // center repetition
     if repetition_chance > 0.0 {
-	rules.push(
-	    Rule {
-		source: vec![center_label],
-		symbol: center_label,
-		probability: repetition_chance,
-		duration: dur as u64,
-	    }
-	    .to_pfa_rule(),
-	);
+        rules.push(
+            Rule {
+                source: vec![center_label],
+                symbol: center_label,
+                probability: repetition_chance,
+                duration: dur as u64,
+            }
+            .to_pfa_rule(),
+        );
     }
-        
+
     for _ in 0..(friends_labels.len() / 2) {
         if let Some(label_a) = friends_iter.next() {
             if let Some(label_b) = friends_iter.next() {
@@ -212,24 +212,24 @@ pub fn construct_friendship(tail: &mut Vec<Expr>) -> Atom {
                     .to_pfa_rule(),
                 );
 
-		// center max repetition
-		if repetition_chance > 0.0 && max_repetitions >= 2.0 {		                        
-		    let mut max_rep_source = Vec::new();
-		    for _ in 0..max_repetitions as usize {
+                // center max repetition
+                if repetition_chance > 0.0 && max_repetitions >= 2.0 {
+                    let mut max_rep_source = Vec::new();
+                    for _ in 0..max_repetitions as usize {
                         max_rep_source.push(center_label);
-		    }
-		    
-		    // max repetition rule
-		    rules.push(
+                    }
+
+                    // max repetition rule
+                    rules.push(
                         Rule {
-			    source: max_rep_source,
-			    symbol: *label_a,
-			    probability: norep_center_exit_prob,
-			    duration: dur as u64,
+                            source: max_rep_source,
+                            symbol: *label_a,
+                            probability: norep_center_exit_prob,
+                            duration: dur as u64,
                         }
                         .to_pfa_rule(),
-		    );                    
-		}
+                    );
+                }
 
                 //println!("push rule {} -> {}", center_label, label_a);
 
@@ -242,37 +242,37 @@ pub fn construct_friendship(tail: &mut Vec<Expr>) -> Atom {
                     }
                     .to_pfa_rule(),
                 );
-		
-		if repetition_chance > 0.0 {
-		    rules.push(
-			Rule {
+
+                if repetition_chance > 0.0 {
+                    rules.push(
+                        Rule {
                             source: vec![*label_a],
                             symbol: *label_a,
                             probability: repetition_chance,
                             duration: dur as u64,
-			}
-			.to_pfa_rule(),
+                        }
+                        .to_pfa_rule(),
                     );
 
-		    if max_repetitions >= 2.0 {
-			let mut max_rep_source = Vec::new();
-			for _ in 0..max_repetitions as usize {
+                    if max_repetitions >= 2.0 {
+                        let mut max_rep_source = Vec::new();
+                        for _ in 0..max_repetitions as usize {
                             max_rep_source.push(*label_a);
-			}
-			
-			// max repetition rule
-			rules.push(
+                        }
+
+                        // max repetition rule
+                        rules.push(
                             Rule {
-				source: max_rep_source,
-				symbol: *label_b,
-				probability: 1.0,
-				duration: dur as u64,
+                                source: max_rep_source,
+                                symbol: *label_b,
+                                probability: 1.0,
+                                duration: dur as u64,
                             }
                             .to_pfa_rule(),
-			); 
-		    }
-		}
-		
+                        );
+                    }
+                }
+
                 //println!("push rule {} -> {}", label_a, label_b);
 
                 rules.push(
@@ -285,36 +285,36 @@ pub fn construct_friendship(tail: &mut Vec<Expr>) -> Atom {
                     .to_pfa_rule(),
                 );
 
-		if repetition_chance > 0.0 {
-		    rules.push(
-			Rule {
+                if repetition_chance > 0.0 {
+                    rules.push(
+                        Rule {
                             source: vec![*label_b],
                             symbol: *label_b,
                             probability: repetition_chance,
                             duration: dur as u64,
-			}
-			.to_pfa_rule(),
+                        }
+                        .to_pfa_rule(),
                     );
-		    
-		    if max_repetitions >= 2.0 {
-			let mut max_rep_source = Vec::new();
-			for _ in 0..max_repetitions as usize {
+
+                    if max_repetitions >= 2.0 {
+                        let mut max_rep_source = Vec::new();
+                        for _ in 0..max_repetitions as usize {
                             max_rep_source.push(*label_b);
-			}
-			
-			// max repetition rule
-			rules.push(
+                        }
+
+                        // max repetition rule
+                        rules.push(
                             Rule {
-				source: max_rep_source,
-				symbol: center_label,
-				probability: 1.0,
-				duration: dur as u64,
+                                source: max_rep_source,
+                                symbol: center_label,
+                                probability: 1.0,
+                                duration: dur as u64,
                             }
                             .to_pfa_rule(),
-			); 
-		    }
-		}
-		
+                        );
+                    }
+                }
+
                 //println!("push rule {} -> {}", label_b, center_label);
 
                 duration_mapping.insert((center_label, *label_a), dur_ev.clone());
@@ -333,7 +333,7 @@ pub fn construct_friendship(tail: &mut Vec<Expr>) -> Atom {
         pfa.randomize_edges(randomize_chance, randomize_chance);
         pfa.rebalance();
     }
-    
+
     let mut id_tags = BTreeSet::new();
     id_tags.insert(name.clone());
 
