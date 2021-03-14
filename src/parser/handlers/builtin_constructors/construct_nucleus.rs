@@ -1,12 +1,12 @@
 use crate::builtin_types::*;
 use crate::event::*;
 use crate::generator::Generator;
-use crate::markov_sequence_generator::{MarkovSequenceGenerator, Rule};
+use crate::markov_sequence_generator::MarkovSequenceGenerator;
 use crate::parameter::*;
 use crate::parser::parser_helpers::*;
 use ruffbox_synth::ruffbox::synth::SynthParameter;
 use std::collections::{BTreeSet, HashMap};
-use vom_rs::pfa::Pfa;
+use vom_rs::pfa::{Pfa, Rule};
 
 pub fn construct_nucleus(tail: &mut Vec<Expr>) -> Atom {
     let mut tail_drain = tail.drain(..);
@@ -31,17 +31,15 @@ pub fn construct_nucleus(tail: &mut Vec<Expr>) -> Atom {
             Atom::SoundEvent(e) => ev_vec.push(SourceEvent::Sound(e)),
             Atom::ControlEvent(c) => ev_vec.push(SourceEvent::Control(c)),
             Atom::Keyword(k) => match k.as_str() {
-                "dur" => {
-                    match tail_drain.next().unwrap() {
-                        Expr::Constant(Atom::Float(n)) => {
-                            dur = Some(Parameter::with_value(n));
-                        }
-                        Expr::Constant(Atom::Parameter(p)) => {
-                            dur = Some(p);
-                        }
-			_ => {}
-                    };
-                }
+                "dur" => match tail_drain.next() {
+                    Some(Expr::Constant(Atom::Float(n))) => {
+                        dur = Some(Parameter::with_value(n));
+                    }
+                    Some(Expr::Constant(Atom::Parameter(p))) => {
+                        dur = Some(p);
+                    }
+                    _ => {}
+                },
                 _ => println!("{}", k),
             },
             _ => println! {"ignored"},
@@ -51,21 +49,16 @@ pub fn construct_nucleus(tail: &mut Vec<Expr>) -> Atom {
     event_mapping.insert('a', ev_vec);
 
     let mut dur_ev = Event::with_name("transition".to_string());
-    dur_ev.params.insert(
-        SynthParameter::Duration,
-        Box::new(dur.unwrap()),
-    );
+    dur_ev
+        .params
+        .insert(SynthParameter::Duration, Box::new(dur.unwrap()));
     duration_mapping.insert(('a', 'a'), dur_ev);
     // one rule to rule them all
-    rules.push(
-        Rule {
-            source: vec!['a'],
-            symbol: 'a',
-            probability: 1.0,
-            duration: 200,
-        }
-        .to_pfa_rule(),
-    );
+    rules.push(Rule {
+        source: vec!['a'],
+        symbol: 'a',
+        probability: 1.0,
+    });
 
     let pfa = Pfa::<char>::infer_from_rules(&mut rules);
     let mut id_tags = BTreeSet::new();

@@ -6,7 +6,7 @@ use crate::parameter::*;
 use crate::parser::parser_helpers::*;
 use ruffbox_synth::ruffbox::synth::SynthParameter;
 use std::collections::{BTreeSet, HashMap};
-use vom_rs::pfa::Pfa;
+use vom_rs::pfa;
 
 pub fn construct_rule(tail: &mut Vec<Expr>) -> Atom {
     let mut tail_drain = tail.drain(..);
@@ -43,7 +43,7 @@ pub fn construct_infer(tail: &mut Vec<Expr>) -> Atom {
 
     let mut collect_events = false;
     let mut collect_rules = false;
-    let mut dur: f32 = 200.0;
+    let mut dur: Option<Parameter> = Some(Parameter::with_value(200.0));
 
     let mut ev_vec = Vec::new();
     let mut cur_key: String = "".to_string();
@@ -103,18 +103,22 @@ pub fn construct_infer(tail: &mut Vec<Expr>) -> Atom {
                     collect_events = true;
                     continue;
                 }
-                "dur" => {
-                    if let Expr::Constant(Atom::Float(n)) = tail_drain.next().unwrap() {
-                        dur = n;
+                "dur" => match tail_drain.next() {
+                    Some(Expr::Constant(Atom::Float(n))) => {
+                        dur = Some(Parameter::with_value(n));
                     }
-                }
+                    Some(Expr::Constant(Atom::Parameter(p))) => {
+                        dur = Some(p);
+                    }
+                    _ => {}
+                },
                 _ => println!("{}", k),
             },
             _ => println! {"ignored"},
         }
     }
 
-    let pfa = Pfa::<char>::infer_from_rules(&mut rules);
+    let pfa = pfa::Pfa::<char>::infer_from_rules(&mut rules);
     let mut id_tags = BTreeSet::new();
     id_tags.insert(name.clone());
 
@@ -127,7 +131,7 @@ pub fn construct_infer(tail: &mut Vec<Expr>) -> Atom {
             duration_mapping,
             modified: false,
             symbol_ages: HashMap::new(),
-            default_duration: dur as u64,
+            default_duration: dur.unwrap().static_val as u64,
             last_transition: None,
         },
         processors: Vec::new(),

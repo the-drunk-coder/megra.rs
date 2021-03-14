@@ -2,6 +2,7 @@ use crate::builtin_types::*;
 use crate::event::*;
 use crate::generator::Generator;
 use crate::markov_sequence_generator::MarkovSequenceGenerator;
+use crate::parameter::*;
 use crate::parser::parser_helpers::*;
 use std::collections::{BTreeSet, HashMap};
 use vom_rs::pfa::Pfa;
@@ -24,7 +25,7 @@ pub fn construct_learn(tail: &mut Vec<Expr>) -> Atom {
     let mut epsilon = 0.01;
     let mut pfa_size = 30;
 
-    let mut dur = 200;
+    let mut dur: Option<Parameter> = Some(Parameter::with_value(200.0));
 
     let mut ev_vec = Vec::new();
     let mut cur_key: String = "".to_string();
@@ -72,11 +73,15 @@ pub fn construct_learn(tail: &mut Vec<Expr>) -> Atom {
                     collect_events = true;
                     continue;
                 }
-                "dur" => {
-                    if let Expr::Constant(Atom::Float(n)) = tail_drain.next().unwrap() {
-                        dur = n as i32;
+                "dur" => match tail_drain.next() {
+                    Some(Expr::Constant(Atom::Float(n))) => {
+                        dur = Some(Parameter::with_value(n));
                     }
-                }
+                    Some(Expr::Constant(Atom::Parameter(p))) => {
+                        dur = Some(p);
+                    }
+                    _ => {}
+                },
                 "bound" => {
                     if let Expr::Constant(Atom::Float(n)) = tail_drain.next().unwrap() {
                         bound = n as usize;
@@ -124,7 +129,7 @@ pub fn construct_learn(tail: &mut Vec<Expr>) -> Atom {
             duration_mapping: HashMap::new(),
             modified: false,
             symbol_ages: HashMap::new(),
-            default_duration: dur as u64,
+            default_duration: dur.unwrap().static_val as u64,
             last_transition: None,
         },
         processors: Vec::new(),

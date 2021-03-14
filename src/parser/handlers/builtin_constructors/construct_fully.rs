@@ -1,12 +1,12 @@
 use crate::builtin_types::*;
 use crate::event::*;
 use crate::generator::Generator;
-use crate::markov_sequence_generator::{MarkovSequenceGenerator, Rule};
+use crate::markov_sequence_generator::MarkovSequenceGenerator;
 use crate::parameter::*;
 use crate::parser::parser_helpers::*;
 use ruffbox_synth::ruffbox::synth::SynthParameter;
 use std::collections::{BTreeSet, HashMap};
-use vom_rs::pfa::Pfa;
+use vom_rs::pfa::{Pfa, Rule};
 
 pub fn construct_fully(tail: &mut Vec<Expr>) -> Atom {
     let mut tail_drain = tail.drain(..);
@@ -28,7 +28,7 @@ pub fn construct_fully(tail: &mut Vec<Expr>) -> Atom {
     let mut final_mapping = HashMap::new();
     let mut last_char: char = '!'; // label chars
     let mut labels = Vec::new();
-    let mut dur = 200.0;
+    let mut dur: Option<Parameter> = Some(Parameter::with_value(200.0));
 
     while let Some(Expr::Constant(c)) = tail_drain.next() {
         if collect_labeled {
@@ -90,11 +90,15 @@ pub fn construct_fully(tail: &mut Vec<Expr>) -> Atom {
 
         if let Atom::Keyword(k) = c {
             match k.as_str() {
-                "dur" => {
-                    if let Expr::Constant(Atom::Float(n)) = tail_drain.next().unwrap() {
-                        dur = n;
+                "dur" => match tail_drain.next() {
+                    Some(Expr::Constant(Atom::Float(n))) => {
+                        dur = Some(Parameter::with_value(n));
                     }
-                }
+                    Some(Expr::Constant(Atom::Parameter(p))) => {
+                        dur = Some(p);
+                    }
+                    _ => {}
+                },
                 "events" => {
                     collect_labeled = true;
                     continue;
@@ -114,21 +118,16 @@ pub fn construct_fully(tail: &mut Vec<Expr>) -> Atom {
     let mut rules = Vec::new();
     for label_a in labels.iter() {
         for label_b in labels.iter() {
-            rules.push(
-                Rule {
-                    source: vec![*label_a],
-                    symbol: *label_b,
-                    probability: prob,
-                    duration: dur as u64,
-                }
-                .to_pfa_rule(),
-            );
+            rules.push(Rule {
+                source: vec![*label_a],
+                symbol: *label_b,
+                probability: prob,
+            });
 
             let mut dur_ev = Event::with_name("transition".to_string());
-            dur_ev.params.insert(
-                SynthParameter::Duration,
-                Box::new(Parameter::with_value(dur)),
-            );
+            dur_ev
+                .params
+                .insert(SynthParameter::Duration, Box::new(dur.clone().unwrap()));
             duration_mapping.insert((*label_a, *label_b), dur_ev);
         }
     }
@@ -147,7 +146,7 @@ pub fn construct_fully(tail: &mut Vec<Expr>) -> Atom {
             duration_mapping,
             modified: false,
             symbol_ages: HashMap::new(),
-            default_duration: dur as u64,
+            default_duration: dur.unwrap().static_val as u64,
             last_transition: None,
         },
         processors: Vec::new(),
