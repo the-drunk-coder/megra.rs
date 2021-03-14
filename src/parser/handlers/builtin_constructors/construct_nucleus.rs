@@ -23,7 +23,7 @@ pub fn construct_nucleus(tail: &mut Vec<Expr>) -> Atom {
     let mut duration_mapping = HashMap::<(char, char), Event>::new();
     let mut rules = Vec::new();
 
-    let mut dur: f32 = 200.0;
+    let mut dur: Option<Parameter> = Some(Parameter::with_value(200.0));
     let mut ev_vec = Vec::new();
 
     while let Some(Expr::Constant(c)) = tail_drain.next() {
@@ -32,9 +32,15 @@ pub fn construct_nucleus(tail: &mut Vec<Expr>) -> Atom {
             Atom::ControlEvent(c) => ev_vec.push(SourceEvent::Control(c)),
             Atom::Keyword(k) => match k.as_str() {
                 "dur" => {
-                    if let Expr::Constant(Atom::Float(n)) = tail_drain.next().unwrap() {
-                        dur = n;
-                    }
+                    match tail_drain.next().unwrap() {
+                        Expr::Constant(Atom::Float(n)) => {
+                            dur = Some(Parameter::with_value(n));
+                        }
+                        Expr::Constant(Atom::Parameter(p)) => {
+                            dur = Some(p);
+                        }
+			_ => {}
+                    };
                 }
                 _ => println!("{}", k),
             },
@@ -47,7 +53,7 @@ pub fn construct_nucleus(tail: &mut Vec<Expr>) -> Atom {
     let mut dur_ev = Event::with_name("transition".to_string());
     dur_ev.params.insert(
         SynthParameter::Duration,
-        Box::new(Parameter::with_value(dur)),
+        Box::new(dur.unwrap()),
     );
     duration_mapping.insert(('a', 'a'), dur_ev);
     // one rule to rule them all
@@ -56,7 +62,7 @@ pub fn construct_nucleus(tail: &mut Vec<Expr>) -> Atom {
             source: vec!['a'],
             symbol: 'a',
             probability: 1.0,
-            duration: dur as u64,
+            duration: 200,
         }
         .to_pfa_rule(),
     );
@@ -74,7 +80,7 @@ pub fn construct_nucleus(tail: &mut Vec<Expr>) -> Atom {
             duration_mapping,
             modified: false,
             symbol_ages: HashMap::new(),
-            default_duration: dur as u64,
+            default_duration: 200,
             last_transition: None,
         },
         processors: Vec::new(),
