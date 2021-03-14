@@ -159,8 +159,9 @@ pub fn construct_flower(tail: &mut Vec<Expr>) -> Atom {
             }
         }
     }
-        
+    
     // first of all check if we have enough petal events
+    // if not, repeat the last event until we do ...
     let needed_petals = petal_labels.len() % num_layers;
     if needed_petals != 0 {
         let last_found = last_char;
@@ -193,65 +194,51 @@ pub fn construct_flower(tail: &mut Vec<Expr>) -> Atom {
     }
 
     let pistil_exit_prob = (1.0 - repetition_chance) / ((petal_labels.len()) as f32 / num_layers as f32);
+    let norep_pistil_exit_prob = 1.0 / ((petal_labels.len()) as f32 / num_layers as f32);
 
     let mut petal_iter = petal_labels.iter();
-    let mut petal_repetition_handled = false;
+
+    // pistil repetition
+    if repetition_chance > 0.0 {
+	rules.push(
+	    Rule {
+		source: vec![pistil_label],
+		symbol: pistil_label,
+		probability: repetition_chance,
+		duration: dur as u64,
+	    }
+	    .to_pfa_rule(),
+	);
+    }
     
     for _ in 0..(petal_labels.len() / num_layers) {
         let mut label_a = pistil_label;
         let mut last_label_a = pistil_label;
         let mut cur_prob = pistil_exit_prob;
 
-        for l in 0..num_layers {            
+        for l in 0..num_layers {	    
             if let Some(label_b) = petal_iter.next() {
 		//////////////////////
                 // event repetition //
 		//////////////////////
-		if repetition_chance > 0.0 {
-		    if l == 0 && !petal_repetition_handled {
-			rules.push(
-			    Rule {
-				source: vec![label_a],
-				symbol: label_a,
-				probability: repetition_chance,
-				duration: dur as u64,
-			    }
-			    .to_pfa_rule(),
-			);
-			petal_repetition_handled = true;
-		    } else if l > 0 {
-			rules.push(
-			    Rule {
-				source: vec![label_a],
-				symbol: label_a,
-				probability: repetition_chance,
-				duration: dur as u64,
-			    }
-			    .to_pfa_rule(),
-			);
+		// pistil repetition exit 
+		if label_a == pistil_label && repetition_chance > 0.0 && max_repetitions >= 2.0 {		    
+		    let mut max_rep_source = Vec::new();
+		    for _ in 0..max_repetitions as usize {
+			max_rep_source.push(pistil_label);
 		    }
-                    
-		    if max_repetitions >= 2.0 {
-			let mut max_rep_source = Vec::new();
-			for _ in 0..max_repetitions as usize {
-                            max_rep_source.push(label_a);
+		    // max repetition rule
+		    rules.push(
+			Rule {
+			    source: max_rep_source,
+			    symbol: *label_b,
+			    probability: norep_pistil_exit_prob,
+			    duration: dur as u64,
 			}
-			// max repetition rule
-			rules.push(
-                            Rule {
-				source: max_rep_source,
-				symbol: *label_b,
-				probability: 1.0,
-				duration: dur as u64,
-                            }
-                            .to_pfa_rule(),
-			);
-                    }		    
+			.to_pfa_rule(),
+		    );
 		}
-		//////////////////////////
-                // END event repetition //
-		//////////////////////////
-                
+	    	
                 rules.push(
                     Rule {
                         source: vec![label_a],
@@ -261,6 +248,36 @@ pub fn construct_flower(tail: &mut Vec<Expr>) -> Atom {
                     }
                     .to_pfa_rule(),
                 );
+
+		// we already repeated the pistil label ...
+		if  repetition_chance > 0.0 {
+		    rules.push(
+			Rule {
+			    source: vec![*label_b],
+			    symbol: *label_b,
+			    probability: repetition_chance,
+			    duration: dur as u64,
+			}
+			.to_pfa_rule(),
+		    );
+		    
+		    if label_a != pistil_label && max_repetitions >= 2.0 {
+			let mut max_rep_source = Vec::new();
+			for _ in 0..max_repetitions as usize {
+			    max_rep_source.push(label_a);
+			}
+			// max repetition rule
+			rules.push(
+			    Rule {
+				source: max_rep_source,
+				symbol: *label_b,
+				probability: 1.0,
+				duration: dur as u64,
+			    }
+			    .to_pfa_rule(),
+			);
+		    }
+		}
 
 		if l == num_layers - 1 {
 		    rules.push(
@@ -272,6 +289,25 @@ pub fn construct_flower(tail: &mut Vec<Expr>) -> Atom {
 			}
 			.to_pfa_rule(),
                     );
+
+		    if repetition_chance > 0.0 && max_repetitions >= 2.0 {
+			// event repetition, special case
+			// (outermost layer ...)
+			let mut max_rep_source = Vec::new();
+			for _ in 0..max_repetitions as usize {
+			    max_rep_source.push(*label_b);
+			}
+			// max repetition rule
+			rules.push(
+			    Rule {
+				source: max_rep_source,
+				symbol: label_a,
+				probability: 1.0,
+				duration: dur as u64,
+			    }
+			    .to_pfa_rule(),
+			);                
+		    }		    
 		} else {
 		    rules.push(
 			Rule {
@@ -292,36 +328,7 @@ pub fn construct_flower(tail: &mut Vec<Expr>) -> Atom {
                 label_a = *label_b;
 
                 cur_prob = 0.5;
-            }
-	    // event repetition, special case
-	    // (outermost layer ...)
-            if repetition_chance > 0.0 {
-                rules.push(
-		    Rule {
-                        source: vec![label_a],
-                        symbol: label_a,
-                        probability: repetition_chance,
-                        duration: dur as u64,
-		    }
-		    .to_pfa_rule(),
-                );
-		if  max_repetitions >= 2.0 {
-		    let mut max_rep_source = Vec::new();
-		    for _ in 0..max_repetitions as usize {
-                        max_rep_source.push(label_a);
-		    }
-		    // max repetition rule
-		    rules.push(
-                        Rule {
-			    source: max_rep_source,
-			    symbol: last_label_a,
-			    probability: 1.0,
-			    duration: dur as u64,
-                        }
-                        .to_pfa_rule(),
-		    );
-                }
-	    }
+            }	    
         }
     }
 
