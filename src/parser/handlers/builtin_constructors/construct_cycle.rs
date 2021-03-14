@@ -32,7 +32,7 @@ pub fn construct_cycle(
     let mut randomize_chance: f32 = 0.0;
     let mut max_repetitions: f32 = 0.0;
 
-    let mut dur_vec: Vec<f32> = Vec::new();
+    let mut dur_vec: Vec<Parameter> = Vec::new();
 
     let mut collect_events = false;
     let mut collect_template = false;
@@ -45,6 +45,7 @@ pub fn construct_cycle(
 
     // collect final events in their position in the cycle
     let mut ev_vecs = Vec::new();
+    let mut parsed_cycle = None;
 
     while let Some(Expr::Constant(c)) = tail_drain.next() {
         if collect_template {
@@ -131,55 +132,56 @@ pub fn construct_cycle(
                 _ => println!("{}", k),
             },
             Atom::Description(d) => {
-                let parsed_cycle = cyc_parser::eval_cyc_from_str(&d, sample_set, out_mode);
-                match parsed_cycle {
-                    Ok(mut c) => {
-                        for mut cyc_evs in c.drain(..) {
-                            match *cyc_evs.as_slice() {
-                                [Some(Expr::Constant(Atom::Float(f)))] => {
-                                    // slice pattern are awesome !
-                                    if !dur_vec.is_empty() {
-                                        // replace last value, but vec can't start with duration !
-                                        *dur_vec.last_mut().unwrap() = f
-                                    }
-                                }
-                                _ => {
-                                    ev_vecs.push(Vec::new());
-                                    dur_vec.push(dur.clone().unwrap().static_val);
-                                    let mut cyc_evs_drain = cyc_evs.drain(..);
-                                    while let Some(Some(Expr::Constant(cc))) = cyc_evs_drain.next()
-                                    {
-                                        match cc {
-                                            Atom::Symbol(s) => {
-                                                if collected_mapping
-                                                    .contains_key(&s.chars().next().unwrap())
-                                                {
-                                                    ev_vecs.last_mut().unwrap().append(
-                                                        collected_mapping
-                                                            .get_mut(&s.chars().next().unwrap())
-                                                            .unwrap(),
-                                                    );
-                                                }
-                                            }
-                                            Atom::SoundEvent(e) => {
-                                                ev_vecs
-                                                    .last_mut()
-                                                    .unwrap()
-                                                    .push(SourceEvent::Sound(e));
-                                            }
-                                            _ => { /* ignore */ }
-                                        }
-                                    }
-                                }
-                            }
+                parsed_cycle = Some(cyc_parser::eval_cyc_from_str(&d, sample_set, out_mode));               
+            }
+            _ => println! {"ignored"},
+        }
+    }
+
+    match parsed_cycle {
+        Some(Ok(mut c)) => {
+            for mut cyc_evs in c.drain(..) {
+                match cyc_evs.as_slice() {
+                    [Some(Expr::Constant(Atom::Float(f)))] => {
+                        // slice pattern are awesome !
+                        if !dur_vec.is_empty() {
+                            // replace last value, but vec can't start with duration !
+                            *dur_vec.last_mut().unwrap() = Parameter::with_value(*f);
                         }
                     }
                     _ => {
-                        println!("couldn't parse cycle: {}", d);
+                        ev_vecs.push(Vec::new());
+                        dur_vec.push(dur.clone().unwrap());
+                        let mut cyc_evs_drain = cyc_evs.drain(..);
+                        while let Some(Some(Expr::Constant(cc))) = cyc_evs_drain.next()
+                        {
+                            match cc {
+                                Atom::Symbol(s) => {
+                                    if collected_mapping
+                                        .contains_key(&s.chars().next().unwrap())
+                                    {
+                                        ev_vecs.last_mut().unwrap().append(
+                                            collected_mapping
+                                                .get_mut(&s.chars().next().unwrap())
+                                                .unwrap(),
+                                        );
+                                    }
+                                }
+                                Atom::SoundEvent(e) => {
+                                    ev_vecs
+                                        .last_mut()
+                                        .unwrap()
+                                        .push(SourceEvent::Sound(e));
+                                }
+                                _ => { /* ignore */ }
+                            }
+                        }
                     }
                 }
             }
-            _ => println! {"ignored"},
+        }
+        _ => {
+            println!("couldn't parse cycle");
         }
     }
 
@@ -203,7 +205,7 @@ pub fn construct_cycle(
         let mut dur_ev = Event::with_name("transition".to_string());
         dur_ev.params.insert(
             SynthParameter::Duration,
-            Box::new(Parameter::with_value(dur_vec[count])),
+            Box::new(dur_vec[count].clone()),
         );
         duration_mapping.insert((last_char, next_char), dur_ev);
 
@@ -257,7 +259,7 @@ pub fn construct_cycle(
         let mut dur_ev = Event::with_name("transition".to_string());
         dur_ev.params.insert(
             SynthParameter::Duration,
-            Box::new(Parameter::with_value(*dur_vec.last().unwrap())),
+            Box::new(dur_vec.last().unwrap().clone()),
         );
         duration_mapping.insert((last_char, first_char), dur_ev);
 
