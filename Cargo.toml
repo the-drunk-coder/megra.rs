@@ -6,6 +6,7 @@ edition = "2018"
 license = "GPL-3.0+"
 
 [dependencies]
+num = "0.4"
 cpal = { version="0.13", features = ["jack"] }
 directories-next = "2.0"
 anyhow = "1.0"
