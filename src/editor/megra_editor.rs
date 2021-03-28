@@ -176,17 +176,19 @@ impl<'a> epi::App for MegraEditor<'a> {
                 );
 
                 let id = ui.make_persistent_id("file_chooser_box");
-                egui::combo_box(ui, id, &self.sketch_list[self.sketch_number], |ui| {
-                    for i in 0..self.sketch_list.len() {
-                        ui.selectable_value(
-                            &mut sketch_number,
-                            SketchNumber::Num(i),
-                            &self.sketch_list[i],
-                        );
-                    }
-                });
+                egui::ComboBox::from_id_source(id)
+		    .selected_text(&self.sketch_list[self.sketch_number])
+		    .show_ui(ui, |ui| {
+			for i in 0..self.sketch_list.len() {
+                            ui.selectable_value(
+				&mut sketch_number,
+				SketchNumber::Num(i),
+				&self.sketch_list[i],
+                            );
+			}
+                    });
             });
-
+	    
             let SketchNumber::Num(sk_num) = sketch_number;
 
             let mut sketch_switched = false;
