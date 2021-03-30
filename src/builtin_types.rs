@@ -121,6 +121,7 @@ pub enum BuiltInCommand {
     LoadSampleSets,
     LoadSampleSet,
     LoadPart,
+    Once,
 }
 
 /// As this doesn't strive to be a turing-complete lisp, we'll start with the basic
@@ -149,6 +150,7 @@ pub enum Command {
     LoadSampleSets(String),                            // top level sets set path
     LoadPart((String, Part)),                          // set (events), keyword, path
     ExportDot((String, Generator)),                    // filename, generator
+    Once((Vec<Event>, Vec<ControlEvent>)),
 }
 
 #[derive(Clone)]

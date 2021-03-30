@@ -43,7 +43,7 @@ pub struct Session<const BUFSIZE: usize, const NCHAN: usize> {
             sync::Arc<Mutex<SchedulerData<BUFSIZE, NCHAN>>>,
         ),
     >,
-    output_mode: OutputMode,
+    pub output_mode: OutputMode,
     contexts: HashMap<String, BTreeSet<BTreeSet<String>>>,
 }
 

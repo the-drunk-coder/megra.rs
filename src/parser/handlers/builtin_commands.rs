@@ -199,6 +199,22 @@ fn handle_export_dot(tail: &mut Vec<Expr>) -> Atom {
     Atom::Command(Command::ExportDot((filename, gen)))
 }
 
+fn handle_once(tail: &mut Vec<Expr>) -> Atom {
+    let mut tail_drain = tail.drain(..);
+    let mut sound_events = Vec::new();
+    let mut control_events = Vec::new();
+
+    while let Some(Expr::Constant(c)) = tail_drain.next() {
+        match c {
+            Atom::SoundEvent(e) => sound_events.push(e),
+	    Atom::ControlEvent(c) => control_events.push(c),            
+            _ => {}
+        }
+    }
+
+    Atom::Command(Command::Once((sound_events, control_events)))
+}
+
 pub fn handle(cmd: BuiltInCommand, tail: &mut Vec<Expr>) -> Atom {
     match cmd {
         BuiltInCommand::Clear => Atom::Command(Command::Clear),
@@ -211,5 +227,6 @@ pub fn handle(cmd: BuiltInCommand, tail: &mut Vec<Expr>) -> Atom {
         BuiltInCommand::LoadSampleSets => handle_load_sample_sets(tail),
         BuiltInCommand::LoadPart => handle_load_part(tail),
         BuiltInCommand::ExportDot => handle_export_dot(tail),
+	BuiltInCommand::Once => handle_once(tail),
     }
 }

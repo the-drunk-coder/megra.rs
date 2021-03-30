@@ -10,8 +10,11 @@ use vom_rs::pfa;
 use ruffbox_synth::ruffbox::{synth::SynthParameter, Ruffbox};
 
 use crate::builtin_types::*;
+use crate::event_helpers::*;
+use crate::event::*;
 use crate::generator::*;
 use crate::parameter::*;
+use crate::session::*;
 use crate::sample_set::SampleSet;
 
 pub fn load_sample<const BUFSIZE: usize, const NCHAN: usize>(
@@ -27,7 +30,7 @@ pub fn load_sample<const BUFSIZE: usize, const NCHAN: usize>(
     let mut duration = if let Some(samples) = reader.streaminfo().samples {
         let tmp_dur = 1000.0
             * ((samples as f32 / reader.streaminfo().channels as f32)
-                / reader.streaminfo().sample_rate as f32);
+               / reader.streaminfo().sample_rate as f32);
         tmp_dur as usize
     } else {
         200
@@ -175,4 +178,81 @@ pub fn export_dot(filename: &str, generator: &Generator) {
     let dot_string = pfa::to_dot::<char>(&generator.root_generator.generator);
     println!("export to {}", filename);
     fs::write(filename, dot_string).expect("Unable to write file");
+}
+
+pub fn once<const BUFSIZE: usize, const NCHAN: usize>(
+    ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>,
+    parts_store: &sync::Arc<Mutex<PartsStore>>,
+    global_parameters: &sync::Arc<GlobalParameters>,
+    session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
+    sound_events: &mut Vec<Event>,
+    control_events: &mut Vec<ControlEvent>
+) {
+    for cev in control_events.iter() {
+	if let Some(mut contexts) = cev.ctx.clone() {
+            // this is the worst clone ....
+            for mut sx in contexts.drain(..) {
+                Session::handle_context(
+                    &mut sx,
+                    session,
+                    ruffbox,
+                    parts_store,
+                    global_parameters,
+                );
+            }
+        }
+    }
+
+    for sev in sound_events.iter_mut() {
+	let s = sev.get_static();
+
+	if s.name == "silence" {
+            continue;
+        }
+
+        let mut bufnum: usize = 0;
+        if let Some(b) = s.params.get(&SynthParameter::SampleBufferNumber) {
+            bufnum = *b as usize;
+        }
+
+        let mut ruff = ruffbox.lock();
+        // latency 0.05, should be made configurable later ...
+        let inst = ruff.prepare_instance(
+            map_name(&s.name),
+            0.0,
+            bufnum,
+        );
+        // set parameters and trigger instance
+        for (k, v) in s.params.iter() {
+            // special handling for stereo param
+            match k {
+                SynthParameter::ChannelPosition => {
+		    let sess = session.lock();
+                    if sess.output_mode == OutputMode::Stereo {
+                        let pos = (*v + 1.0) * 0.5;
+                        ruff.set_instance_parameter(inst, *k, pos);
+                    } else {
+                        ruff.set_instance_parameter(inst, *k, *v);
+                    }
+                }
+                // convert milliseconds to seconds
+                SynthParameter::Duration => {
+                    ruff.set_instance_parameter(inst, *k, *v * 0.001)
+                }
+                SynthParameter::Attack => {
+                    ruff.set_instance_parameter(inst, *k, *v * 0.001)
+                }
+                SynthParameter::Sustain => {
+                    ruff.set_instance_parameter(inst, *k, *v * 0.001)
+                }
+                SynthParameter::Release => {
+                    ruff.set_instance_parameter(inst, *k, *v * 0.001)
+                }
+                _ => ruff.set_instance_parameter(inst, *k, *v),
+            }
+        }
+        ruff.trigger(inst);
+    }
+    
+    
 }
