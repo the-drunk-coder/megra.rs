@@ -96,6 +96,7 @@ impl<'a> epi::App for MegraEditor<'a> {
         self.function_names.push("defpart");
         self.function_names.push("infer");
         self.function_names.push("clear");
+	self.function_names.push("once");
 
         self.colors.insert(
             egui::CodeColors::Keyword,
