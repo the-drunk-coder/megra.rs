@@ -69,9 +69,7 @@ fn parse_commands<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<&'a 
         map(tag("export-dot"), |_| {
             BuiltIn::Command(BuiltInCommand::ExportDot)
         }),
-	map(tag("once"), |_| {
-            BuiltIn::Command(BuiltInCommand::Once)
-        }),
+        map(tag("once"), |_| BuiltIn::Command(BuiltInCommand::Once)),
     ))(i)
 }
 

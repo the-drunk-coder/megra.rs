@@ -207,7 +207,7 @@ fn handle_once(tail: &mut Vec<Expr>) -> Atom {
     while let Some(Expr::Constant(c)) = tail_drain.next() {
         match c {
             Atom::SoundEvent(e) => sound_events.push(e),
-	    Atom::ControlEvent(c) => control_events.push(c),            
+            Atom::ControlEvent(c) => control_events.push(c),
             _ => {}
         }
     }
@@ -227,6 +227,6 @@ pub fn handle(cmd: BuiltInCommand, tail: &mut Vec<Expr>) -> Atom {
         BuiltInCommand::LoadSampleSets => handle_load_sample_sets(tail),
         BuiltInCommand::LoadPart => handle_load_part(tail),
         BuiltInCommand::ExportDot => handle_export_dot(tail),
-	BuiltInCommand::Once => handle_once(tail),
+        BuiltInCommand::Once => handle_once(tail),
     }
 }

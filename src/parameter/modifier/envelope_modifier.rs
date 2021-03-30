@@ -60,7 +60,7 @@ impl Modifier for EnvelopeModifier {
                 self.steps_idx += 1;
             } else if self.repeat {
                 if let Some(cur_step) = self.steps.get_mut(0) {
-                    self.current_steps = cur_step.evaluate() as usize;		    
+                    self.current_steps = cur_step.evaluate() as usize;
                     self.steps_idx = 1;
                 } else {
                     self.done = true;
@@ -95,9 +95,9 @@ impl Modifier for EnvelopeModifier {
                 self.done = true;
             }
 
-            self.step_count = 0;            
+            self.step_count = 0;
         }
-	//println!("from: {} to: {} step: {} done: {}", self.current_from, self.current_to, self.current_steps, self.done);
+        //println!("from: {} to: {} step: {} done: {}", self.current_from, self.current_to, self.current_steps, self.done);
 
         let val = if (self.current_from - self.current_to).abs() < f32::EPSILON || self.done {
             // self.current_to == self.current_from
@@ -105,10 +105,10 @@ impl Modifier for EnvelopeModifier {
         } else {
             let current_range = self.current_to - self.current_from;
             let degree_increment = if self.current_steps <= 1 {
-		90.0
-	    } else {
-		90.0 / (self.current_steps - 1) as f32
-	    };
+                90.0
+            } else {
+                90.0 / (self.current_steps - 1) as f32
+            };
             let degree = degree_increment * self.step_count as f32;
             self.current_from + degree.to_radians().sin() * current_range
         };

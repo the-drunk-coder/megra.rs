@@ -106,10 +106,17 @@ pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
                 }
                 Command::ExportDot((f, g)) => {
                     commands::export_dot(&f, &g);
-                },
-		Command::Once((mut s, mut c)) => {
-                    commands::once(ruffbox, parts_store, global_parameters, session, &mut s, &mut c);
-                },
+                }
+                Command::Once((mut s, mut c)) => {
+                    commands::once(
+                        ruffbox,
+                        parts_store,
+                        global_parameters,
+                        session,
+                        &mut s,
+                        &mut c,
+                    );
+                }
             };
         }
         Expr::Constant(Atom::Float(f)) => {
