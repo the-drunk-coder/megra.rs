@@ -57,6 +57,7 @@ pub enum BuiltInParameterEvent {
 
 pub enum BuiltInSoundEvent {
     Sine(EventOperation),
+    Cub(EventOperation),
     Saw(EventOperation),
     Square(EventOperation),
 }

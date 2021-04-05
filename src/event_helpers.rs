@@ -6,6 +6,7 @@ pub fn map_name(name: &str) -> SourceType {
         "sine" => SourceType::SineSynth,
         "saw" => SourceType::LFSawSynth,
         "sqr" => SourceType::LFSquareSynth,
+	"cub" => SourceType::LFCubSynth,
         "sampler" => SourceType::Sampler,
         _ => SourceType::SineSynth,
     }
