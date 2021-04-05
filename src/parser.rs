@@ -132,6 +132,9 @@ fn parse_constructors<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<
         map(tag("friendship"), |_| {
             BuiltIn::Constructor(BuiltInConstructor::Friendship)
         }),
+	map(tag("chop"), |_| {
+            BuiltIn::Constructor(BuiltInConstructor::Chop)
+        }),
     ))(i)
 }
 

@@ -110,7 +110,7 @@ pub enum BuiltInConstructor {
     Fully,
     Flower,
     Friendship,
-    // Chop,
+    Chop,
     // Pseq, ?
 }
 

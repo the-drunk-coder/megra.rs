@@ -11,6 +11,7 @@ mod construct_fully;
 mod construct_infer;
 mod construct_learn;
 mod construct_nucleus;
+mod construct_chop;
 
 pub fn handle(
     constructor_type: &BuiltInConstructor,
@@ -27,5 +28,6 @@ pub fn handle(
         BuiltInConstructor::Friendship => construct_friendship::construct_friendship(tail),
         BuiltInConstructor::Fully => construct_fully::construct_fully(tail),
         BuiltInConstructor::Cycle => construct_cycle::construct_cycle(tail, sample_set, out_mode),
+	BuiltInConstructor::Chop => construct_chop::construct_chop(tail),
     }
 }
