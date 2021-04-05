@@ -98,6 +98,7 @@ impl<'a> epi::App for MegraEditor<'a> {
         self.function_names.push("clear");
 	self.function_names.push("once");
 	self.function_names.push("cub");
+	self.function_names.push("cmp");
 	
         self.colors.insert(
             egui::CodeColors::Keyword,

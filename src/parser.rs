@@ -141,6 +141,7 @@ fn parse_generator_processors<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, Verbo
         map(tag("apple"), |_| BuiltIn::GenProc(BuiltInGenProc::Apple)),
         map(tag("every"), |_| BuiltIn::GenProc(BuiltInGenProc::Every)),
         map(tag("life"), |_| BuiltIn::GenProc(BuiltInGenProc::Lifemodel)),
+	map(tag("cmp"), |_| BuiltIn::Compose), // putting this here for now
     ))(i)
 }
 
@@ -366,6 +367,9 @@ pub fn eval_expression(
                 Expr::Constant(Atom::BuiltIn(bi)) => Some(Expr::Constant(match bi {
                     BuiltIn::Command(cmd) => {
                         handlers::builtin_commands::handle(cmd, &mut reduced_tail)
+                    }
+		    BuiltIn::Compose => {
+                        handlers::builtin_compose::handle(&mut reduced_tail)
                     }
                     BuiltIn::Silence => Atom::SoundEvent(Event::with_name("silence".to_string())),
                     BuiltIn::Constructor(con) => handlers::builtin_constructors::handle(

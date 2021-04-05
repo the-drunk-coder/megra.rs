@@ -8,4 +8,5 @@ pub mod builtin_multiplexer;
 pub mod builtin_parameter_event;
 pub mod builtin_sound_event;
 pub mod builtin_sync_context;
+pub mod builtin_compose;
 pub mod custom_sample_event;

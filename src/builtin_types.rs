@@ -74,7 +74,10 @@ pub enum BuiltInGenProc {
     Pear,
     Apple,
     Every,
-    Lifemodel,
+    Lifemodel,    
+}
+pub enum BuiltInCompose {
+    
 }
 
 pub enum BuiltInGenModFun {
@@ -131,6 +134,7 @@ pub enum BuiltIn {
     Constructor(BuiltInConstructor),
     Silence,
     Command(BuiltInCommand),
+    Compose,
     SyncContext,
     Parameter(BuiltInDynamicParameter),
     SoundEvent(BuiltInSoundEvent),

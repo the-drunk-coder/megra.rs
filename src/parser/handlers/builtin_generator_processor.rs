@@ -315,7 +315,7 @@ pub fn collect_generator_processor(
         BuiltInGenProc::Pear => collect_pear(tail),
         BuiltInGenProc::Apple => collect_apple(tail),
         BuiltInGenProc::Every => collect_every(tail),
-        BuiltInGenProc::Lifemodel => collect_lifemodel(tail),
+        BuiltInGenProc::Lifemodel => collect_lifemodel(tail),	
     }
 }
 
