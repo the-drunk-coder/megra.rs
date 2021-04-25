@@ -17,9 +17,9 @@ pub fn construct_chop(tail: &mut Vec<Expr>) -> Atom {
     } else {
         "".to_string()
     };
-    
+
     // name is the first symbol
-    let slices:usize = if let Some(n) = get_float_from_expr(&tail_drain.next().unwrap()) {
+    let slices: usize = if let Some(n) = get_float_from_expr(&tail_drain.next().unwrap()) {
         n as usize
     } else {
         8
@@ -29,74 +29,72 @@ pub fn construct_chop(tail: &mut Vec<Expr>) -> Atom {
     let mut repetition_chance: f32 = 0.0;
     let mut randomize_chance: f32 = 0.0;
     let mut max_repetitions: f32 = 0.0;
-    
+
     let mut events = Vec::new();
-    
-    while let Some(Expr::Constant(c)) = tail_drain.next() {        
+
+    while let Some(Expr::Constant(c)) = tail_drain.next() {
         match c {
             Atom::SoundEvent(e) => {
                 events.push(e);
-            }                          
-	    Atom::Keyword(k) => {
-		match k.as_str() {
-		    "dur" => match tail_drain.next() {
-			Some(Expr::Constant(Atom::Float(n))) => {
-			    dur = Some(Parameter::with_value(n));
-			}
-			Some(Expr::Constant(Atom::Parameter(p))) => {
-			    dur = Some(p);
-			}
-			_ => {}
-		    },
-		    "rep" => {
-			if let Expr::Constant(Atom::Float(n)) = tail_drain.next().unwrap() {
-                            repetition_chance = n;
-			}
+            }
+            Atom::Keyword(k) => match k.as_str() {
+                "dur" => match tail_drain.next() {
+                    Some(Expr::Constant(Atom::Float(n))) => {
+                        dur = Some(Parameter::with_value(n));
                     }
-                    "rnd" => {
-			if let Expr::Constant(Atom::Float(n)) = tail_drain.next().unwrap() {
-                            randomize_chance = n;
-			}
+                    Some(Expr::Constant(Atom::Parameter(p))) => {
+                        dur = Some(p);
                     }
-                    "max-rep" => {
-			if let Expr::Constant(Atom::Float(n)) = tail_drain.next().unwrap() {
-                            max_repetitions = n;
-			}
+                    _ => {}
+                },
+                "rep" => {
+                    if let Expr::Constant(Atom::Float(n)) = tail_drain.next().unwrap() {
+                        repetition_chance = n;
                     }
-		    _ => {}
-		}		
-	    }
-	    _ => {}
-	} 
-    }       	
-    
+                }
+                "rnd" => {
+                    if let Expr::Constant(Atom::Float(n)) = tail_drain.next().unwrap() {
+                        randomize_chance = n;
+                    }
+                }
+                "max-rep" => {
+                    if let Expr::Constant(Atom::Float(n)) = tail_drain.next().unwrap() {
+                        max_repetitions = n;
+                    }
+                }
+                _ => {}
+            },
+            _ => {}
+        }
+    }
+
     let mut chopped_events = Vec::new();
 
     for s in 0..slices {
-	let mut slice_events = Vec::new();
+        let mut slice_events = Vec::new();
 
-	for ev in events.iter() {
-	    let mut slice_event = ev.clone();
-	    slice_event.params.insert(
-		SynthParameter::PlaybackStart,
-		Box::new(Parameter::with_value(s as f32 * (1.0 / slices as f32))),
-	    );
+        for ev in events.iter() {
+            let mut slice_event = ev.clone();
+            slice_event.params.insert(
+                SynthParameter::PlaybackStart,
+                Box::new(Parameter::with_value(s as f32 * (1.0 / slices as f32))),
+            );
 
-	    let sus = if let Some(old_sus) = slice_event.params.get(&SynthParameter::Sustain) {
-		old_sus.static_val  / slices as f32 
-	    } else {
-		dur.clone().unwrap().static_val
-	    };
-	    
-	    slice_event.params.insert(
-		SynthParameter::Sustain,
-		Box::new(Parameter::with_value(sus)),
-	    );
-	    
-	    slice_events.push(SourceEvent::Sound(slice_event));
-	}
+            let sus = if let Some(old_sus) = slice_event.params.get(&SynthParameter::Sustain) {
+                old_sus.static_val / slices as f32
+            } else {
+                dur.clone().unwrap().static_val
+            };
 
-	chopped_events.push(slice_events)
+            slice_event.params.insert(
+                SynthParameter::Sustain,
+                Box::new(Parameter::with_value(sus)),
+            );
+
+            slice_events.push(SourceEvent::Sound(slice_event));
+        }
+
+        chopped_events.push(slice_events)
     }
 
     let mut rules = Vec::new();
@@ -107,7 +105,7 @@ pub fn construct_chop(tail: &mut Vec<Expr>) -> Atom {
     let mut duration_mapping = HashMap::<(char, char), Event>::new();
     let mut count = 0;
     let num_events = chopped_events.len();
-    
+
     for ev in chopped_events.drain(..) {
         let next_char: char = std::char::from_u32(last_char as u32 + 1).unwrap();
 
@@ -118,7 +116,7 @@ pub fn construct_chop(tail: &mut Vec<Expr>) -> Atom {
             .params
             .insert(SynthParameter::Duration, Box::new(dur.clone().unwrap()));
         duration_mapping.insert((last_char, next_char), dur_ev);
-	
+
         if count < num_events - 1 {
             if repetition_chance > 0.0 {
                 //println!("add rep chance");
@@ -167,12 +165,11 @@ pub fn construct_chop(tail: &mut Vec<Expr>) -> Atom {
     if count != 0 {
         // close the cycle
         let mut dur_ev = Event::with_name("transition".to_string());
-        dur_ev.params.insert(
-            SynthParameter::Duration,
-            Box::new(dur.clone().unwrap()),
-        );
+        dur_ev
+            .params
+            .insert(SynthParameter::Duration, Box::new(dur.clone().unwrap()));
         duration_mapping.insert((last_char, first_char), dur_ev);
-	
+
         rules.push(Rule {
             source: vec![last_char],
             symbol: first_char,

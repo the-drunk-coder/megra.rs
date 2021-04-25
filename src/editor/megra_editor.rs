@@ -96,11 +96,11 @@ impl<'a> epi::App for MegraEditor<'a> {
         self.function_names.push("defpart");
         self.function_names.push("infer");
         self.function_names.push("clear");
-	self.function_names.push("once");
-	self.function_names.push("cub");
-	self.function_names.push("cmp");
-	self.function_names.push("chop");
-	
+        self.function_names.push("once");
+        self.function_names.push("cub");
+        self.function_names.push("cmp");
+        self.function_names.push("chop");
+
         self.colors.insert(
             egui::CodeColors::Keyword,
             egui::Color32::from_rgb(200, 20, 200),

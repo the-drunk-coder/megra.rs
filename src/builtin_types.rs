@@ -74,11 +74,9 @@ pub enum BuiltInGenProc {
     Pear,
     Apple,
     Every,
-    Lifemodel,    
+    Lifemodel,
 }
-pub enum BuiltInCompose {
-    
-}
+pub enum BuiltInCompose {}
 
 pub enum BuiltInGenModFun {
     Haste,

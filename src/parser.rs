@@ -132,7 +132,7 @@ fn parse_constructors<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<
         map(tag("friendship"), |_| {
             BuiltIn::Constructor(BuiltInConstructor::Friendship)
         }),
-	map(tag("chop"), |_| {
+        map(tag("chop"), |_| {
             BuiltIn::Constructor(BuiltInConstructor::Chop)
         }),
     ))(i)
@@ -144,7 +144,7 @@ fn parse_generator_processors<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, Verbo
         map(tag("apple"), |_| BuiltIn::GenProc(BuiltInGenProc::Apple)),
         map(tag("every"), |_| BuiltIn::GenProc(BuiltInGenProc::Every)),
         map(tag("life"), |_| BuiltIn::GenProc(BuiltInGenProc::Lifemodel)),
-	map(tag("cmp"), |_| BuiltIn::Compose), // putting this here for now
+        map(tag("cmp"), |_| BuiltIn::Compose), // putting this here for now
     ))(i)
 }
 
@@ -181,7 +181,7 @@ fn parse_synth_event<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<&
         map(tag("sine"), |_| {
             BuiltIn::SoundEvent(BuiltInSoundEvent::Sine(EventOperation::Replace))
         }),
-	map(tag("cub"), |_| {
+        map(tag("cub"), |_| {
             BuiltIn::SoundEvent(BuiltInSoundEvent::Cub(EventOperation::Replace))
         }),
         map(tag("saw"), |_| {
@@ -371,9 +371,7 @@ pub fn eval_expression(
                     BuiltIn::Command(cmd) => {
                         handlers::builtin_commands::handle(cmd, &mut reduced_tail)
                     }
-		    BuiltIn::Compose => {
-                        handlers::builtin_compose::handle(&mut reduced_tail)
-                    }
+                    BuiltIn::Compose => handlers::builtin_compose::handle(&mut reduced_tail),
                     BuiltIn::Silence => Atom::SoundEvent(Event::with_name("silence".to_string())),
                     BuiltIn::Constructor(con) => handlers::builtin_constructors::handle(
                         &con,
