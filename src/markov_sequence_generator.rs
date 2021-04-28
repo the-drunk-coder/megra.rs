@@ -87,7 +87,7 @@ impl MarkovSequenceGenerator {
             {
                 transition = Some(dur.get_static());
             } else {
-                // println!("no dur");
+                //println!("no dur");
 
                 let mut t = Event::with_name("transition".to_string()).get_static();
                 t.params

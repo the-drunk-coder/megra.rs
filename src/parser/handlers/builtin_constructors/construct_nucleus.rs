@@ -36,7 +36,7 @@ pub fn construct_nucleus(tail: &mut Vec<Expr>) -> Atom {
                         dur = Some(Parameter::with_value(n));
                     }
                     Some(Expr::Constant(Atom::Parameter(p))) => {
-                        dur = Some(p);
+			dur = Some(p);
                     }
                     _ => {}
                 },
@@ -51,7 +51,7 @@ pub fn construct_nucleus(tail: &mut Vec<Expr>) -> Atom {
     let mut dur_ev = Event::with_name("transition".to_string());
     dur_ev
         .params
-        .insert(SynthParameter::Duration, Box::new(dur.unwrap()));
+        .insert(SynthParameter::Duration, Box::new(dur.clone().unwrap()));
     duration_mapping.insert(('a', 'a'), dur_ev);
     // one rule to rule them all
     rules.push(Rule {
@@ -73,7 +73,7 @@ pub fn construct_nucleus(tail: &mut Vec<Expr>) -> Atom {
             duration_mapping,
             modified: false,
             symbol_ages: HashMap::new(),
-            default_duration: 200,
+	    default_duration: dur.unwrap().static_val as u64,
             last_transition: None,
         },
         processors: Vec::new(),

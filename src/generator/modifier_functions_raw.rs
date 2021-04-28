@@ -10,6 +10,7 @@ use std::collections::{HashMap, HashSet};
 
 pub fn haste_raw(time_mods: &mut Vec<TimeMod>, v: f32, n: usize) {
     for _ in 0..n {
+	//println!("push time mod {}", v);
         time_mods.push(TimeMod {
             val: v,
             op: EventOperation::Multiply,
@@ -108,6 +109,7 @@ pub fn grow_raw(
             }
 
             for (k, v) in dur_mapping_to_add.drain() {
+		//println!("add dur map {:?} {}", k, v.params[&SynthParameter::Duration].static_val);
                 gen.duration_mapping.insert(k, v);
             }
         }
