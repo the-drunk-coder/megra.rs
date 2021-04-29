@@ -168,10 +168,14 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Scheduler<BUFSIZE, NCHAN> {
     /// Stop this scheduler.
     pub fn stop(&mut self) {
         self.running.store(false, Ordering::SeqCst);
-        self.handle
-            .take()
-            .expect("Called stop on non-running thread")
-            .join()
-            .expect("Could not join spawned thread");
+	if let Some(h) = self.handle.take() {
+	    if let Ok(_) = h.join() {
+		println!("joined!");
+	    } else {
+		println!("Could not join spawned thread");
+	    }
+	} else {
+	    println!("Called stop on non-running thread");
+	}
     }
 }

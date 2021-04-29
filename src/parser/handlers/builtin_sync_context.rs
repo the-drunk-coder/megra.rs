@@ -7,8 +7,25 @@ pub fn handle(tail: &mut Vec<Expr>) -> Atom {
     let mut tail_drain = tail.drain(..);
 
     // name is the first symbol
-    let name: String = get_string_from_expr(&tail_drain.next().unwrap()).unwrap();
-    let active = get_bool_from_expr(&tail_drain.next().unwrap()).unwrap();
+    let name = if let Some(thing) = tail_drain.next() {
+	if let Some(namestring) = get_string_from_expr(&thing) {
+	    namestring
+	} else {
+	    "".to_string()
+	}
+    } else {
+	"".to_string()
+    };
+    
+    let active = if let Some(thing) = tail_drain.next() {
+	if let Some(act) = get_bool_from_expr(&thing) {
+	    act
+	} else {
+	    false
+	}
+    } else {
+	false
+    };
 
     if !active {
         return Atom::SyncContext(SyncContext {
