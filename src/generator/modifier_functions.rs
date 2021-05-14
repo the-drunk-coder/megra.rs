@@ -22,9 +22,9 @@ pub fn haste(
     _: &HashMap<String, ConfigParameter>,
 ) {
     // sanity check, otherwise nothing happens ...
-    if let ConfigParameter::Numeric(n) = pos_args[0] {
-        if let ConfigParameter::Numeric(v) = pos_args[1] {
-            haste_raw(time_mods, v, n as usize);
+    if let Some(ConfigParameter::Numeric(n)) = pos_args.get(0) {
+	if let Some(ConfigParameter::Numeric(v)) = pos_args.get(1) {
+            haste_raw(time_mods, *v, *n as usize);
         }
     }
 }
@@ -35,9 +35,9 @@ pub fn relax(
     pos_args: &[ConfigParameter],
     _: &HashMap<String, ConfigParameter>,
 ) {
-    if let ConfigParameter::Numeric(n) = pos_args[0] {
-        if let ConfigParameter::Numeric(v) = pos_args[1] {
-            relax_raw(time_mods, v, n as usize);
+    if let Some(ConfigParameter::Numeric(n)) = pos_args.get(0) {
+        if let Some(ConfigParameter::Numeric(v)) = pos_args.get(1) {
+            relax_raw(time_mods, *v, *n as usize);
         }
     }
 }
@@ -48,7 +48,7 @@ pub fn grow(
     pos_args: &[ConfigParameter],
     named_args: &HashMap<String, ConfigParameter>,
 ) {
-    if let ConfigParameter::Numeric(f) = pos_args[0] {
+    if let Some(ConfigParameter::Numeric(f)) = pos_args.get(0) {
         // get method or use default ...
         let m = if let Some(ConfigParameter::Symbolic(s)) = named_args.get("method") {
             s.clone()
@@ -56,7 +56,7 @@ pub fn grow(
             "flower".to_string()
         };
 
-        grow_raw(gen, &m, f, &HashSet::new(), &Vec::<Parameter>::new());
+        grow_raw(gen, &m, *f, &HashSet::new(), &Vec::<Parameter>::new());
     }
 }
 
@@ -78,8 +78,8 @@ pub fn shake(
     pos_args: &[ConfigParameter],
     _: &HashMap<String, ConfigParameter>,
 ) {
-    if let ConfigParameter::Numeric(f) = pos_args[0] {
-        shake_raw(gen, &HashSet::new(), f);
+    if let Some(ConfigParameter::Numeric(f)) = pos_args.get(0) {
+        shake_raw(gen, &HashSet::new(), *f);
     }
 }
 
@@ -89,8 +89,8 @@ pub fn sharpen(
     pos_args: &[ConfigParameter],
     _: &HashMap<String, ConfigParameter>,
 ) {
-    if let ConfigParameter::Numeric(f) = pos_args[0] {
-        sharpen_raw(gen, f);
+    if let Some(ConfigParameter::Numeric(f)) = pos_args.get(0) {
+        sharpen_raw(gen, *f);
     }
 }
 
@@ -100,8 +100,8 @@ pub fn blur(
     pos_args: &[ConfigParameter],
     _: &HashMap<String, ConfigParameter>,
 ) {
-    if let ConfigParameter::Numeric(f) = pos_args[0] {
-        blur_raw(gen, f);
+    if let Some(ConfigParameter::Numeric(f)) = pos_args.get(0) {
+        blur_raw(gen, *f);
     }
 }
 
@@ -111,8 +111,8 @@ pub fn skip(
     pos_args: &[ConfigParameter],
     _: &HashMap<String, ConfigParameter>,
 ) {
-    if let ConfigParameter::Numeric(f) = pos_args[0] {
-        skip_raw(gen, f as usize);
+    if let Some(ConfigParameter::Numeric(f)) = pos_args.get(0) {
+        skip_raw(gen, *f as usize);
     }
 }
 
@@ -122,8 +122,9 @@ pub fn rewind(
     pos_args: &[ConfigParameter],
     _: &HashMap<String, ConfigParameter>,
 ) {
-    if let ConfigParameter::Numeric(f) = pos_args[0] {
-        rewind_raw(gen, f as usize);
+
+    if let Some(ConfigParameter::Numeric(f)) = pos_args.get(0) {
+        rewind_raw(gen, *f as usize);
     }
 }
 
