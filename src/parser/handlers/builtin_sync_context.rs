@@ -8,23 +8,23 @@ pub fn handle(tail: &mut Vec<Expr>) -> Atom {
 
     // name is the first symbol
     let name = if let Some(thing) = tail_drain.next() {
-	if let Some(namestring) = get_string_from_expr(&thing) {
-	    namestring
-	} else {
-	    "".to_string()
-	}
+        if let Some(namestring) = get_string_from_expr(&thing) {
+            namestring
+        } else {
+            "".to_string()
+        }
     } else {
-	"".to_string()
+        "".to_string()
     };
-    
+
     let active = if let Some(thing) = tail_drain.next() {
-	if let Some(act) = get_bool_from_expr(&thing) {
-	    act
-	} else {
-	    false
-	}
+        if let Some(act) = get_bool_from_expr(&thing) {
+            act
+        } else {
+            false
+        }
     } else {
-	false
+        false
     };
 
     if !active {

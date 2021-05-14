@@ -69,7 +69,7 @@ impl Generator {
             proc.process_transition(&mut trans, global_parameters);
         }
         if let Some(tmod) = self.time_mods.pop() {
-	    //println!("apply time mod");
+            //println!("apply time mod");
             tmod.apply_to(&mut trans);
         }
         trans

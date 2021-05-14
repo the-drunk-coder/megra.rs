@@ -36,7 +36,7 @@ pub fn construct_nucleus(tail: &mut Vec<Expr>) -> Atom {
                         dur = Some(Parameter::with_value(n));
                     }
                     Some(Expr::Constant(Atom::Parameter(p))) => {
-			dur = Some(p);
+                        dur = Some(p);
                     }
                     _ => {}
                 },
@@ -73,7 +73,7 @@ pub fn construct_nucleus(tail: &mut Vec<Expr>) -> Atom {
             duration_mapping,
             modified: false,
             symbol_ages: HashMap::new(),
-	    default_duration: dur.unwrap().static_val as u64,
+            default_duration: dur.unwrap().static_val as u64,
             last_transition: None,
         },
         processors: Vec::new(),

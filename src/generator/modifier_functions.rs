@@ -23,7 +23,7 @@ pub fn haste(
 ) {
     // sanity check, otherwise nothing happens ...
     if let Some(ConfigParameter::Numeric(n)) = pos_args.get(0) {
-	if let Some(ConfigParameter::Numeric(v)) = pos_args.get(1) {
+        if let Some(ConfigParameter::Numeric(v)) = pos_args.get(1) {
             haste_raw(time_mods, *v, *n as usize);
         }
     }
@@ -122,7 +122,6 @@ pub fn rewind(
     pos_args: &[ConfigParameter],
     _: &HashMap<String, ConfigParameter>,
 ) {
-
     if let Some(ConfigParameter::Numeric(f)) = pos_args.get(0) {
         rewind_raw(gen, *f as usize);
     }
@@ -134,7 +133,6 @@ pub fn rnd(
     pos_args: &[ConfigParameter],
     _: &HashMap<String, ConfigParameter>,
 ) {
-
     if let Some(ConfigParameter::Numeric(f)) = pos_args.get(0) {
         rnd_raw(gen, f / 100.0);
     }
@@ -146,10 +144,9 @@ pub fn rep(
     pos_args: &[ConfigParameter],
     _: &HashMap<String, ConfigParameter>,
 ) {
-
     if let Some(ConfigParameter::Numeric(r)) = pos_args.get(0) {
-	if let Some(ConfigParameter::Numeric(m)) = pos_args.get(1) {
+        if let Some(ConfigParameter::Numeric(m)) = pos_args.get(1) {
             rep_raw(gen, r / 100.0, *m as usize);
-	}
+        }
     }
 }

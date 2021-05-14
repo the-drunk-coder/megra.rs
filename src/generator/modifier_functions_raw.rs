@@ -10,7 +10,7 @@ use std::collections::{HashMap, HashSet};
 
 pub fn haste_raw(time_mods: &mut Vec<TimeMod>, v: f32, n: usize) {
     for _ in 0..n {
-	//println!("push time mod {}", v);
+        //println!("push time mod {}", v);
         time_mods.push(TimeMod {
             val: v,
             op: EventOperation::Multiply,
@@ -109,7 +109,7 @@ pub fn grow_raw(
             }
 
             for (k, v) in dur_mapping_to_add.drain() {
-		//println!("add dur map {:?} {}", k, v.params[&SynthParameter::Duration].static_val);
+                //println!("add dur map {:?} {}", k, v.params[&SynthParameter::Duration].static_val);
                 gen.duration_mapping.insert(k, v);
             }
         }
@@ -160,13 +160,14 @@ pub fn rewind_raw(gen: &mut MarkovSequenceGenerator, states: usize) {
 
 pub fn rnd_raw(gen: &mut MarkovSequenceGenerator, randomize_chance: f32) {
     if randomize_chance > 0.0 {
-        gen.generator.randomize_edges(randomize_chance, randomize_chance);
+        gen.generator
+            .randomize_edges(randomize_chance, randomize_chance);
         gen.generator.rebalance();
-    }    
+    }
 }
 
 pub fn rep_raw(gen: &mut MarkovSequenceGenerator, repetition_chance: f32, max_repetitions: usize) {
     if repetition_chance > 0.0 {
         gen.generator.repeat(repetition_chance, max_repetitions);
-    }    
+    }
 }

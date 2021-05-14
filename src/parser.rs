@@ -173,12 +173,8 @@ fn parse_generator_modifier_functions<'a>(
         map(tag("rewind"), |_| {
             BuiltIn::GenModFun(BuiltInGenModFun::Rewind)
         }),
-	map(tag("rnd"), |_| {
-            BuiltIn::GenModFun(BuiltInGenModFun::Rnd)
-        }),
-	map(tag("rep"), |_| {
-            BuiltIn::GenModFun(BuiltInGenModFun::Rep)
-        }),
+        map(tag("rnd"), |_| BuiltIn::GenModFun(BuiltInGenModFun::Rnd)),
+        map(tag("rep"), |_| BuiltIn::GenModFun(BuiltInGenModFun::Rep)),
     ))(i)
 }
 
