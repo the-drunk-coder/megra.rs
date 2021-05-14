@@ -89,6 +89,7 @@ pub enum BuiltInGenModFun {
     Skip,
     Rewind,
     Rnd,
+    Rep,
 }
 
 #[derive(Clone, Copy)]

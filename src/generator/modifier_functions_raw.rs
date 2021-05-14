@@ -164,3 +164,9 @@ pub fn rnd_raw(gen: &mut MarkovSequenceGenerator, randomize_chance: f32) {
         gen.generator.rebalance();
     }    
 }
+
+pub fn rep_raw(gen: &mut MarkovSequenceGenerator, repetition_chance: f32, max_repetitions: usize) {
+    if repetition_chance > 0.0 {
+        gen.generator.repeat(repetition_chance, max_repetitions);
+    }    
+}

@@ -139,3 +139,17 @@ pub fn rnd(
         rnd_raw(gen, f / 100.0);
     }
 }
+
+pub fn rep(
+    gen: &mut MarkovSequenceGenerator,
+    _: &mut Vec<TimeMod>,
+    pos_args: &[ConfigParameter],
+    _: &HashMap<String, ConfigParameter>,
+) {
+
+    if let Some(ConfigParameter::Numeric(r)) = pos_args.get(0) {
+	if let Some(ConfigParameter::Numeric(m)) = pos_args.get(1) {
+            rep_raw(gen, r / 100.0, *m as usize);
+	}
+    }
+}

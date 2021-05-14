@@ -176,6 +176,9 @@ fn parse_generator_modifier_functions<'a>(
 	map(tag("rnd"), |_| {
             BuiltIn::GenModFun(BuiltInGenModFun::Rnd)
         }),
+	map(tag("rep"), |_| {
+            BuiltIn::GenModFun(BuiltInGenModFun::Rep)
+        }),
     ))(i)
 }
 
