@@ -84,6 +84,12 @@ pub fn handle(gen_mod: &BuiltInGenModFun, tail: &mut Vec<Expr>) -> Atom {
                     &pos_args,
                     &named_args,
                 ),
+		BuiltInGenModFun::Rnd => rnd(
+                    &mut g.root_generator,
+                    &mut g.time_mods,
+                    &pos_args,
+                    &named_args,
+                ),
             }
             Atom::Generator(g)
         }
@@ -124,6 +130,7 @@ pub fn handle(gen_mod: &BuiltInGenModFun, tail: &mut Vec<Expr>) -> Atom {
                 BuiltInGenModFun::Shake => (shake, pos_args, named_args),
                 BuiltInGenModFun::Skip => (skip, pos_args, named_args),
                 BuiltInGenModFun::Rewind => (rewind, pos_args, named_args),
+		BuiltInGenModFun::Rnd => (rnd, pos_args, named_args),
             })
         }
         None => Atom::Nothing,

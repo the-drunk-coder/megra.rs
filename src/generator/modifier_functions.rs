@@ -126,3 +126,15 @@ pub fn rewind(
         rewind_raw(gen, f as usize);
     }
 }
+
+pub fn rnd(
+    gen: &mut MarkovSequenceGenerator,
+    _: &mut Vec<TimeMod>,
+    pos_args: &[ConfigParameter],
+    _: &HashMap<String, ConfigParameter>,
+) {
+
+    if let Some(ConfigParameter::Numeric(f)) = pos_args.get(0) {
+        rnd_raw(gen, f / 100.0);
+    }
+}

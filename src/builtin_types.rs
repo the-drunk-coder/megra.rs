@@ -88,6 +88,7 @@ pub enum BuiltInGenModFun {
     Shake,
     Skip,
     Rewind,
+    Rnd,
 }
 
 #[derive(Clone, Copy)]

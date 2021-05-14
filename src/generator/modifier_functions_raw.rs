@@ -157,3 +157,10 @@ pub fn skip_raw(gen: &mut MarkovSequenceGenerator, times: usize) {
 pub fn rewind_raw(gen: &mut MarkovSequenceGenerator, states: usize) {
     gen.generator.rewind(states);
 }
+
+pub fn rnd_raw(gen: &mut MarkovSequenceGenerator, randomize_chance: f32) {
+    if randomize_chance > 0.0 {
+        gen.generator.randomize_edges(randomize_chance, randomize_chance);
+        gen.generator.rebalance();
+    }    
+}
