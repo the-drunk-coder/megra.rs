@@ -6,7 +6,8 @@ use ruffbox_synth::ruffbox::synth::SynthParameter;
 use ruffbox_synth::ruffbox::Ruffbox;
 
 use crate::builtin_types::{
-    BuiltinGlobalParameters, ConfigParameter, GlobalParameters, Part, PartProxy, PartsStore, GeneratorProcessorOrModifier
+    BuiltinGlobalParameters, ConfigParameter, GeneratorProcessorOrModifier, GlobalParameters, Part,
+    PartProxy, PartsStore,
 };
 use crate::event::InterpretableEvent;
 use crate::event_helpers::*;
@@ -55,17 +56,21 @@ fn resolve_proxy(parts_store: &PartsStore, proxy: PartProxy, generators: &mut Ve
             if let Some(Part::Combined(part_generators, proxies)) = parts_store.get(&s) {
                 // this can be done for sure ...
                 for mut gen in part_generators.clone().drain(..) {
-		    let mut procs_clone = procs.clone();
-		    let mut gpl_drain = procs_clone.drain(..);
-		    while let Some(gpom) = gpl_drain.next() {
-			match gpom {
-			    GeneratorProcessorOrModifier::GeneratorProcessor(gp) => gen.processors.push(gp),
-			    GeneratorProcessorOrModifier::GeneratorModifierFunction((fun, pos, named)) => {
-				fun(&mut gen.root_generator, &mut Vec::new(), &pos, &named)
-			    }
-			}
-		    }
-		    //gen.id_tags.insert(s.clone());
+                    let mut procs_clone = procs.clone();
+                    let mut gpl_drain = procs_clone.drain(..);
+                    while let Some(gpom) = gpl_drain.next() {
+                        match gpom {
+                            GeneratorProcessorOrModifier::GeneratorProcessor(gp) => {
+                                gen.processors.push(gp)
+                            }
+                            GeneratorProcessorOrModifier::GeneratorModifierFunction((
+                                fun,
+                                pos,
+                                named,
+                            )) => fun(&mut gen.root_generator, &mut Vec::new(), &pos, &named),
+                        }
+                    }
+                    //gen.id_tags.insert(s.clone());
                     generators.push(gen);
                 }
 
@@ -73,16 +78,20 @@ fn resolve_proxy(parts_store: &PartsStore, proxy: PartProxy, generators: &mut Ve
                     let mut sub_gens = Vec::new();
                     resolve_proxy(parts_store, sub_proxy, &mut sub_gens);
                     for mut gen in sub_gens.drain(..) {
-			let mut procs_clone = procs.clone();
-			let mut gpl_drain = procs_clone.drain(..);
-			while let Some(gpom) = gpl_drain.next() {
-			    match gpom {
-				GeneratorProcessorOrModifier::GeneratorProcessor(gp) => gen.processors.push(gp),
-				GeneratorProcessorOrModifier::GeneratorModifierFunction((fun, pos, named)) => {
-				    fun(&mut gen.root_generator, &mut Vec::new(), &pos, &named)
-				}
-			    }
-			}
+                        let mut procs_clone = procs.clone();
+                        let mut gpl_drain = procs_clone.drain(..);
+                        while let Some(gpom) = gpl_drain.next() {
+                            match gpom {
+                                GeneratorProcessorOrModifier::GeneratorProcessor(gp) => {
+                                    gen.processors.push(gp)
+                                }
+                                GeneratorProcessorOrModifier::GeneratorModifierFunction((
+                                    fun,
+                                    pos,
+                                    named,
+                                )) => fun(&mut gen.root_generator, &mut Vec::new(), &pos, &named),
+                            }
+                        }
                         //gen.id_tags.insert(s.clone());
                         generators.push(gen);
                     }

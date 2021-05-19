@@ -132,7 +132,9 @@ fn spread_proxies(mul: &BuiltInMultiplexer, proxies: &mut Vec<PartProxy>, out_mo
                 p.events_to_be_applied
                     .push((Parameter::with_value(100.0), filtered_events));
                 match prox {
-                    PartProxy::Proxy(_, ref mut procs) => procs.push(GeneratorProcessorOrModifier::GeneratorProcessor(Box::new(p))),
+                    PartProxy::Proxy(_, ref mut procs) => procs.push(
+                        GeneratorProcessorOrModifier::GeneratorProcessor(Box::new(p)),
+                    ),
                 }
             }
         }
@@ -155,7 +157,7 @@ pub fn handle(mul: &BuiltInMultiplexer, tail: &mut Vec<Expr>, out_mode: OutputMo
             Atom::GeneratorProcessorOrModifier(gp) => {
                 let gpl = vec![gp];
                 gen_proc_list_list.push(gpl);
-            }            
+            }
             _ => {
                 println!("can't multiplex this ...");
             }
@@ -223,16 +225,20 @@ pub fn handle(mul: &BuiltInMultiplexer, tail: &mut Vec<Expr>, out_mode: OutputMo
                     }
                 }
 
-		let mut gpl_drain = gpl.drain(..);
-		while let Some(gpom) = gpl_drain.next() {
-		    match gpom {
-			GeneratorProcessorOrModifier::GeneratorProcessor(gp) => pclone.processors.push(gp),
-			GeneratorProcessorOrModifier::GeneratorModifierFunction((fun, pos, named)) => {
-			    fun(&mut pclone.root_generator, &mut Vec::new(), &pos, &named)
-			}
-		    }
-		}
-                
+                let mut gpl_drain = gpl.drain(..);
+                while let Some(gpom) = gpl_drain.next() {
+                    match gpom {
+                        GeneratorProcessorOrModifier::GeneratorProcessor(gp) => {
+                            pclone.processors.push(gp)
+                        }
+                        GeneratorProcessorOrModifier::GeneratorModifierFunction((
+                            fun,
+                            pos,
+                            named,
+                        )) => fun(&mut pclone.root_generator, &mut Vec::new(), &pos, &named),
+                    }
+                }
+
                 gens.push(pclone);
             }
             gens.push(g);
@@ -266,17 +272,21 @@ pub fn handle(mul: &BuiltInMultiplexer, tail: &mut Vec<Expr>, out_mode: OutputMo
                         }
                     }
 
-		    let mut gpl_clone = gpl.clone();
-		    let mut gpl_drain = gpl_clone.drain(..);
-		    while let Some(gpom) = gpl_drain.next() {
-			match gpom {
-			    GeneratorProcessorOrModifier::GeneratorProcessor(gp) => pclone.processors.push(gp),
-			    GeneratorProcessorOrModifier::GeneratorModifierFunction((fun, pos, named)) => {
-				fun(&mut pclone.root_generator, &mut Vec::new(), &pos, &named)
-			    }
-			}
-		    }
-		    
+                    let mut gpl_clone = gpl.clone();
+                    let mut gpl_drain = gpl_clone.drain(..);
+                    while let Some(gpom) = gpl_drain.next() {
+                        match gpom {
+                            GeneratorProcessorOrModifier::GeneratorProcessor(gp) => {
+                                pclone.processors.push(gp)
+                            }
+                            GeneratorProcessorOrModifier::GeneratorModifierFunction((
+                                fun,
+                                pos,
+                                named,
+                            )) => fun(&mut pclone.root_generator, &mut Vec::new(), &pos, &named),
+                        }
+                    }
+
                     gens.push(pclone);
                 }
                 gens.push(gen);

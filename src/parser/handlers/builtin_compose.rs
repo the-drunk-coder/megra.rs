@@ -36,33 +36,37 @@ pub fn handle(tail: &mut Vec<Expr>) -> Atom {
             Atom::ProxyList(new_list)
         }
         Some(Expr::Constant(Atom::Generator(mut g))) => {
-	    let mut proc_or_mods = collect_compose(tail);
-	    let mut prom_drain = proc_or_mods.drain(..);
-	    let mut procs = Vec::new();
+            let mut proc_or_mods = collect_compose(tail);
+            let mut prom_drain = proc_or_mods.drain(..);
+            let mut procs = Vec::new();
 
-	    while let Some(gpom) = prom_drain.next() {
-		match gpom {
-		    GeneratorProcessorOrModifier::GeneratorProcessor(gp) => procs.push(gp),
-		    GeneratorProcessorOrModifier::GeneratorModifierFunction((fun, pos, named)) => {
-			fun(&mut g.root_generator, &mut Vec::new(), &pos, &named)
-		    }
-		}
-	    }
-	    
+            while let Some(gpom) = prom_drain.next() {
+                match gpom {
+                    GeneratorProcessorOrModifier::GeneratorProcessor(gp) => procs.push(gp),
+                    GeneratorProcessorOrModifier::GeneratorModifierFunction((fun, pos, named)) => {
+                        fun(&mut g.root_generator, &mut Vec::new(), &pos, &named)
+                    }
+                }
+            }
+
             g.processors.append(&mut procs);
             Atom::Generator(g)
         }
         Some(Expr::Constant(Atom::GeneratorList(mut gl))) => {
             let gp = collect_compose(tail);
             for gen in gl.iter_mut() {
-		for gpom in gp.iter() {
-		    match gpom {
-			GeneratorProcessorOrModifier::GeneratorProcessor(gproc) => gen.processors.push(gproc.clone()),
-			GeneratorProcessorOrModifier::GeneratorModifierFunction((fun, pos, named)) => {
-			    fun(&mut gen.root_generator, &mut Vec::new(), &pos, &named)
-			}
-		    }		    
-		}
+                for gpom in gp.iter() {
+                    match gpom {
+                        GeneratorProcessorOrModifier::GeneratorProcessor(gproc) => {
+                            gen.processors.push(gproc.clone())
+                        }
+                        GeneratorProcessorOrModifier::GeneratorModifierFunction((
+                            fun,
+                            pos,
+                            named,
+                        )) => fun(&mut gen.root_generator, &mut Vec::new(), &pos, &named),
+                    }
+                }
             }
             Atom::GeneratorList(gl)
         }

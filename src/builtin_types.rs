@@ -196,7 +196,7 @@ pub enum Atom {
     GeneratorList(Vec<Generator>),
     GeneratorProcessorOrModifier(GeneratorProcessorOrModifier),
     GeneratorProcessorOrModifierList(Vec<GeneratorProcessorOrModifier>),
-    Parameter(Parameter),    
+    Parameter(Parameter),
     Nothing,
 }
 
