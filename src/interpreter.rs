@@ -37,10 +37,14 @@ pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
         Expr::Constant(Atom::ControlEvent(_)) => {
             println!("a control event");
         }
-        Expr::Constant(Atom::GeneratorModifierFunction(_)) => {
+        Expr::Constant(
+	    Atom::GeneratorProcessorOrModifier(
+		GeneratorProcessorOrModifier::GeneratorModifierFunction(_))) => {
             println!("a gen mod fun");
         }
-        Expr::Constant(Atom::GeneratorProcessor(_)) => {
+        Expr::Constant(
+	    Atom::GeneratorProcessorOrModifier(
+		GeneratorProcessorOrModifier::GeneratorProcessor(_))) => {
             println!("a gen proc");
         }
         Expr::Constant(Atom::GeneratorList(gl)) => {

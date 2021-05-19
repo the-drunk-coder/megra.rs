@@ -161,7 +161,19 @@ pub enum Command {
 #[derive(Clone)]
 pub enum PartProxy {
     // part, mods
-    Proxy(String, Vec<Box<dyn GeneratorProcessor + Send>>),
+    Proxy(String, Vec<GeneratorProcessorOrModifier>),
+}
+
+#[derive(Clone)]
+pub enum GeneratorProcessorOrModifier {
+    GeneratorProcessor(Box<dyn GeneratorProcessor + Send>),
+    GeneratorModifierFunction(
+        (
+            GenModFun,
+            Vec<ConfigParameter>,
+            HashMap<String, ConfigParameter>,
+        ),
+    ),
 }
 
 pub enum Atom {
@@ -181,17 +193,10 @@ pub enum Atom {
     PartProxy(PartProxy),
     ProxyList(Vec<PartProxy>),
     Generator(Generator),
-    GeneratorProcessor(Box<dyn GeneratorProcessor + Send>),
-    GeneratorProcessorList(Vec<Box<dyn GeneratorProcessor + Send>>),
     GeneratorList(Vec<Generator>),
-    Parameter(Parameter),
-    GeneratorModifierFunction(
-        (
-            GenModFun,
-            Vec<ConfigParameter>,
-            HashMap<String, ConfigParameter>,
-        ),
-    ),
+    GeneratorProcessorOrModifier(GeneratorProcessorOrModifier),
+    GeneratorProcessorOrModifierList(Vec<GeneratorProcessorOrModifier>),
+    Parameter(Parameter),    
     Nothing,
 }
 

@@ -1,12 +1,12 @@
 use crate::builtin_types::*;
-use crate::generator_processor::*;
+//use crate::generator_processor::*;
 
-fn collect_compose(tail: &mut Vec<Expr>) -> Vec<Box<dyn GeneratorProcessor + Send>> {
+fn collect_compose(tail: &mut Vec<Expr>) -> Vec<GeneratorProcessorOrModifier> {
     let mut gen_procs = Vec::new();
     let mut tail_drain = tail.drain(..);
     while let Some(Expr::Constant(c)) = tail_drain.next() {
         match c {
-            Atom::GeneratorProcessor(gp) => {
+            Atom::GeneratorProcessorOrModifier(gp) => {
                 gen_procs.push(gp);
             }
             _ => {}
@@ -36,19 +36,39 @@ pub fn handle(tail: &mut Vec<Expr>) -> Atom {
             Atom::ProxyList(new_list)
         }
         Some(Expr::Constant(Atom::Generator(mut g))) => {
-            g.processors.append(&mut collect_compose(tail));
+	    let mut proc_or_mods = collect_compose(tail);
+	    let mut prom_drain = proc_or_mods.drain(..);
+	    let mut procs = Vec::new();
+
+	    while let Some(gpom) = prom_drain.next() {
+		match gpom {
+		    GeneratorProcessorOrModifier::GeneratorProcessor(gp) => procs.push(gp),
+		    GeneratorProcessorOrModifier::GeneratorModifierFunction((fun, pos, named)) => {
+			fun(&mut g.root_generator, &mut Vec::new(), &pos, &named)
+		    }
+		}
+	    }
+	    
+            g.processors.append(&mut procs);
             Atom::Generator(g)
         }
         Some(Expr::Constant(Atom::GeneratorList(mut gl))) => {
             let gp = collect_compose(tail);
             for gen in gl.iter_mut() {
-                gen.processors.append(&mut gp.clone());
+		for gpom in gp.iter() {
+		    match gpom {
+			GeneratorProcessorOrModifier::GeneratorProcessor(gproc) => gen.processors.push(gproc.clone()),
+			GeneratorProcessorOrModifier::GeneratorModifierFunction((fun, pos, named)) => {
+			    fun(&mut gen.root_generator, &mut Vec::new(), &pos, &named)
+			}
+		    }		    
+		}
             }
             Atom::GeneratorList(gl)
         }
         Some(l) => {
             tail.push(l);
-            Atom::GeneratorProcessorList(collect_compose(tail))
+            Atom::GeneratorProcessorOrModifierList(collect_compose(tail))
         }
         _ => Atom::Nothing,
     }

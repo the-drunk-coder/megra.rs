@@ -126,19 +126,21 @@ pub fn handle(gen_mod: &BuiltInGenModFun, tail: &mut Vec<Expr>) -> Atom {
                 }
             }
 
-            Atom::GeneratorModifierFunction(match gen_mod {
-                BuiltInGenModFun::Haste => (haste, pos_args, named_args),
-                BuiltInGenModFun::Relax => (relax, pos_args, named_args),
-                BuiltInGenModFun::Grow => (grow, pos_args, named_args),
-                BuiltInGenModFun::Shrink => (shrink, pos_args, named_args),
-                BuiltInGenModFun::Blur => (blur, pos_args, named_args),
-                BuiltInGenModFun::Sharpen => (sharpen, pos_args, named_args),
-                BuiltInGenModFun::Shake => (shake, pos_args, named_args),
-                BuiltInGenModFun::Skip => (skip, pos_args, named_args),
-                BuiltInGenModFun::Rewind => (rewind, pos_args, named_args),
-                BuiltInGenModFun::Rnd => (rnd, pos_args, named_args),
-                BuiltInGenModFun::Rep => (rep, pos_args, named_args),
-            })
+            Atom::GeneratorProcessorOrModifier(
+		GeneratorProcessorOrModifier::GeneratorModifierFunction(
+		    match gen_mod {
+			BuiltInGenModFun::Haste => (haste, pos_args, named_args),
+			BuiltInGenModFun::Relax => (relax, pos_args, named_args),
+			BuiltInGenModFun::Grow => (grow, pos_args, named_args),
+			BuiltInGenModFun::Shrink => (shrink, pos_args, named_args),
+			BuiltInGenModFun::Blur => (blur, pos_args, named_args),
+			BuiltInGenModFun::Sharpen => (sharpen, pos_args, named_args),
+			BuiltInGenModFun::Shake => (shake, pos_args, named_args),
+			BuiltInGenModFun::Skip => (skip, pos_args, named_args),
+			BuiltInGenModFun::Rewind => (rewind, pos_args, named_args),
+			BuiltInGenModFun::Rnd => (rnd, pos_args, named_args),
+			BuiltInGenModFun::Rep => (rep, pos_args, named_args),
+            }))
         }
         None => Atom::Nothing,
     }

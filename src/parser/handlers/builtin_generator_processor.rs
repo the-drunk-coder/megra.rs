@@ -21,8 +21,8 @@ fn collect_every(tail: &mut Vec<Expr>) -> Box<EveryProcessor> {
 
     while let Some(Expr::Constant(c)) = tail_drain.next() {
         match c {
-            Atom::GeneratorModifierFunction(g) => {
-                gen_mod_funs.push(g);
+            Atom::GeneratorProcessorOrModifier(GeneratorProcessorOrModifier::GeneratorModifierFunction(gmf)) => {
+                gen_mod_funs.push(gmf);
                 collect_filters = false;
             }
             Atom::SoundEvent(e) => {
@@ -177,8 +177,8 @@ fn collect_apple(tail: &mut Vec<Expr>) -> Box<AppleProcessor> {
 
     while let Some(Expr::Constant(c)) = tail_drain.next() {
         match c {
-            Atom::GeneratorModifierFunction(g) => {
-                gen_mod_funs.push(g);
+            Atom::GeneratorProcessorOrModifier(GeneratorProcessorOrModifier::GeneratorModifierFunction(gmf)) => {
+                gen_mod_funs.push(gmf);
             }
             Atom::Keyword(k) => {
                 if k == "p" {
@@ -310,13 +310,14 @@ fn collect_lifemodel(tail: &mut Vec<Expr>) -> Box<LifemodelProcessor> {
 pub fn collect_generator_processor(
     proc_type: &BuiltInGenProc,
     tail: &mut Vec<Expr>,
-) -> Box<dyn GeneratorProcessor + Send> {
-    match proc_type {
-        BuiltInGenProc::Pear => collect_pear(tail),
-        BuiltInGenProc::Apple => collect_apple(tail),
-        BuiltInGenProc::Every => collect_every(tail),
-        BuiltInGenProc::Lifemodel => collect_lifemodel(tail),
-    }
+) -> GeneratorProcessorOrModifier {
+    GeneratorProcessorOrModifier::GeneratorProcessor(
+	match proc_type {
+            BuiltInGenProc::Pear => collect_pear(tail),
+            BuiltInGenProc::Apple => collect_apple(tail),
+            BuiltInGenProc::Every => collect_every(tail),
+            BuiltInGenProc::Lifemodel => collect_lifemodel(tail),
+	})
 }
 
 // store list of genProcs in a vec if there's no root gen ???
@@ -324,8 +325,9 @@ pub fn handle(proc_type: &BuiltInGenProc, tail: &mut Vec<Expr>) -> Atom {
     let last = tail.pop();
     match last {
         Some(Expr::Constant(Atom::Generator(mut g))) => {
-            g.processors
-                .push(collect_generator_processor(proc_type, tail));
+	    if let GeneratorProcessorOrModifier::GeneratorProcessor(gp) = collect_generator_processor(proc_type, tail) {
+		g.processors.push(gp);
+	    }            
             Atom::Generator(g)
         }
         Some(Expr::Constant(Atom::Symbol(s))) => Atom::PartProxy(PartProxy::Proxy(
@@ -347,22 +349,23 @@ pub fn handle(proc_type: &BuiltInGenProc, tail: &mut Vec<Expr>) -> Atom {
             Atom::ProxyList(new_list)
         }
         Some(Expr::Constant(Atom::GeneratorList(mut gl))) => {
-            let gp = collect_generator_processor(proc_type, tail);
-            for gen in gl.iter_mut() {
-                gen.processors.push(gp.clone());
-            }
+	    if let GeneratorProcessorOrModifier::GeneratorProcessor(gp) = collect_generator_processor(proc_type, tail) {
+		for gen in gl.iter_mut() {
+                    gen.processors.push(gp.clone());
+		}
+	    }            
             Atom::GeneratorList(gl)
         }
-        Some(Expr::Constant(Atom::GeneratorProcessor(gp))) => {
-            Atom::GeneratorProcessorList(vec![gp, collect_generator_processor(proc_type, tail)])
+        Some(Expr::Constant(Atom::GeneratorProcessorOrModifier(gp))) => {
+            Atom::GeneratorProcessorOrModifierList(vec![gp, collect_generator_processor(proc_type, tail)])
         }
-        Some(Expr::Constant(Atom::GeneratorProcessorList(mut l))) => {
+        Some(Expr::Constant(Atom::GeneratorProcessorOrModifierList(mut l))) => {
             l.push(collect_generator_processor(proc_type, tail));
-            Atom::GeneratorProcessorList(l)
+            Atom::GeneratorProcessorOrModifierList(l)
         }
         Some(l) => {
             tail.push(l);
-            Atom::GeneratorProcessor(collect_generator_processor(proc_type, tail))
+            Atom::GeneratorProcessorOrModifier(collect_generator_processor(proc_type, tail))
         }
         None => Atom::Nothing,
     }
