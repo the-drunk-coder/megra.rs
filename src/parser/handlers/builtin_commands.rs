@@ -26,6 +26,18 @@ fn handle_load_part(tail: &mut Vec<Expr>) -> Atom {
     Atom::Command(Command::LoadPart((name, Part::Combined(gens, proxies))))
 }
 
+fn handle_freeze_buffer(tail: &mut Vec<Expr>) -> Atom {
+    let mut tail_drain = tail.drain(..);
+
+    let freeze_buffer = if let Some(Expr::Constant(Atom::Float(f))) = tail_drain.next() {
+        f as usize
+    } else {
+	1
+    };
+	    
+    Atom::Command(Command::FreezeBuffer(freeze_buffer))
+}
+
 fn handle_load_sample(tail: &mut Vec<Expr>) -> Atom {
     let mut tail_drain = tail.drain(..);
 
@@ -228,5 +240,6 @@ pub fn handle(cmd: BuiltInCommand, tail: &mut Vec<Expr>) -> Atom {
         BuiltInCommand::LoadPart => handle_load_part(tail),
         BuiltInCommand::ExportDot => handle_export_dot(tail),
         BuiltInCommand::Once => handle_once(tail),
+	BuiltInCommand::FreezeBuffer => handle_freeze_buffer(tail),
     }
 }

@@ -17,6 +17,15 @@ use crate::parameter::*;
 use crate::sample_set::SampleSet;
 use crate::session::*;
 
+pub fn freeze_buffer<const BUFSIZE: usize, const NCHAN: usize>(
+    ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>,
+    freezbuf: usize,
+) {
+    let mut ruff = ruffbox.lock();
+    ruff.freeze_buffer(freezbuf);
+}
+
+
 pub fn load_sample<const BUFSIZE: usize, const NCHAN: usize>(
     ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>,
     sample_set: &sync::Arc<Mutex<SampleSet>>,
