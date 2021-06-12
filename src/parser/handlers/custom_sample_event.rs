@@ -49,7 +49,7 @@ pub fn handle(
                 }
             }
         };
-
+	
         let mut ev = Event::with_name("sampler".to_string());
         ev.tags.insert(set);
         for k in sample_info.key.iter() {
@@ -92,6 +92,50 @@ pub fn handle(
         );
 
         let mut tail_drain = tail.drain(drain_idx..);
+        get_keyword_params(&mut ev.params, &mut tail_drain);
+
+        Some(Expr::Constant(Atom::SoundEvent(ev)))
+    } else if set == "feedr" {
+	let mut ev = Event::with_name("livesampler".to_string());
+
+	ev.tags.insert(set);
+
+        ev.params.insert(
+            SynthParameter::SampleBufferNumber,
+            Box::new(Parameter::with_value(0.0)),
+        );
+
+        // set some defaults
+        ev.params
+            .insert(SynthParameter::Level, Box::new(Parameter::with_value(0.4)));
+        ev.params
+            .insert(SynthParameter::Attack, Box::new(Parameter::with_value(1.0)));
+        ev.params.insert(
+            SynthParameter::Sustain,
+            Box::new(Parameter::with_value(500 as f32)),
+        );
+        ev.params.insert(
+            SynthParameter::Release,
+            Box::new(Parameter::with_value(1.0)),
+        );
+        ev.params.insert(
+            SynthParameter::ChannelPosition,
+            Box::new(Parameter::with_value(0.00)),
+        );
+        ev.params.insert(
+            SynthParameter::PlaybackRate,
+            Box::new(Parameter::with_value(1.0)),
+        );
+        ev.params.insert(
+            SynthParameter::LowpassFilterDistortion,
+            Box::new(Parameter::with_value(0.0)),
+        );
+        ev.params.insert(
+            SynthParameter::PlaybackStart,
+            Box::new(Parameter::with_value(0.0)),
+        );
+
+        let mut tail_drain = tail.drain(..);
         get_keyword_params(&mut ev.params, &mut tail_drain);
 
         Some(Expr::Constant(Atom::SoundEvent(ev)))

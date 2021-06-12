@@ -113,7 +113,7 @@ fn main() -> Result<(), anyhow::Error> {
         "default".to_string()
     };
 
-    let device = if out_device == "default" {
+    let output_device = if out_device == "default" {
         host.default_output_device()
     } else {
         host.output_devices()?
@@ -121,7 +121,16 @@ fn main() -> Result<(), anyhow::Error> {
     }
     .expect("failed to find output device");
 
-    let config: cpal::SupportedStreamConfig = device.default_output_config().unwrap();
+    let input_device = if out_device == "default" {
+        host.default_input_device()
+    } else {
+        host.input_devices()?
+            .find(|x| x.name().map(|y| y == out_device).unwrap_or(false))
+    }
+    .expect("failed to find input device");
+
+    let config: cpal::SupportedStreamConfig = input_device.default_input_config().unwrap();
+    println!("chan: {:?}", config);
     let sample_format = config.sample_format();
 
     match out_mode {
@@ -130,13 +139,13 @@ fn main() -> Result<(), anyhow::Error> {
             conf.channels = 2;
             match sample_format {
                 cpal::SampleFormat::F32 => {
-                    run::<f32, 2>(&device, &conf, out_mode, editor, load_samples)?
+                    run::<f32, 2>(&input_device, &output_device, &conf, out_mode, editor, load_samples)?
                 }
                 cpal::SampleFormat::I16 => {
-                    run::<i16, 2>(&device, &conf, out_mode, editor, load_samples)?
+                    run::<i16, 2>(&input_device, &output_device, &conf, out_mode, editor, load_samples)?
                 }
                 cpal::SampleFormat::U16 => {
-                    run::<u16, 2>(&device, &conf, out_mode, editor, load_samples)?
+                    run::<u16, 2>(&input_device, &output_device, &conf, out_mode, editor, load_samples)?
                 }
             }
         }
@@ -145,13 +154,13 @@ fn main() -> Result<(), anyhow::Error> {
             conf.channels = 4;
             match sample_format {
                 cpal::SampleFormat::F32 => {
-                    run::<f32, 4>(&device, &conf, out_mode, editor, load_samples)?
+                    run::<f32, 4>(&input_device, &output_device, &conf, out_mode, editor, load_samples)?
                 }
                 cpal::SampleFormat::I16 => {
-                    run::<i16, 4>(&device, &conf, out_mode, editor, load_samples)?
+                    run::<i16, 4>(&input_device, &output_device, &conf, out_mode, editor, load_samples)?
                 }
                 cpal::SampleFormat::U16 => {
-                    run::<u16, 4>(&device, &conf, out_mode, editor, load_samples)?
+                    run::<u16, 4>(&input_device, &output_device, &conf, out_mode, editor, load_samples)?
                 }
             }
         }
@@ -160,13 +169,13 @@ fn main() -> Result<(), anyhow::Error> {
             conf.channels = 8;
             match sample_format {
                 cpal::SampleFormat::F32 => {
-                    run::<f32, 8>(&device, &conf, out_mode, editor, load_samples)?
+                    run::<f32, 8>(&input_device, &output_device, &conf, out_mode, editor, load_samples)?
                 }
                 cpal::SampleFormat::I16 => {
-                    run::<i16, 8>(&device, &conf, out_mode, editor, load_samples)?
+                    run::<i16, 8>(&input_device, &output_device, &conf, out_mode, editor, load_samples)?
                 }
                 cpal::SampleFormat::U16 => {
-                    run::<u16, 8>(&device, &conf, out_mode, editor, load_samples)?
+                    run::<u16, 8>(&input_device, &output_device, &conf, out_mode, editor, load_samples)?
                 }
             }
         }
@@ -176,7 +185,8 @@ fn main() -> Result<(), anyhow::Error> {
 }
 
 fn run<T, const NCHAN: usize>(
-    device: &cpal::Device,
+    input_device: &cpal::Device,
+    output_device: &cpal::Device,
     config: &cpal::StreamConfig,
     mode: OutputMode,
     editor: bool,
@@ -190,10 +200,24 @@ where
     let channels = config.channels as usize;
     let err_fn = |err| eprintln!("an error occurred on stream: {}", err);
 
-    let ruffbox = sync::Arc::new(Mutex::new(Ruffbox::<512, NCHAN>::new()));
+    let ruffbox = sync::Arc::new(Mutex::new(Ruffbox::<512, NCHAN>::new(true)));
     let ruffbox2 = sync::Arc::clone(&ruffbox); // the one for the audio thread ...
+    let ruffbox3 = sync::Arc::clone(&ruffbox); // the one for the audio thread ...
 
-    let stream = device.build_output_stream(
+    let in_stream = input_device.build_input_stream(
+        config,
+        move |data: &[f32], _: &cpal::InputCallbackInfo| {
+            let mut ruff = ruffbox3.lock();
+
+            // there might be a faster way to de-interleave here ...
+            for (_, frame) in data.chunks(channels).enumerate() {		
+		ruff.write_sample_to_live_buffer(frame[0]);
+            }
+        },
+        err_fn,
+    )?;
+    
+    let out_stream = output_device.build_output_stream(
         config,
         move |data: &mut [f32], _: &cpal::OutputCallbackInfo| {
             let mut ruff = ruffbox2.lock();
@@ -211,7 +235,9 @@ where
         },
         err_fn,
     )?;
-    stream.play()?;
+    
+    in_stream.play()?;
+    out_stream.play()?;
 
     // global data
     let session = sync::Arc::new(Mutex::new(Session::with_mode(mode)));
