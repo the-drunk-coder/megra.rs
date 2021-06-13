@@ -4,6 +4,7 @@ use std::collections::{HashMap, HashSet};
 
 use crate::parameter::Parameter;
 use crate::session::SyncContext;
+use crate::builtin_types::Command;
 
 #[derive(Clone, Copy)]
 pub enum EventOperation {
@@ -35,7 +36,7 @@ pub struct StaticEvent {
 pub struct ControlEvent {
     pub tags: HashSet<String>,
     pub ctx: Option<Vec<SyncContext>>,
-    // later: command
+    pub cmd: Option<Vec<Command>>,
 }
 
 #[derive(Clone)]

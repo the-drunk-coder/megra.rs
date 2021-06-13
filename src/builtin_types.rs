@@ -9,6 +9,7 @@ use std::collections::HashMap;
 
 use ruffbox_synth::ruffbox::synth::SynthParameter;
 
+#[derive(Clone)]
 pub enum Part {
     Combined(Vec<Generator>, Vec<PartProxy>),
 }
@@ -146,6 +147,7 @@ pub enum BuiltIn {
     Multiplexer(BuiltInMultiplexer),
 }
 
+#[derive(Clone)]
 pub enum Command {
     Clear,                                             // clear the entire session
     Tmod(Parameter),                                   // set global time mod parameter

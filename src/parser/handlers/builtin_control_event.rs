@@ -5,9 +5,14 @@ use std::collections::HashSet;
 pub fn handle(tail: &mut Vec<Expr>) -> Atom {
     let mut tail_drain = tail.drain(..);
     let mut sync_contexts = Vec::new();
+    let mut commands = Vec::new();
 
-    while let Some(Expr::Constant(Atom::SyncContext(s))) = tail_drain.next() {
-        sync_contexts.push(s);
+    while let Some(Expr::Constant(c)) = tail_drain.next() {
+	match c {
+	    Atom::SyncContext(s) => {sync_contexts.push(s);}
+	    Atom::Command(c) => {commands.push(c);}
+	    _ => {} // not controllable
+	}
     }
 
     Atom::ControlEvent(ControlEvent {
@@ -16,6 +21,11 @@ pub fn handle(tail: &mut Vec<Expr>) -> Atom {
             None
         } else {
             Some(sync_contexts)
+        },
+	cmd: if commands.is_empty() {
+            None
+        } else {
+            Some(commands)
         },
     })
 }
