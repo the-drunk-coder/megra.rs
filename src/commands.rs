@@ -59,10 +59,13 @@ pub fn load_sample<const BUFSIZE: usize, const NCHAN: usize>(
 
     // decode to f32
     let max_val = (i32::MAX >> (32 - reader.streaminfo().bits_per_sample)) as f32;
+    sample_buffer.push(0.0); // interpolation sample
     for sample in reader.samples() {
         let s = sample.unwrap() as f32 / max_val;
         sample_buffer.push(s);
     }
+    sample_buffer.push(0.0); // interpolation sample
+    sample_buffer.push(0.0); // interpolation sample
 
     let mut ruff = ruffbox.lock();
     let bufnum = ruff.load_sample(&sample_buffer);
