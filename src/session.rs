@@ -7,13 +7,14 @@ use ruffbox_synth::ruffbox::Ruffbox;
 
 use crate::builtin_types::{
     BuiltinGlobalParameters, ConfigParameter, GeneratorProcessorOrModifier, GlobalParameters, Part,
-    PartProxy, PartsStore,
+    PartProxy, PartsStore, Command,
 };
 use crate::event::InterpretableEvent;
 use crate::event_helpers::*;
 use crate::generator::Generator;
 use crate::parameter::*;
 use crate::scheduler::{Scheduler, SchedulerData};
+use crate::commands;
 
 #[derive(Clone, Copy, PartialEq)]
 pub enum OutputMode {
@@ -38,12 +39,12 @@ pub struct SyncContext {
 
 pub struct Session<const BUFSIZE: usize, const NCHAN: usize> {
     schedulers: HashMap<
-        BTreeSet<String>,
+            BTreeSet<String>,
         (
             Scheduler<BUFSIZE, NCHAN>,
             sync::Arc<Mutex<SchedulerData<BUFSIZE, NCHAN>>>,
         ),
-    >,
+	>,
     pub output_mode: OutputMode,
     contexts: HashMap<String, BTreeSet<BTreeSet<String>>>,
 }
@@ -425,6 +426,31 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                                     );
                                 }
                             }
+			    if let Some(mut commands) = c.cmd.clone() {
+				// this is the worst clone ....
+                                for c in commands.drain(..) {
+				    match c {										
+					Command::LoadPart((name, part)) => {
+					    commands::load_part(&data.parts_store, name, part);
+					    println!("a command (load part)");
+					}
+					Command::FreezeBuffer(freezbuf) => {
+					    commands::freeze_buffer(&data.ruffbox, freezbuf);
+					    println!("freeze buffer");
+					}
+					Command::Tmod(p) => {
+					    commands::set_global_tmod(&data.global_parameters, p);
+					}
+					Command::GlobRes(v) => {
+					    commands::set_global_lifemodel_resources(&data.global_parameters, v);
+					}
+					Command::GlobalRuffboxParams(m) => {
+					    commands::set_global_ruffbox_parameters(&data.ruffbox, &m);
+					}					
+					_ => {println!("ignore command")}
+				    };
+				}
+			    }
                         }
                     }
                 }
@@ -443,11 +469,11 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                 }
 
                 (data
-                    .generator
-                    .current_transition(&data.global_parameters)
-                    .params[&SynthParameter::Duration] as f64
-                    * 0.001
-                    * tmod) as f64
+                 .generator
+                 .current_transition(&data.global_parameters)
+                 .params[&SynthParameter::Duration] as f64
+                 * 0.001
+                 * tmod) as f64
             };
 
             // assemble name for thread ...
