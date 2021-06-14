@@ -57,14 +57,20 @@ impl<'a> epi::App for MegraEditor<'a> {
         std::time::Duration::from_secs(5)
     }
 
-    fn load(&mut self, storage: &dyn epi::Storage) {
+    fn setup(&mut self,
+	    _ctx: &egui::CtxRef,
+            _frame: &mut epi::Frame<'_>,
+	    storage: Option<&dyn epi::Storage>) {
         // make sure callback is carried over after loading
         let callback = self
             .callback
             .as_ref()
             .map(|tmp_callback| Arc::clone(&tmp_callback));
 
-        *self = epi::get_value(storage, epi::APP_KEY).unwrap_or_default();
+
+	if let Some(s) = storage {
+	    *self = epi::get_value(s, epi::APP_KEY).unwrap_or_default();
+	}
 
         if let Some(tmp_callback) = callback {
             self.set_callback(&tmp_callback);
