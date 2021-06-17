@@ -66,3 +66,6 @@ pub use every_processor::*;
 
 mod lifemodel_processor;
 pub use lifemodel_processor::*;
+
+mod generator_wrapper_processor;
+pub use generator_wrapper_processor::*;

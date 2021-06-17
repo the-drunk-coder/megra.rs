@@ -1,5 +1,5 @@
 use crate::builtin_types::*;
-//use crate::generator_processor::*;
+use crate::generator_processor::GeneratorWrapperProcessor;
 
 fn collect_compose(tail: &mut Vec<Expr>) -> Vec<GeneratorProcessorOrModifier> {
     let mut gen_procs = Vec::new();
@@ -8,6 +8,11 @@ fn collect_compose(tail: &mut Vec<Expr>) -> Vec<GeneratorProcessorOrModifier> {
         match c {
             Atom::GeneratorProcessorOrModifier(gp) => {
                 gen_procs.push(gp);
+            }
+            Atom::Generator(g) => {
+                gen_procs.push(GeneratorProcessorOrModifier::GeneratorProcessor(Box::new(
+                    GeneratorWrapperProcessor::with_generator(g),
+                )));
             }
             _ => {}
         }

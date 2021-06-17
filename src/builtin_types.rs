@@ -157,7 +157,7 @@ pub enum Command {
     LoadSampleSet(String),                             // set path
     LoadSampleSets(String),                            // top level sets set path
     LoadPart((String, Part)),                          // set (events), keyword, path
-    FreezeBuffer(usize),                               // freeze live buffer 
+    FreezeBuffer(usize),                               // freeze live buffer
     ExportDot((String, Generator)),                    // filename, generator
     Once((Vec<Event>, Vec<ControlEvent>)),
 }

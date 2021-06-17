@@ -2,9 +2,9 @@ use ruffbox_synth::ruffbox::synth::SynthParameter;
 use std::boxed::Box;
 use std::collections::{HashMap, HashSet};
 
+use crate::builtin_types::Command;
 use crate::parameter::Parameter;
 use crate::session::SyncContext;
-use crate::builtin_types::Command;
 
 #[derive(Clone, Copy)]
 pub enum EventOperation {

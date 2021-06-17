@@ -25,7 +25,6 @@ pub fn freeze_buffer<const BUFSIZE: usize, const NCHAN: usize>(
     ruff.freeze_buffer(freezbuf);
 }
 
-
 pub fn load_sample<const BUFSIZE: usize, const NCHAN: usize>(
     ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>,
     sample_set: &sync::Arc<Mutex<SampleSet>>,

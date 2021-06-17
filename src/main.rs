@@ -138,45 +138,90 @@ fn main() -> Result<(), anyhow::Error> {
             let mut conf: cpal::StreamConfig = config.into();
             conf.channels = 2;
             match sample_format {
-                cpal::SampleFormat::F32 => {
-                    run::<f32, 2>(&input_device, &output_device, &conf, out_mode, editor, load_samples)?
-                }
-                cpal::SampleFormat::I16 => {
-                    run::<i16, 2>(&input_device, &output_device, &conf, out_mode, editor, load_samples)?
-                }
-                cpal::SampleFormat::U16 => {
-                    run::<u16, 2>(&input_device, &output_device, &conf, out_mode, editor, load_samples)?
-                }
+                cpal::SampleFormat::F32 => run::<f32, 2>(
+                    &input_device,
+                    &output_device,
+                    &conf,
+                    out_mode,
+                    editor,
+                    load_samples,
+                )?,
+                cpal::SampleFormat::I16 => run::<i16, 2>(
+                    &input_device,
+                    &output_device,
+                    &conf,
+                    out_mode,
+                    editor,
+                    load_samples,
+                )?,
+                cpal::SampleFormat::U16 => run::<u16, 2>(
+                    &input_device,
+                    &output_device,
+                    &conf,
+                    out_mode,
+                    editor,
+                    load_samples,
+                )?,
             }
         }
         OutputMode::FourChannel => {
             let mut conf: cpal::StreamConfig = config.into();
             conf.channels = 4;
             match sample_format {
-                cpal::SampleFormat::F32 => {
-                    run::<f32, 4>(&input_device, &output_device, &conf, out_mode, editor, load_samples)?
-                }
-                cpal::SampleFormat::I16 => {
-                    run::<i16, 4>(&input_device, &output_device, &conf, out_mode, editor, load_samples)?
-                }
-                cpal::SampleFormat::U16 => {
-                    run::<u16, 4>(&input_device, &output_device, &conf, out_mode, editor, load_samples)?
-                }
+                cpal::SampleFormat::F32 => run::<f32, 4>(
+                    &input_device,
+                    &output_device,
+                    &conf,
+                    out_mode,
+                    editor,
+                    load_samples,
+                )?,
+                cpal::SampleFormat::I16 => run::<i16, 4>(
+                    &input_device,
+                    &output_device,
+                    &conf,
+                    out_mode,
+                    editor,
+                    load_samples,
+                )?,
+                cpal::SampleFormat::U16 => run::<u16, 4>(
+                    &input_device,
+                    &output_device,
+                    &conf,
+                    out_mode,
+                    editor,
+                    load_samples,
+                )?,
             }
         }
         OutputMode::EightChannel => {
             let mut conf: cpal::StreamConfig = config.into();
             conf.channels = 8;
             match sample_format {
-                cpal::SampleFormat::F32 => {
-                    run::<f32, 8>(&input_device, &output_device, &conf, out_mode, editor, load_samples)?
-                }
-                cpal::SampleFormat::I16 => {
-                    run::<i16, 8>(&input_device, &output_device, &conf, out_mode, editor, load_samples)?
-                }
-                cpal::SampleFormat::U16 => {
-                    run::<u16, 8>(&input_device, &output_device, &conf, out_mode, editor, load_samples)?
-                }
+                cpal::SampleFormat::F32 => run::<f32, 8>(
+                    &input_device,
+                    &output_device,
+                    &conf,
+                    out_mode,
+                    editor,
+                    load_samples,
+                )?,
+                cpal::SampleFormat::I16 => run::<i16, 8>(
+                    &input_device,
+                    &output_device,
+                    &conf,
+                    out_mode,
+                    editor,
+                    load_samples,
+                )?,
+                cpal::SampleFormat::U16 => run::<u16, 8>(
+                    &input_device,
+                    &output_device,
+                    &conf,
+                    out_mode,
+                    editor,
+                    load_samples,
+                )?,
             }
         }
     }
@@ -210,13 +255,13 @@ where
             let mut ruff = ruffbox3.lock();
 
             // there might be a faster way to de-interleave here ...
-            for (_, frame) in data.chunks(channels).enumerate() {		
-		ruff.write_sample_to_live_buffer(frame[0]);
+            for (_, frame) in data.chunks(channels).enumerate() {
+                ruff.write_sample_to_live_buffer(frame[0]);
             }
         },
         err_fn,
     )?;
-    
+
     let out_stream = output_device.build_output_stream(
         config,
         move |data: &mut [f32], _: &cpal::OutputCallbackInfo| {
@@ -235,7 +280,7 @@ where
         },
         err_fn,
     )?;
-    
+
     in_stream.play()?;
     out_stream.play()?;
 

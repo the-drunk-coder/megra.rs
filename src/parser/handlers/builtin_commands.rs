@@ -32,9 +32,9 @@ fn handle_freeze_buffer(tail: &mut Vec<Expr>) -> Atom {
     let freeze_buffer = if let Some(Expr::Constant(Atom::Float(f))) = tail_drain.next() {
         f as usize
     } else {
-	1
+        1
     };
-	    
+
     Atom::Command(Command::FreezeBuffer(freeze_buffer))
 }
 
@@ -240,6 +240,6 @@ pub fn handle(cmd: BuiltInCommand, tail: &mut Vec<Expr>) -> Atom {
         BuiltInCommand::LoadPart => handle_load_part(tail),
         BuiltInCommand::ExportDot => handle_export_dot(tail),
         BuiltInCommand::Once => handle_once(tail),
-	BuiltInCommand::FreezeBuffer => handle_freeze_buffer(tail),
+        BuiltInCommand::FreezeBuffer => handle_freeze_buffer(tail),
     }
 }

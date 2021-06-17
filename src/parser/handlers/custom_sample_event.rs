@@ -49,7 +49,7 @@ pub fn handle(
                 }
             }
         };
-	
+
         let mut ev = Event::with_name("sampler".to_string());
         ev.tags.insert(set);
         for k in sample_info.key.iter() {
@@ -95,10 +95,11 @@ pub fn handle(
         get_keyword_params(&mut ev.params, &mut tail_drain);
 
         Some(Expr::Constant(Atom::SoundEvent(ev)))
-    } else if set == "feedr" { // this is quick and dirty ...
-	let mut ev = Event::with_name("livesampler".to_string());
+    } else if set == "feedr" {
+        // this is quick and dirty ...
+        let mut ev = Event::with_name("livesampler".to_string());
 
-	ev.tags.insert(set);
+        ev.tags.insert(set);
 
         ev.params.insert(
             SynthParameter::SampleBufferNumber,
@@ -139,13 +140,12 @@ pub fn handle(
         get_keyword_params(&mut ev.params, &mut tail_drain);
 
         Some(Expr::Constant(Atom::SoundEvent(ev)))
-    } else if set == "freezr" { // this is quick and dirty ...
-	// read from freeze buffers ... 
-	let mut ev = Event::with_name("sampler".to_string());
+    } else if set == "freezr" {
+        // this is quick and dirty ...
+        // read from freeze buffers ...
+        let mut ev = Event::with_name("sampler".to_string());
 
-	ev.tags.insert(set);
-
-        
+        ev.tags.insert(set);
 
         // set some defaults
         ev.params
@@ -179,26 +179,26 @@ pub fn handle(
 
         let mut tail_drain = tail.drain(..);
 
-	// get freeze buffer 
-	let freeze_buffer = if let Some(Expr::Constant(Atom::Float(f))) = tail_drain.next() {
-            // just to be sure 
-	    if f > 10.0 {
-		10.0
-	    } else if f < 1.0 {
-		1.0
-	    } else {
-		f
-	    }
-	} else {
-	    1.0
-	};
-	
-	ev.params.insert(
+        // get freeze buffer
+        let freeze_buffer = if let Some(Expr::Constant(Atom::Float(f))) = tail_drain.next() {
+            // just to be sure
+            if f > 10.0 {
+                10.0
+            } else if f < 1.0 {
+                1.0
+            } else {
+                f
+            }
+        } else {
+            1.0
+        };
+
+        ev.params.insert(
             SynthParameter::SampleBufferNumber,
             Box::new(Parameter::with_value(freeze_buffer)),
         );
-	
-	get_keyword_params(&mut ev.params, &mut tail_drain);
+
+        get_keyword_params(&mut ev.params, &mut tail_drain);
 
         Some(Expr::Constant(Atom::SoundEvent(ev)))
     } else {
