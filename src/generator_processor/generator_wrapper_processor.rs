@@ -21,7 +21,7 @@ impl GeneratorWrapperProcessor {
         GeneratorWrapperProcessor {
             wrapped_generator: gen,
             current_events: Vec::new(),
-	    filter: vec!["".to_string()]
+            filter: vec!["".to_string()],
         }
     }
 }
@@ -42,7 +42,6 @@ impl GeneratorProcessor for GeneratorWrapperProcessor {
         glob: &Arc<GlobalParameters>,
     ) {
         self.current_events = self.wrapped_generator.current_events(glob);
-
 
         for ev in self.current_events.iter_mut() {
             if let InterpretableEvent::Sound(sev) = ev {
@@ -66,6 +65,6 @@ impl GeneratorProcessor for GeneratorWrapperProcessor {
                 trans.apply(&sev, &self.filter);
             }
         }
-	self.wrapped_generator.current_transition(glob);
+        self.wrapped_generator.current_transition(glob);
     }
 }

@@ -57,7 +57,12 @@ fn main() -> Result<(), anyhow::Error> {
     opts.optopt("o", "output-mode", "output mode (stereo, 8ch)", "stereo");
     opts.optflag("l", "list-devices", "list available devices");
     opts.optopt("d", "device", "choose device", "default");
-    opts.optopt("", "live-buffer-time", "the capacity of the live input buffer in seconds", "3.0");
+    opts.optopt(
+        "",
+        "live-buffer-time",
+        "the capacity of the live input buffer in seconds",
+        "3.0",
+    );
 
     let matches = match opts.parse(argv) {
         Ok(m) => m,
@@ -90,14 +95,14 @@ fn main() -> Result<(), anyhow::Error> {
         }
     };
 
-    let live_buffer_time:f32 = if let Some(s) = matches.opt_str("live-buffer-time") {
-	if let Ok(f) = s.parse() {
-	    f
-	} else {
-	    3.0
-	}
+    let live_buffer_time: f32 = if let Some(s) = matches.opt_str("live-buffer-time") {
+        if let Ok(f) = s.parse() {
+            f
+        } else {
+            3.0
+        }
     } else {
-	3.0
+        3.0
     };
 
     println!("using a live buffer time of: {}", live_buffer_time);
@@ -156,7 +161,7 @@ fn main() -> Result<(), anyhow::Error> {
                     &output_device,
                     &conf,
                     out_mode,
-		    live_buffer_time,
+                    live_buffer_time,
                     editor,
                     load_samples,
                 )?,
@@ -165,7 +170,7 @@ fn main() -> Result<(), anyhow::Error> {
                     &output_device,
                     &conf,
                     out_mode,
-		    live_buffer_time,
+                    live_buffer_time,
                     editor,
                     load_samples,
                 )?,
@@ -174,7 +179,7 @@ fn main() -> Result<(), anyhow::Error> {
                     &output_device,
                     &conf,
                     out_mode,
-		    live_buffer_time,
+                    live_buffer_time,
                     editor,
                     load_samples,
                 )?,
@@ -189,7 +194,7 @@ fn main() -> Result<(), anyhow::Error> {
                     &output_device,
                     &conf,
                     out_mode,
-		    live_buffer_time,
+                    live_buffer_time,
                     editor,
                     load_samples,
                 )?,
@@ -198,7 +203,7 @@ fn main() -> Result<(), anyhow::Error> {
                     &output_device,
                     &conf,
                     out_mode,
-		    live_buffer_time,
+                    live_buffer_time,
                     editor,
                     load_samples,
                 )?,
@@ -207,7 +212,7 @@ fn main() -> Result<(), anyhow::Error> {
                     &output_device,
                     &conf,
                     out_mode,
-		    live_buffer_time,
+                    live_buffer_time,
                     editor,
                     load_samples,
                 )?,
@@ -222,7 +227,7 @@ fn main() -> Result<(), anyhow::Error> {
                     &output_device,
                     &conf,
                     out_mode,
-		    live_buffer_time,
+                    live_buffer_time,
                     editor,
                     load_samples,
                 )?,
@@ -231,7 +236,7 @@ fn main() -> Result<(), anyhow::Error> {
                     &output_device,
                     &conf,
                     out_mode,
-		    live_buffer_time,
+                    live_buffer_time,
                     editor,
                     load_samples,
                 )?,
@@ -240,7 +245,7 @@ fn main() -> Result<(), anyhow::Error> {
                     &output_device,
                     &conf,
                     out_mode,
-		    live_buffer_time,
+                    live_buffer_time,
                     editor,
                     load_samples,
                 )?,
@@ -268,7 +273,10 @@ where
     let channels = config.channels as usize;
     let err_fn = |err| eprintln!("an error occurred on stream: {}", err);
 
-    let ruffbox = sync::Arc::new(Mutex::new(Ruffbox::<512, NCHAN>::new(true, live_buffer_time)));
+    let ruffbox = sync::Arc::new(Mutex::new(Ruffbox::<512, NCHAN>::new(
+        true,
+        live_buffer_time,
+    )));
     let ruffbox2 = sync::Arc::clone(&ruffbox); // the one for the audio thread ...
     let ruffbox3 = sync::Arc::clone(&ruffbox); // the one for the audio thread ...
 
