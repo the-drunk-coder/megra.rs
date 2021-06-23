@@ -190,7 +190,8 @@ impl<'a> epi::App for MegraEditor<'a> {
                 ui.add(
                     egui::Label::new("Mégra Editor")
                         .text_color(egui::Color32::from_rgb(150, 250, 100))
-                        .monospace(),
+			.wrap(false)
+			.monospace(),
                 );
 
                 let id = ui.make_persistent_id("file_chooser_box");
@@ -241,13 +242,16 @@ impl<'a> epi::App for MegraEditor<'a> {
             ScrollArea::auto_sized()
                 .always_show_scroll(true)
                 .show(ui, |ui| {
+
+		    let num_lines = self.content.lines().count() + 1;
+
                     let tx = if let Some(cb) = self.callback.as_ref() {
                         egui::LivecodeTextEdit::multiline(
                             &mut self.content,
                             &self.function_names,
                             &self.colors,
                         )
-                        .desired_rows(20)
+                        .desired_rows(22)
                         .reset_cursor(sketch_switched)
                         .text_style(egui::TextStyle::Monospace)
                         .desired_width(800.0)
@@ -258,13 +262,27 @@ impl<'a> epi::App for MegraEditor<'a> {
                             &self.function_names,
                             &self.colors,
                         )
-                        .desired_rows(20)
+                        .desired_rows(22)
                         .reset_cursor(sketch_switched)
                         .desired_width(800.0)
                         .text_style(egui::TextStyle::Monospace)
                     };
 
-                    ui.add(tx);
+		    
+		    let mut linenums = "".to_owned();
+		    for i in 1..num_lines {
+			linenums.push_str(format!("{}\n", i).as_str());
+		    }
+		    
+		    let ln = egui::Label::new(
+			&mut linenums,
+		    ).text_style(egui::TextStyle::Monospace);
+
+		    ui.horizontal(|ui| {
+			ui.add(ln);
+			ui.add(tx);
+		    });
+			
                 });
         });
     }
