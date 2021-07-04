@@ -52,16 +52,20 @@ pub enum InterpretableEvent {
 }
 
 impl StaticEvent {
-    pub fn apply(&mut self, other: &StaticEvent, filters: &[String]) {
+    pub fn apply(&mut self, other: &StaticEvent, filters: &[String], positive_mode: bool) {
         let mut apply = false;
 
         // check if tags contain one of the filters (filters are always or-matched)
         for f in filters.iter() {
-            if f.is_empty() || self.tags.contains(f) {
-                apply = true;
-            }
+            if f.is_empty() {
+		if positive_mode && self.tags.contains(f) {
+                    apply = true;
+		} else if !positive_mode && !self.tags.contains(f) {
+		    apply = true;
+		}
+	    }
         }
-
+	    
         if !apply {
             return;
         }

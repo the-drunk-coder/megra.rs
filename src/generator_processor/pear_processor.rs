@@ -54,7 +54,7 @@ impl GeneratorProcessor for PearProcessor {
                         match in_ev {
                             InterpretableEvent::Sound(s) => {
                                 if rng.gen_range(0, 100) < cur_prob {
-                                    s.apply(&ev_static, filter);
+                                    s.apply(&ev_static, filter, true);
                                 }
                             }
                             InterpretableEvent::Control(_) => {
@@ -76,7 +76,7 @@ impl GeneratorProcessor for PearProcessor {
             for (filter, evs) in filtered_events.iter_mut() {
                 for ev in evs.iter() {
                     if (rng.gen_range(0, 100) as usize) < *prob {
-                        trans.apply(&ev, filter); // not sure
+                        trans.apply(&ev, filter, true); // not sure
                     }
                 }
             }

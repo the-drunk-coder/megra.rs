@@ -42,7 +42,7 @@ impl GeneratorProcessor for EveryProcessor {
                         for in_ev in events.iter_mut() {
                             match in_ev {
                                 InterpretableEvent::Sound(s) => {
-                                    s.apply(&ev_static, filter);
+                                    s.apply(&ev_static, filter, true);
                                 }
                                 InterpretableEvent::Control(_) => {
                                     // ??
@@ -80,7 +80,7 @@ impl GeneratorProcessor for EveryProcessor {
             if self.step_count != 0 && self.step_count % cur_step == 0 {
                 for (filter, evs) in filtered_events.iter() {
                     for ev in evs.iter() {
-                        trans.apply(&ev, filter); // not sure
+                        trans.apply(&ev, filter, true); // not sure
                     }
                 }
             }
