@@ -72,6 +72,9 @@ pub enum BuiltInDynamicParameter {
 }
 
 pub enum BuiltInGenProc {
+    Inhibit,
+    Exhibit,
+    InExhibit,
     Pear,
     Apple,
     Every,

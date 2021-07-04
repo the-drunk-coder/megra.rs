@@ -144,6 +144,11 @@ fn parse_constructors<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<
 fn parse_generator_processors<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<&'a str>> {
     alt((
         map(tag("pear"), |_| BuiltIn::GenProc(BuiltInGenProc::Pear)),
+        map(tag("inh"), |_| BuiltIn::GenProc(BuiltInGenProc::Inhibit)),
+        map(tag("exh"), |_| BuiltIn::GenProc(BuiltInGenProc::Exhibit)),
+        map(tag("inexh"), |_| {
+            BuiltIn::GenProc(BuiltInGenProc::InExhibit)
+        }),
         map(tag("apple"), |_| BuiltIn::GenProc(BuiltInGenProc::Apple)),
         map(tag("every"), |_| BuiltIn::GenProc(BuiltInGenProc::Every)),
         map(tag("life"), |_| BuiltIn::GenProc(BuiltInGenProc::Lifemodel)),

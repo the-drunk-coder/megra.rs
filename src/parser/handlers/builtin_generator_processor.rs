@@ -1,7 +1,8 @@
+use ruffbox_synth::ruffbox::synth::SynthParameter;
 use std::collections::HashMap;
-//use ruffbox_synth::ruffbox::synth::SynthParameter;
 
 use crate::builtin_types::*;
+use crate::event::*;
 use crate::event_helpers::*;
 
 use crate::generator_processor::*;
@@ -48,9 +49,9 @@ fn collect_every(tail: &mut Vec<Expr>) -> Box<EveryProcessor> {
                             let mut n_filters = Vec::new();
                             n_evs.append(&mut events);
                             n_filters.append(&mut last_filters);
-			    if n_filters.is_empty() {
-				n_filters.push("".to_string());
-			    }
+                            if n_filters.is_empty() {
+                                n_filters.push("".to_string());
+                            }
                             filtered_events.insert(n_filters, (true, n_evs));
 
                             proc.things_to_be_applied.push((
@@ -59,8 +60,8 @@ fn collect_every(tail: &mut Vec<Expr>) -> Box<EveryProcessor> {
                                 n_mods,
                             ));
                         } else {
-			    last_filters.clear();
-			}
+                            last_filters.clear();
+                        }
                         // collect new filters
                         collect_filters = true;
                     }
@@ -74,9 +75,9 @@ fn collect_every(tail: &mut Vec<Expr>) -> Box<EveryProcessor> {
                             let mut n_filters = Vec::new();
                             n_evs.append(&mut events);
                             n_filters.append(&mut last_filters);
-			    if n_filters.is_empty() {
-				n_filters.push("".to_string());
-			    }
+                            if n_filters.is_empty() {
+                                n_filters.push("".to_string());
+                            }
                             filtered_events.insert(n_filters, (true, n_evs));
 
                             proc.things_to_be_applied.push((
@@ -99,9 +100,9 @@ fn collect_every(tail: &mut Vec<Expr>) -> Box<EveryProcessor> {
     // save last context
     if !events.is_empty() || !gen_mod_funs.is_empty() {
         let mut filtered_events = HashMap::new();
-	if last_filters.is_empty() {
-	   last_filters.push("".to_string());
-	}
+        if last_filters.is_empty() {
+            last_filters.push("".to_string());
+        }
         filtered_events.insert(last_filters, (true, events));
         proc.things_to_be_applied
             .push((cur_step, filtered_events, gen_mod_funs));
@@ -123,8 +124,8 @@ fn collect_pear(tail: &mut Vec<Expr>) -> Box<PearProcessor> {
     while let Some(Expr::Constant(c)) = tail_drain.next() {
         match c {
             Atom::SoundEvent(e) => {
-                evs.push(e);		
-                if collect_filters {		   
+                evs.push(e);
+                if collect_filters {
                     collect_filters = false;
                 }
             }
@@ -137,11 +138,11 @@ fn collect_pear(tail: &mut Vec<Expr>) -> Box<PearProcessor> {
                             let mut n_evs = Vec::new();
                             let mut n_filters = Vec::new();
                             n_evs.append(&mut evs);
-			    //println!("last filters {:?}", last_filters);
+                            //println!("last filters {:?}", last_filters);
                             n_filters.extend_from_slice(&last_filters);
-			    if n_filters.is_empty() {
-				n_filters.push("".to_string());
-			    }
+                            if n_filters.is_empty() {
+                                n_filters.push("".to_string());
+                            }
                             filtered_events.insert(n_filters, (true, n_evs));
                             proc.events_to_be_applied
                                 .push((cur_prob.clone(), filtered_events));
@@ -157,15 +158,15 @@ fn collect_pear(tail: &mut Vec<Expr>) -> Box<PearProcessor> {
                             let mut n_filters = Vec::new();
                             n_evs.append(&mut evs);
                             n_filters.append(&mut last_filters);
-			    if n_filters.is_empty() {
-				n_filters.push("".to_string());
-			    }
+                            if n_filters.is_empty() {
+                                n_filters.push("".to_string());
+                            }
                             filtered_events.insert(n_filters, (true, n_evs));
                             proc.events_to_be_applied
                                 .push((cur_prob.clone(), filtered_events));
                         } else {
-			    last_filters.clear();
-			}
+                            last_filters.clear();
+                        }
                         // collect new filters
                         collect_filters = true;
                     }
@@ -174,7 +175,7 @@ fn collect_pear(tail: &mut Vec<Expr>) -> Box<PearProcessor> {
             }
             Atom::Symbol(s) => {
                 if collect_filters {
-		    //println!("found filter {}", s);
+                    //println!("found filter {}", s);
                     last_filters.push(s)
                 }
             }
@@ -185,12 +186,124 @@ fn collect_pear(tail: &mut Vec<Expr>) -> Box<PearProcessor> {
     // save last context
     if !evs.is_empty() {
         let mut filtered_events = HashMap::new();
-	if last_filters.is_empty() {
-	    last_filters.push("".to_string());
-	}
+        if last_filters.is_empty() {
+            last_filters.push("".to_string());
+        }
         filtered_events.insert(last_filters, (true, evs));
         proc.events_to_be_applied.push((cur_prob, filtered_events));
     }
+    Box::new(proc)
+}
+
+// this is basically a shorthand for a pear processor
+fn collect_inhibit_exhibit(
+    tail: &mut Vec<Expr>,
+    inhibit: bool,
+    exhibit: bool,
+) -> Box<PearProcessor> {
+    let mut tail_drain = tail.drain(..);
+    let mut proc = PearProcessor::new();
+
+    let mut last_filters = Vec::new();
+
+    let mut evs = Vec::new();
+    let mut silencer = Event::with_name("silencer".to_string());
+    silencer
+        .params
+        .insert(SynthParameter::Level, Box::new(Parameter::with_value(0.0)));
+    evs.push(silencer);
+
+    let mut collect_filters = false;
+    let mut cur_prob = Parameter::with_value(100.0); // if nothing is specified, it's always or prob 100
+
+    while let Some(Expr::Constant(c)) = tail_drain.next() {
+        match c {
+            Atom::SoundEvent(e) => {
+                evs.push(e);
+                if collect_filters {
+                    collect_filters = false;
+                }
+            }
+            Atom::Keyword(k) => {
+                match k.as_str() {
+                    "p" => {
+                        // save current context, if something has been found
+                        if inhibit && !last_filters.is_empty() {
+                            let mut filtered_events = HashMap::new();
+                            let mut n_filters = Vec::new();
+                            n_filters.extend_from_slice(&last_filters);
+                            filtered_events.insert(n_filters, (true, evs.clone()));
+                            proc.events_to_be_applied
+                                .push((cur_prob.clone(), filtered_events));
+                        }
+
+                        if exhibit && !last_filters.is_empty() {
+                            let mut filtered_events = HashMap::new();
+                            let mut n_filters = Vec::new();
+                            n_filters.extend_from_slice(&last_filters);
+                            filtered_events.insert(n_filters, (false, evs.clone()));
+                            proc.events_to_be_applied
+                                .push((cur_prob.clone(), filtered_events));
+                        }
+                        // grab new probability
+                        cur_prob = get_next_param(&mut tail_drain, 100.0);
+                        collect_filters = false;
+                    }
+                    "for" => {
+                        if inhibit && !last_filters.is_empty() {
+                            let mut filtered_events = HashMap::new();
+                            let mut n_filters = Vec::new();
+                            n_filters.append(&mut last_filters);
+                            filtered_events.insert(n_filters, (true, evs.clone()));
+                            proc.events_to_be_applied
+                                .push((cur_prob.clone(), filtered_events));
+                        }
+
+                        if exhibit && !last_filters.is_empty() {
+                            let mut filtered_events = HashMap::new();
+                            let mut n_filters = Vec::new();
+                            n_filters.append(&mut last_filters);
+                            filtered_events.insert(n_filters, (false, evs.clone()));
+                            proc.events_to_be_applied
+                                .push((cur_prob.clone(), filtered_events));
+                        }
+
+                        // collect new filters
+                        collect_filters = true;
+                    }
+                    _ => {}
+                }
+            }
+            Atom::Symbol(s) => {
+                if collect_filters {
+                    //println!("found filter {}", s);
+                    last_filters.push(s)
+                }
+            }
+            _ => {}
+        }
+    }
+
+    // save last context
+    if inhibit {
+        let mut filtered_events = HashMap::new();
+        if last_filters.is_empty() {
+            last_filters.push("".to_string());
+        }
+        filtered_events.insert(last_filters.clone(), (true, evs.clone()));
+        proc.events_to_be_applied
+            .push((cur_prob.clone(), filtered_events));
+    }
+
+    if exhibit {
+        let mut filtered_events = HashMap::new();
+        if last_filters.is_empty() {
+            last_filters.push("".to_string());
+        }
+        filtered_events.insert(last_filters, (false, evs));
+        proc.events_to_be_applied.push((cur_prob, filtered_events));
+    }
+
     Box::new(proc)
 }
 
@@ -341,6 +454,9 @@ pub fn collect_generator_processor(
 ) -> GeneratorProcessorOrModifier {
     GeneratorProcessorOrModifier::GeneratorProcessor(match proc_type {
         BuiltInGenProc::Pear => collect_pear(tail),
+        BuiltInGenProc::Inhibit => collect_inhibit_exhibit(tail, true, false),
+        BuiltInGenProc::Exhibit => collect_inhibit_exhibit(tail, false, true),
+        BuiltInGenProc::InExhibit => collect_inhibit_exhibit(tail, true, true),
         BuiltInGenProc::Apple => collect_apple(tail),
         BuiltInGenProc::Every => collect_every(tail),
         BuiltInGenProc::Lifemodel => collect_lifemodel(tail),
