@@ -35,14 +35,14 @@ impl GeneratorProcessor for EveryProcessor {
             let cur_step: usize = (step.evaluate() as usize) % 101; // make sure prob is always between 0 and 100
             if self.step_count != 0 && self.step_count % cur_step == 0 {
                 let mut stat_evs = HashMap::new();
-                for (filter, evs) in filtered_events.iter_mut() {
+                for (filter, (mode, evs)) in filtered_events.iter_mut() {
                     let mut evs_static = Vec::new();
                     for ev in evs.iter_mut() {
                         let ev_static = ev.get_static();
                         for in_ev in events.iter_mut() {
                             match in_ev {
                                 InterpretableEvent::Sound(s) => {
-                                    s.apply(&ev_static, filter, true);
+                                    s.apply(&ev_static, filter, *mode);
                                 }
                                 InterpretableEvent::Control(_) => {
                                     // ??

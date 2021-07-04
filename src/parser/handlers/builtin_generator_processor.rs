@@ -51,7 +51,7 @@ fn collect_every(tail: &mut Vec<Expr>) -> Box<EveryProcessor> {
 			    if n_filters.is_empty() {
 				n_filters.push("".to_string());
 			    }
-                            filtered_events.insert(n_filters, n_evs);
+                            filtered_events.insert(n_filters, (true, n_evs));
 
                             proc.things_to_be_applied.push((
                                 cur_step.clone(),
@@ -77,7 +77,7 @@ fn collect_every(tail: &mut Vec<Expr>) -> Box<EveryProcessor> {
 			    if n_filters.is_empty() {
 				n_filters.push("".to_string());
 			    }
-                            filtered_events.insert(n_filters, n_evs);
+                            filtered_events.insert(n_filters, (true, n_evs));
 
                             proc.things_to_be_applied.push((
                                 cur_step.clone(),
@@ -102,7 +102,7 @@ fn collect_every(tail: &mut Vec<Expr>) -> Box<EveryProcessor> {
 	if last_filters.is_empty() {
 	   last_filters.push("".to_string());
 	}
-        filtered_events.insert(last_filters, events);
+        filtered_events.insert(last_filters, (true, events));
         proc.things_to_be_applied
             .push((cur_step, filtered_events, gen_mod_funs));
     }
@@ -142,7 +142,7 @@ fn collect_pear(tail: &mut Vec<Expr>) -> Box<PearProcessor> {
 			    if n_filters.is_empty() {
 				n_filters.push("".to_string());
 			    }
-                            filtered_events.insert(n_filters, n_evs);
+                            filtered_events.insert(n_filters, (true, n_evs));
                             proc.events_to_be_applied
                                 .push((cur_prob.clone(), filtered_events));
                         }
@@ -160,7 +160,7 @@ fn collect_pear(tail: &mut Vec<Expr>) -> Box<PearProcessor> {
 			    if n_filters.is_empty() {
 				n_filters.push("".to_string());
 			    }
-                            filtered_events.insert(n_filters, n_evs);
+                            filtered_events.insert(n_filters, (true, n_evs));
                             proc.events_to_be_applied
                                 .push((cur_prob.clone(), filtered_events));
                         } else {
@@ -188,7 +188,7 @@ fn collect_pear(tail: &mut Vec<Expr>) -> Box<PearProcessor> {
 	if last_filters.is_empty() {
 	    last_filters.push("".to_string());
 	}
-        filtered_events.insert(last_filters, evs);
+        filtered_events.insert(last_filters, (true, evs));
         proc.events_to_be_applied.push((cur_prob, filtered_events));
     }
     Box::new(proc)

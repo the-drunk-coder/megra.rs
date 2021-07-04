@@ -64,7 +64,7 @@ fn spread_gens(mul: &BuiltInMultiplexer, gens: &mut Vec<Generator>, out_mode: &O
                     Box::new(Parameter::with_value(positions[i])),
                 );
                 let mut filtered_events = HashMap::new();
-                filtered_events.insert(vec!["".to_string()], vec![ev]);
+                filtered_events.insert(vec!["".to_string()], (true, vec![ev]));
                 p.events_to_be_applied
                     .push((Parameter::with_value(100.0), filtered_events));
                 gens[i].processors.push(Box::new(p));
@@ -128,7 +128,7 @@ fn spread_proxies(mul: &BuiltInMultiplexer, proxies: &mut Vec<PartProxy>, out_mo
                     Box::new(Parameter::with_value(positions[i])),
                 );
                 let mut filtered_events = HashMap::new();
-                filtered_events.insert(vec!["".to_string()], vec![ev]);
+                filtered_events.insert(vec!["".to_string()], (true, vec![ev]));
                 p.events_to_be_applied
                     .push((Parameter::with_value(100.0), filtered_events));
                 match prox {

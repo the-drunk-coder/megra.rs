@@ -46,7 +46,7 @@ impl GeneratorProcessor for PearProcessor {
             let mut stat_evs = HashMap::new();
             let cur_prob: usize = (prob.evaluate() as usize) % 101; // make sure prob is always between 0 and 100
                                                                     //println!("cur p {}", cur_prob);
-            for (filter, evs) in filtered_events.iter_mut() {
+            for (filter, (mode, evs)) in filtered_events.iter_mut() {
                 let mut evs_static = Vec::new();
                 for ev in evs.iter_mut() {
                     let ev_static = ev.get_static();
@@ -54,7 +54,7 @@ impl GeneratorProcessor for PearProcessor {
                         match in_ev {
                             InterpretableEvent::Sound(s) => {
                                 if rng.gen_range(0, 100) < cur_prob {
-                                    s.apply(&ev_static, filter, true);
+                                    s.apply(&ev_static, filter, *mode);
                                 }
                             }
                             InterpretableEvent::Control(_) => {
