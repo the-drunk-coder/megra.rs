@@ -12,7 +12,7 @@ fn collect_every(tail: &mut Vec<Expr>) -> Box<EveryProcessor> {
     let mut tail_drain = tail.drain(..);
     let mut proc = EveryProcessor::new();
 
-    let mut last_filters = vec!["".to_string()];
+    let mut last_filters = Vec::new();
 
     let mut cur_step = Parameter::with_value(1.0); // if nothing is specified, it's always applied
     let mut gen_mod_funs = Vec::new();
@@ -48,6 +48,9 @@ fn collect_every(tail: &mut Vec<Expr>) -> Box<EveryProcessor> {
                             let mut n_filters = Vec::new();
                             n_evs.append(&mut events);
                             n_filters.append(&mut last_filters);
+			    if n_filters.is_empty() {
+				n_filters.push("".to_string());
+			    }
                             filtered_events.insert(n_filters, n_evs);
 
                             proc.things_to_be_applied.push((
@@ -55,7 +58,9 @@ fn collect_every(tail: &mut Vec<Expr>) -> Box<EveryProcessor> {
                                 filtered_events,
                                 n_mods,
                             ));
-                        }
+                        } else {
+			    last_filters.clear();
+			}
                         // collect new filters
                         collect_filters = true;
                     }
@@ -69,6 +74,9 @@ fn collect_every(tail: &mut Vec<Expr>) -> Box<EveryProcessor> {
                             let mut n_filters = Vec::new();
                             n_evs.append(&mut events);
                             n_filters.append(&mut last_filters);
+			    if n_filters.is_empty() {
+				n_filters.push("".to_string());
+			    }
                             filtered_events.insert(n_filters, n_evs);
 
                             proc.things_to_be_applied.push((
@@ -91,6 +99,9 @@ fn collect_every(tail: &mut Vec<Expr>) -> Box<EveryProcessor> {
     // save last context
     if !events.is_empty() || !gen_mod_funs.is_empty() {
         let mut filtered_events = HashMap::new();
+	if last_filters.is_empty() {
+	   last_filters.push("".to_string());
+	}
         filtered_events.insert(last_filters, events);
         proc.things_to_be_applied
             .push((cur_step, filtered_events, gen_mod_funs));
@@ -103,7 +114,7 @@ fn collect_pear(tail: &mut Vec<Expr>) -> Box<PearProcessor> {
     let mut tail_drain = tail.drain(..);
     let mut proc = PearProcessor::new();
 
-    let mut last_filters = vec!["".to_string()];
+    let mut last_filters = Vec::new();
 
     let mut evs = Vec::new();
     let mut collect_filters = false;
@@ -112,8 +123,8 @@ fn collect_pear(tail: &mut Vec<Expr>) -> Box<PearProcessor> {
     while let Some(Expr::Constant(c)) = tail_drain.next() {
         match c {
             Atom::SoundEvent(e) => {
-                evs.push(e);
-                if collect_filters {
+                evs.push(e);		
+                if collect_filters {		   
                     collect_filters = false;
                 }
             }
@@ -126,7 +137,11 @@ fn collect_pear(tail: &mut Vec<Expr>) -> Box<PearProcessor> {
                             let mut n_evs = Vec::new();
                             let mut n_filters = Vec::new();
                             n_evs.append(&mut evs);
+			    //println!("last filters {:?}", last_filters);
                             n_filters.extend_from_slice(&last_filters);
+			    if n_filters.is_empty() {
+				n_filters.push("".to_string());
+			    }
                             filtered_events.insert(n_filters, n_evs);
                             proc.events_to_be_applied
                                 .push((cur_prob.clone(), filtered_events));
@@ -142,10 +157,15 @@ fn collect_pear(tail: &mut Vec<Expr>) -> Box<PearProcessor> {
                             let mut n_filters = Vec::new();
                             n_evs.append(&mut evs);
                             n_filters.append(&mut last_filters);
+			    if n_filters.is_empty() {
+				n_filters.push("".to_string());
+			    }
                             filtered_events.insert(n_filters, n_evs);
                             proc.events_to_be_applied
                                 .push((cur_prob.clone(), filtered_events));
-                        }
+                        } else {
+			    last_filters.clear();
+			}
                         // collect new filters
                         collect_filters = true;
                     }
@@ -154,6 +174,7 @@ fn collect_pear(tail: &mut Vec<Expr>) -> Box<PearProcessor> {
             }
             Atom::Symbol(s) => {
                 if collect_filters {
+		    //println!("found filter {}", s);
                     last_filters.push(s)
                 }
             }
@@ -164,6 +185,9 @@ fn collect_pear(tail: &mut Vec<Expr>) -> Box<PearProcessor> {
     // save last context
     if !evs.is_empty() {
         let mut filtered_events = HashMap::new();
+	if last_filters.is_empty() {
+	    last_filters.push("".to_string());
+	}
         filtered_events.insert(last_filters, evs);
         proc.events_to_be_applied.push((cur_prob, filtered_events));
     }
