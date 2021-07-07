@@ -9,6 +9,7 @@ pub fn handle(event_type: &BuiltInSoundEvent, tail: &mut Vec<Expr>) -> Atom {
 
     let mut ev = match event_type {
         BuiltInSoundEvent::Sine(o) => Event::with_name_and_operation("sine".to_string(), *o),
+	BuiltInSoundEvent::Tri(o) => Event::with_name_and_operation("tri".to_string(), *o),
         BuiltInSoundEvent::Saw(o) => Event::with_name_and_operation("saw".to_string(), *o),
         BuiltInSoundEvent::Square(o) => Event::with_name_and_operation("sqr".to_string(), *o),
         BuiltInSoundEvent::Cub(o) => Event::with_name_and_operation("cub".to_string(), *o),

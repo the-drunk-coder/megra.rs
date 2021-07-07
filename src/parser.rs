@@ -191,6 +191,9 @@ fn parse_synth_event<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<&
         map(tag("sine"), |_| {
             BuiltIn::SoundEvent(BuiltInSoundEvent::Sine(EventOperation::Replace))
         }),
+	map(tag("tri"), |_| {
+            BuiltIn::SoundEvent(BuiltInSoundEvent::Tri(EventOperation::Replace))
+        }),
         map(tag("cub"), |_| {
             BuiltIn::SoundEvent(BuiltInSoundEvent::Cub(EventOperation::Replace))
         }),

@@ -108,7 +108,10 @@ impl<'a> epi::App for MegraEditor<'a> {
         self.function_names.push("cmp");
         self.function_names.push("chop");
         self.function_names.push("rnd");
-        self.function_names.push("rep");
+	self.function_names.push("rep");
+	self.function_names.push("inh");
+	self.function_names.push("exh");
+	self.function_names.push("inexh");
 
         self.colors.insert(
             egui::CodeColors::Keyword,

@@ -4,6 +4,7 @@ use ruffbox_synth::ruffbox::synth::SynthParameter;
 pub fn map_name(name: &str) -> SourceType {
     match name {
         "sine" => SourceType::SineSynth,
+	"tri" => SourceType::LFTriangleSynth,
         "saw" => SourceType::LFSawSynth,
         "sqr" => SourceType::LFSquareSynth,
         "cub" => SourceType::LFCubSynth,
