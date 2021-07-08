@@ -112,6 +112,7 @@ impl<'a> epi::App for MegraEditor<'a> {
 	self.function_names.push("inh");
 	self.function_names.push("exh");
 	self.function_names.push("inexh");
+	self.function_names.push("stages");
 
         self.colors.insert(
             egui::CodeColors::Keyword,

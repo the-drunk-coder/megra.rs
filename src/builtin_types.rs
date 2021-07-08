@@ -116,6 +116,7 @@ pub enum BuiltInConstructor {
     Flower,
     Friendship,
     Chop,
+    Stages,
     // Pseq, ?
 }
 
