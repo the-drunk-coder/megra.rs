@@ -62,6 +62,7 @@ pub enum BuiltInSoundEvent {
     Cub(EventOperation),
     Saw(EventOperation),
     Square(EventOperation),
+    RissetBell(EventOperation),
 }
 
 pub enum BuiltInDynamicParameter {

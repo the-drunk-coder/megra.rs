@@ -8,6 +8,7 @@ pub fn map_name(name: &str) -> SourceType {
         "saw" => SourceType::LFSawSynth,
         "sqr" => SourceType::LFSquareSynth,
         "cub" => SourceType::LFCubSynth,
+	"risset" => SourceType::RissetBell,
         "sampler" => SourceType::Sampler,
         "livesampler" => SourceType::LiveSampler,
         _ => SourceType::SineSynth,

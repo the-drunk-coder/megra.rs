@@ -13,6 +13,7 @@ pub fn handle(event_type: &BuiltInSoundEvent, tail: &mut Vec<Expr>) -> Atom {
         BuiltInSoundEvent::Saw(o) => Event::with_name_and_operation("saw".to_string(), *o),
         BuiltInSoundEvent::Square(o) => Event::with_name_and_operation("sqr".to_string(), *o),
         BuiltInSoundEvent::Cub(o) => Event::with_name_and_operation("cub".to_string(), *o),
+	BuiltInSoundEvent::RissetBell(o) => Event::with_name_and_operation("risset".to_string(), *o),
     };
 
     // first arg is always freq ...

@@ -203,6 +203,9 @@ fn parse_synth_event<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<&
         map(tag("saw"), |_| {
             BuiltIn::SoundEvent(BuiltInSoundEvent::Saw(EventOperation::Replace))
         }),
+	map(tag("risset"), |_| {
+            BuiltIn::SoundEvent(BuiltInSoundEvent::RissetBell(EventOperation::Replace))
+        }),
         map(tag("sqr"), |_| {
             BuiltIn::SoundEvent(BuiltInSoundEvent::Square(EventOperation::Replace))
         }),
