@@ -396,47 +396,47 @@ fn collect_lifemodel(tail: &mut Vec<Expr>) -> Box<LifemodelProcessor> {
                     collect_keeps = true;
                 }
                 "apoptosis" => {
-                    if let Expr::Constant(Atom::Boolean(b)) = tail_drain.next().unwrap() {
+                    if let Some(Expr::Constant(Atom::Boolean(b))) = tail_drain.next() {
                         proc.apoptosis = b;
                     }
                 }
                 "method" => {
-                    if let Expr::Constant(Atom::Keyword(k)) = tail_drain.next().unwrap() {
+                    if let Some(Expr::Constant(Atom::Keyword(k))) = tail_drain.next() {
                         proc.growth_method = k;
                     }
                 }
                 "autophagia" => {
-                    if let Expr::Constant(Atom::Boolean(b)) = tail_drain.next().unwrap() {
+                    if let Some(Expr::Constant(Atom::Boolean(b))) = tail_drain.next() {
                         proc.autophagia = b;
                     }
                 }
                 "lifespan-variance" => {
-                    if let Expr::Constant(Atom::Float(f)) = tail_drain.next().unwrap() {
+                    if let Some(Expr::Constant(Atom::Float(f))) = tail_drain.next() {
                         proc.node_lifespan_variance = f;
                     }
                 }
                 "apoptosis-regain" => {
-                    if let Expr::Constant(Atom::Float(f)) = tail_drain.next().unwrap() {
+                    if let Some(Expr::Constant(Atom::Float(f))) = tail_drain.next() {
                         proc.apoptosis_regain = f;
                     }
                 }
                 "autophagia-regain" => {
-                    if let Expr::Constant(Atom::Float(f)) = tail_drain.next().unwrap() {
+                    if let Some(Expr::Constant(Atom::Float(f))) = tail_drain.next() {
                         proc.autophagia_regain = f;
                     }
                 }
                 "local-resources" => {
-                    if let Expr::Constant(Atom::Float(f)) = tail_drain.next().unwrap() {
+                    if let Some(Expr::Constant(Atom::Float(f))) = tail_drain.next() {
                         proc.local_resources = f;
                     }
                 }
                 "cost" => {
-                    if let Expr::Constant(Atom::Float(f)) = tail_drain.next().unwrap() {
+                    if let Some(Expr::Constant(Atom::Float(f))) = tail_drain.next() {
                         proc.growth_cost = f;
                     }
                 }
                 "global-contrib" => {
-                    if let Expr::Constant(Atom::Boolean(b)) = tail_drain.next().unwrap() {
+                    if let Some(Expr::Constant(Atom::Boolean(b))) = tail_drain.next() {
                         proc.global_contrib = b;
                     }
                 }
@@ -475,10 +475,24 @@ pub fn handle(proc_type: &BuiltInGenProc, tail: &mut Vec<Expr>) -> Atom {
             }
             Atom::Generator(g)
         }
-        Some(Expr::Constant(Atom::Symbol(s))) => Atom::PartProxy(PartProxy::Proxy(
-            s,
-            vec![collect_generator_processor(proc_type, tail)],
-        )),
+        Some(Expr::Constant(Atom::Symbol(s))) => {
+	    // check if previous is a keyword ...
+	    // if not, assume it's a part proxy
+	    let prev = tail.pop();
+	    match prev {
+		Some(Expr::Constant(Atom::Keyword(_))) => {
+		    tail.push(prev.unwrap());
+		    tail.push(Expr::Constant(Atom::Symbol(s)));
+		    Atom::GeneratorProcessorOrModifier(collect_generator_processor(proc_type, tail))		    
+		},
+		_ => {
+		    Atom::PartProxy(PartProxy::Proxy(
+			s,
+			vec![collect_generator_processor(proc_type, tail)],
+		    ))
+		}
+	    }		    	
+	},
         Some(Expr::Constant(Atom::PartProxy(PartProxy::Proxy(s, mut proxy_mods)))) => {
             proxy_mods.push(collect_generator_processor(proc_type, tail));
             Atom::PartProxy(PartProxy::Proxy(s, proxy_mods))
