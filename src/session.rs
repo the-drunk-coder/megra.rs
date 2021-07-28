@@ -1,6 +1,6 @@
 use parking_lot::Mutex;
 use std::collections::{BTreeSet, HashMap};
-use std::sync;
+use std::{sync, thread};
 
 use ruffbox_synth::ruffbox::synth::SynthParameter;
 use ruffbox_synth::ruffbox::Ruffbox;
@@ -148,21 +148,23 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
             }
 
             // calc difference, stop vanished ones, sync new ones ...
-            let mut difference: Vec<_> = Vec::new();
+            let mut newcomers: Vec<_> = Vec::new();
+	    let mut quitters: Vec<_> = Vec::new();
             let mut remainders: Vec<_> = Vec::new();
             {
                 let sess = session.lock();
                 if let Some(old_gens) = sess.contexts.get(&name) {
                     // this means context is running
                     remainders = new_gens.intersection(&old_gens).cloned().collect();
-                    difference = new_gens.symmetric_difference(&old_gens).cloned().collect();
+                    newcomers = new_gens.difference(&old_gens).cloned().collect();
+		    quitters = old_gens.difference(&new_gens).cloned().collect();
                 }
             }
 
-            for tags in difference.iter() {
-                Session::stop_generator(session, &tags);
-            }
-
+	    //println!("rem {:?}", remainders);
+	    //println!("diff1 {:?}", difference);
+	    //println!("diff2 {:?}", difference2);
+	    	    	    
             if let Some(sync) = &ctx.sync_to {
                 let mut smallest_id = None;
                 {
@@ -170,7 +172,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                     if let Some(sync_gens) = sess.contexts.get(sync) {
                         // if there's both old and new generators
 
-                        let mut last_len: usize = usize::MAX; // usize max would be better ...
+                        let mut last_len: usize = usize::MAX; 
 
                         for tags in sync_gens.iter() {
                             if tags.len() < last_len {
@@ -201,7 +203,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                         ctx.shift as f64 * 0.001,
                     );
                 }
-            } else if !remainders.is_empty() && !difference.is_empty() {
+            } else if !remainders.is_empty() && !newcomers.is_empty() {
                 // if there's both old and new generators
                 let mut smallest_id = None;
                 let mut last_len: usize = usize::MAX; // usize max would be better ...
@@ -247,6 +249,14 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                 }
             }
 
+	    // stop asynchronously to keep main thread reactive
+	    let session2 = sync::Arc::clone(session);
+	    thread::spawn(move || {
+		for tags in quitters.iter() {
+                    Session::stop_generator(&session2, &tags);
+		}
+	    });
+	    		    
             // insert new context
             {
                 let mut sess = session.lock();
@@ -261,6 +271,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                     an_old_ctx = Some(old_ctx.clone());
                 }
             }
+	    
             if let Some(old_ctx) = an_old_ctx {
                 for tags in old_ctx.iter() {
                     // this is the type of clone i hate ...
@@ -536,6 +547,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
             println!("\'");
         }
         sess.schedulers = HashMap::new();
+	sess.contexts = HashMap::new();
         let mut ps = parts_store.lock();
         *ps = HashMap::new();
     }

@@ -49,13 +49,15 @@ impl MarkovSequenceGenerator {
             self.last_transition = self.generator.next_transition();
             //println!("no last_trans");
         } else if let Some(trans) = self.last_transition.clone() {
-            if !self.event_mapping.contains_key(&trans.last_symbol) {
+	    //println!("cur sym: {}", &trans.last_symbol);
+	    if !self.event_mapping.contains_key(&trans.last_symbol) {
                 // if transition was invalidated by shrink, for example ...
                 self.last_transition = self.generator.next_transition();
             }
         }
 
         if let Some(trans) = &self.last_transition {
+	    //println!("cur sym: {}", &trans.last_symbol);
             // increment symbol age ...
             *self.symbol_ages.entry(trans.last_symbol).or_insert(0) += 1;
             // get static events ...
