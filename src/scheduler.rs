@@ -3,6 +3,7 @@ use crate::generator::Generator;
 use crate::session::{OutputMode, Session};
 use parking_lot::Mutex;
 use ruffbox_synth::ruffbox::Ruffbox;
+
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::{Duration, Instant};
 use std::{sync, thread};
@@ -26,6 +27,7 @@ pub struct SchedulerData<const BUFSIZE: usize, const NCHAN: usize> {
     pub last_diff: f64,
     pub shift: f64,
     pub generator: Box<Generator>,
+    pub synced_generators: Vec<(Box<Generator>, f64)>,    
     pub ruffbox: sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>,
     pub session: sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
     pub parts_store: sync::Arc<Mutex<PartsStore>>,
@@ -52,6 +54,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> SchedulerData<BUFSIZE, NCHAN> {
             shift,
             last_diff: 0.0,
             generator: data,
+	    synced_generators: old.synced_generators.clone(),
             ruffbox: sync::Arc::clone(ruffbox),
             session: sync::Arc::clone(session),
             parts_store: sync::Arc::clone(parts_store),
@@ -78,6 +81,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> SchedulerData<BUFSIZE, NCHAN> {
             shift,
             last_diff: 0.0,
             generator: data,
+	    synced_generators: Vec::new(),
             ruffbox: sync::Arc::clone(ruffbox),
             session: sync::Arc::clone(session),
             parts_store: sync::Arc::clone(parts_store),
@@ -108,6 +112,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> SchedulerData<BUFSIZE, NCHAN> {
             last_diff: 0.0,
             shift,
             generator: data,
+	    synced_generators: Vec::new(),
             ruffbox: sync::Arc::clone(ruffbox),
             session: sync::Arc::clone(session),
             parts_store: sync::Arc::clone(parts_store),
