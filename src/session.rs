@@ -140,46 +140,14 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
 
         let name = ctx.name.clone(); // keep a copy for later
         if ctx.active {
-
-	    // are we supposed to sync to some other context ??
-	    // in ha
-            if let Some(sync) = &ctx.sync_to {
-
-		let mut smallest_id = None;
-                {
-                    let sess = session.lock();
-                    if let Some(sync_gens) = sess.contexts.get(sync) {                        
-                        let mut last_len: usize = usize::MAX; 
-			
-                        for tags in sync_gens.iter() {
-                            if tags.len() < last_len {
-                                last_len = tags.len();
-                                smallest_id = Some(tags.clone());
-                            }
-                        }
-                    }
-                }
-
-		if let Some(smid) = smallest_id {
-                    for c in ctx.generators.drain(..) {			
-			// sync to what is most likely the root generator
-			// if it exists
-			Session::start_generator_push_sync(
-                            Box::new(c),
-                            session,
-                            &smid.clone(),
-                            ctx.shift as f64 * 0.001,
-			);
-		    }                     
-                }	
-            }
-
+	    
 	    // otherwise, handle internal sync relations ...
 	    let mut new_gens = BTreeSet::new();
-
-            // collect id_tags
-            for c in ctx.generators.iter() {
-                new_gens.insert(c.id_tags.clone());
+	    let mut gen_map: HashMap<BTreeSet<String>, Generator> = HashMap::new();
+            // collect id_tags and organize in map
+            for g in ctx.generators.drain(..) {
+                new_gens.insert(g.id_tags.clone());
+		gen_map.insert(g.id_tags.clone(), g);
             }
 
             // calc difference, stop vanished ones, sync new ones ...
@@ -199,76 +167,135 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
 	    println!("newcomers {:?}", newcomers);
 	    println!("remainders {:?}", remainders);
 	    println!("quitters {:?}", quitters);
-	    
-	    if !remainders.is_empty() && !newcomers.is_empty() {
-                // if there's both old and new generators
-                let mut smallest_id = BTreeSet::new();
-                let mut last_len: usize = usize::MAX; // usize max would be better ...
-                for tags in remainders.iter() {
-                    if tags.len() < last_len {
-                        last_len = tags.len();
-                        smallest_id = tags.clone();
+
+	    // EXTERNAL SYNC
+	    // are we supposed to sync to some other context ??
+	    // get external sync ...
+            let external_sync = if let Some(sync) = &ctx.sync_to {
+		let mut smallest_id = None;
+                {
+                    let sess = session.lock();
+                    if let Some(sync_gens) = sess.contexts.get(sync) {                        
+                        let mut last_len: usize = usize::MAX; 			
+                        for tags in sync_gens.iter() {
+                            if tags.len() < last_len {
+                                last_len = tags.len();
+                                smallest_id = Some(tags.clone());
+                            }
+                        }
                     }
                 }
-                for c in ctx.generators.drain(..) {
-                    // if it's a remainder
-		    if  remainders.iter().any(|i| {
-			let a: Vec<_> = i.symmetric_difference(&c.id_tags).collect();
-			a.is_empty()
-		    }) {
-			Session::resume_generator(
-                            Box::new(c),
-                            session,
-                            ruffbox,
-                            parts_store,
-                            ctx.shift as f64 * 0.001,
-			);
-		    } else if newcomers.iter().any(|i| {
-			let a: Vec<_> = i.symmetric_difference(&c.id_tags).collect();
-			a.is_empty()
-		    }) {
-			// nothing to sync to in that case ...
-			Session::start_generator_push_sync(
-                            Box::new(c),
-                            session,
-			    &smallest_id,
-                            ctx.shift as f64 * 0.001,
-			);
-		    }		                        
-                }
-            } else {                
-                for c in ctx.generators.drain(..) {
-		    // if it's a remainder
-		    if remainders.iter().any(|i| {
-			let a: Vec<_> = i.symmetric_difference(&c.id_tags).collect();
-			a.is_empty()
-		    }) {
-			Session::resume_generator(
-				Box::new(c),
-				session,
-				ruffbox,
-				parts_store,
-				ctx.shift as f64 * 0.001,
-			    );
-		    } else {
-			// sync to what is most likely the root generator
-			Session::start_generator_no_sync(
-                            Box::new(c),
-                            session,
-                            ruffbox,
-                            parts_store,
-                            global_parameters,			
-                            ctx.shift as f64 * 0.001,
-			);
-		    }		                        
-                }
-            }
-        
+		smallest_id			
+            } else {
+		None
+	    }; // END EXTERNAL SYNC
 
+	    // INTERNAL SYNC
+	    // get context-internal sync in case there are newcomers	    
+	    let mut internal_sync = None;
+            let mut last_len: usize = usize::MAX; // usize max would be better ...
+            for tags in remainders.iter() {
+                if tags.len() < last_len {
+                    last_len = tags.len();
+                    internal_sync = Some(tags.clone());
+                }
+            } // END INTERNAL SYNC
+
+	    // HANDLE REMAINDERS
+	    if let Some(ext_sync) = external_sync.clone() {
+		for rem in remainders.drain(..) {
+		    let gen = gen_map.remove(&rem).unwrap();		    
+		    Session::resume_generator_sync(Box::new(gen),
+						   &session,
+						   &ruffbox,
+						   &parts_store,
+						   &ext_sync,
+						   ctx.shift as f64 * 0.001);
+		}
+	    } else {
+		for rem in remainders.drain(..) {
+		    let gen = gen_map.remove(&rem).unwrap();
+		    // WHAT TO DO IN SYNC CASE ?
+		    Session::resume_generator(Box::new(gen),
+					      &session,
+					      &ruffbox,
+					      &parts_store,
+					      ctx.shift as f64 * 0.001);
+		}
+	    } // END HANDLE REMAINDERS
+	    
+	    // HANDLE NEWCOMERS	    	    
+	    if let Some(ext_sync) = external_sync.clone() {
+		// external sync has precedence
+		for nc in newcomers.drain(..) {
+		    let gen = gen_map.remove(&nc).unwrap();
+		    Session::start_generator_push_sync(Box::new(gen),
+						       &session,
+						       &ext_sync,
+		    				       ctx.shift as f64 * 0.001);
+		}
+	    } else if let Some(int_sync) = internal_sync.clone() {
+		for nc in newcomers.drain(..) {
+		    let gen = gen_map.remove(&nc).unwrap();
+		    Session::start_generator_push_sync(Box::new(gen),
+						       &session,
+						       &int_sync,
+		    				       ctx.shift as f64 * 0.001);
+		}
+	    } else {
+		for nc in newcomers.drain(..) {
+		    let gen = gen_map.remove(&nc).unwrap();
+		    Session::start_generator_no_sync(Box::new(gen),
+						     &session,
+						     &ruffbox,
+						     &parts_store,
+						     &global_parameters,
+						     ctx.shift as f64 * 0.001);
+		}
+	    }
+	    // END HANDLE NEWCOMERS
+
+	    // HANDLE LEFTOVERS OR FRESH CONTEXT (most likely the latter)
+	    // if there's still gens in the map, handle those
+	    // this will happen if, for example, we're handling an
+	    // entirely new context, and there was no old generators
+	    // to compare to ...
+	    let leftovers_present = !gen_map.is_empty();
+	    if leftovers_present {
+		if let Some(ext_sync) = external_sync {
+		    // external sync has precedence
+		    for (_, gen) in gen_map.drain() {
+			Session::start_generator_push_sync(Box::new(gen),
+							   &session,
+							   &ext_sync,
+		    					   ctx.shift as f64 * 0.001);
+		    }
+		} else if let Some(int_sync) = internal_sync {
+		    // this is very unlikely to happen, but just in case ...
+		    for (_, gen) in gen_map.drain() {			
+			Session::start_generator_push_sync(Box::new(gen),
+							   &session,
+							   &int_sync,
+		    					   ctx.shift as f64 * 0.001);
+		    }
+		} else {
+		    // common case ... 
+		    for (_, gen) in gen_map.drain() {
+			Session::start_generator_no_sync(Box::new(gen),
+							 &session,
+							 &ruffbox,
+							 &parts_store,
+							 &global_parameters,
+							 ctx.shift as f64 * 0.001);
+		    }
+		}		
+	    }
+
+	    // HANDLE QUITTERS (generators to be stopped ...)
 	    // stop asynchronously to keep main thread reactive
 	    let session2 = sync::Arc::clone(session);
 	    thread::spawn(move || {
-		for tags in quitters.iter() {
+		for tags in quitters.drain(..) {
                     Session::stop_generator(&session2, &tags);
 		}
 	    });
@@ -302,19 +329,16 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
         }
     }
 
-    /// if a generater is already active, it'll be resumed by replacing
-    /// it's scheduler data
+    /// if a generater is already active, it'll be resumed by replacing its scheduler data
     fn resume_generator(gen: Box<Generator>,
 			session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
 			ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>,
-			parts_store: &sync::Arc<Mutex<PartsStore>>,			
+			parts_store: &sync::Arc<Mutex<PartsStore>>,
 			shift: f64) {
-
 	let mut sess = session.lock();
         let id_tags = gen.id_tags.clone();
         // start scheduler if it exists ...
-        if let Some((_, data)) = sess.schedulers.get_mut(&id_tags) {
-            // resume sync: later ...
+        if let Some((_, data)) = sess.schedulers.get_mut(&id_tags) {            
             print!("resume generator \'");
             for tag in id_tags.iter() {
                 print!("{} ", tag);
@@ -332,6 +356,64 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                 parts_store,
             );
         }	
+    }
+
+    fn resume_generator_sync(gen: Box<Generator>,
+			     session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
+			     ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>,
+			     parts_store: &sync::Arc<Mutex<PartsStore>>,
+			     sync_tags: &BTreeSet<String>,
+			     shift: f64) {
+	let mut sess = session.lock();
+        let id_tags = gen.id_tags.clone();
+        // start scheduler if it exists ...
+
+	// thanks, borrow checker, for this elegant construction ...
+	let s_data = if let Some((_, sd)) = sess.schedulers.get(sync_tags) {
+	    Some(sd.clone())
+	} else {
+	    None
+	};
+	
+        if let Some((_, data)) = sess.schedulers.get_mut(&id_tags) {
+	    if let Some(sync_data) = s_data  {
+		// resume sync: later ...
+		print!("resume sync  generator \'");
+		for tag in id_tags.iter() {
+                    print!("{} ", tag);
+		}
+		println!("\'");
+
+		// keep the scheduler running, just replace the data ...
+		let mut sched_data = data.lock();
+		let sync_sched_data = sync_data.lock();
+		*sched_data = SchedulerData::<BUFSIZE, NCHAN>::from_time_data(
+                    &sync_sched_data,
+                    shift,
+                    gen,
+                    ruffbox,
+                    session,
+                    parts_store,
+		);
+            } else {
+		// resume sync: later ...
+		print!("resume generator \'");
+		for tag in id_tags.iter() {
+                    print!("{} ", tag);
+		}
+		println!("\'");
+		// keep the scheduler running, just replace the data ...
+		let mut sched_data = data.lock();		
+		*sched_data = SchedulerData::<BUFSIZE, NCHAN>::from_previous(
+                    &sched_data,
+                    shift,
+                    gen,
+                    ruffbox,
+                    session,
+                    parts_store,
+		);
+	    }
+	}
     }
 
     /// start, sync time data ...
