@@ -1,6 +1,6 @@
 use crate::builtin_types::*;
 use crate::generator::Generator;
-use crate::session::{OutputMode, Session};
+use crate::session::{OutputMode, SyncMode, Session};
 use parking_lot::Mutex;
 use ruffbox_synth::ruffbox::Ruffbox;
 
@@ -32,7 +32,8 @@ pub struct SchedulerData<const BUFSIZE: usize, const NCHAN: usize> {
     pub session: sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
     pub parts_store: sync::Arc<Mutex<PartsStore>>,
     pub global_parameters: sync::Arc<GlobalParameters>,
-    pub mode: OutputMode,
+    pub output_mode: OutputMode,
+    pub sync_mode: SyncMode,
 }
 
 impl<const BUFSIZE: usize, const NCHAN: usize> SchedulerData<BUFSIZE, NCHAN> {
@@ -59,7 +60,8 @@ impl<const BUFSIZE: usize, const NCHAN: usize> SchedulerData<BUFSIZE, NCHAN> {
             session: sync::Arc::clone(session),
             parts_store: sync::Arc::clone(parts_store),
             global_parameters: sync::Arc::clone(&old.global_parameters),
-            mode: old.mode,
+            output_mode: old.output_mode,
+	    sync_mode: old.sync_mode,
         }
     }
 
@@ -86,7 +88,8 @@ impl<const BUFSIZE: usize, const NCHAN: usize> SchedulerData<BUFSIZE, NCHAN> {
             session: sync::Arc::clone(session),
             parts_store: sync::Arc::clone(parts_store),
             global_parameters: sync::Arc::clone(&old.global_parameters),
-            mode: old.mode,
+	    output_mode: old.output_mode,
+	    sync_mode: old.sync_mode,
         }
     }
 
@@ -97,7 +100,8 @@ impl<const BUFSIZE: usize, const NCHAN: usize> SchedulerData<BUFSIZE, NCHAN> {
         ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>,
         parts_store: &sync::Arc<Mutex<PartsStore>>,
         global_parameters: &sync::Arc<GlobalParameters>,
-        mode: OutputMode,
+        output_mode: OutputMode,
+	sync_mode: SyncMode,
     ) -> Self {
         // get logical time since start from ruffbox
         let stream_time;
@@ -117,7 +121,8 @@ impl<const BUFSIZE: usize, const NCHAN: usize> SchedulerData<BUFSIZE, NCHAN> {
             session: sync::Arc::clone(session),
             parts_store: sync::Arc::clone(parts_store),
             global_parameters: sync::Arc::clone(global_parameters),
-            mode,
+            output_mode: output_mode,
+	    sync_mode: sync_mode,
         }
     }
 }

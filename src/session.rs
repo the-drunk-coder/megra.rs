@@ -27,6 +27,14 @@ pub enum OutputMode {
     //TwentyFourChannel,
 }
 
+#[derive(Clone, Copy, PartialEq)]
+pub enum SyncMode {
+    All, // sync on all events
+    NotOnSilence, // don't sync on silent events
+    OnlyOnSilence, // only sync on silent events
+    // OnMarkers // on specific markers ... not sure how to handle this yet ...
+}
+
 #[derive(Clone)]
 pub struct SyncContext {
     pub name: String,
@@ -493,10 +501,15 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
             parts_store,
             global_parameters,
             session.lock().output_mode,
+	    SyncMode::NotOnSilence,
         )));
 	Session::start_scheduler(session, sched_data, id_tags)
     }	    
-    
+
+    /////////////////////////////////////////////
+    // start scheduler and main time recursion //
+    /////////////////////////////////////////////
+    /// start a scheduler, create scheduler data, etc ...
     fn start_scheduler(session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
 		       sched_data: sync::Arc<Mutex<SchedulerData<BUFSIZE, NCHAN>>>,
 		       id_tags: BTreeSet<String>) {	
@@ -513,30 +526,56 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
             let events = data.generator.current_events(&data.global_parameters);
 
 	    // start the generators ready to be synced ...
-	    let mut syncs = data.synced_generators.clone();
-	    for (g, s) in syncs.drain(..) {
-		println!("sync drain");
-		Session::start_generator_data_sync(g,
-						   data,
-						   s);
+	    if data.sync_mode == SyncMode::All {
+		let mut syncs = data.synced_generators.clone();
+		for (g, s) in syncs.drain(..) {
+		    println!("sync drain");
+		    Session::start_generator_data_sync(g,
+						       data,
+						       s);
+		}
+		data.synced_generators.clear();
 	    }
-	    data.synced_generators.clear();
-	    
+	    	    
             for ev in events.iter() {
                 match ev {
                     InterpretableEvent::Sound(s) => {
                         // no need to allocate a string everytime here, should be changed
                         if s.name == "silence" {
+			    // start the generators ready to be synced ...
+			    if data.sync_mode == SyncMode::OnlyOnSilence {
+				let mut syncs = data.synced_generators.clone();
+				for (g, s) in syncs.drain(..) {
+				    println!("sync drain");
+				    Session::start_generator_data_sync(g,
+								       data,
+								       s);
+				}
+				data.synced_generators.clear();
+			    }
                             continue;
                         }
 
+			// start the generators ready to be synced ...
+			if data.sync_mode == SyncMode::NotOnSilence {
+			    let mut syncs = data.synced_generators.clone();
+			    for (g, s) in syncs.drain(..) {
+				println!("sync drain");
+				Session::start_generator_data_sync(g,
+								   data,
+								   s);
+			    }
+			    data.synced_generators.clear();
+			}
+			
                         let mut bufnum: usize = 0;
                         if let Some(b) = s.params.get(&SynthParameter::SampleBufferNumber) {
                             bufnum = *b as usize;
                         }
 
                         let mut ruff = data.ruffbox.lock();
-                        // latency 0.05, should be made configurable later ...
+
+			// latency 0.05, should be made configurable later ...
                         let inst = ruff.prepare_instance(
                             map_name(&s.name),
                             data.stream_time + 0.05,
@@ -547,7 +586,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                             // special handling for stereo param
                             match k {
                                 SynthParameter::ChannelPosition => {
-                                    if data.mode == OutputMode::Stereo {
+                                    if data.output_mode == OutputMode::Stereo {
                                         let pos = (*v + 1.0) * 0.5;
                                         ruff.set_instance_parameter(inst, *k, pos);
                                     } else {
