@@ -121,11 +121,11 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
         // resolve part proxies ..
         // at some point this should probably check if
         // there's loops and so on ...
-        {
-            let ps = parts_store.lock();
-
+	// do it in a block to keep locking time short 
+        {            	    
             let mut gens = Vec::new();
 
+	    let ps = parts_store.lock();
             for p in ctx.part_proxies.drain(..) {
                 resolve_proxy(&ps, p, &mut gens);
             }
@@ -136,11 +136,46 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
             }
 
             ctx.generators.append(&mut gens);
-        }
+        } // end resolve proxies
 
-        let name = ctx.name.clone();
+        let name = ctx.name.clone(); // keep a copy for later
         if ctx.active {
-            let mut new_gens = BTreeSet::new();
+
+	    // are we supposed to sync to some other context ??
+	    // in ha
+            if let Some(sync) = &ctx.sync_to {
+
+		let mut smallest_id = None;
+                {
+                    let sess = session.lock();
+                    if let Some(sync_gens) = sess.contexts.get(sync) {                        
+                        let mut last_len: usize = usize::MAX; 
+			
+                        for tags in sync_gens.iter() {
+                            if tags.len() < last_len {
+                                last_len = tags.len();
+                                smallest_id = Some(tags.clone());
+                            }
+                        }
+                    }
+                }
+
+		if let Some(smid) = smallest_id {
+                    for c in ctx.generators.drain(..) {			
+			// sync to what is most likely the root generator
+			// if it exists
+			Session::start_generator_push_sync(
+                            Box::new(c),
+                            session,
+                            &smid.clone(),
+                            ctx.shift as f64 * 0.001,
+			);
+		    }                     
+                }	
+            }
+
+	    // otherwise, handle internal sync relations ...
+	    let mut new_gens = BTreeSet::new();
 
             // collect id_tags
             for c in ctx.generators.iter() {
@@ -161,49 +196,11 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                 }
             }
 
-	    //println!("rem {:?}", remainders);
-	    //println!("diff1 {:?}", difference);
-	    //println!("diff2 {:?}", difference2);
+	    println!("newcomers {:?}", newcomers);
+	    println!("remainders {:?}", remainders);
+	    println!("quitters {:?}", quitters);
 	    
-            if let Some(sync) = &ctx.sync_to {
-                let mut smallest_id = None;
-                {
-                    let sess = session.lock();
-                    if let Some(sync_gens) = sess.contexts.get(sync) {                        
-                        let mut last_len: usize = usize::MAX; 
-			
-                        for tags in sync_gens.iter() {
-                            if tags.len() < last_len {
-                                last_len = tags.len();
-                                smallest_id = Some(tags.clone());
-                            }
-                        }
-                    }
-                }
-		
-                for c in ctx.generators.drain(..) {
-		    if let Some(smid) = smallest_id.clone() {
-			// sync to what is most likely the root generator
-			Session::start_generator_push_sync(
-                            Box::new(c),
-                            session,
-                            &smid,
-                            ctx.shift as f64 * 0.001,
-			);
-		    } else {
-			// sync to what is most likely the root generator
-			Session::start_generator_no_sync(
-                            Box::new(c),
-                            session,
-                            ruffbox,
-                            parts_store,
-                            global_parameters,			
-                            ctx.shift as f64 * 0.001,
-			);
-		    }
-                    
-                }
-            } else if !remainders.is_empty() && !newcomers.is_empty() {
+	    if !remainders.is_empty() && !newcomers.is_empty() {
                 // if there's both old and new generators
                 let mut smallest_id = BTreeSet::new();
                 let mut last_len: usize = usize::MAX; // usize max would be better ...
@@ -239,8 +236,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
 			);
 		    }		                        
                 }
-            } else {
-                
+            } else {                
                 for c in ctx.generators.drain(..) {
 		    // if it's a remainder
 		    if remainders.iter().any(|i| {
@@ -306,6 +302,8 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
         }
     }
 
+    /// if a generater is already active, it'll be resumed by replacing
+    /// it's scheduler data
     fn resume_generator(gen: Box<Generator>,
 			session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
 			ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>,
@@ -575,7 +573,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
             sync::Arc::clone(&sched_data),
         );
 	let mut sess = session.lock();
-        sess.schedulers.insert(id_tags, (sched, sched_data));
+        sess.schedulers.insert(id_tags, (sched, sched_data));	
     }
     
     pub fn stop_generator(

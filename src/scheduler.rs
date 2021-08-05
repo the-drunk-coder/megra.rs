@@ -54,7 +54,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> SchedulerData<BUFSIZE, NCHAN> {
             shift,
             last_diff: 0.0,
             generator: data,
-	    synced_generators: old.synced_generators.clone(),
+	    synced_generators: old.synced_generators.clone(), // carry over synced gens ... 
             ruffbox: sync::Arc::clone(ruffbox),
             session: sync::Arc::clone(session),
             parts_store: sync::Arc::clone(parts_store),
@@ -172,7 +172,8 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Scheduler<BUFSIZE, NCHAN> {
 
     /// Stop this scheduler.
     pub fn stop(&mut self) {
-        self.running.store(false, Ordering::SeqCst);
+	println!("stopping");
+	self.running.store(false, Ordering::SeqCst);
         if let Some(h) = self.handle.take() {
             if let Ok(_) = h.join() {
                 println!("joined!");
