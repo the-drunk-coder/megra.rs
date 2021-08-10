@@ -30,7 +30,7 @@ pub fn construct_learn(tail: &mut Vec<Expr>) -> Atom {
     let mut ev_vec = Vec::new();
     let mut cur_key: String = "".to_string();
 
-    let mut autosilence = false;
+    let mut autosilence = true;
 
     while let Some(Expr::Constant(c)) = tail_drain.next() {
         if collect_events {

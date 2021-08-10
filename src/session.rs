@@ -32,7 +32,8 @@ pub enum SyncMode {
     All, // sync on all events
     NotOnSilence, // don't sync on silent events
     OnlyOnSilence, // only sync on silent events
-    // OnMarkers // on specific markers ... not sure how to handle this yet ...
+    // OnMarkersOnly
+    // OnMarkersNotOnsilence // on specific markers ... not sure how to handle this yet ...
 }
 
 #[derive(Clone)]
@@ -54,6 +55,7 @@ pub struct Session<const BUFSIZE: usize, const NCHAN: usize> {
         ),
 	>,
     pub output_mode: OutputMode,
+    //pub sync_mode: SyncMode,
     contexts: HashMap<String, BTreeSet<BTreeSet<String>>>,
 }
 

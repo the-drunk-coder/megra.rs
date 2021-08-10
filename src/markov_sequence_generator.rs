@@ -47,17 +47,18 @@ impl MarkovSequenceGenerator {
         // that'd mean it's probably the initial one, or there's something wrong ...
         if self.last_transition.is_none() {
             self.last_transition = self.generator.next_transition();
-            //println!("no last_trans");
+            //println!("no last_trans, fetch");
         } else if let Some(trans) = self.last_transition.clone() {
-	    //println!("cur sym: {}", &trans.last_symbol);
+	    //println!("trans present, cur sym: {}", &trans.last_symbol);
 	    if !self.event_mapping.contains_key(&trans.last_symbol) {
+		//println!("cur sym invalid, fetch next: {}", &trans.last_symbol);
                 // if transition was invalidated by shrink, for example ...
                 self.last_transition = self.generator.next_transition();
             }
         }
 
         if let Some(trans) = &self.last_transition {
-	    //println!("cur sym: {}", &trans.last_symbol);
+	    //println!("cur sym EFFECTIVE: {}", &trans.last_symbol);
             // increment symbol age ...
             *self.symbol_ages.entry(trans.last_symbol).or_insert(0) += 1;
             // get static events ...
@@ -72,8 +73,8 @@ impl MarkovSequenceGenerator {
                 }
             }
             //else {
-            //	println!("no events for sym");
-            // }
+            //	println!("no events for sym {}", trans.last_symbol);
+            //}
         }
 
         interpretable_events
