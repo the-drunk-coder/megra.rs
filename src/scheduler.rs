@@ -53,7 +53,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> SchedulerData<BUFSIZE, NCHAN> {
             stream_time: old.stream_time + shift_diff,
             logical_time: old.logical_time + shift_diff,
             shift,
-            last_diff: 0.0,
+            last_diff: old.last_diff,
             generator: data,
 	    synced_generators: old.synced_generators.clone(), // carry over synced gens ... 
             ruffbox: sync::Arc::clone(ruffbox),
@@ -139,7 +139,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Scheduler<BUFSIZE, NCHAN> {
     pub fn start(
         &mut self,
         name: &str,
-        fun: fn(&mut SchedulerData<BUFSIZE, NCHAN>) -> f64,
+        fun: fn(&mut SchedulerData<BUFSIZE, NCHAN>) -> (f64, bool),
         data: sync::Arc<Mutex<SchedulerData<BUFSIZE, NCHAN>>>,
     ) {
         self.running.store(true, Ordering::SeqCst);
@@ -156,18 +156,41 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Scheduler<BUFSIZE, NCHAN> {
                         let cur: f64;
                         {
                             let mut sched_data = data.lock();
-                            cur = sched_data.start_time.elapsed().as_secs_f64();
+                            // call event processing function that'll return
+			    // the sync flag and 
+                            let sched_result = (fun)(&mut sched_data);			   
+			    cur = sched_data.start_time.elapsed().as_secs_f64();
                             sched_data.last_diff = cur - sched_data.logical_time;
-                            next = (fun)(&mut sched_data);
-                            ldif = sched_data.last_diff;
-                            sched_data.logical_time += next;
-                            sched_data.stream_time += next;
-                        }
-                        // compensate for eventual lateness ...
-                        if (next - ldif) < 0.0 {
-                            println!("negative duration found: {} {} {}", cur, next, ldif);
-                        }
+			    next = sched_result.0;
+			    let sync = sched_result.1;			    
+			    if sync {
+				let mut syncs = sched_data.synced_generators.clone();
+				for (g, s) in syncs.drain(..) {
+				    //println!("sync drain");
+				    Session::start_generator_no_sync(g,
+								     &sched_data.session,
+								     &sched_data.ruffbox,
+								     &sched_data.parts_store,
+								     &sched_data.global_parameters,
+								     s);
+				}
+				sched_data.synced_generators.clear();
+			    }
+			    ldif = sched_data.last_diff;
 
+			    // compensate for eventual lateness ...
+                            if (next - ldif) < 0.0 {
+				let handle = thread::current();				
+				println!("{} negative duration found: {} {} {} {}", handle.name().unwrap(), cur, sched_data.logical_time, next, ldif);
+                            }
+			    else {
+			    let handle = thread::current();
+			    println!("{} valid duration found: {} {} {} {}", handle.name().unwrap(), cur, sched_data.logical_time, next, ldif);
+			    }
+			    sched_data.logical_time += next;
+                            sched_data.stream_time += next;			    
+			}
+                        
                         thread::sleep(Duration::from_secs_f64(next - ldif));
                     }
                 })
@@ -177,7 +200,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Scheduler<BUFSIZE, NCHAN> {
 
     /// Stop this scheduler.
     pub fn stop(&mut self) {
-	println!("stopping");
+	//println!("stopping");
 	self.running.store(false, Ordering::SeqCst);
         if let Some(h) = self.handle.take() {
             if let Ok(_) = h.join() {
