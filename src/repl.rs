@@ -66,6 +66,7 @@ pub fn start_repl<const BUFSIZE: usize, const NCHAN: usize>(
                                                     global_parameters,
                                                     sample_set,
                                                     parts_store,
+						    mode
                                                 );
                                                 rl.add_history_entry(line_buffer.as_str());
                                                 break;
@@ -93,6 +94,7 @@ pub fn start_repl<const BUFSIZE: usize, const NCHAN: usize>(
                             global_parameters,
                             sample_set,
                             parts_store,
+			    mode
                         );
                         rl.add_history_entry(line.as_str());
                     }

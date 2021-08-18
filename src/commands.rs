@@ -198,12 +198,13 @@ pub fn once<const BUFSIZE: usize, const NCHAN: usize>(
     session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
     sound_events: &mut Vec<Event>,
     control_events: &mut Vec<ControlEvent>,
+    output_mode: OutputMode,
 ) {
     for cev in control_events.iter() {
         if let Some(mut contexts) = cev.ctx.clone() {
             // this is the worst clone ....
             for mut sx in contexts.drain(..) {
-                Session::handle_context(&mut sx, session, ruffbox, parts_store, global_parameters);
+                Session::handle_context(&mut sx, session, ruffbox, parts_store, global_parameters, output_mode);
             }
         }
     }
@@ -228,8 +229,7 @@ pub fn once<const BUFSIZE: usize, const NCHAN: usize>(
             // special handling for stereo param
             match k {
                 SynthParameter::ChannelPosition => {
-                    let sess = session.lock();
-                    if sess.output_mode == OutputMode::Stereo {
+                    if output_mode == OutputMode::Stereo {
                         let pos = (*v + 1.0) * 0.5;
                         ruff.set_instance_parameter(inst, *k, pos);
                     } else {

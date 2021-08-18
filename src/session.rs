@@ -54,8 +54,6 @@ pub struct Session<const BUFSIZE: usize, const NCHAN: usize> {
             sync::Arc<Mutex<SchedulerData<BUFSIZE, NCHAN>>>,
         ),
 	>,
-    pub output_mode: OutputMode,
-    //pub sync_mode: SyncMode,
     contexts: HashMap<String, BTreeSet<BTreeSet<String>>>,
 }
 
@@ -204,6 +202,7 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(data: &mut SchedulerData<
                             &data.ruffbox,
                             &data.parts_store,
                             &data.global_parameters,
+			    data.output_mode
                         );
                     }
                 }
@@ -268,10 +267,9 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(data: &mut SchedulerData<
 // END INNER MAIN SCHEDULER FUNCTION ...
 
 impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
-    pub fn with_mode(mode: OutputMode) -> Self {
+    pub fn new() -> Self {
         Session {
             schedulers: HashMap::new(),
-            output_mode: mode,
             contexts: HashMap::new(),
         }
     }
@@ -282,6 +280,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
         ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>,
         parts_store: &sync::Arc<Mutex<PartsStore>>,
         global_parameters: &sync::Arc<GlobalParameters>,
+	output_mode: OutputMode
     ) {
         // resolve part proxies ..
         // at some point this should probably check if
@@ -393,6 +392,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
 						     &ruffbox,
 						     &parts_store,
 						     &global_parameters,
+						     output_mode,
 						     ctx.shift as f64 * 0.001);
 		}
 	    }
@@ -451,6 +451,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
 							 &ruffbox,
 							 &parts_store,
 							 &global_parameters,
+							 output_mode,
 							 ctx.shift as f64 * 0.001);
 		    }
 		}		
@@ -643,7 +644,8 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
         session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
         ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>,
         parts_store: &sync::Arc<Mutex<PartsStore>>,
-        global_parameters: &sync::Arc<GlobalParameters>,        
+        global_parameters: &sync::Arc<GlobalParameters>,
+	output_mode: OutputMode,
         shift: f64,
     ) {
         let id_tags = gen.id_tags.clone();
@@ -661,7 +663,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
             ruffbox,
             parts_store,
             global_parameters,
-            session.lock().output_mode,
+            output_mode,
 	    SyncMode::NotOnSilence,
         )));
 	Session::start_scheduler(session, sched_data, id_tags)

@@ -316,7 +316,7 @@ where
     out_stream.play()?;
 
     // global data
-    let session = sync::Arc::new(Mutex::new(Session::with_mode(mode)));
+    let session = sync::Arc::new(Mutex::new(Session::new()));
     let global_parameters = sync::Arc::new(GlobalParameters::with_capacity(1));
     let sample_set = sync::Arc::new(Mutex::new(SampleSet::new()));
     let parts_store = sync::Arc::new(Mutex::new(PartsStore::new()));

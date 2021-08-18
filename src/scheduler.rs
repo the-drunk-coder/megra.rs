@@ -172,6 +172,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Scheduler<BUFSIZE, NCHAN> {
 								     &sched_data.ruffbox,
 								     &sched_data.parts_store,
 								     &sched_data.global_parameters,
+								     sched_data.output_mode,
 								     s);
 				}
 				sched_data.synced_generators.clear();

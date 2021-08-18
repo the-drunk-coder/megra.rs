@@ -7,7 +7,7 @@ use ruffbox_synth::ruffbox::Ruffbox;
 use crate::builtin_types::*;
 use crate::commands;
 use crate::sample_set::SampleSet;
-use crate::session::Session;
+use crate::session::{Session, OutputMode};
 
 pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
     parsed_in: Expr,
@@ -16,6 +16,7 @@ pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
     global_parameters: &sync::Arc<GlobalParameters>,
     sample_set: &sync::Arc<Mutex<SampleSet>>,
     parts_store: &sync::Arc<Mutex<PartsStore>>,
+    output_mode: OutputMode,
 ) {
     match parsed_in {
         Expr::Comment => {
@@ -59,7 +60,7 @@ pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
         }
         Expr::Constant(Atom::SyncContext(mut s)) => {
             println!("a context called \'{}\'", s.name);
-            Session::handle_context(&mut s, &session, &ruffbox, parts_store, &global_parameters);
+            Session::handle_context(&mut s, &session, &ruffbox, parts_store, &global_parameters, output_mode);
         }
         Expr::Constant(Atom::Command(c)) => {
             match c {
@@ -123,6 +124,7 @@ pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
                         session,
                         &mut s,
                         &mut c,
+			output_mode,
                     );
                 }
             };
