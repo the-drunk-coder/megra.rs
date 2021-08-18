@@ -112,6 +112,161 @@ fn resolve_proxy(parts_store: &PartsStore, proxy: PartProxy, generators: &mut Ve
     }
 }
 
+
+//////////////////////////////////////
+// THE MAIN TIME RECURSION LOOP!!!  //
+//////////////////////////////////////
+
+// yes, here it is ... the evaluation function ...
+// or better, the inside part of the time recursion
+fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(data: &mut SchedulerData<BUFSIZE, NCHAN>) -> (f64, bool) {
+    let events = data.generator.current_events(&data.global_parameters);
+
+    // the sync flag will be returned alongside the
+    // time to let the scheduler know that it should
+    // trigger the synced generators
+    let mut sync = false;
+    // start the generators ready to be synced ...
+    if data.sync_mode == SyncMode::All {
+	//println!("sync all");
+	sync = true;
+    }
+    
+    for ev in events.iter() {
+        match ev {
+            InterpretableEvent::Sound(s) => {
+                // no need to allocate a string everytime here, should be changed
+                if s.name == "silence" {
+		    // start the generators ready to be synced ...
+		    if data.sync_mode == SyncMode::OnlyOnSilence {
+			//println!("sync silence");
+			sync = true;
+		    }
+                    continue;
+                }
+
+		// start the generators ready to be synced ...
+		if data.sync_mode == SyncMode::NotOnSilence {
+		    //println!("sync nosilence");
+		    sync = true;
+		}
+		
+                let mut bufnum: usize = 0;
+                if let Some(b) = s.params.get(&SynthParameter::SampleBufferNumber) {
+                    bufnum = *b as usize;
+                }
+
+                let mut ruff = data.ruffbox.lock();
+
+		// latency 0.05, should be made configurable later ...
+                let inst = ruff.prepare_instance(
+                    map_name(&s.name),
+                    data.stream_time + 0.05,
+                    bufnum,
+                );
+                // set parameters and trigger instance
+                for (k, v) in s.params.iter() {
+                    // special handling for stereo param
+                    match k {
+                        SynthParameter::ChannelPosition => {
+                            if data.output_mode == OutputMode::Stereo {
+                                let pos = (*v + 1.0) * 0.5;
+                                ruff.set_instance_parameter(inst, *k, pos);
+                            } else {
+                                ruff.set_instance_parameter(inst, *k, *v);
+                            }
+                        }
+                        // convert milliseconds to seconds
+                        SynthParameter::Duration => {
+                            ruff.set_instance_parameter(inst, *k, *v * 0.001)
+                        }
+                        SynthParameter::Attack => {
+                            ruff.set_instance_parameter(inst, *k, *v * 0.001)
+                        }
+                        SynthParameter::Sustain => {
+                            ruff.set_instance_parameter(inst, *k, *v * 0.001)
+                        }
+                        SynthParameter::Release => {
+                            ruff.set_instance_parameter(inst, *k, *v * 0.001)
+                        }
+                        _ => ruff.set_instance_parameter(inst, *k, *v),
+                    }
+                }
+                ruff.trigger(inst);
+            }
+            InterpretableEvent::Control(c) => {
+                if let Some(mut contexts) = c.ctx.clone() {
+                    // this is the worst clone ....
+                    for mut sx in contexts.drain(..) {
+                        Session::handle_context(
+                            &mut sx,
+                            &data.session,
+                            &data.ruffbox,
+                            &data.parts_store,
+                            &data.global_parameters,
+                        );
+                    }
+                }
+                if let Some(mut commands) = c.cmd.clone() {
+                    // this is the worst clone ....
+                    for c in commands.drain(..) {
+                        match c {
+                            Command::LoadPart((name, part)) => {
+                                commands::load_part(&data.parts_store, name, part);
+                                println!("a command (load part)");
+                            }
+                            Command::FreezeBuffer(freezbuf) => {
+                                commands::freeze_buffer(&data.ruffbox, freezbuf);
+                                println!("freeze buffer");
+                            }
+                            Command::Tmod(p) => {
+                                commands::set_global_tmod(&data.global_parameters, p);
+                            }
+                            Command::GlobRes(v) => {
+                                commands::set_global_lifemodel_resources(
+                                    &data.global_parameters,
+                                    v,
+                                );
+                            }
+                            Command::GlobalRuffboxParams(m) => {
+                                commands::set_global_ruffbox_parameters(
+                                    &data.ruffbox,
+                                    &m,
+                                );
+                            }
+                            _ => {
+                                println!("ignore command")
+                            }
+                        };
+                    }
+                }
+            }
+        }
+    }
+
+    // global tempo modifier, allows us to do weird stuff with the
+    // global tempo ...
+    let mut tmod: f64 = 1.0;
+
+    if let ConfigParameter::Dynamic(global_tmod) = data
+        .global_parameters
+        .entry(BuiltinGlobalParameters::GlobalTimeModifier)
+        .or_insert(ConfigParameter::Dynamic(Parameter::with_value(1.0))) // init on first attempt
+        .value_mut()
+    {
+        tmod = global_tmod.evaluate() as f64;
+    }
+
+    let time = (data
+		.generator
+		.current_transition(&data.global_parameters)
+		.params[&SynthParameter::Duration] as f64
+		* 0.001
+		* tmod) as f64;
+    (time, sync)		
+}
+// END INNER MAIN SCHEDULER FUNCTION ...
+
 impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
     pub fn with_mode(mode: OutputMode) -> Self {
         Session {
@@ -211,8 +366,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                 }
             } // END INTERNAL SYNC
 
-	    
-	    
+	    	    
 	    // HANDLE NEWCOMERS	    	    
 	    if let Some(ext_sync) = external_sync.clone() {
 		// external sync has precedence
@@ -361,14 +515,14 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
 	    sched_data.generator = gen;
 	    sched_data.shift = shift;
 	    /*
-            *sched_data = SchedulerData::<BUFSIZE, NCHAN>::from_previous(
-                &sched_data,
-                shift,
-                gen,
-                ruffbox,
-                session,
-                parts_store,
-            );*/
+             *sched_data = SchedulerData::<BUFSIZE, NCHAN>::from_previous(
+            &sched_data,
+            shift,
+            gen,
+            ruffbox,
+            session,
+            parts_store,
+        );*/
 	    println!("replaced sched data");
         }	
     }
@@ -486,7 +640,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
     
     pub fn start_generator_no_sync(
         gen: Box<Generator>,
-        session: &Session<BUFSIZE, NCHAN>,
+        session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
         ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>,
         parts_store: &sync::Arc<Mutex<PartsStore>>,
         global_parameters: &sync::Arc<GlobalParameters>,        
@@ -503,11 +657,11 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
         let sched_data = sync::Arc::new(Mutex::new(SchedulerData::<BUFSIZE, NCHAN>::from_data(
             gen,
             shift,
-            &sync::Arc::new(Mutex::new(*session)),
+	    session,
             ruffbox,
             parts_store,
             global_parameters,
-            session.output_mode,
+            session.lock().output_mode,
 	    SyncMode::NotOnSilence,
         )));
 	Session::start_scheduler(session, sched_data, id_tags)
@@ -517,166 +671,12 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
     // start scheduler and main time recursion //
     /////////////////////////////////////////////
     /// start a scheduler, create scheduler data, etc ...
-    fn start_scheduler(session: &Session<BUFSIZE, NCHAN>,
+    fn start_scheduler(session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
 		       sched_data: sync::Arc<Mutex<SchedulerData<BUFSIZE, NCHAN>>>,
 		       id_tags: BTreeSet<String>) {	
 	// otherwise, create new sched and data ...
         let mut sched = Scheduler::<BUFSIZE, NCHAN>::new();
-
-        //////////////////////////////////////
-        // THE MAIN TIME RECURSION LOOP!!!  //
-        //////////////////////////////////////
-
-        // yes, here it is ... the evaluation function ...
-        // or better, the inside part of the time recursion
-        let eval_loop = |data: &mut SchedulerData<BUFSIZE, NCHAN>| -> (f64, bool) {
-            let events = data.generator.current_events(&data.global_parameters);
-
-	    // the sync flag will be returned alongside the
-	    // time to let the scheduler know that it should
-	    // trigger the synced generators
-	    let mut sync = false;
-	    // start the generators ready to be synced ...
-	    if data.sync_mode == SyncMode::All {
-		//println!("sync all");
-		sync = true;
-	    }
-	    	    
-            for ev in events.iter() {
-                match ev {
-                    InterpretableEvent::Sound(s) => {
-                        // no need to allocate a string everytime here, should be changed
-                        if s.name == "silence" {
-			    // start the generators ready to be synced ...
-			    if data.sync_mode == SyncMode::OnlyOnSilence {
-				//println!("sync silence");
-				sync = true;
-			    }
-                            continue;
-                        }
-
-			// start the generators ready to be synced ...
-			if data.sync_mode == SyncMode::NotOnSilence {
-			    //println!("sync nosilence");
-			    sync = true;
-			}
-			
-                        let mut bufnum: usize = 0;
-                        if let Some(b) = s.params.get(&SynthParameter::SampleBufferNumber) {
-                            bufnum = *b as usize;
-                        }
-
-                        let mut ruff = data.ruffbox.lock();
-
-			// latency 0.05, should be made configurable later ...
-                        let inst = ruff.prepare_instance(
-                            map_name(&s.name),
-                            data.stream_time + 0.05,
-                            bufnum,
-                        );
-                        // set parameters and trigger instance
-                        for (k, v) in s.params.iter() {
-                            // special handling for stereo param
-                            match k {
-                                SynthParameter::ChannelPosition => {
-                                    if data.output_mode == OutputMode::Stereo {
-                                        let pos = (*v + 1.0) * 0.5;
-                                        ruff.set_instance_parameter(inst, *k, pos);
-                                    } else {
-                                        ruff.set_instance_parameter(inst, *k, *v);
-                                    }
-                                }
-                                // convert milliseconds to seconds
-                                SynthParameter::Duration => {
-                                    ruff.set_instance_parameter(inst, *k, *v * 0.001)
-                                }
-                                SynthParameter::Attack => {
-                                    ruff.set_instance_parameter(inst, *k, *v * 0.001)
-                                }
-                                SynthParameter::Sustain => {
-                                    ruff.set_instance_parameter(inst, *k, *v * 0.001)
-                                }
-                                SynthParameter::Release => {
-                                    ruff.set_instance_parameter(inst, *k, *v * 0.001)
-                                }
-                                _ => ruff.set_instance_parameter(inst, *k, *v),
-                            }
-                        }
-                        ruff.trigger(inst);
-                    }
-                    InterpretableEvent::Control(c) => {
-                        if let Some(mut contexts) = c.ctx.clone() {
-                            // this is the worst clone ....
-                            for mut sx in contexts.drain(..) {
-                                Session::handle_context(
-                                    &mut sx,
-                                    &data.session,
-                                    &data.ruffbox,
-                                    &data.parts_store,
-                                    &data.global_parameters,
-                                );
-                            }
-                        }
-                        if let Some(mut commands) = c.cmd.clone() {
-                            // this is the worst clone ....
-                            for c in commands.drain(..) {
-                                match c {
-                                    Command::LoadPart((name, part)) => {
-                                        commands::load_part(&data.parts_store, name, part);
-                                        println!("a command (load part)");
-                                    }
-                                    Command::FreezeBuffer(freezbuf) => {
-                                        commands::freeze_buffer(&data.ruffbox, freezbuf);
-                                        println!("freeze buffer");
-                                    }
-                                    Command::Tmod(p) => {
-                                        commands::set_global_tmod(&data.global_parameters, p);
-                                    }
-                                    Command::GlobRes(v) => {
-                                        commands::set_global_lifemodel_resources(
-                                            &data.global_parameters,
-                                            v,
-                                        );
-                                    }
-                                    Command::GlobalRuffboxParams(m) => {
-                                        commands::set_global_ruffbox_parameters(
-                                            &data.ruffbox,
-                                            &m,
-                                        );
-                                    }
-                                    _ => {
-                                        println!("ignore command")
-                                    }
-                                };
-                            }
-                        }
-                    }
-                }
-            }
-
-            // global tempo modifier, allows us to do weird stuff with the
-            // global tempo ...
-            let mut tmod: f64 = 1.0;
-
-            if let ConfigParameter::Dynamic(global_tmod) = data
-                .global_parameters
-                .entry(BuiltinGlobalParameters::GlobalTimeModifier)
-                .or_insert(ConfigParameter::Dynamic(Parameter::with_value(1.0))) // init on first attempt
-                .value_mut()
-            {
-                tmod = global_tmod.evaluate() as f64;
-            }
-
-            let time = (data
-			.generator
-			.current_transition(&data.global_parameters)
-			.params[&SynthParameter::Duration] as f64
-			* 0.001
-			* tmod) as f64;
-	    (time, sync)		
-        };
-	// END INNER MAIN SCHEDULER FUNCTION ...
-
+        
         // assemble name for thread ...
         let mut thread_name: String = "".to_owned();
         for tag in id_tags.iter() {
@@ -690,8 +690,9 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
         );
 
 	let id_tags2 = id_tags.clone();
+	let mut sess = session.lock();
 	// prepare for replacement
-	if let Some((mut sched, _)) = session.schedulers.remove(&id_tags) {
+	if let Some((mut sched, _)) = sess.schedulers.remove(&id_tags) {
 	    thread::spawn(move || {
 		sched.stop();
 		print!("replacing generator \'");
@@ -701,7 +702,8 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
 		println!("\'");
             });
 	}
-        session.schedulers.insert(id_tags, (sched, sched_data));	
+
+        sess.schedulers.insert(id_tags, (sched, sched_data));	
     }
     
     pub fn stop_generator(
@@ -713,8 +715,8 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
             sched.stop();
 	    print!("stopped/removed generator \'");
 	    for tag in gen_name.iter() {
-                    print!("{} ", tag);
-		}
+                print!("{} ", tag);
+	    }
 	    println!("\'");
         }
     }
