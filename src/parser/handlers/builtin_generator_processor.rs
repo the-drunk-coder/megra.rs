@@ -476,23 +476,21 @@ pub fn handle(proc_type: &BuiltInGenProc, tail: &mut Vec<Expr>) -> Atom {
             Atom::Generator(g)
         }
         Some(Expr::Constant(Atom::Symbol(s))) => {
-	    // check if previous is a keyword ...
-	    // if not, assume it's a part proxy
-	    let prev = tail.pop();
-	    match prev {
-		Some(Expr::Constant(Atom::Keyword(_))) => {
-		    tail.push(prev.unwrap());
-		    tail.push(Expr::Constant(Atom::Symbol(s)));
-		    Atom::GeneratorProcessorOrModifier(collect_generator_processor(proc_type, tail))		    
-		},
-		_ => {
-		    Atom::PartProxy(PartProxy::Proxy(
-			s,
-			vec![collect_generator_processor(proc_type, tail)],
-		    ))
-		}
-	    }		    	
-	},
+            // check if previous is a keyword ...
+            // if not, assume it's a part proxy
+            let prev = tail.pop();
+            match prev {
+                Some(Expr::Constant(Atom::Keyword(_))) => {
+                    tail.push(prev.unwrap());
+                    tail.push(Expr::Constant(Atom::Symbol(s)));
+                    Atom::GeneratorProcessorOrModifier(collect_generator_processor(proc_type, tail))
+                }
+                _ => Atom::PartProxy(PartProxy::Proxy(
+                    s,
+                    vec![collect_generator_processor(proc_type, tail)],
+                )),
+            }
+        }
         Some(Expr::Constant(Atom::PartProxy(PartProxy::Proxy(s, mut proxy_mods)))) => {
             proxy_mods.push(collect_generator_processor(proc_type, tail));
             Atom::PartProxy(PartProxy::Proxy(s, proxy_mods))

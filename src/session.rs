@@ -29,11 +29,11 @@ pub enum OutputMode {
 
 #[derive(Clone, Copy, PartialEq)]
 pub enum SyncMode {
-    All, // sync on all events
+    All,          // sync on all events
     NotOnSilence, // don't sync on silent events
     OnlyOnSilence, // only sync on silent events
-    // OnMarkersOnly
-    // OnMarkersNotOnsilence // on specific markers ... not sure how to handle this yet ...
+                  // OnMarkersOnly
+                  // OnMarkersNotOnsilence // on specific markers ... not sure how to handle this yet ...
 }
 
 #[derive(Clone)]
@@ -48,12 +48,12 @@ pub struct SyncContext {
 
 pub struct Session<const BUFSIZE: usize, const NCHAN: usize> {
     schedulers: HashMap<
-            BTreeSet<String>,
+        BTreeSet<String>,
         (
             Scheduler<BUFSIZE, NCHAN>,
             sync::Arc<Mutex<SchedulerData<BUFSIZE, NCHAN>>>,
         ),
-	>,
+    >,
     contexts: HashMap<String, BTreeSet<BTreeSet<String>>>,
 }
 
@@ -110,14 +110,15 @@ fn resolve_proxy(parts_store: &PartsStore, proxy: PartProxy, generators: &mut Ve
     }
 }
 
-
 //////////////////////////////////////
 // THE MAIN TIME RECURSION LOOP!!!  //
 //////////////////////////////////////
 
 // yes, here it is ... the evaluation function ...
 // or better, the inside part of the time recursion
-fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(data: &mut SchedulerData<BUFSIZE, NCHAN>) -> (f64, bool) {
+fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
+    data: &mut SchedulerData<BUFSIZE, NCHAN>,
+) -> (f64, bool) {
     let events = data.generator.current_events(&data.global_parameters);
 
     // the sync flag will be returned alongside the
@@ -126,29 +127,29 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(data: &mut SchedulerData<
     let mut sync = false;
     // start the generators ready to be synced ...
     if data.sync_mode == SyncMode::All {
-	//println!("sync all");
-	sync = true;
+        //println!("sync all");
+        sync = true;
     }
-    
+
     for ev in events.iter() {
         match ev {
             InterpretableEvent::Sound(s) => {
                 // no need to allocate a string everytime here, should be changed
                 if s.name == "silence" {
-		    // start the generators ready to be synced ...
-		    if data.sync_mode == SyncMode::OnlyOnSilence {
-			//println!("sync silence");
-			sync = true;
-		    }
+                    // start the generators ready to be synced ...
+                    if data.sync_mode == SyncMode::OnlyOnSilence {
+                        //println!("sync silence");
+                        sync = true;
+                    }
                     continue;
                 }
 
-		// start the generators ready to be synced ...
-		if data.sync_mode == SyncMode::NotOnSilence {
-		    //println!("sync nosilence");
-		    sync = true;
-		}
-		
+                // start the generators ready to be synced ...
+                if data.sync_mode == SyncMode::NotOnSilence {
+                    //println!("sync nosilence");
+                    sync = true;
+                }
+
                 let mut bufnum: usize = 0;
                 if let Some(b) = s.params.get(&SynthParameter::SampleBufferNumber) {
                     bufnum = *b as usize;
@@ -156,12 +157,9 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(data: &mut SchedulerData<
 
                 let mut ruff = data.ruffbox.lock();
 
-		// latency 0.05, should be made configurable later ...
-                let inst = ruff.prepare_instance(
-                    map_name(&s.name),
-                    data.stream_time + 0.05,
-                    bufnum,
-                );
+                // latency 0.05, should be made configurable later ...
+                let inst =
+                    ruff.prepare_instance(map_name(&s.name), data.stream_time + 0.05, bufnum);
                 // set parameters and trigger instance
                 for (k, v) in s.params.iter() {
                     // special handling for stereo param
@@ -178,9 +176,7 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(data: &mut SchedulerData<
                         SynthParameter::Duration => {
                             ruff.set_instance_parameter(inst, *k, *v * 0.001)
                         }
-                        SynthParameter::Attack => {
-                            ruff.set_instance_parameter(inst, *k, *v * 0.001)
-                        }
+                        SynthParameter::Attack => ruff.set_instance_parameter(inst, *k, *v * 0.001),
                         SynthParameter::Sustain => {
                             ruff.set_instance_parameter(inst, *k, *v * 0.001)
                         }
@@ -202,7 +198,7 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(data: &mut SchedulerData<
                             &data.ruffbox,
                             &data.parts_store,
                             &data.global_parameters,
-			    data.output_mode
+                            data.output_mode,
                         );
                     }
                 }
@@ -228,10 +224,7 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(data: &mut SchedulerData<
                                 );
                             }
                             Command::GlobalRuffboxParams(m) => {
-                                commands::set_global_ruffbox_parameters(
-                                    &data.ruffbox,
-                                    &m,
-                                );
+                                commands::set_global_ruffbox_parameters(&data.ruffbox, &m);
                             }
                             _ => {
                                 println!("ignore command")
@@ -257,12 +250,12 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(data: &mut SchedulerData<
     }
 
     let time = (data
-		.generator
-		.current_transition(&data.global_parameters)
-		.params[&SynthParameter::Duration] as f64
-		* 0.001
-		* tmod) as f64;
-    (time, sync)		
+        .generator
+        .current_transition(&data.global_parameters)
+        .params[&SynthParameter::Duration] as f64
+        * 0.001
+        * tmod) as f64;
+    (time, sync)
 }
 // END INNER MAIN SCHEDULER FUNCTION ...
 
@@ -280,16 +273,16 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
         ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>,
         parts_store: &sync::Arc<Mutex<PartsStore>>,
         global_parameters: &sync::Arc<GlobalParameters>,
-	output_mode: OutputMode
+        output_mode: OutputMode,
     ) {
         // resolve part proxies ..
         // at some point this should probably check if
         // there's loops and so on ...
-	// do it in a block to keep locking time short 
-        {            	    
+        // do it in a block to keep locking time short
+        {
             let mut gens = Vec::new();
 
-	    let ps = parts_store.lock();
+            let ps = parts_store.lock();
             for p in ctx.part_proxies.drain(..) {
                 resolve_proxy(&ps, p, &mut gens);
             }
@@ -304,19 +297,18 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
 
         let name = ctx.name.clone(); // keep a copy for later
         if ctx.active {
-	    
-	    // otherwise, handle internal sync relations ...
-	    let mut new_gens = BTreeSet::new();
-	    let mut gen_map: HashMap<BTreeSet<String>, Generator> = HashMap::new();
+            // otherwise, handle internal sync relations ...
+            let mut new_gens = BTreeSet::new();
+            let mut gen_map: HashMap<BTreeSet<String>, Generator> = HashMap::new();
             // collect id_tags and organize in map
             for g in ctx.generators.drain(..) {
                 new_gens.insert(g.id_tags.clone());
-		gen_map.insert(g.id_tags.clone(), g);
+                gen_map.insert(g.id_tags.clone(), g);
             }
 
             // calc difference, stop vanished ones, sync new ones ...
             let mut newcomers: Vec<_> = Vec::new();
-	    let mut quitters: Vec<_> = Vec::new();
+            let mut quitters: Vec<_> = Vec::new();
             let mut remainders: Vec<_> = Vec::new();
             {
                 let sess = session.lock();
@@ -324,23 +316,23 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                     // this means context is running
                     remainders = new_gens.intersection(&old_gens).cloned().collect();
                     newcomers = new_gens.difference(&old_gens).cloned().collect();
-		    quitters = old_gens.difference(&new_gens).cloned().collect();
+                    quitters = old_gens.difference(&new_gens).cloned().collect();
                 }
             }
 
-	    println!("newcomers {:?}", newcomers);
-	    println!("remainders {:?}", remainders);
-	    println!("quitters {:?}", quitters);
+            println!("newcomers {:?}", newcomers);
+            println!("remainders {:?}", remainders);
+            println!("quitters {:?}", quitters);
 
-	    // EXTERNAL SYNC
-	    // are we supposed to sync to some other context ??
-	    // get external sync ...
+            // EXTERNAL SYNC
+            // are we supposed to sync to some other context ??
+            // get external sync ...
             let external_sync = if let Some(sync) = &ctx.sync_to {
-		let mut smallest_id = None;
+                let mut smallest_id = None;
                 {
                     let sess = session.lock();
-                    if let Some(sync_gens) = sess.contexts.get(sync) {                        
-                        let mut last_len: usize = usize::MAX; 			
+                    if let Some(sync_gens) = sess.contexts.get(sync) {
+                        let mut last_len: usize = usize::MAX;
                         for tags in sync_gens.iter() {
                             if tags.len() < last_len {
                                 last_len = tags.len();
@@ -349,14 +341,14 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                         }
                     }
                 }
-		smallest_id			
+                smallest_id
             } else {
-		None
-	    }; // END EXTERNAL SYNC
+                None
+            }; // END EXTERNAL SYNC
 
-	    // INTERNAL SYNC
-	    // get context-internal sync in case there are newcomers	    
-	    let mut internal_sync = None;
+            // INTERNAL SYNC
+            // get context-internal sync in case there are newcomers
+            let mut internal_sync = None;
             let mut last_len: usize = usize::MAX; // usize max would be better ...
             for tags in remainders.iter() {
                 if tags.len() < last_len {
@@ -365,107 +357,122 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                 }
             } // END INTERNAL SYNC
 
-	    	    
-	    // HANDLE NEWCOMERS	    	    
-	    if let Some(ext_sync) = external_sync.clone() {
-		// external sync has precedence
-		for nc in newcomers.drain(..) {
-		    let gen = gen_map.remove(&nc).unwrap();
-		    Session::start_generator_push_sync(Box::new(gen),
-						       &session,
-						       &ext_sync,
-		    				       ctx.shift as f64 * 0.001);
-		}
-	    } else if let Some(int_sync) = internal_sync.clone() {
-		for nc in newcomers.drain(..) {
-		    let gen = gen_map.remove(&nc).unwrap();
-		    Session::start_generator_push_sync(Box::new(gen),
-						       &session,
-						       &int_sync,
-		    				       ctx.shift as f64 * 0.001);
-		}
-	    } else {
-		for nc in newcomers.drain(..) {
-		    let gen = gen_map.remove(&nc).unwrap();
-		    Session::start_generator_no_sync(Box::new(gen),
-						     &session,
-						     &ruffbox,
-						     &parts_store,
-						     &global_parameters,
-						     output_mode,
-						     ctx.shift as f64 * 0.001);
-		}
-	    }
-	    // END HANDLE NEWCOMERS
+            // HANDLE NEWCOMERS
+            if let Some(ext_sync) = external_sync.clone() {
+                // external sync has precedence
+                for nc in newcomers.drain(..) {
+                    let gen = gen_map.remove(&nc).unwrap();
+                    Session::start_generator_push_sync(
+                        Box::new(gen),
+                        &session,
+                        &ext_sync,
+                        ctx.shift as f64 * 0.001,
+                    );
+                }
+            } else if let Some(int_sync) = internal_sync.clone() {
+                for nc in newcomers.drain(..) {
+                    let gen = gen_map.remove(&nc).unwrap();
+                    Session::start_generator_push_sync(
+                        Box::new(gen),
+                        &session,
+                        &int_sync,
+                        ctx.shift as f64 * 0.001,
+                    );
+                }
+            } else {
+                for nc in newcomers.drain(..) {
+                    let gen = gen_map.remove(&nc).unwrap();
+                    Session::start_generator_no_sync(
+                        Box::new(gen),
+                        &session,
+                        &ruffbox,
+                        &parts_store,
+                        &global_parameters,
+                        output_mode,
+                        ctx.shift as f64 * 0.001,
+                    );
+                }
+            }
+            // END HANDLE NEWCOMERS
 
-	    // HANDLE REMAINDERS
-	    if let Some(ext_sync) = external_sync.clone() {
-		for rem in remainders.drain(..) {
-		    let gen = gen_map.remove(&rem).unwrap();		    
-		    Session::resume_generator_sync(Box::new(gen),
-						   &session,
-						   &ruffbox,
-						   &parts_store,
-						   &ext_sync,
-						   ctx.shift as f64 * 0.001);
-		}
-	    } else {
-		for rem in remainders.drain(..) {
-		    let gen = gen_map.remove(&rem).unwrap();		    
-		    Session::resume_generator(Box::new(gen),
-					      &session,
-					      &ruffbox,
-					      &parts_store,
-					      ctx.shift as f64 * 0.001);
-		}
-	    } // END HANDLE REMAINDERS
+            // HANDLE REMAINDERS
+            if let Some(ext_sync) = external_sync.clone() {
+                for rem in remainders.drain(..) {
+                    let gen = gen_map.remove(&rem).unwrap();
+                    Session::resume_generator_sync(
+                        Box::new(gen),
+                        &session,
+                        &ruffbox,
+                        &parts_store,
+                        &ext_sync,
+                        ctx.shift as f64 * 0.001,
+                    );
+                }
+            } else {
+                for rem in remainders.drain(..) {
+                    let gen = gen_map.remove(&rem).unwrap();
+                    Session::resume_generator(
+                        Box::new(gen),
+                        &session,
+                        &ruffbox,
+                        &parts_store,
+                        ctx.shift as f64 * 0.001,
+                    );
+                }
+            } // END HANDLE REMAINDERS
 
-	    // HANDLE LEFTOVERS OR FRESH CONTEXT (most likely the latter)
-	    // if there's still gens in the map, handle those
-	    // this will happen if, for example, we're handling an
-	    // entirely new context, and there was no old generators
-	    // to compare to ...
-	    let leftovers_present = !gen_map.is_empty();
-	    if leftovers_present {
-		if let Some(ext_sync) = external_sync {
-		    // external sync has precedence
-		    for (_, gen) in gen_map.drain() {
-			Session::start_generator_push_sync(Box::new(gen),
-							   &session,
-							   &ext_sync,
-		    					   ctx.shift as f64 * 0.001);
-		    }
-		} else if let Some(int_sync) = internal_sync {
-		    // this is very unlikely to happen, but just in case ...
-		    for (_, gen) in gen_map.drain() {			
-			Session::start_generator_push_sync(Box::new(gen),
-							   &session,
-							   &int_sync,
-		    					   ctx.shift as f64 * 0.001);
-		    }
-		} else {
-		    // common case ... 
-		    for (_, gen) in gen_map.drain() {
-			Session::start_generator_no_sync(Box::new(gen),
-							 &session,
-							 &ruffbox,
-							 &parts_store,
-							 &global_parameters,
-							 output_mode,
-							 ctx.shift as f64 * 0.001);
-		    }
-		}		
-	    }
+            // HANDLE LEFTOVERS OR FRESH CONTEXT (most likely the latter)
+            // if there's still gens in the map, handle those
+            // this will happen if, for example, we're handling an
+            // entirely new context, and there was no old generators
+            // to compare to ...
+            let leftovers_present = !gen_map.is_empty();
+            if leftovers_present {
+                if let Some(ext_sync) = external_sync {
+                    // external sync has precedence
+                    for (_, gen) in gen_map.drain() {
+                        Session::start_generator_push_sync(
+                            Box::new(gen),
+                            &session,
+                            &ext_sync,
+                            ctx.shift as f64 * 0.001,
+                        );
+                    }
+                } else if let Some(int_sync) = internal_sync {
+                    // this is very unlikely to happen, but just in case ...
+                    for (_, gen) in gen_map.drain() {
+                        Session::start_generator_push_sync(
+                            Box::new(gen),
+                            &session,
+                            &int_sync,
+                            ctx.shift as f64 * 0.001,
+                        );
+                    }
+                } else {
+                    // common case ...
+                    for (_, gen) in gen_map.drain() {
+                        Session::start_generator_no_sync(
+                            Box::new(gen),
+                            &session,
+                            &ruffbox,
+                            &parts_store,
+                            &global_parameters,
+                            output_mode,
+                            ctx.shift as f64 * 0.001,
+                        );
+                    }
+                }
+            }
 
-	    // HANDLE QUITTERS (generators to be stopped ...)
-	    // stop asynchronously to keep main thread reactive
-	    let session2 = sync::Arc::clone(session);
-	    thread::spawn(move || {
-		for tags in quitters.drain(..) {
+            // HANDLE QUITTERS (generators to be stopped ...)
+            // stop asynchronously to keep main thread reactive
+            let session2 = sync::Arc::clone(session);
+            thread::spawn(move || {
+                for tags in quitters.drain(..) {
                     Session::stop_generator(&session2, &tags);
-		}
-	    });
-	    
+                }
+            });
+
             // insert new context
             {
                 let mut sess = session.lock();
@@ -480,7 +487,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                     an_old_ctx = Some(old_ctx.clone());
                 }
             }
-	    
+
             if let Some(old_ctx) = an_old_ctx {
                 for tags in old_ctx.iter() {
                     // this is the type of clone i hate ...
@@ -496,120 +503,124 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
     }
 
     /// if a generater is already active, it'll be resumed by replacing its scheduler data
-    fn resume_generator(gen: Box<Generator>,
-			session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
-			ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>,
-			parts_store: &sync::Arc<Mutex<PartsStore>>,
-			shift: f64) {
-	let mut sess = session.lock();
+    fn resume_generator(
+        gen: Box<Generator>,
+        session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
+        ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>,
+        parts_store: &sync::Arc<Mutex<PartsStore>>,
+        shift: f64,
+    ) {
+        let mut sess = session.lock();
         let id_tags = gen.id_tags.clone();
         // start scheduler if it exists ...
-        if let Some((_, data)) = sess.schedulers.get_mut(&id_tags) {            
+        if let Some((_, data)) = sess.schedulers.get_mut(&id_tags) {
             print!("resume generator \'");
             for tag in id_tags.iter() {
                 print!("{} ", tag);
             }
             println!("\'");
-	    
+
             // keep the scheduler running, just replace the data ...
             let mut sched_data = data.lock();
-	    sched_data.generator = gen;
-	    sched_data.shift = shift;
-	    /*
-             *sched_data = SchedulerData::<BUFSIZE, NCHAN>::from_previous(
-            &sched_data,
-            shift,
-            gen,
-            ruffbox,
-            session,
-            parts_store,
-        );*/
-	    println!("replaced sched data");
-        }	
+            sched_data.generator = gen;
+            sched_data.shift = shift;
+            /*
+                 *sched_data = SchedulerData::<BUFSIZE, NCHAN>::from_previous(
+                &sched_data,
+                shift,
+                gen,
+                ruffbox,
+                session,
+                parts_store,
+            );*/
+            println!("replaced sched data");
+        }
     }
 
-    fn resume_generator_sync(gen: Box<Generator>,
-			     session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
-			     ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>,
-			     parts_store: &sync::Arc<Mutex<PartsStore>>,
-			     sync_tags: &BTreeSet<String>,
-			     shift: f64) {
-	let mut sess = session.lock();
+    fn resume_generator_sync(
+        gen: Box<Generator>,
+        session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
+        ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>,
+        parts_store: &sync::Arc<Mutex<PartsStore>>,
+        sync_tags: &BTreeSet<String>,
+        shift: f64,
+    ) {
+        let mut sess = session.lock();
         let id_tags = gen.id_tags.clone();
         // start scheduler if it exists ...
 
-	// thanks, borrow checker, for this elegant construction ...
-	let s_data = if let Some((_, sd)) = sess.schedulers.get(sync_tags) {
-	    Some(sd.clone())
-	} else {
-	    None
-	};
-	
-        if let Some((_, data)) = sess.schedulers.get_mut(&id_tags) {
-	    if let Some(sync_data) = s_data  {
-		
-		print!("resume sync generator \'");
-		for tag in id_tags.iter() {
-                    print!("{} ", tag);
-		}
-		println!("\'");
+        // thanks, borrow checker, for this elegant construction ...
+        let s_data = if let Some((_, sd)) = sess.schedulers.get(sync_tags) {
+            Some(sd.clone())
+        } else {
+            None
+        };
 
-		// keep the scheduler running, just replace the data ...
-		let mut sched_data = data.lock();
-		let sync_sched_data = sync_data.lock();
-		*sched_data = SchedulerData::<BUFSIZE, NCHAN>::from_time_data(
+        if let Some((_, data)) = sess.schedulers.get_mut(&id_tags) {
+            if let Some(sync_data) = s_data {
+                print!("resume sync generator \'");
+                for tag in id_tags.iter() {
+                    print!("{} ", tag);
+                }
+                println!("\'");
+
+                // keep the scheduler running, just replace the data ...
+                let mut sched_data = data.lock();
+                let sync_sched_data = sync_data.lock();
+                *sched_data = SchedulerData::<BUFSIZE, NCHAN>::from_time_data(
                     &sync_sched_data,
                     shift,
                     gen,
                     ruffbox,
                     session,
                     parts_store,
-		);
+                );
             } else {
-		// resume sync: later ...
-		print!("resume generator \'");
-		for tag in id_tags.iter() {
+                // resume sync: later ...
+                print!("resume generator \'");
+                for tag in id_tags.iter() {
                     print!("{} ", tag);
-		}
-		println!("\'");
-		// keep the scheduler running, just replace the data ...
-		let mut sched_data = data.lock();		
-		*sched_data = SchedulerData::<BUFSIZE, NCHAN>::from_previous(
+                }
+                println!("\'");
+                // keep the scheduler running, just replace the data ...
+                let mut sched_data = data.lock();
+                *sched_data = SchedulerData::<BUFSIZE, NCHAN>::from_previous(
                     &sched_data,
                     shift,
                     gen,
                     ruffbox,
                     session,
                     parts_store,
-		);
-	    }
-	}
+                );
+            }
+        }
     }
 
     /// start, sync time data ...
     pub fn start_generator_data_sync(
-        gen: Box<Generator>,        
+        gen: Box<Generator>,
         data: &SchedulerData<BUFSIZE, NCHAN>,
         shift: f64,
     ) {
-	let id_tags = gen.id_tags.clone();
+        let id_tags = gen.id_tags.clone();
 
-	print!("start generator (sync time data) \'");
-	for tag in id_tags.iter() {
-	    print!("{} ", tag);
-	}
-	println!("\'");
-	// sync to data
-	// create sched data from data
-	let sched_data = sync::Arc::new(Mutex::new(SchedulerData::<BUFSIZE, NCHAN>::from_time_data(
-            data,
-            shift,
-	    gen,
-	    &data.ruffbox,
-            &data.session,
-            &data.parts_store,            
-        )));
-	Session::start_scheduler(&data.session, sched_data, id_tags)
+        print!("start generator (sync time data) \'");
+        for tag in id_tags.iter() {
+            print!("{} ", tag);
+        }
+        println!("\'");
+        // sync to data
+        // create sched data from data
+        let sched_data =
+            sync::Arc::new(Mutex::new(SchedulerData::<BUFSIZE, NCHAN>::from_time_data(
+                data,
+                shift,
+                gen,
+                &data.ruffbox,
+                &data.session,
+                &data.parts_store,
+            )));
+        Session::start_scheduler(&data.session, sched_data, id_tags)
     }
 
     // push to synced gen's sync list ...
@@ -620,65 +631,67 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
         sync_tags: &BTreeSet<String>,
         shift: f64,
     ) {
-	//this is prob kinda redundant
-	let mut sess = session.lock();
+        //this is prob kinda redundant
+        let mut sess = session.lock();
         if let Some((_, data)) = sess.schedulers.get_mut(&sync_tags) {
-	    print!("start generator \'");
-	    for tag in gen.id_tags.iter() {
-		print!("{} ", tag);
-	    }		
-	    print!("\' (push sync to existing \'");
-	    for tag in sync_tags.iter() {
-		print!("{} ", tag);
+            print!("start generator \'");
+            for tag in gen.id_tags.iter() {
+                print!("{} ", tag);
             }
-	    println!("\')");
-	    
-	    let mut dlock = data.lock();
-	    // push to sync ...
-	    dlock.synced_generators.push((gen, shift));	    
-	}
+            print!("\' (push sync to existing \'");
+            for tag in sync_tags.iter() {
+                print!("{} ", tag);
+            }
+            println!("\')");
+
+            let mut dlock = data.lock();
+            // push to sync ...
+            dlock.synced_generators.push((gen, shift));
+        }
     }
-    
+
     pub fn start_generator_no_sync(
         gen: Box<Generator>,
         session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
         ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>,
         parts_store: &sync::Arc<Mutex<PartsStore>>,
         global_parameters: &sync::Arc<GlobalParameters>,
-	output_mode: OutputMode,
+        output_mode: OutputMode,
         shift: f64,
     ) {
         let id_tags = gen.id_tags.clone();
 
-	print!("start generator (no sync) \'");
-	for tag in id_tags.iter() {
-	    print!("{} ", tag);
-	}
-	println!("\'");
-	
+        print!("start generator (no sync) \'");
+        for tag in id_tags.iter() {
+            print!("{} ", tag);
+        }
+        println!("\'");
+
         let sched_data = sync::Arc::new(Mutex::new(SchedulerData::<BUFSIZE, NCHAN>::from_data(
             gen,
             shift,
-	    session,
+            session,
             ruffbox,
             parts_store,
             global_parameters,
             output_mode,
-	    SyncMode::NotOnSilence,
+            SyncMode::NotOnSilence,
         )));
-	Session::start_scheduler(session, sched_data, id_tags)
-    }	    
+        Session::start_scheduler(session, sched_data, id_tags)
+    }
 
     /////////////////////////////////////////////
     // start scheduler and main time recursion //
     /////////////////////////////////////////////
     /// start a scheduler, create scheduler data, etc ...
-    fn start_scheduler(session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
-		       sched_data: sync::Arc<Mutex<SchedulerData<BUFSIZE, NCHAN>>>,
-		       id_tags: BTreeSet<String>) {	
-	// otherwise, create new sched and data ...
+    fn start_scheduler(
+        session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
+        sched_data: sync::Arc<Mutex<SchedulerData<BUFSIZE, NCHAN>>>,
+        id_tags: BTreeSet<String>,
+    ) {
+        // otherwise, create new sched and data ...
         let mut sched = Scheduler::<BUFSIZE, NCHAN>::new();
-        
+
         // assemble name for thread ...
         let mut thread_name: String = "".to_owned();
         for tag in id_tags.iter() {
@@ -691,23 +704,23 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
             sync::Arc::clone(&sched_data),
         );
 
-	let id_tags2 = id_tags.clone();
-	let mut sess = session.lock();
-	// prepare for replacement
-	if let Some((mut sched, _)) = sess.schedulers.remove(&id_tags) {
-	    thread::spawn(move || {
-		sched.stop();
-		print!("replacing generator \'");
-		for tag in id_tags2.iter() {
+        let id_tags2 = id_tags.clone();
+        let mut sess = session.lock();
+        // prepare for replacement
+        if let Some((mut sched, _)) = sess.schedulers.remove(&id_tags) {
+            thread::spawn(move || {
+                sched.stop();
+                print!("replacing generator \'");
+                for tag in id_tags2.iter() {
                     print!("{} ", tag);
-		}
-		println!("\'");
+                }
+                println!("\'");
             });
-	}
+        }
 
-        sess.schedulers.insert(id_tags, (sched, sched_data));	
+        sess.schedulers.insert(id_tags, (sched, sched_data));
     }
-    
+
     pub fn stop_generator(
         session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
         gen_name: &BTreeSet<String>,
@@ -715,11 +728,11 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
         let mut sess = session.lock();
         if let Some((mut sched, _)) = sess.schedulers.remove(gen_name) {
             sched.stop();
-	    print!("stopped/removed generator \'");
-	    for tag in gen_name.iter() {
+            print!("stopped/removed generator \'");
+            for tag in gen_name.iter() {
                 print!("{} ", tag);
-	    }
-	    println!("\'");
+            }
+            println!("\'");
         }
     }
 
@@ -738,7 +751,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
             println!("\'");
         }
         sess.schedulers = HashMap::new();
-	sess.contexts = HashMap::new();
+        sess.contexts = HashMap::new();
         let mut ps = parts_store.lock();
         *ps = HashMap::new();
     }

@@ -40,7 +40,7 @@ pub fn run_editor<const BUFSIZE: usize, const NCHAN: usize>(
                         &global_parameters2,
                         &sample_set2,
                         &parts_store2,
-			mode
+                        mode,
                     );
                 }
                 Err(_) => {

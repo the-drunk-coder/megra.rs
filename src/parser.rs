@@ -138,7 +138,7 @@ fn parse_constructors<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<
         map(tag("chop"), |_| {
             BuiltIn::Constructor(BuiltInConstructor::Chop)
         }),
-	map(tag("stages"), |_| {
+        map(tag("stages"), |_| {
             BuiltIn::Constructor(BuiltInConstructor::Stages)
         }),
     ))(i)
@@ -194,7 +194,7 @@ fn parse_synth_event<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<&
         map(tag("sine"), |_| {
             BuiltIn::SoundEvent(BuiltInSoundEvent::Sine(EventOperation::Replace))
         }),
-	map(tag("tri"), |_| {
+        map(tag("tri"), |_| {
             BuiltIn::SoundEvent(BuiltInSoundEvent::Tri(EventOperation::Replace))
         }),
         map(tag("cub"), |_| {
@@ -203,7 +203,7 @@ fn parse_synth_event<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<&
         map(tag("saw"), |_| {
             BuiltIn::SoundEvent(BuiltInSoundEvent::Saw(EventOperation::Replace))
         }),
-	map(tag("risset"), |_| {
+        map(tag("risset"), |_| {
             BuiltIn::SoundEvent(BuiltInSoundEvent::RissetBell(EventOperation::Replace))
         }),
         map(tag("sqr"), |_| {

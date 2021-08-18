@@ -204,7 +204,14 @@ pub fn once<const BUFSIZE: usize, const NCHAN: usize>(
         if let Some(mut contexts) = cev.ctx.clone() {
             // this is the worst clone ....
             for mut sx in contexts.drain(..) {
-                Session::handle_context(&mut sx, session, ruffbox, parts_store, global_parameters, output_mode);
+                Session::handle_context(
+                    &mut sx,
+                    session,
+                    ruffbox,
+                    parts_store,
+                    global_parameters,
+                    output_mode,
+                );
             }
         }
     }

@@ -30,6 +30,6 @@ pub fn handle(
         BuiltInConstructor::Fully => construct_fully::construct_fully(tail),
         BuiltInConstructor::Cycle => construct_cycle::construct_cycle(tail, sample_set, out_mode),
         BuiltInConstructor::Chop => construct_chop::construct_chop(tail),
-	BuiltInConstructor::Stages => construct_stages::construct_stages(tail),
+        BuiltInConstructor::Stages => construct_stages::construct_stages(tail),
     }
 }
