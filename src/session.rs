@@ -478,24 +478,18 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
             }
         } else {
             // stop all that were kept in this context, remove context ...
-            let mut an_old_ctx = None;
+            let an_old_ctx;
             {
-                let sess = session.lock();
-                if let Some(old_ctx) = sess.contexts.get(&name) {
-                    an_old_ctx = Some(old_ctx.clone());
-                }
+                let mut sess = session.lock();
+                an_old_ctx = sess.contexts.remove(&name);
             }
 
             if let Some(old_ctx) = an_old_ctx {
-                for tags in old_ctx.iter() {
-                    // this is the type of clone i hate ...
-                    Session::stop_generator(session, tags);
-                }
-            }
-            // remove context
-            {
-                let mut sess = session.lock();
-                sess.contexts.remove(&name);
+                let old_ctx_vec = old_ctx.difference(&BTreeSet::new()).cloned().collect();
+                let session2 = sync::Arc::clone(session);
+                thread::spawn(move || {
+                    Session::stop_generators(&session2, &old_ctx_vec);
+                });
             }
         }
     }
