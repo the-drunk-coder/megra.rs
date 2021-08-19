@@ -59,7 +59,7 @@ pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
             }
         }
         Expr::Constant(Atom::SyncContext(mut s)) => {
-            println!("a context called \'{}\'", s.name);
+            println!("\n\n############### a context called \'{}\' ###############", s.name);
             Session::handle_context(
                 &mut s,
                 &session,

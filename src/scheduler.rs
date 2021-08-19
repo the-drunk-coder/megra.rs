@@ -207,9 +207,12 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Scheduler<BUFSIZE, NCHAN> {
     }
 
     /// Stop this scheduler.
-    pub fn stop(&mut self) {
-        //println!("stopping");
-        self.running.store(false, Ordering::SeqCst);
+    pub fn stop(&mut self) {        
+        self.running.store(false, Ordering::SeqCst);        
+    }
+
+    /// Join this scheduler thread.
+    pub fn join(&mut self) {                
         if let Some(h) = self.handle.take() {
             if let Ok(_) = h.join() {
                 println!("joined!");
@@ -220,4 +223,6 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Scheduler<BUFSIZE, NCHAN> {
             println!("Called stop on non-running thread");
         }
     }
+
+    
 }
