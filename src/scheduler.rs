@@ -158,11 +158,11 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Scheduler<BUFSIZE, NCHAN> {
                             let mut sched_data = data.lock();
                             // call event processing function that'll return
                             // the sync flag and
-                            let sched_result = (fun)(&mut sched_data);                            
-                            let sync = sched_result.1;			    
+                            let sched_result = (fun)(&mut sched_data);
+                            let sync = sched_result.1;
                             if sync {
                                 let mut syncs = sched_data.synced_generators.clone();
-                                for (g, s) in syncs.drain(..) {                                    
+                                for (g, s) in syncs.drain(..) {
                                     Session::start_generator_no_sync(
                                         g,
                                         &sched_data.session,
@@ -171,7 +171,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Scheduler<BUFSIZE, NCHAN> {
                                         &sched_data.global_parameters,
                                         sched_data.output_mode,
                                         s,
-                                    );				    
+                                    );
                                 }
                                 sched_data.synced_generators.clear();
                             }
@@ -180,7 +180,6 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Scheduler<BUFSIZE, NCHAN> {
                             sched_data.last_diff = cur - sched_data.logical_time;
                             next = sched_result.0;
                             ldif = sched_data.last_diff;
-			    
                             // compensate for eventual lateness ...
                             if (next - ldif) < 0.0 {
                                 let handle = thread::current();
@@ -194,7 +193,6 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Scheduler<BUFSIZE, NCHAN> {
                                     ldif
                                 );
                             }
-			    
                             sched_data.logical_time += next;
                             sched_data.stream_time += next;
                         }
@@ -207,12 +205,12 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Scheduler<BUFSIZE, NCHAN> {
     }
 
     /// Stop this scheduler.
-    pub fn stop(&mut self) {        
-        self.running.store(false, Ordering::SeqCst);        
+    pub fn stop(&mut self) {
+        self.running.store(false, Ordering::SeqCst);
     }
 
     /// Join this scheduler thread.
-    pub fn join(&mut self) {                
+    pub fn join(&mut self) {
         if let Some(h) = self.handle.take() {
             if let Ok(_) = h.join() {
                 println!("joined!");
@@ -223,6 +221,4 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Scheduler<BUFSIZE, NCHAN> {
             println!("Called stop on non-running thread");
         }
     }
-
-    
 }

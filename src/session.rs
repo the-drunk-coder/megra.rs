@@ -324,13 +324,13 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
             println!("remainders {:?}", remainders);
             println!("quitters {:?}", quitters);
 
-	    // HANDLE QUITTERS (generators to be stopped ...)
+            // HANDLE QUITTERS (generators to be stopped ...)
             // stop asynchronously to keep main thread reactive
             let session2 = sync::Arc::clone(session);
-            thread::spawn(move || {                
-                Session::stop_generators(&session2, &quitters);                
+            thread::spawn(move || {
+                Session::stop_generators(&session2, &quitters);
             });
-	    
+
             // EXTERNAL SYNC
             // are we supposed to sync to some other context ??
             // get external sync ...
@@ -363,7 +363,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                     internal_sync = Some(tags.clone());
                 }
             } // END INTERNAL SYNC
-	    
+
             // HANDLE NEWCOMERS
             if let Some(ext_sync) = external_sync.clone() {
                 // external sync has precedence
@@ -470,7 +470,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                     }
                 }
             }
-            
+
             // insert new context
             {
                 let mut sess = session.lock();
@@ -519,7 +519,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
             println!("\'");
 
             // keep the scheduler running, just replace the data ...
-            let mut sched_data = data.lock();                        
+            let mut sched_data = data.lock();
             *sched_data = SchedulerData::<BUFSIZE, NCHAN>::from_previous(
                 &sched_data,
                 shift,
@@ -699,47 +699,47 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
             sync::Arc::clone(&sched_data),
         );
 
-	// get sched out of map, try to keep lock only shortly ...
-	let sched_prox;
-	{
-	    let mut sess = session.lock();
-	    sched_prox = sess.schedulers.remove(&id_tags);
-	    sess.schedulers.insert(id_tags.clone(), (sched, sched_data));
-	}
-	
-	// prepare for replacement
+        // get sched out of map, try to keep lock only shortly ...
+        let sched_prox;
+        {
+            let mut sess = session.lock();
+            sched_prox = sess.schedulers.remove(&id_tags);
+            sess.schedulers.insert(id_tags.clone(), (sched, sched_data));
+        }
+
+        // prepare for replacement
         if let Some((mut sched, _)) = sched_prox {
             thread::spawn(move || {
                 sched.stop();
-		sched.join();
+                sched.join();
                 print!("replacing generator \'");
                 for tag in id_tags.iter() {
                     print!("{} ", tag);
                 }
                 println!("\'");
             });
-        }        
+        }
     }
 
     pub fn stop_generator(
         session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
         gen_name: &BTreeSet<String>,
     ) {
-	print!("--- stopping generator \'");
+        print!("--- stopping generator \'");
         for tag in gen_name.iter() {
             print!("{} ", tag);
         }
         println!("\'");
-	// get sched out of map, try to keep lock only shortly ...
-	let sched_prox;
-	{
-	    let mut sess = session.lock();
-	    sched_prox = sess.schedulers.remove(gen_name);
-	}
-		 
-	if let Some((mut sched, _)) = sched_prox {
+        // get sched out of map, try to keep lock only shortly ...
+        let sched_prox;
+        {
+            let mut sess = session.lock();
+            sched_prox = sess.schedulers.remove(gen_name);
+        }
+
+        if let Some((mut sched, _)) = sched_prox {
             sched.stop();
-	    sched.join();
+            sched.join();
             print!("stopped/removed generator \'");
             for tag in gen_name.iter() {
                 print!("{} ", tag);
@@ -751,27 +751,27 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
     pub fn stop_generators(
         session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
         gen_names: &Vec<BTreeSet<String>>,
-    ) {	
-	// get scheds out of map, try to keep lock only shortly ...
-	let mut sched_proxies = Vec::new();
-	{
-	    let mut sess = session.lock();
-	    for name in gen_names.iter() {
-		sched_proxies.push(sess.schedulers.remove(&name));
-	    }
-	}
+    ) {
+        // get scheds out of map, try to keep lock only shortly ...
+        let mut sched_proxies = Vec::new();
+        {
+            let mut sess = session.lock();
+            for name in gen_names.iter() {
+                sched_proxies.push(sess.schedulers.remove(&name));
+            }
+        }
 
-	// stop
-	let mut sched_proxies2 = Vec::new(); // sometimes rust is really annoying ...
-	let mut prox_drain = sched_proxies.drain(..);	
-	while let Some(Some((mut sched, _))) = prox_drain.next() {
-	    sched.stop();
-	    sched_proxies2.push(sched);
-	}
+        // stop
+        let mut sched_proxies2 = Vec::new(); // sometimes rust is really annoying ...
+        let mut prox_drain = sched_proxies.drain(..);
+        while let Some(Some((mut sched, _))) = prox_drain.next() {
+            sched.stop();
+            sched_proxies2.push(sched);
+        }
 
-	// join
-	for mut sched in sched_proxies2.drain(..) {	    
-	    sched.join();	    
+        // join
+        for mut sched in sched_proxies2.drain(..) {
+            sched.join();
         }
     }
 
@@ -781,12 +781,11 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
     ) {
         let mut sess = session.lock();
         for (_, (sched, _)) in sess.schedulers.iter_mut() {
-            sched.stop();	                
+            sched.stop();
         }
 
-	for (k, (sched, _)) in sess.schedulers.iter_mut() {
+        for (k, (sched, _)) in sess.schedulers.iter_mut() {
             sched.join();
-	    
             print!("stopped/removed generator \'");
             for tag in k.iter() {
                 print!("{} ", tag);
