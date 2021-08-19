@@ -163,13 +163,9 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Scheduler<BUFSIZE, NCHAN> {
                             if sync {
                                 let mut syncs = sched_data.synced_generators.clone();
                                 for (g, s) in syncs.drain(..) {
-                                    Session::start_generator_no_sync(
+                                    Session::start_generator_data_sync(
                                         g,
-                                        &sched_data.session,
-                                        &sched_data.ruffbox,
-                                        &sched_data.parts_store,
-                                        &sched_data.global_parameters,
-                                        sched_data.output_mode,
+                                        &sched_data,
                                         s,
                                     );
                                 }
