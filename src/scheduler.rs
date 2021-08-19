@@ -158,15 +158,11 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Scheduler<BUFSIZE, NCHAN> {
                             let mut sched_data = data.lock();
                             // call event processing function that'll return
                             // the sync flag and
-                            let sched_result = (fun)(&mut sched_data);
-                            cur = sched_data.start_time.elapsed().as_secs_f64();
-                            sched_data.last_diff = cur - sched_data.logical_time;
-                            next = sched_result.0;
-                            let sync = sched_result.1;
+                            let sched_result = (fun)(&mut sched_data);                            
+                            let sync = sched_result.1;			    
                             if sync {
                                 let mut syncs = sched_data.synced_generators.clone();
-                                for (g, s) in syncs.drain(..) {
-                                    //println!("sync drain");
+                                for (g, s) in syncs.drain(..) {                                    
                                     Session::start_generator_no_sync(
                                         g,
                                         &sched_data.session,
@@ -175,34 +171,30 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Scheduler<BUFSIZE, NCHAN> {
                                         &sched_data.global_parameters,
                                         sched_data.output_mode,
                                         s,
-                                    );
+                                    );				    
                                 }
                                 sched_data.synced_generators.clear();
                             }
-                            ldif = sched_data.last_diff;
 
+			    cur = sched_data.start_time.elapsed().as_secs_f64();
+                            sched_data.last_diff = cur - sched_data.logical_time;
+                            next = sched_result.0;
+                            ldif = sched_data.last_diff;
+			    
                             // compensate for eventual lateness ...
                             if (next - ldif) < 0.0 {
                                 let handle = thread::current();
-                                println!(
-                                    "{} negative duration found: {} {} {} {}",
+				println!(
+                                    "{} negative duration found: cur before {} cur after {} {} {} {}",
                                     handle.name().unwrap(),
                                     cur,
-                                    sched_data.logical_time,
-                                    next,
-                                    ldif
-                                );
-                            } else {
-                                let handle = thread::current();
-                                println!(
-                                    "{} valid duration found: {} {} {} {}",
-                                    handle.name().unwrap(),
-                                    cur,
+				    sched_data.start_time.elapsed().as_secs_f64(),
                                     sched_data.logical_time,
                                     next,
                                     ldif
                                 );
                             }
+			    
                             sched_data.logical_time += next;
                             sched_data.stream_time += next;
                         }

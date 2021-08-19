@@ -521,18 +521,15 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
             println!("\'");
 
             // keep the scheduler running, just replace the data ...
-            let mut sched_data = data.lock();
-            sched_data.generator = gen;
-            sched_data.shift = shift;
-            /*
-                 *sched_data = SchedulerData::<BUFSIZE, NCHAN>::from_previous(
+            let mut sched_data = data.lock();                        
+            *sched_data = SchedulerData::<BUFSIZE, NCHAN>::from_previous(
                 &sched_data,
                 shift,
                 gen,
                 ruffbox,
                 session,
                 parts_store,
-            );*/
+            );
             println!("replaced sched data");
         }
     }
@@ -704,29 +701,40 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
             sync::Arc::clone(&sched_data),
         );
 
-        let id_tags2 = id_tags.clone();
-        let mut sess = session.lock();
-        // prepare for replacement
-        if let Some((mut sched, _)) = sess.schedulers.remove(&id_tags) {
+	// get sched out of map, try to keep lock only shortly ...
+	let sched_prox;
+	{
+	    let mut sess = session.lock();
+	    sched_prox = sess.schedulers.remove(&id_tags);
+	    sess.schedulers.insert(id_tags.clone(), (sched, sched_data));
+	}
+	
+	// prepare for replacement
+        if let Some((mut sched, _)) = sched_prox {
             thread::spawn(move || {
                 sched.stop();
                 print!("replacing generator \'");
-                for tag in id_tags2.iter() {
+                for tag in id_tags.iter() {
                     print!("{} ", tag);
                 }
                 println!("\'");
             });
-        }
-
-        sess.schedulers.insert(id_tags, (sched, sched_data));
+        }        
     }
 
     pub fn stop_generator(
         session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
         gen_name: &BTreeSet<String>,
     ) {
-        let mut sess = session.lock();
-        if let Some((mut sched, _)) = sess.schedulers.remove(gen_name) {
+
+	// get sched out of map, try to keep lock only shortly ...
+	let sched_prox;
+	{
+	    let mut sess = session.lock();
+	    sched_prox = sess.schedulers.remove(gen_name);
+	}
+		 
+	if let Some((mut sched, _)) = sched_prox {
             sched.stop();
             print!("stopped/removed generator \'");
             for tag in gen_name.iter() {
