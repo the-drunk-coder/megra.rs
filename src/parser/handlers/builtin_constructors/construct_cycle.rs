@@ -202,7 +202,7 @@ pub fn construct_cycle(
             .insert(SynthParameter::Duration, Box::new(dur_vec[count].clone()));
         duration_mapping.insert((last_char, next_char), dur_ev);
 
-        if count < num_events - 1 {
+        if count < num_events {
             if repetition_chance > 0.0 {
                 //println!("add rep chance");
                 // repetition rule
@@ -213,11 +213,19 @@ pub fn construct_cycle(
                 });
 
                 // next rule
-                rules.push(Rule {
-                    source: vec![last_char],
-                    symbol: next_char,
-                    probability: 1.0 - (repetition_chance / 100.0),
-                });
+                if count == num_events - 1 {
+                    rules.push(Rule {
+                        source: vec![last_char],
+                        symbol: first_char,
+                        probability: 1.0 - (repetition_chance / 100.0),
+                    });
+                } else {
+                    rules.push(Rule {
+                        source: vec![last_char],
+                        symbol: next_char,
+                        probability: 1.0 - (repetition_chance / 100.0),
+                    });
+                }
 
                 // endless repetition allowed per default ...
                 if max_repetitions >= 2.0 {
@@ -226,18 +234,34 @@ pub fn construct_cycle(
                         max_rep_source.push(last_char);
                     }
                     // max repetition rule
+                    if count == num_events - 1 {
+                        rules.push(Rule {
+                            source: max_rep_source,
+                            symbol: first_char,
+                            probability: 1.0,
+                        });
+                    } else {
+                        rules.push(Rule {
+                            source: max_rep_source,
+                            symbol: next_char,
+                            probability: 1.0,
+                        });
+                    }
+                }
+            } else {
+                if count == num_events - 1 {
                     rules.push(Rule {
-                        source: max_rep_source,
+                        source: vec![last_char],
+                        symbol: first_char,
+                        probability: 1.0,
+                    });
+                } else {
+                    rules.push(Rule {
+                        source: vec![last_char],
                         symbol: next_char,
                         probability: 1.0,
                     });
                 }
-            } else {
-                rules.push(Rule {
-                    source: vec![last_char],
-                    symbol: next_char,
-                    probability: 1.0,
-                });
             }
 
             last_char = next_char;
@@ -248,19 +272,13 @@ pub fn construct_cycle(
 
     // if our cycle isn't empty ...
     if count != 0 {
-        // close the cycle
+        // create duration event (otherwise not needed ...)
         let mut dur_ev = Event::with_name("transition".to_string());
         dur_ev.params.insert(
             SynthParameter::Duration,
             Box::new(dur_vec.last().unwrap().clone()),
         );
         duration_mapping.insert((last_char, first_char), dur_ev);
-
-        rules.push(Rule {
-            source: vec![last_char],
-            symbol: first_char,
-            probability: 1.0,
-        });
     }
 
     let mut pfa = Pfa::<char>::infer_from_rules(&mut rules);
