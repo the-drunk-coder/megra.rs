@@ -44,6 +44,8 @@ pub struct SyncContext {
     pub generators: Vec<Generator>,
     pub part_proxies: Vec<PartProxy>,
     pub shift: i32,
+    pub block_tags: BTreeSet<String>,
+    pub solo_tags: BTreeSet<String>,
 }
 
 pub struct Session<const BUFSIZE: usize, const NCHAN: usize> {
@@ -141,6 +143,17 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
                         //println!("sync silence");
                         sync = true;
                     }
+                    continue;
+                }
+
+                //println!("solo: {:?}", data.solo_tags);
+                //println!("block: {:?}", data.block_tags);
+
+                if !data.block_tags.is_empty() && !data.block_tags.is_disjoint(&s.tags) {
+                    continue;
+                }
+
+                if !data.solo_tags.is_empty() && data.solo_tags.is_disjoint(&s.tags) {
                     continue;
                 }
 
@@ -397,6 +410,8 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                         &global_parameters,
                         output_mode,
                         ctx.shift as f64 * 0.001,
+                        &ctx.block_tags,
+                        &ctx.solo_tags,
                     );
                 }
             }
@@ -413,6 +428,8 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                         &parts_store,
                         &ext_sync,
                         ctx.shift as f64 * 0.001,
+                        &ctx.block_tags,
+                        &ctx.solo_tags,
                     );
                 }
             } else {
@@ -424,6 +441,8 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                         &ruffbox,
                         &parts_store,
                         ctx.shift as f64 * 0.001,
+                        &ctx.block_tags,
+                        &ctx.solo_tags,
                     );
                 }
             } // END HANDLE REMAINDERS
@@ -466,6 +485,8 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                             &global_parameters,
                             output_mode,
                             ctx.shift as f64 * 0.001,
+                            &ctx.block_tags,
+                            &ctx.solo_tags,
                         );
                     }
                 }
@@ -501,6 +522,8 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
         ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>,
         parts_store: &sync::Arc<Mutex<PartsStore>>,
         shift: f64,
+        block_tags: &BTreeSet<String>,
+        solo_tags: &BTreeSet<String>,
     ) {
         let mut sess = session.lock();
         let id_tags = gen.id_tags.clone();
@@ -521,6 +544,8 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                 ruffbox,
                 session,
                 parts_store,
+                block_tags,
+                solo_tags,
             );
             println!("replaced sched data");
         }
@@ -533,6 +558,8 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
         parts_store: &sync::Arc<Mutex<PartsStore>>,
         sync_tags: &BTreeSet<String>,
         shift: f64,
+        block_tags: &BTreeSet<String>,
+        solo_tags: &BTreeSet<String>,
     ) {
         let mut sess = session.lock();
         let id_tags = gen.id_tags.clone();
@@ -563,6 +590,8 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                     ruffbox,
                     session,
                     parts_store,
+                    block_tags,
+                    solo_tags,
                 );
             } else {
                 // resume sync: later ...
@@ -580,6 +609,8 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                     ruffbox,
                     session,
                     parts_store,
+                    block_tags,
+                    solo_tags,
                 );
             }
         }
@@ -590,6 +621,8 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
         gen: Box<Generator>,
         data: &SchedulerData<BUFSIZE, NCHAN>,
         shift: f64,
+        block_tags: &BTreeSet<String>,
+        solo_tags: &BTreeSet<String>,
     ) {
         let id_tags = gen.id_tags.clone();
 
@@ -608,6 +641,8 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                 &data.ruffbox,
                 &data.session,
                 &data.parts_store,
+                block_tags,
+                solo_tags,
             )));
         Session::start_scheduler(&data.session, sched_data, id_tags)
     }
@@ -647,6 +682,8 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
         global_parameters: &sync::Arc<GlobalParameters>,
         output_mode: OutputMode,
         shift: f64,
+        block_tags: &BTreeSet<String>,
+        solo_tags: &BTreeSet<String>,
     ) {
         let id_tags = gen.id_tags.clone();
 
@@ -665,6 +702,8 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
             global_parameters,
             output_mode,
             SyncMode::NotOnSilence,
+            block_tags,
+            solo_tags,
         )));
         Session::start_scheduler(session, sched_data, id_tags)
     }

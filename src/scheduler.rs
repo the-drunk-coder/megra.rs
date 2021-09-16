@@ -4,6 +4,7 @@ use crate::session::{OutputMode, Session, SyncMode};
 use parking_lot::Mutex;
 use ruffbox_synth::ruffbox::Ruffbox;
 
+use std::collections::BTreeSet;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::{Duration, Instant};
 use std::{sync, thread};
@@ -34,6 +35,8 @@ pub struct SchedulerData<const BUFSIZE: usize, const NCHAN: usize> {
     pub global_parameters: sync::Arc<GlobalParameters>,
     pub output_mode: OutputMode,
     pub sync_mode: SyncMode,
+    pub block_tags: BTreeSet<String>,
+    pub solo_tags: BTreeSet<String>,
 }
 
 impl<const BUFSIZE: usize, const NCHAN: usize> SchedulerData<BUFSIZE, NCHAN> {
@@ -44,6 +47,8 @@ impl<const BUFSIZE: usize, const NCHAN: usize> SchedulerData<BUFSIZE, NCHAN> {
         ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>,
         session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
         parts_store: &sync::Arc<Mutex<PartsStore>>,
+        block_tags: &BTreeSet<String>,
+        solo_tags: &BTreeSet<String>,
     ) -> Self {
         let shift_diff = shift - old.shift;
         data.transfer_state(&old.generator);
@@ -62,6 +67,8 @@ impl<const BUFSIZE: usize, const NCHAN: usize> SchedulerData<BUFSIZE, NCHAN> {
             global_parameters: sync::Arc::clone(&old.global_parameters),
             output_mode: old.output_mode,
             sync_mode: old.sync_mode,
+            block_tags: block_tags.clone(),
+            solo_tags: solo_tags.clone(),
         }
     }
 
@@ -72,6 +79,8 @@ impl<const BUFSIZE: usize, const NCHAN: usize> SchedulerData<BUFSIZE, NCHAN> {
         ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>,
         session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
         parts_store: &sync::Arc<Mutex<PartsStore>>,
+        block_tags: &BTreeSet<String>,
+        solo_tags: &BTreeSet<String>,
     ) -> Self {
         let shift_diff = shift - old.shift;
 
@@ -90,6 +99,8 @@ impl<const BUFSIZE: usize, const NCHAN: usize> SchedulerData<BUFSIZE, NCHAN> {
             global_parameters: sync::Arc::clone(&old.global_parameters),
             output_mode: old.output_mode,
             sync_mode: old.sync_mode,
+            block_tags: block_tags.clone(),
+            solo_tags: solo_tags.clone(),
         }
     }
 
@@ -102,6 +113,8 @@ impl<const BUFSIZE: usize, const NCHAN: usize> SchedulerData<BUFSIZE, NCHAN> {
         global_parameters: &sync::Arc<GlobalParameters>,
         output_mode: OutputMode,
         sync_mode: SyncMode,
+        block_tags: &BTreeSet<String>,
+        solo_tags: &BTreeSet<String>,
     ) -> Self {
         // get logical time since start from ruffbox
         let stream_time;
@@ -123,6 +136,8 @@ impl<const BUFSIZE: usize, const NCHAN: usize> SchedulerData<BUFSIZE, NCHAN> {
             global_parameters: sync::Arc::clone(global_parameters),
             output_mode: output_mode,
             sync_mode: sync_mode,
+            block_tags: block_tags.clone(),
+            solo_tags: solo_tags.clone(),
         }
     }
 }
@@ -167,6 +182,8 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Scheduler<BUFSIZE, NCHAN> {
                                         g,
                                         &sched_data,
                                         s,
+					&sched_data.block_tags,
+					&sched_data.solo_tags,
                                     );
                                 }
                                 sched_data.synced_generators.clear();
