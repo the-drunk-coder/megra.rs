@@ -49,6 +49,7 @@ impl GeneratorProcessor for GeneratorWrapperProcessor {
                     match in_ev {
                         InterpretableEvent::Sound(s) => {
                             s.apply(&sev, &self.filter, true);
+                            s.tags = sev.tags.union(&s.tags).cloned().collect();
                         }
                         InterpretableEvent::Control(_) => {
                             // ??

@@ -1,6 +1,6 @@
 use crate::builtin_types::*;
 use crate::event::*;
-use std::collections::HashSet;
+use std::collections::BTreeSet;
 
 pub fn handle(tail: &mut Vec<Expr>) -> Atom {
     let mut tail_drain = tail.drain(..);
@@ -20,7 +20,7 @@ pub fn handle(tail: &mut Vec<Expr>) -> Atom {
     }
 
     Atom::ControlEvent(ControlEvent {
-        tags: HashSet::new(),
+        tags: BTreeSet::new(),
         ctx: if sync_contexts.is_empty() {
             None
         } else {

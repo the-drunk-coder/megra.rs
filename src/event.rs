@@ -1,6 +1,6 @@
 use ruffbox_synth::ruffbox::synth::SynthParameter;
 use std::boxed::Box;
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeSet, HashMap, HashSet};
 
 use crate::builtin_types::Command;
 use crate::parameter::Parameter;
@@ -19,7 +19,7 @@ pub enum EventOperation {
 pub struct Event {
     pub name: String,
     pub params: HashMap<SynthParameter, Box<Parameter>>,
-    pub tags: HashSet<String>,
+    pub tags: BTreeSet<String>,
     pub op: EventOperation,
 }
 
@@ -28,13 +28,13 @@ pub struct Event {
 pub struct StaticEvent {
     pub name: String,
     pub params: HashMap<SynthParameter, f32>,
-    pub tags: HashSet<String>,
+    pub tags: BTreeSet<String>,
     pub op: EventOperation,
 }
 
 #[derive(Clone)]
 pub struct ControlEvent {
-    pub tags: HashSet<String>,
+    pub tags: BTreeSet<String>,
     pub ctx: Option<Vec<SyncContext>>,
     pub cmd: Option<Vec<Command>>,
 }
@@ -100,7 +100,7 @@ impl StaticEvent {
 
 impl Event {
     pub fn with_name_and_operation(name: String, op: EventOperation) -> Self {
-        let mut tags = HashSet::new();
+        let mut tags = BTreeSet::new();
         tags.insert(name.clone()); // add to tags, for subsequent filters ...
         Event {
             name,
@@ -111,7 +111,7 @@ impl Event {
     }
 
     pub fn with_name(name: String) -> Self {
-        let mut tags = HashSet::new();
+        let mut tags = BTreeSet::new();
         tags.insert(name.clone()); // add to tags, for subsequent filters ...
         Event {
             name,

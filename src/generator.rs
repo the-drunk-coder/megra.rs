@@ -49,6 +49,16 @@ impl Generator {
         global_parameters: &Arc<GlobalParameters>,
     ) -> Vec<InterpretableEvent> {
         let mut events = self.root_generator.current_events();
+
+        for ev in events.iter_mut() {
+            match ev {
+                InterpretableEvent::Sound(s) => {
+                    s.tags = self.id_tags.union(&s.tags).cloned().collect()
+                }
+                _ => {}
+            }
+        }
+
         for proc in self.processors.iter_mut() {
             proc.process_events(&mut events, global_parameters);
             proc.process_generator(
@@ -57,9 +67,11 @@ impl Generator {
                 &mut self.time_mods,
             );
         }
+
         if events.is_empty() {
             println!("no events");
         }
+
         events
     }
 
