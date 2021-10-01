@@ -106,6 +106,7 @@ pub enum BuiltInMultiplexer {
     //XRot
 }
 
+
 /// constructor for generators ...
 pub enum BuiltInConstructor {
     Learn,
@@ -151,6 +152,7 @@ pub enum BuiltIn {
     GenProc(BuiltInGenProc),
     GenModFun(BuiltInGenModFun),
     Multiplexer(BuiltInMultiplexer),
+    GeneratorList
 }
 
 #[derive(Clone)]
