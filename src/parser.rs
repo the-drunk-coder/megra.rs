@@ -37,7 +37,7 @@ fn parse_builtin<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<&'a s
         parse_commands,
         map(tag("sx"), |_| BuiltIn::SyncContext),
         map(tag("ctrl"), |_| BuiltIn::ControlEvent),
-	map(tag("ls"), |_| BuiltIn::GeneratorList),
+        map(tag("ls"), |_| BuiltIn::GeneratorList),
         parse_generator_modifier_functions, // needs to come before events so it can catch relax before rel(ease)
         parse_events,
         parse_dynamic_parameters,
@@ -423,7 +423,7 @@ pub fn eval_expression(
                     BuiltIn::Multiplexer(m) => {
                         handlers::builtin_multiplexer::handle(&m, &mut reduced_tail, out_mode)
                     }
-		    BuiltIn::GeneratorList => {
+                    BuiltIn::GeneratorList => {
                         handlers::builtin_generator_list::handle(&mut reduced_tail)
                     }
                 })),

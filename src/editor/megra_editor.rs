@@ -99,7 +99,7 @@ impl<'a> epi::App for MegraEditor<'a> {
         self.function_names.push("xspread");
         self.function_names.push("xdup");
         self.function_names.push("life");
-	self.function_names.push("ls");
+        self.function_names.push("ls");
         self.function_names.push("every");
         self.function_names.push("defpart");
         self.function_names.push("infer");
