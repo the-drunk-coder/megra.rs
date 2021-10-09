@@ -705,7 +705,7 @@ without re-writing the whole generator.
 
 ### Example
 ```lisp
-(sx 'more t
+(sx 'more #t
     (xdup
      (cmp ;; this is the copy with modifiers ...
       (pear (pitch-mul 2.0) (rev 0.1))
@@ -722,7 +722,7 @@ the available loudspeakers.
 
 ### Example
 ```lisp
-(sx 'more t
+(sx 'more #t
     (xspread
      (cmp ;; this is the copy with modifiers ...
           (pear (pitch-mul 2.0) (rev 0.1))
