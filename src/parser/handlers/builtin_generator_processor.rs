@@ -481,14 +481,17 @@ pub fn handle(proc_type: &BuiltInGenProc, tail: &mut Vec<Expr>) -> Atom {
             let prev = tail.pop();
             match prev {
                 Some(Expr::Constant(Atom::Keyword(_))) => {
-                    tail.push(prev.unwrap());
+                    tail.push(prev.unwrap()); // push back for further processing
                     tail.push(Expr::Constant(Atom::Symbol(s)));
                     Atom::GeneratorProcessorOrModifier(collect_generator_processor(proc_type, tail))
                 }
-                _ => Atom::PartProxy(PartProxy::Proxy(
-                    s,
-                    vec![collect_generator_processor(proc_type, tail)],
-                )),
+                _ => {
+                    tail.push(prev.unwrap()); // push back for further processing
+                    Atom::PartProxy(PartProxy::Proxy(
+                        s,
+                        vec![collect_generator_processor(proc_type, tail)],
+                    ))
+                }
             }
         }
         Some(Expr::Constant(Atom::PartProxy(PartProxy::Proxy(s, mut proxy_mods)))) => {
