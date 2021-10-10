@@ -146,21 +146,59 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
                     continue;
                 }
 
-                //println!("solo: {:?}", data.solo_tags);
-                //println!("block: {:?}", data.block_tags);
-
-                if !data.block_tags.is_empty() && !data.block_tags.is_disjoint(&s.tags) {
-                    continue;
-                }
-
-                if !data.solo_tags.is_empty() && data.solo_tags.is_disjoint(&s.tags) {
-                    continue;
-                }
-
                 // start the generators ready to be synced ...
                 if data.sync_mode == SyncMode::NotOnSilence {
                     //println!("sync nosilence");
                     sync = true;
+                }
+
+                //println!("solo: {:?}", data.solo_tags);
+                //println!("block: {:?}", data.block_tags);
+
+                if !data.block_tags.is_empty() && !data.block_tags.is_disjoint(&s.tags) {
+                    // global tempo modifier, allows us to do weird stuff with the
+                    // global tempo ...
+                    let mut tmod: f64 = 1.0;
+
+                    if let ConfigParameter::Dynamic(global_tmod) = data
+                        .global_parameters
+                        .entry(BuiltinGlobalParameters::GlobalTimeModifier)
+                        .or_insert(ConfigParameter::Dynamic(Parameter::with_value(1.0))) // init on first attempt
+                        .value_mut()
+                    {
+                        tmod = global_tmod.evaluate() as f64;
+                    }
+
+                    let time = (data
+                        .generator
+                        .current_transition(&data.global_parameters)
+                        .params[&SynthParameter::Duration] as f64
+                        * 0.001
+                        * tmod) as f64;
+                    return (time, sync); // early exit
+                }
+
+                if !data.solo_tags.is_empty() && data.solo_tags.is_disjoint(&s.tags) {
+                    // global tempo modifier, allows us to do weird stuff with the
+                    // global tempo ...
+                    let mut tmod: f64 = 1.0;
+
+                    if let ConfigParameter::Dynamic(global_tmod) = data
+                        .global_parameters
+                        .entry(BuiltinGlobalParameters::GlobalTimeModifier)
+                        .or_insert(ConfigParameter::Dynamic(Parameter::with_value(1.0))) // init on first attempt
+                        .value_mut()
+                    {
+                        tmod = global_tmod.evaluate() as f64;
+                    }
+
+                    let time = (data
+                        .generator
+                        .current_transition(&data.global_parameters)
+                        .params[&SynthParameter::Duration] as f64
+                        * 0.001
+                        * tmod) as f64;
+                    return (time, sync); // early exit
                 }
 
                 let mut bufnum: usize = 0;
