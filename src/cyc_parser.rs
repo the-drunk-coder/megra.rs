@@ -115,14 +115,15 @@ fn parse_cyc_expr<'a>(i: &'a str) -> IResult<&'a str, Vec<CycleItem>, VerboseErr
             ),
             preceded(multispace0, char(']')),
         ),
-        map(
+	separated_list1(tag(":"), parse_cyc_parameter),
+	map(
             alt((
                 parse_cyc_parameter,
                 parse_cyc_duration,
                 parse_cyc_application,
             )),
             |x| vec![x],
-        ),
+        ),	
     ))(i)
 }
 
