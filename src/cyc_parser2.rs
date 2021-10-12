@@ -5,6 +5,7 @@ use nom::{
     branch::alt,
     bytes::complete::{tag, take_while},
     character::complete::{char, multispace0},
+    character::is_alphanumeric,
     combinator::{cut, map},
     error::{context, VerboseError},
     multi::{separated_list0, separated_list1},
@@ -78,6 +79,11 @@ fn parse_cyc_duration<'a>(i: &'a str) -> IResult<&'a str, CycleItem, VerboseErro
     })(i)
 }
 
+/// valid chars for a function name
+fn valid_cycle_fun_name_char(chr: char) -> bool {
+    chr == '_' || chr == '~' || chr == '-' || is_alphanumeric(chr as u8)
+}
+
 fn parse_cyc_application<'a>(i: &'a str) -> IResult<&'a str, CycleItem, VerboseError<&'a str>> {
     alt((
         map(
@@ -92,7 +98,7 @@ fn parse_cyc_application<'a>(i: &'a str) -> IResult<&'a str, CycleItem, VerboseE
             |(head, tail)| CycleItem::Event((head, tail)),
         ),
         map(
-	    context("custom_cycle_fun", cut(take_while(valid_fun_name_char))),
+	    context("custom_cycle_fun", cut(take_while(valid_cycle_fun_name_char))),
 	    |fun_str: &str| CycleItem::Event((fun_str.to_string(), Vec::new())),
 	),
     ))(i)
@@ -157,6 +163,7 @@ pub fn eval_cyc_from_str(
 			CycleItem::Duration(d) => {
 			    let mut ev = Event::with_name("transition".to_string());
 			    ev.params.insert(SynthParameter::Duration, Box::new(Parameter::with_value(d)));
+			    println!("push");
 			    cycle_position.push(CycleResult::Duration(ev));
 			},
 			CycleItem::Event((mut name, pars)) => {
@@ -171,16 +178,20 @@ pub fn eval_cyc_from_str(
 					name = name + " " + s;
 				    },
 				    _ => { println!("ignore cycle event param") }
-				}
-				match parse_expr(&name.trim()) {
-				    Ok((_, expr)) => {
-					if let Some(Expr::Constant(Atom::SoundEvent(e))) = eval_expression(expr, sample_set, out_mode) {
-					    cycle_position.push(CycleResult::SoundEvent(e));
-					}
-				    },
-				    Err(_) => { println!("couldn't parse re-assembled cycle event") }
-				}								
-			    }			    
+				}												
+			    }
+			    // in brackets so it's recognized as a "function"
+			    name = format!("({})", name);
+			    match parse_expr(&name.trim()) {
+				Ok((_, expr)) => {				    
+				    if let Some(Expr::Constant(Atom::SoundEvent(e))) = eval_expression(expr, sample_set, out_mode) {
+					cycle_position.push(CycleResult::SoundEvent(e));
+				    } else {
+					println!("couldn't eval cycle expr");
+				    }
+				},
+				Err(_) => { println!("couldn't parse re-assembled cycle event") }
+			    }
 			},
 			CycleItem::Parameter(CycleParameter::Number(f)) => {
 			    template_params.push(CycleParameter::Number(f));
@@ -211,10 +222,14 @@ pub fn eval_cyc_from_str(
 				}
 			    }
 			}
+			// brackets so it's recognized as a "function"
+			ev_name = format!("({})", ev_name);
 			match parse_expr(&ev_name.trim()) {
 			    Ok((_, expr)) => {
 				if let Some(Expr::Constant(Atom::SoundEvent(e))) = eval_expression(expr, sample_set, out_mode) {
 				    cycle_position.push(CycleResult::SoundEvent(e));
+				} else {
+				    println!("couldn't eval cycle expr");
 				}
 			    },
 			    Err(_) => { println!("couldn't parse re-assembled cycle event") }
@@ -246,7 +261,7 @@ mod tests {
     }
     
     #[test]
-    fn test_basic_cyc_elem() {        
+    fn test_basic_cyc2_elem() {        
         match parse_cyc("[saw:200]") {
             Ok((_,o)) => match &o[0][0] {
                 CycleItem::Event((_, _)) => assert!(true),
@@ -259,7 +274,7 @@ mod tests {
     }
 
     #[test]
-    fn test_basic_cyc() {        
+    fn test_basic_cyc2() {        
         match parse_cyc("saw:200 ~ ~ ~") {
             Ok((_, o)) => {
                 assert!(o.len() == 4);
@@ -275,7 +290,7 @@ mod tests {
                 }
 
                 match &o[2][0] {
-                    CycleItem::Event((s, _)) => assert!(s == ""),
+                    CycleItem::Event((s, _)) => assert!(s == "~"),
                     _ => assert!(false),
                 }
 
@@ -289,7 +304,7 @@ mod tests {
     }
 
     #[test]
-    fn test_basic_cyc_noparam() {        
+    fn test_basic_cyc2_noparam() {        
         match parse_cyc("saw ~ ~ ~") {
             Ok((_, o)) => {
                 assert!(o.len() == 4);
@@ -305,7 +320,7 @@ mod tests {
                 }
 
                 match &o[2][0] {
-                    CycleItem::Event((s, _)) => assert!(s == ""),
+                    CycleItem::Event((s, _)) => assert!(s == "~"),
                     _ => assert!(false),
                 }
 
@@ -319,7 +334,7 @@ mod tests {
     }
 
     #[test]
-    fn test_basic_cyc_noparam_dur() {        
+    fn test_basic_cyc2_noparam_dur() {        
         match parse_cyc("saw /100 saw ~ ~") {
             Ok((_, o)) => {
                 assert!(o.len() == 5);
@@ -335,7 +350,7 @@ mod tests {
                 }
 
                 match &o[2][0] {
-                    CycleItem::Event((s, _)) => assert!(s == ""),
+                    CycleItem::Event((s, _)) => assert!(s == "saw"),
                     _ => assert!(false),
                 }
 
@@ -406,6 +421,53 @@ mod tests {
                 }
             }
             Err(_) => assert!(false),
+        }
+    }
+
+    #[test]
+    fn test_basic_cyc2_eval_noparam() {
+        let sample_set = sync::Arc::new(Mutex::new(SampleSet::new()));
+	let template_events = Vec::new();
+	let event_mappings = HashMap::new();
+	
+        let o = eval_cyc_from_str("saw /100 saw:400 ~ ~ [saw:100 saw:500]", &sample_set, OutputMode::Stereo, &template_events, &event_mappings);
+	println!("return length: {}", o.len());
+	
+        assert!(o.len() == 6);
+	
+        match &o[0][0] {
+            CycleResult::SoundEvent(e) => assert!(e.name == "saw"),
+            _ => assert!(false),
+        }
+
+	match &o[1][0] {
+            CycleResult::Duration(e) => assert!(e.name == "transition"),
+            _ => assert!(false),
+        }
+
+        match &o[2][0] {
+            CycleResult::SoundEvent(e) => assert!(e.name == "saw"),
+            _ => assert!(false),
+        }
+
+        match &o[3][0] {
+	    CycleResult::SoundEvent(e) => assert!(e.name == "silence"),
+            _ => assert!(false),
+        }
+
+        match &o[4][0] {
+	    CycleResult::SoundEvent(e) => assert!(e.name == "silence"),
+            _ => assert!(false),
+        }
+
+	match &o[5][0] {
+	    CycleResult::SoundEvent(e) => assert!(e.name == "saw"),
+            _ => assert!(false),
+        }
+
+	match &o[5][1] {
+	    CycleResult::SoundEvent(e) => assert!(e.name == "saw"),
+            _ => assert!(false),
         }
     }
 }
