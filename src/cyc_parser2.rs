@@ -1,12 +1,12 @@
 use parking_lot::Mutex;
-use std::sync;
+use std::{sync, collections::HashMap};
 
 use nom::{
     branch::alt,
-    bytes::complete::tag,
+    bytes::complete::{tag, take_while},
     character::complete::{char, multispace0},
-    combinator::map,
-    error::VerboseError,
+    combinator::{cut, map},
+    error::{context, VerboseError},
     multi::{separated_list0, separated_list1},
     sequence::{delimited, preceded, separated_pair},
     IResult,
@@ -14,13 +14,24 @@ use nom::{
 
 use ruffbox_synth::ruffbox::synth::SynthParameter;
 
-pub enum CycleItem {
-    CycleDuration(f32),
-    CycleEvent(Event),
-    CycleParameterFloat(f32),
-    CycleParameterSymbol(f32),
-    CycleNothing
+pub enum CycleParameter {
+    Number(f32),
+    Symbol(String)
 }
+
+// "inner" item
+pub enum CycleItem {
+    Duration(f32),
+    Event((String, Vec<CycleItem>)),
+    Parameter(CycleParameter),   
+    Nothing
+}
+
+// "outer" item that'll be passed to the calling function
+pub enum CycleResult {
+    SoundEvent(Event),
+    Duration(Event)
+} 
 
 use crate::builtin_types::*;
 use crate::parameter::*;
@@ -33,25 +44,14 @@ use crate::session::OutputMode;
 //  CYC NOTATION PARSER  //
 ///////////////////////////
 
-fn parse_cyc_event<'a>(i: &'a str) -> IResult<&'a str, CycleItem, VerboseError<&'a str>> {
-    alt((
-	map(map(parse_events, Atom::BuiltIn), Expr::Constant),
-	parse_custom
-    ))
-
-	
-	(i)
-}
-
-
-fn parse_cyc_constant<'a>(i: &'a str) -> IResult<&'a str, CycleItem, VerboseError<&'a str>> {
+fn parse_cyc_parameter<'a>(i: &'a str) -> IResult<&'a str, CycleItem, VerboseError<&'a str>> {
     alt((parse_cyc_symbol, parse_cyc_float))(i)
 }
 
 fn parse_cyc_symbol<'a>(i: &'a str) -> IResult<&'a str, CycleItem, VerboseError<&'a str>> {
     map(parse_symbol, |s| {
 	if let Atom::Symbol(val) = s {
-	    CycleItem::CycleParameterSymbol(s)
+	    CycleItem::Parameter(CycleParameter::Symbol(val))
 	} else {
 	    CycleItem::Nothing
 	}	
@@ -61,7 +61,7 @@ fn parse_cyc_symbol<'a>(i: &'a str) -> IResult<&'a str, CycleItem, VerboseError<
 fn parse_cyc_float<'a>(i: &'a str) -> IResult<&'a str, CycleItem, VerboseError<&'a str>> {
     map(parse_float, |f| {
 	if let Atom::Float(val) = f {
-	    CycleItem::CycleParameterFloat(val)
+	    CycleItem::Parameter(CycleParameter::Number(val))
 	} else {
 	    CycleItem::Nothing
 	}	
@@ -71,26 +71,30 @@ fn parse_cyc_float<'a>(i: &'a str) -> IResult<&'a str, CycleItem, VerboseError<&
 fn parse_cyc_duration<'a>(i: &'a str) -> IResult<&'a str, CycleItem, VerboseError<&'a str>> {
     map(preceded(tag("/"), parse_float), |f| {
 	if let Atom::Float(dur) = f {
-	    CycleItem::CycleDuration(dur)
+	    CycleItem::Duration(dur)
 	} else {
 	    CycleItem::Nothing
 	}	
     })(i)
 }
 
-fn parse_cyc_application<'a>(i: &'a str) -> IResult<&'a str, Expr, VerboseError<&'a str>> {
+fn parse_cyc_application<'a>(i: &'a str) -> IResult<&'a str, CycleItem, VerboseError<&'a str>> {
     alt((
         map(
             separated_pair(
-                alt((parse_cyc_event, parse_custom)),
+                map(
+		    context("custom_cycle_fun", cut(take_while(valid_fun_name_char))),
+		    |fun_str: &str| fun_str.to_string(),
+		),
                 tag(":"),
-                separated_list0(tag(":"), parse_cyc_constant),
+                separated_list0(tag(":"), parse_cyc_parameter),
             ),
-            |(head, tail)| Expr::Application(Box::new(head), tail),
+            |(head, tail)| CycleItem::Event((head, tail)),
         ),
-        map(alt((parse_cyc_event, parse_custom)), |head| {
-            Expr::Application(Box::new(head), Vec::new())
-        }),
+        map(
+	    context("custom_cycle_fun", cut(take_while(valid_fun_name_char))),
+	    |fun_str: &str| CycleItem::Event((fun_str.to_string(), Vec::new())),
+	),
     ))(i)
 }
 
@@ -103,15 +107,14 @@ fn parse_cyc_expr<'a>(i: &'a str) -> IResult<&'a str, Vec<CycleItem>, VerboseErr
                 multispace0,
                 separated_list1(
                     tag(" "),
-                    alt((parse_cyc_symbol, parse_cyc_float, parse_cyc_application)),
+                    alt((parse_cyc_parameter, parse_cyc_application)),
                 ),
             ),
             preceded(multispace0, char(']')),
         ),
         map(
             alt((
-                parse_cyc_symbol,
-                parse_cyc_float,
+                parse_cyc_parameter,
                 parse_cyc_duration,
                 parse_cyc_application,
             )),
@@ -120,34 +123,110 @@ fn parse_cyc_expr<'a>(i: &'a str) -> IResult<&'a str, Vec<CycleItem>, VerboseErr
     ))(i)
 }
 
-fn parse_cyc<'a>(i: &'a str) -> IResult<&'a str, Vec<Vec<Expr>>, VerboseError<&'a str>> {
+/// parse cycle to cycle items ...
+fn parse_cyc<'a>(i: &'a str) -> IResult<&'a str, Vec<Vec<CycleItem>>, VerboseError<&'a str>> {
     separated_list1(tag(" "), parse_cyc_expr)(i)
 }
 
-/// eval cyc substrings ...
+/// adapt items to results ...
 pub fn eval_cyc_from_str(
     src: &str,
     sample_set: &sync::Arc<Mutex<SampleSet>>,
     out_mode: OutputMode,
-) -> Result<Vec<Vec<Option<Expr>>>, String> {
-    parse_cyc(src.trim())
+    template_events: &Vec<String>,
+    event_mappings: &HashMap<String, Vec<Event>>
+) -> Vec<Vec<CycleResult>> {
+    let items = parse_cyc(src.trim())
         .map_err(|e: nom::Err<VerboseError<&str>>| {
             let ret = format!("{:#?}", e);
             println!("{}", ret);
             ret
-        })
-        .map(|(_, exp_vecs)| {
-            exp_vecs
-                .into_iter()
-                .map(|exp_vec| {
-                    let mut eval_exps = Vec::new();
-                    for exp in exp_vec.into_iter() {
-                        eval_exps.push(eval_expression(exp, sample_set, out_mode));
-                    }
-                    eval_exps
-                })
-                .collect()
-        })
+        });
+    
+    match items {
+	Ok((_, mut i)) => {	    
+	    let mut results = Vec::new();
+	    let mut item_drain = i.drain(..);
+	    
+	    while let Some(mut inner) = item_drain.next() { // iterate through cycle positions ...
+		let mut inner_drain = inner.drain(..);
+		let mut cycle_position = Vec::new();
+		let mut template_params = Vec::new(); // collect params for templates ..
+		while let Some(item) = inner_drain.next() {
+		    match item {
+			CycleItem::Duration(d) => {
+			    let mut ev = Event::with_name("transition".to_string());
+			    ev.params.insert(SynthParameter::Duration, Box::new(Parameter::with_value(d)));
+			    cycle_position.push(CycleResult::Duration(ev));
+			},
+			CycleItem::Event((mut name, pars)) => {
+			    // now this might seem odd, but to re-align the positional arguments i'm just reassembling the string
+			    // and use the regular parser ... not super elegant, but hey ...
+			    for par in pars.iter() {				
+				match par {
+				    CycleItem::Parameter(CycleParameter::Number(f)) => {
+					name = name + " " + &f.to_string();
+				    },
+				    CycleItem::Parameter(CycleParameter::Symbol(s)) => {
+					name = name + " " + s;
+				    },
+				    _ => { println!("ignore cycle event param") }
+				}
+				match parse_expr(&name.trim()) {
+				    Ok((_, expr)) => {
+					if let Some(Expr::Constant(Atom::SoundEvent(e))) = eval_expression(expr, sample_set, out_mode) {
+					    cycle_position.push(CycleResult::SoundEvent(e));
+					}
+				    },
+				    Err(_) => { println!("couldn't parse re-assembled cycle event") }
+				}								
+			    }			    
+			},
+			CycleItem::Parameter(CycleParameter::Number(f)) => {
+			    template_params.push(CycleParameter::Number(f));
+			},
+			CycleItem::Parameter(CycleParameter::Symbol(s)) => {
+			    if let Some(evs) = event_mappings.get(&s) { // mappings have precedence ...
+				for ev in evs {
+				    // sound event might not be correct here as this could be control events ...
+				    cycle_position.push(CycleResult::SoundEvent(ev.clone()));
+				}				    
+			    } else {
+				template_params.push(CycleParameter::Symbol(s));
+			    }			    
+			}			
+			_ => {println!("nothing to be done ...")}
+		    }
+		}
+		if !template_events.is_empty() && !template_params.is_empty() {
+		    for t_ev in template_events.iter() {
+			let mut ev_name = t_ev.clone();
+			for t_par in template_params.iter() {
+			    match t_par {
+				CycleParameter::Number(f) => {
+				    ev_name = ev_name + " " + &f.to_string();
+				},
+				CycleParameter::Symbol(s) => {
+				    ev_name = ev_name + " " + s;
+				}
+			    }
+			}
+			match parse_expr(&ev_name.trim()) {
+			    Ok((_, expr)) => {
+				if let Some(Expr::Constant(Atom::SoundEvent(e))) = eval_expression(expr, sample_set, out_mode) {
+				    cycle_position.push(CycleResult::SoundEvent(e));
+				}
+			    },
+			    Err(_) => { println!("couldn't parse re-assembled cycle event") }
+			}	
+		    }
+		}
+		results.push(cycle_position);
+	    }	    
+	    results
+	},
+	Err(_) => Vec::new()
+    }
 }
 
 // TEST TEST TEST
@@ -157,7 +236,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_basic_cyc_float() {
+    fn test_basic_cyc2_float() {
 	match parse_cyc_float("100 b") {
 	    Ok(o) => {
 		println!("{:?}", o.0)
@@ -167,12 +246,10 @@ mod tests {
     }
     
     #[test]
-    fn test_basic_cyc_elem() {
-        let sample_set = sync::Arc::new(Mutex::new(SampleSet::new()));
-
-        match eval_cyc_from_str("[saw:200]", &sample_set, OutputMode::Stereo) {
-            Ok(o) => match &o[0][0] {
-                Some(Expr::Constant(Atom::SoundEvent(_))) => assert!(true),
+    fn test_basic_cyc_elem() {        
+        match parse_cyc("[saw:200]") {
+            Ok((_,o)) => match &o[0][0] {
+                CycleItem::Event((_, _)) => assert!(true),
                 _ => {
                     assert!(false)
                 }
@@ -182,30 +259,28 @@ mod tests {
     }
 
     #[test]
-    fn test_basic_cyc() {
-        let sample_set = sync::Arc::new(Mutex::new(SampleSet::new()));
-
-        match eval_cyc_from_str("saw:200 ~ ~ ~", &sample_set, OutputMode::Stereo) {
-            Ok(o) => {
+    fn test_basic_cyc() {        
+        match parse_cyc("saw:200 ~ ~ ~") {
+            Ok((_, o)) => {
                 assert!(o.len() == 4);
 
                 match &o[0][0] {
-                    Some(Expr::Constant(Atom::SoundEvent(e))) => assert!(e.name == "saw"),
+                    CycleItem::Event((s, _)) => assert!(s == "saw"),
                     _ => assert!(false),
                 }
 
                 match &o[1][0] {
-                    Some(Expr::Constant(Atom::SoundEvent(e))) => assert!(e.name == "silence"),
+                    CycleItem::Event((s, _)) => assert!(s == "~"),
                     _ => assert!(false),
                 }
 
                 match &o[2][0] {
-                    Some(Expr::Constant(Atom::SoundEvent(e))) => assert!(e.name == "silence"),
+                    CycleItem::Event((s, _)) => assert!(s == ""),
                     _ => assert!(false),
                 }
 
                 match &o[3][0] {
-                    Some(Expr::Constant(Atom::SoundEvent(e))) => assert!(e.name == "silence"),
+                    CycleItem::Event((s, _)) => assert!(s == "~"),
                     _ => assert!(false),
                 }
             }
@@ -214,30 +289,28 @@ mod tests {
     }
 
     #[test]
-    fn test_basic_cyc_noparam() {
-        let sample_set = sync::Arc::new(Mutex::new(SampleSet::new()));
-
-        match eval_cyc_from_str("saw ~ ~ ~", &sample_set, OutputMode::Stereo) {
-            Ok(o) => {
+    fn test_basic_cyc_noparam() {        
+        match parse_cyc("saw ~ ~ ~") {
+            Ok((_, o)) => {
                 assert!(o.len() == 4);
 
                 match &o[0][0] {
-                    Some(Expr::Constant(Atom::SoundEvent(e))) => assert!(e.name == "saw"),
+                    CycleItem::Event((s, _)) => assert!(s == "saw"),
                     _ => assert!(false),
                 }
 
                 match &o[1][0] {
-                    Some(Expr::Constant(Atom::SoundEvent(e))) => assert!(e.name == "silence"),
+                    CycleItem::Event((s, _)) => assert!(s == "~"),
                     _ => assert!(false),
                 }
 
                 match &o[2][0] {
-                    Some(Expr::Constant(Atom::SoundEvent(e))) => assert!(e.name == "silence"),
+                    CycleItem::Event((s, _)) => assert!(s == ""),
                     _ => assert!(false),
                 }
 
                 match &o[3][0] {
-                    Some(Expr::Constant(Atom::SoundEvent(e))) => assert!(e.name == "silence"),
+                    CycleItem::Event((s, _)) => assert!(s == "~"),
                     _ => assert!(false),
                 }
             }
@@ -246,38 +319,33 @@ mod tests {
     }
 
     #[test]
-    fn test_basic_cyc_noparam_dur() {
-        let sample_set = sync::Arc::new(Mutex::new(SampleSet::new()));
-
-        match eval_cyc_from_str("saw /100 saw ~ ~", &sample_set, OutputMode::Stereo) {
-            Ok(o) => {
+    fn test_basic_cyc_noparam_dur() {        
+        match parse_cyc("saw /100 saw ~ ~") {
+            Ok((_, o)) => {
                 assert!(o.len() == 5);
 
-                match &o[0][0] {
-                    Some(Expr::Constant(Atom::SoundEvent(e))) => assert!(e.name == "saw"),
+		match &o[0][0] {
+                    CycleItem::Event((s, _)) => assert!(s == "saw"),
                     _ => assert!(false),
                 }
 
                 match &o[1][0] {
-                    Some(Expr::Constant(Atom::SoundEvent(e))) => {
-			assert!(e.name == "transition");
-			assert!(e.params[&SynthParameter::Duration].static_val == 100.0)
-		    },
+                    CycleItem::Duration(d) => assert!(*d == 100.0),
                     _ => assert!(false),
                 }
 
                 match &o[2][0] {
-                    Some(Expr::Constant(Atom::SoundEvent(e))) => assert!(e.name == "saw"),
+                    CycleItem::Event((s, _)) => assert!(s == ""),
                     _ => assert!(false),
                 }
 
                 match &o[3][0] {
-                    Some(Expr::Constant(Atom::SoundEvent(e))) => assert!(e.name == "silence"),
+                    CycleItem::Event((s, _)) => assert!(s == "~"),
                     _ => assert!(false),
                 }
-
+		
 		match &o[4][0] {
-                    Some(Expr::Constant(Atom::SoundEvent(e))) => assert!(e.name == "silence"),
+                    CycleItem::Event((s, _)) => assert!(s == "~"),
                     _ => assert!(false),
                 }
             }
@@ -286,28 +354,26 @@ mod tests {
     }
 
     #[test]
-    fn test_symbol_param_only() {
-        let sample_set = sync::Arc::new(Mutex::new(SampleSet::new()));
-
-        match eval_cyc_from_str("'boat ~ ~ ~", &sample_set, OutputMode::Stereo) {
-            Ok(o) => {
+    fn test_symbol_param_only() {        
+        match parse_cyc("'boat ~ ~ ~") {
+            Ok((_, o)) => {
                 match &o[0][0] {
-                    Some(Expr::Constant(Atom::Symbol(s))) => assert!(s == "boat"),
+                    CycleItem::Parameter(CycleParameter::Symbol(s)) => assert!(s == "boat"),
                     _ => assert!(false),
                 }
 
                 match &o[1][0] {
-                    Some(Expr::Constant(Atom::SoundEvent(e))) => assert!(e.name == "silence"),
+                    CycleItem::Event((s, _)) => assert!(s == "~"),
                     _ => assert!(false),
                 }
 
                 match &o[2][0] {
-                    Some(Expr::Constant(Atom::SoundEvent(e))) => assert!(e.name == "silence"),
+                    CycleItem::Event((s, _)) => assert!(s == ""),
                     _ => assert!(false),
                 }
 
                 match &o[3][0] {
-                    Some(Expr::Constant(Atom::SoundEvent(e))) => assert!(e.name == "silence"),
+                    CycleItem::Event((s, _)) => assert!(s == "~"),
                     _ => assert!(false),
                 }
             }
@@ -316,28 +382,26 @@ mod tests {
     }
 
     #[test]
-    fn test_float_param_only() {
-        let sample_set = sync::Arc::new(Mutex::new(SampleSet::new()));
-
-        match eval_cyc_from_str("200 ~ ~ ~", &sample_set, OutputMode::Stereo) {
-            Ok(o) => {
+    fn test_float_param_only() {        
+        match parse_cyc("200 ~ ~ ~") {
+            Ok((_, o)) => {
                 match &o[0][0] {
-                    Some(Expr::Constant(Atom::Float(f))) => assert!(*f == 200.0),
+                    CycleItem::Parameter(CycleParameter::Number(f)) => assert!(*f == 200.0),
                     _ => assert!(false),
                 }
 
                 match &o[1][0] {
-                    Some(Expr::Constant(Atom::SoundEvent(e))) => assert!(e.name == "silence"),
+                    CycleItem::Event((s, _)) => assert!(s == "~"),
                     _ => assert!(false),
                 }
 
                 match &o[2][0] {
-                    Some(Expr::Constant(Atom::SoundEvent(e))) => assert!(e.name == "silence"),
+                    CycleItem::Event((s, _)) => assert!(s == ""),
                     _ => assert!(false),
                 }
 
                 match &o[3][0] {
-                    Some(Expr::Constant(Atom::SoundEvent(e))) => assert!(e.name == "silence"),
+                    CycleItem::Event((s, _)) => assert!(s == "~"),
                     _ => assert!(false),
                 }
             }

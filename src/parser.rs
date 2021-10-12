@@ -355,7 +355,7 @@ fn parse_application<'a>(i: &'a str) -> IResult<&'a str, Expr, VerboseError<&'a 
 }
 
 /// We tie them all together again, making a top-level expression parser!
-fn parse_expr<'a>(i: &'a str) -> IResult<&'a str, Expr, VerboseError<&'a str>> {
+pub fn parse_expr<'a>(i: &'a str) -> IResult<&'a str, Expr, VerboseError<&'a str>> {
     preceded(
         multispace0,
         alt((parse_comment, parse_constant, parse_application)),
