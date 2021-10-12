@@ -7,6 +7,7 @@
 pub mod builtin_types;
 pub mod commands;
 pub mod cyc_parser;
+pub mod cyc_parser2;
 pub mod editor;
 pub mod event;
 pub mod event_helpers;
