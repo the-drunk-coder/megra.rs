@@ -45,17 +45,13 @@ pub fn construct_cycle(
 
     // collect final events in their position in the cycle
     let mut ev_vecs = Vec::new();
-    let mut parsed_cycle = None;
+    let mut cycle_string: String = "".to_string();
 
     while let Some(Expr::Constant(c)) = tail_drain.next() {
         if collect_template {
             match c {
-                Atom::SoundEvent(e) => {
-                    template_evs.push(SourceEvent::Sound(e));
-                    continue;
-                }
-                Atom::ControlEvent(e) => {
-                    template_evs.push(SourceEvent::Control(e));
+                Atom::Symbol(s) => {
+                    template_evs.push(s);
                     continue;
                 }
                 _ => {
@@ -132,50 +128,40 @@ pub fn construct_cycle(
                 _ => println!("{}", k),
             },
             Atom::Description(d) => {
-                parsed_cycle = Some(cyc_parser::eval_cyc_from_str(&d, sample_set, out_mode));
+                cycle_string = d.clone();
             }
             _ => println! {"ignored"},
         }
     }
 
-    match parsed_cycle {
-        Some(Ok(mut c)) => {
-            for mut cyc_evs in c.drain(..) {
-                match cyc_evs.as_slice() {
-                    [Some(Expr::Constant(Atom::Float(f)))] => {
-                        // slice pattern are awesome !
-                        if !dur_vec.is_empty() {
-                            // replace last value, but vec can't start with duration !
-                            *dur_vec.last_mut().unwrap() = Parameter::with_value(*f);
-                        }
-                    }
-                    _ => {
-                        ev_vecs.push(Vec::new());
-                        dur_vec.push(dur.clone().unwrap());
-                        let mut cyc_evs_drain = cyc_evs.drain(..);
-                        while let Some(Some(Expr::Constant(cc))) = cyc_evs_drain.next() {
-                            match cc {
-                                Atom::Symbol(s) => {
-                                    if collected_mapping.contains_key(&s.chars().next().unwrap()) {
-                                        ev_vecs.last_mut().unwrap().append(
-                                            collected_mapping
-                                                .get_mut(&s.chars().next().unwrap())
-                                                .unwrap(),
-                                        );
-                                    }
-                                }
-                                Atom::SoundEvent(e) => {
-                                    ev_vecs.last_mut().unwrap().push(SourceEvent::Sound(e));
-                                }
-                                _ => { /* ignore */ }
-                            }
-                        }
-                    }
-                }
+    let mut parsed_cycle = cyc_parser::eval_cyc_from_str(
+        &cycle_string,
+        sample_set,
+        out_mode,
+        &template_evs,
+        &HashMap::new(),
+    );
+
+    if parsed_cycle.is_empty() {
+        println!("couldn't parse cycle");
+    }
+
+    for mut cyc_evs in parsed_cycle.drain(..) {
+        match cyc_evs.as_slice() {
+            [cyc_parser::CycleResult::Duration(d)] => {
+                // only single durations count
+                // slice pattern are awesome !
+                *dur_vec.last_mut().unwrap() = Parameter::with_value(*d);
             }
-        }
-        _ => {
-            println!("couldn't parse cycle");
+            _ => {
+                let mut pos_vec = Vec::new();
+                dur_vec.push(dur.clone().unwrap());
+                let mut cyc_evs_drain = cyc_evs.drain(..);
+                while let Some(cyc_parser::CycleResult::SoundEvent(e)) = cyc_evs_drain.next() {
+                    pos_vec.push(SourceEvent::Sound(e));
+                }
+                ev_vecs.push(pos_vec);
+            }
         }
     }
 
