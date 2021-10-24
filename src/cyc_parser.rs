@@ -29,6 +29,7 @@ pub enum CycleItem {
     Duration(f32),
     Event((String, Vec<CycleItem>)),
     Parameter(CycleParameter),
+    NamedParameter((String, CycleParameter)),
     Nothing,
 }
 
@@ -44,6 +45,22 @@ pub enum CycleResult {
 
 fn parse_cyc_parameter<'a>(i: &'a str) -> IResult<&'a str, CycleItem, VerboseError<&'a str>> {
     alt((parse_cyc_symbol, parse_cyc_float))(i)
+}
+
+fn parse_cyc_named_parameter<'a>(i: &'a str) -> IResult<&'a str, CycleItem, VerboseError<&'a str>> {
+    map(
+	separated_pair(
+	    map(
+		context("custom_cycle_fun", cut(take_while(valid_fun_name_char))),
+		|fun_str: &str| fun_str.to_string(),
+            ),
+            tag("="),
+	    alt((parse_cyc_symbol, parse_cyc_float))),
+	|(head, tail)| if let CycleItem::Parameter(p) = tail {
+	    CycleItem::NamedParameter((head, p))
+	} else {
+	    CycleItem::Nothing
+	})(i)
 }
 
 fn parse_cyc_symbol<'a>(i: &'a str) -> IResult<&'a str, CycleItem, VerboseError<&'a str>> {
@@ -90,7 +107,7 @@ fn parse_cyc_application<'a>(i: &'a str) -> IResult<&'a str, CycleItem, VerboseE
                     |fun_str: &str| fun_str.to_string(),
                 ),
                 tag(":"),
-                separated_list0(tag(":"), parse_cyc_parameter),
+                separated_list0(tag(":"), alt((parse_cyc_parameter, parse_cyc_named_parameter))),
             ),
             |(head, tail)| CycleItem::Event((head, tail)),
         ),
@@ -115,10 +132,10 @@ fn parse_cyc_expr<'a>(i: &'a str) -> IResult<&'a str, Vec<CycleItem>, VerboseErr
             ),
             preceded(multispace0, char(']')),
         ),
-	separated_list1(tag(":"), parse_cyc_parameter),
+	separated_list1(tag(":"), alt((parse_cyc_parameter, parse_cyc_named_parameter))),
 	map(
             alt((
-                parse_cyc_parameter,
+                parse_cyc_parameter,		
                 parse_cyc_duration,
                 parse_cyc_application,
             )),
@@ -171,6 +188,12 @@ pub fn eval_cyc_from_str(
                                     }
                                     CycleItem::Parameter(CycleParameter::Symbol(s)) => {
                                         name = name + " \'" + s;
+                                    },
+				    CycleItem::NamedParameter((pname, CycleParameter::Symbol(s))) => {
+                                        name = name + &format!(" :{} \'{} ", pname, s);
+                                    },
+				    CycleItem::NamedParameter((pname, CycleParameter::Number(f))) => {
+                                        name = name + &format!(" :{} {} ", pname, f);
                                     }
                                     _ => {
                                         println!("ignore cycle event param")
@@ -179,6 +202,7 @@ pub fn eval_cyc_from_str(
                             }
                             // in brackets so it's recognized as a "function"
                             name = format!("({})", name);
+			    println!("{}",name);
                             match parse_expr(&name.trim()) {
                                 Ok((_, expr)) => {
                                     if let Some(Expr::Constant(Atom::SoundEvent(e))) =
@@ -195,7 +219,7 @@ pub fn eval_cyc_from_str(
                             }
                         }
                         CycleItem::Parameter(CycleParameter::Number(f)) => {
-                            template_params.push(CycleParameter::Number(f));
+                            template_params.push(CycleItem::Parameter(CycleParameter::Number(f)));
                         }
                         CycleItem::Parameter(CycleParameter::Symbol(s)) => {
                             if let Some(evs) = event_mappings.get(&s) {
@@ -205,8 +229,11 @@ pub fn eval_cyc_from_str(
                                     cycle_position.push(CycleResult::SoundEvent(ev.clone()));
                                 }
                             } else {
-                                template_params.push(CycleParameter::Symbol(s));
+                               template_params.push(CycleItem::Parameter(CycleParameter::Symbol(s)));
                             }
+                        }
+			CycleItem::NamedParameter((pname, param)) => {
+                            template_params.push(CycleItem::NamedParameter((pname, param)));
                         }
                         _ => {
                             println!("nothing to be done ...")
@@ -218,12 +245,19 @@ pub fn eval_cyc_from_str(
                         let mut ev_name = t_ev.clone();
                         for t_par in template_params.iter() {
                             match t_par {
-                                CycleParameter::Number(f) => {
+                                CycleItem::Parameter(CycleParameter::Number(f)) => {
                                     ev_name = ev_name + " " + &f.to_string();
                                 }
-                                CycleParameter::Symbol(s) => {
+                                CycleItem::Parameter(CycleParameter::Symbol(s)) => {
                                     ev_name = ev_name + " \'" + s;
                                 }
+				CycleItem::NamedParameter((pname, CycleParameter::Number(f))) => {
+                                    ev_name = ev_name + &format!(" :{} {} ", pname, f);
+                                }
+                                CycleItem::NamedParameter((pname, CycleParameter::Symbol(s))) => {
+                                    ev_name = ev_name + &format!(" :{} \'{} ", pname, s);
+                                }
+				_ => {}
                             }
                         }
                         // brackets so it's recognized as a "function"
@@ -394,7 +428,7 @@ mod tests {
                 }
 
                 match &o[2][0] {
-                    CycleItem::Event((s, _)) => assert!(s == ""),
+                    CycleItem::Event((s, _)) => assert!(s == "~"),
                     _ => assert!(false),
                 }
 
@@ -422,7 +456,7 @@ mod tests {
                 }
 
                 match &o[2][0] {
-                    CycleItem::Event((s, _)) => assert!(s == ""),
+                    CycleItem::Event((s, _)) => assert!(s == "~"),
                     _ => assert!(false),
                 }
 
@@ -448,7 +482,7 @@ mod tests {
         let event_mappings = HashMap::new();
 
         let o = eval_cyc_from_str(
-            "saw /100 saw:400 ~ ~ [saw:100 saw:500] ~ piano:'a3",
+            "saw /100 saw:400 ~ ~ [saw:100 saw:500] ~ piano:'a3 piano:'a3:lpf=100",
             &sample_set,
             OutputMode::Stereo,
             &template_events,
@@ -456,7 +490,7 @@ mod tests {
         );
         println!("return length: {}", o.len());
 
-        assert!(o.len() == 8);
+        assert!(o.len() == 9);
 
         match &o[0][0] {
             CycleResult::SoundEvent(e) => assert!(e.name == "saw"),
@@ -464,7 +498,7 @@ mod tests {
         }
 
         match &o[1][0] {
-            CycleResult::Duration(d) => assert!(d == 100.0),
+            CycleResult::Duration(d) => assert!(*d == 100.0 as f32),
             _ => assert!(false),
         }
 
@@ -499,6 +533,11 @@ mod tests {
         }
 
         match &o[7][0] {
+            CycleResult::SoundEvent(e) => assert!(e.name == "sampler"),
+            _ => assert!(false),
+        }
+
+	match &o[8][0] {
             CycleResult::SoundEvent(e) => assert!(e.name == "sampler"),
             _ => assert!(false),
         }
