@@ -3,6 +3,7 @@ use crate::event_helpers::*;
 use crate::parameter::*;
 use ruffbox_synth::ruffbox::synth::SynthParameter;
 use std::collections::HashMap;
+use rust_music_theory::note::{Note, Tuning};
 
 pub fn get_float_from_expr(e: &Expr) -> Option<f32> {
     match e {
@@ -122,6 +123,15 @@ pub fn get_next_param(tail_drain: &mut std::vec::Drain<Expr>, default: f32) -> P
     match tail_drain.next() {
         Some(Expr::Constant(Atom::Float(n))) => Parameter::with_value(n),
         Some(Expr::Constant(Atom::Parameter(pl))) => pl,
+        _ => Parameter::with_value(default),
+    }
+}
+
+pub fn get_next_pitch_param(tail_drain: &mut std::vec::Drain<Expr>, default: f32) -> Parameter {
+    match tail_drain.next() {
+        Some(Expr::Constant(Atom::Float(n))) => Parameter::with_value(n),
+        Some(Expr::Constant(Atom::Parameter(pl))) => pl,
+	Some(Expr::Constant(Atom::Symbol(s))) => Parameter::with_value(Note::from_string(&s).to_freq(Tuning::EqualTemperament)), 
         _ => Parameter::with_value(default),
     }
 }

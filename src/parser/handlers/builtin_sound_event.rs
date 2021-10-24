@@ -18,10 +18,12 @@ pub fn handle(event_type: &BuiltInSoundEvent, tail: &mut Vec<Expr>) -> Atom {
         }
     };
 
+    
+    
     // first arg is always freq ...
     ev.params.insert(
         SynthParameter::PitchFrequency,
-        Box::new(get_next_param(&mut tail_drain, 100.0)),
+        Box::new(get_next_pitch_param(&mut tail_drain, 100.0)),
     );
 
     // set some defaults 2

@@ -20,6 +20,7 @@ rustyline = "6.3.0"
 claxon = "0.4.3"
 getopts = "0.2"
 rand = "0.7"
+rust-music-theory = {path = "../thirdparty/rust-music-theory"}
 egui = { path = "../thirdparty/egui/egui", features = ["persistence"]}
 egui_glium = { path = "../thirdparty/egui/egui_glium", features = ["persistence"]}
 epi = { path = "../thirdparty/egui/epi", features = ["persistence"]}
