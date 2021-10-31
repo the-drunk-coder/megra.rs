@@ -10,11 +10,34 @@ This is still in an early development stage and has some severe limitations!
 * So far only on MacOS and Linux (with Jack)
 * There's no user- or developer documentation so far
 
-All of these things is something that I'm working on !
+These issues are being addressed in no particular order ...
 
 ## Installation
 
-Currently you still need cargo (https://doc.rust-lang.org/cargo/) installed ! 
+Currently you still need cargo (https://doc.rust-lang.org/cargo/) installed !
+Any version above 1.45 should work (last tested with 1.55).
 
 * Download the repo ...
 * In repo folder, type ...
+
+```
+cargo run --release -- -e -o 2ch
+```
+
+## Startup optinos
+
+```
+-v, --version       Print version
+-e, --editor        Use integrated editor (experimental)
+-h, --help          Print this help
+-n, --no-samples    don't load default samples
+-o, --output-mode   output mode (stereo, 2ch, 8ch), default: stereo
+-l, --list-devices  list available audio devices
+-d, --device        choose device
+--live-buffer-time  the capacity of the live input buffer in seconds, default: 3
+```
+
+If the `-e` option is omitted, Mégra is started in REPL (command-line) mode. If you want to integrate it in your favourite editor, that might be helpful.
+
+
+
