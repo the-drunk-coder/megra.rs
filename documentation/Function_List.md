@@ -598,16 +598,21 @@ Generates a one-node repeating generator, i.e. as a starting point for growing.
 ### Syntax
 
 ```lisp
-(nuc <name> <event(s)> :dur <duration>)
+(nuc <name> :dur <duration> <event(s)>)
 ```
 
 ### Example
 
 ```lisp
-(sx 'just t
-  (nuc 'bassdrum (bd) :dur 400))
+;; with one event
+(sx 'just #t
+  (nuc 'a-bassdrum :dur 400 (bd)))
+  
+;; with multiple events
+(sx 'just #t
+  (nuc 'a-bassdrum-and-a-snare :dur 400 (bd) (sn)))
 ```
-![Just a Bassdrum](./nucleus.svg)    
+![Just a Bassdrum](./nucleus.svg)
 
 ## `bounce` - Parameter Oscillator
 
@@ -715,7 +720,6 @@ Learn a trap-like beat from a sample string.
              ~xoxoxox~ohxhohxhohxhxhxhxhxhxhxhoho
              hoh"))
 ```
-
 <img src="./learned-beat.svg" alt="A learned beat." width="1000" height="1000">
 
 ## `infer` - Infer Generator from Rules
