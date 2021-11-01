@@ -725,7 +725,7 @@ Also, exit probablities for each node should add up to 100.
 
 * `name` - generator name
 * `:events` - labeled event mapping
-* `:rules` - transition rules - Format '((<source>) <destination> <probability> <duration (optional)>)
+* `:rules` - transition rules - Format `(rule <source> <destination> <probability> <duration (optional)>)`
 
 ### Example
 
