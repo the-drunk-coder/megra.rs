@@ -24,6 +24,14 @@ Any version above 1.45 should work (last tested with 1.55).
 cargo run --release -- -e -o 2ch
 ```
 
+## Finding and Using Samples
+If you don't already have a sample set at hand, some samples (enough to follow the documentation) can be found here: https://github.com/the-drunk-coder/megra-public-samples
+
+Place the samples (on Linux at least) in the folder `.config/megra/samples`. Now you'll have a sound event for every sample.
+
+## Sketchbook
+The files generated and read by the editor can be found in `.config/megra/sketchbook`.
+
 ## Startup optinos
 
 ```
