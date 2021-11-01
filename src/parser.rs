@@ -9,7 +9,7 @@ use nom::{
     branch::alt,
     bytes::complete::{tag, take_while},
     character::complete::{char, multispace0},
-    character::{is_alphanumeric, is_space},
+    character::{is_alphanumeric, is_space, is_newline},
     combinator::{cut, map, map_res, recognize},
     error::{context, VerboseError},
     multi::many0,
@@ -294,6 +294,7 @@ pub fn valid_char(chr: char) -> bool {
         || chr == ']'
         || is_alphanumeric(chr as u8)
         || is_space(chr as u8)
+	|| is_newline(chr as u8)
 }
 
 /// valid chars for a function name

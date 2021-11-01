@@ -19,7 +19,6 @@ Create basic event sequence generators.
 * [nuc - Nucleus Generator](#nuc---nucleus-generator)
 * [stages - Arrange an Event Sequence in Stages](#stages---stages-generator)
 
-
 **Generator Modifiers**:
 
 * [blur - Blur Probabilities](#blur---blur-probabilities)
@@ -702,17 +701,22 @@ be different from the previous one, obviously.
 
 ## `learn` - Learn Generator from Distribution
 
+Learn a generator from a sample string.
+
 ### Example
+Learn a trap-like beat from a sample string.
 ```lisp
 (sx 'from #t
-    (learn 'data
-           :events 'x (bd) 'o (sn) 'h (hats)
-	       :sample 
-		   "xoxoxoxox~~o~h~~~h~h~h~~h~h~~hhh~x~o~x~o~x~o~x
-            ~o~xh~h~~hhh~x~o~x~o~x~o~xox~xox~xox~xoxo~xoxo
-            ~xoxox~oooo~xxxx~xoxoxox~ohxhohxhohxhxhxhxhxhx
-            hxhohohoh"))
+  (learn 'data
+    :events 'x (bd) 'o (sn) 'h (hats)
+    :sample "xoxoxoxox~~o~h~~~h~h~h~~h~h~~hhh~x~o
+             ~x~o~x~o~x~o~xh~h~~hhh~x~o~x~o~x~o~x
+             ox~xox~xox~xoxo~xoxo~xoxox~oooo~xxxx
+             ~xoxoxox~ohxhohxhohxhxhxhxhxhxhxhoho
+             hoh"))
 ```
+
+![Learned beat](./learned-beat.svg =500x500)
 
 ## `infer` - Infer Generator from Rules
 
