@@ -12,18 +12,17 @@ directories-next = "2.0"
 anyhow = "1.0"
 crossbeam = "0.8"
 parking_lot = "0.11"
-ruffbox_synth = { path = "../ruffbox-synth" }
+ruffbox_synth = { git = "https://github.com/the-drunk-coder/ruffbox-synth" }
 nom = "6.0"
-#vom_rs = { git = "https://gitlab.com/ellipsenpark/vom.rs" }
-vom_rs = { path = "../vom.rs" }
+vom_rs = { git = "https://gitlab.com/ellipsenpark/vom.rs" }
 rustyline = "6.3.0"
 claxon = "0.4.3"
 getopts = "0.2"
 rand = "0.7"
-rust-music-theory = {path = "../thirdparty/rust-music-theory"}
-egui = { path = "../thirdparty/egui/egui", features = ["persistence"]}
-egui_glium = { path = "../thirdparty/egui/egui_glium", features = ["persistence"]}
-epi = { path = "../thirdparty/egui/epi", features = ["persistence"]}
+rust-music-theory = {git = "https://github.com/the-drunk-coder/rust-music-theory"}
+egui = { git = "https://github.com/the-drunk-coder/egui", branch="megra", features = ["persistence"]}
+egui_glium = { git = "https://github.com/the-drunk-coder/egui", branch="megra", features = ["persistence"]}
+epi = { git = "https://github.com/the-drunk-coder/egui", branch="megra", features = ["persistence"]}
 serde = { version = "1", features = ["derive"] }
 dashmap = "4.0.0"
 chrono = "0.4"
