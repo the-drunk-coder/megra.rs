@@ -363,26 +363,27 @@ This creates a directed version of a Friendship- or Windmill graph.
 
 ### Parameters
 
-* `name` - The generator name.
-* `center` - The center of the "social circle".
-* `friends` - The "friends".
-* `list of events` - a list of events (more than 3, odd number).
-* `rep` - Chance of repetition.
-* `max-rep` - Maximum number of repetitions.
-* `rnd` - Generate random shortcuts.
-* `events` - Collect labeled events.
-
+* `name` - the generator name
+* `:center` - the center of the "social circle"
+* `:friends` - the "friends".
+* `:rep` - chance of repetition.
+* `:max-rep` - maximum number of repetitions
+* `:rnd` - generate random shortcuts
+* `:events` - collect labeled events
 
 ### Example
 
 ```lisp
-(sx 'friend #t        
-    (cmp
-     (pear (atk 1) (rel 90) (dur 100) (rev 0.07))
-     (friendship 'ship :(saw 'a2) (saw 'c3) (saw 'e3) (saw 'b3) (saw 'd3) (saw 'f3) (saw 'c4))))
+(sx 'friend #t
+	(cmp
+		(pear (atk 1) (rel 90) (sus 10) (rev 0.07))
+			(friendship 'ship 
+				:dur 100
+				:center  (saw 'a2) 
+				:friends (saw 'c3) (saw 'e3) (saw 'b3) (saw 'd3) (saw 'f3) (saw 'c4))))
 ```
 
-![A beat with repetitions](./friendship.svg)
+![A friendly bassline](./friendship.svg)
 
 ## `flower` - Create Flower Generator
 
