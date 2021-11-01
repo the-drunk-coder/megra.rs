@@ -428,18 +428,19 @@ Each node follows each other node with equal probablity ... so basically a rando
 
 ### Syntax
 ```lisp
-(fully <name> <list of events>)
+(fully <name> :rest <list of events> :events <labeled events>)
 ```
 
 ### Example
 
 ```lisp
-(sx 'full t
-    (fully 'mel (saw 'a3) (saw 'f2) (saw 'c3) (saw 'e3)))
+;; random generator with five events
+(sx 'full #t
+    (fully 'mel :rest (saw 'a3) (saw 'f2) (saw 'c3) (saw 'e3) (saw 'a4)))
 
 ```
 
-![Fully connected](./fully_connected.svg)    
+![Fully connected graph.](./fully-connected.svg)    
 
 ## `grow` - Enlarge Generator
 
