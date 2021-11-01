@@ -1,9 +1,13 @@
 # Mégra Function Reference
 
+Table of contents is grouped by categories, list below is sorted alphabetically.
+
 Table of Contents
 =================
 
 **Generator Generators**:
+
+Create basic event sequence generators.
 
 * [cyc - Cycle Generator](#cyc---cycle-generator)
 * [chop - Chop a sample](#chop---chop-a-sample)
@@ -11,8 +15,10 @@ Table of Contents
 * [flower - Create Flower Generator](#flower---create-flower-generator)
 * [fully - Create Fully Connected Generator](#fully---create-fully-connected-generator)
 * [infer - Infer Generator from Rules](#infer---infer-generator-from-rules)
-* [nuc - Nucleus Generator](#nuc---nucleus-generator)
 * [learn - Learn Generator from Distribution](#learn---learn-generator-from-distribution)
+* [nuc - Nucleus Generator](#nuc---nucleus-generator)
+* [stages - Arrange an Event Sequence in Stages](#stages---stages-generator)
+
 
 **Generator Modifiers**:
 
@@ -56,6 +62,7 @@ Table of Contents
 * [clear - Clear Session](#clear---clear-session)     
 * [ctrl - Control Functions](#ctrl---control-functions)
 * [sx - Event Sinks](#sx---multiple-event-sinks)
+* [export-dot - Export to DOT File](#export-dot---export-to-dot-file)
 
 ## `brownian` - Bounded Brownian Motion 
 
@@ -84,14 +91,15 @@ Define a bounded brownian motion on a parameter.
 
 ## `chop` - Chop a sample
 
-Chop a sample into parts, that will be played as a loop.
+Chop a sample into parts, that will be played as a loop. All other parameters of 
+a loop can be applied (`rep`, `max-rep` and `rnd`).
 
 ### Examples
 
 ```lisp
 ;; chop violin sample into 8 parts (each of which is 200ms long)
 (sx 'some #t
-  (chop 'chops 8 (violin 'a3 :dur 200))) 
+  (chop 'chops 8 (violin 'a3 :sus 200))) 
 ```
 
 ## `clear` - Clear Session
@@ -181,7 +189,9 @@ Executes any function, can be used to conduct execution of generators.
 
 ## `cyc` - Cycle Generator
 
-Generates a cycle (aka loop) from a simple sequencing language.
+Generates a cycle (aka loop) from a simple sequencing language. You can specify parameters within the sequence language,
+or placeholders. Also, you can specify deviations from the default duration between events within the sequencing language.
+It might seem simple, but this is one of the most powerful generators in Mégra.
 
 ### Parameters
 
@@ -190,7 +200,9 @@ Generates a cycle (aka loop) from a simple sequencing language.
 * `:dur` - default space between events 
 * `:rep` - probability of repeating an event
 * `:max-rep` - limits number of repetitions
-* `:rnd` - random connection probability
+* `:rnd` - random connection probability (currently not working the way I expected it ...)
+* `map` - map events on parameters
+* `events` - use labeled events
 
 ### Syntax
 
@@ -205,14 +217,31 @@ Generates a cycle (aka loop) from a simple sequencing language.
   (cyc 'beat "bd ~ hats ~ sn ~ hats ~"))
 ```
 
-![A plain beat](./beat_plain.svg) 
+![A plain beat](./cycle-simple.svg) 
 
 ```lisp
-;; with a 40% chance of repetition, 4 times at max
-(sx 'simple t
-    (cyc 'beat "bd ~ hats ~ sn ~ hats ~" :rep 40 :max-rep 4))
+;; with a 40% chance of repetition, 2 times at max
+(sx 'simple #t
+    (cyc 'beat :rep 40 :max-rep 2 "bd ~ hats ~ sn ~ hats ~"))
 ```
-![A beat with repetitions](./beat_rep.svg)    
+![A beat with repetitions](./cycle-complex.svg)
+
+
+```lisp
+;; with labeled events
+(sx 'simple #t	
+    (cyc 'beat 
+		:events 'a (bd) 'b (hats) 'c (sn)
+		"'a ~ 'b ~ 'c ~ 'b ~"))
+```
+
+```lisp
+;; with parameters and placeholder
+(sx 'simple #t	
+    (cyc 'beat 
+		:map 'saw 
+		"200 ~ 120 140 'a3")) ;; you can use frequencies or note names 
+```
 
 ## `env` - Parameter Envelope
 
@@ -311,12 +340,19 @@ This creates a directed version of a Friendship- or Windmill graph.
 
 ### Syntax
 
-`(friendship <name> <list of events>)`
+`(friendship <name> :center <center event> :friends <list of events>)`
 
 ### Parameters
 
 * `name` - The generator name.
-* `list of events` - a list of events (more than 3, odd number)
+* `center` - The center of the "social circle".
+* `friends` - The "friends".
+* `list of events` - a list of events (more than 3, odd number).
+* `rep` - Chance of repetition.
+* `max-rep` - Maximum number of repetitions.
+* `rnd` - Generate random shortcuts.
+* `events` - Collect labeled events.
+
 
 ### Example
 
@@ -324,7 +360,7 @@ This creates a directed version of a Friendship- or Windmill graph.
 (sx 'friend #t        
     (cmp
      (pear (atk 1) (rel 90) (dur 100) (rev 0.07))
-     (friendship 'ship (saw 'a2) (saw 'c3) (saw 'e3) (saw 'b3) (saw 'd3) (saw 'f3) (saw 'c4))))
+     (friendship 'ship :(saw 'a2) (saw 'c3) (saw 'e3) (saw 'b3) (saw 'd3) (saw 'f3) (saw 'c4))))
 ```
 
 ![A beat with repetitions](./friendship.svg)
