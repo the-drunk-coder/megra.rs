@@ -40,7 +40,7 @@ pub fn construct_cycle(
 
     // collect mapped events, i.e. :events 'a (saw 200) ...
     let mut collected_evs = Vec::new();
-    let mut collected_mapping = HashMap::<char, Vec<SourceEvent>>::new();
+    let mut collected_mapping = HashMap::<String, Vec<SourceEvent>>::new();
     let mut cur_key: String = "".to_string();
 
     // collect final events in their position in the cycle
@@ -66,7 +66,7 @@ pub fn construct_cycle(
                     if !cur_key.is_empty() && !collected_evs.is_empty() {
                         println!("found event {}", cur_key);
                         collected_mapping
-                            .insert(cur_key.chars().next().unwrap(), collected_evs.clone());
+                            .insert(cur_key.clone(), collected_evs.clone());
                         collected_evs.clear();
                     }
                     cur_key = s.clone();
@@ -75,7 +75,7 @@ pub fn construct_cycle(
                 Atom::SoundEvent(e) => {
                     collected_evs.push(SourceEvent::Sound(e));
                     continue;
-                }
+                }		
                 Atom::ControlEvent(e) => {
                     collected_evs.push(SourceEvent::Control(e));
                     continue;
@@ -84,7 +84,7 @@ pub fn construct_cycle(
                     if !cur_key.is_empty() && !collected_evs.is_empty() {
                         println!("found event {}", cur_key);
                         collected_mapping
-                            .insert(cur_key.chars().next().unwrap(), collected_evs.clone());
+                            .insert(cur_key.clone(), collected_evs.clone());
                     }
                     collect_events = false;
                 }
@@ -139,13 +139,13 @@ pub fn construct_cycle(
         sample_set,
         out_mode,
         &template_evs,
-        &HashMap::new(),
+        &collected_mapping,
     );
 
     if parsed_cycle.is_empty() {
         println!("couldn't parse cycle");
     }
-
+    
     for mut cyc_evs in parsed_cycle.drain(..) {
         match cyc_evs.as_slice() {
             [cyc_parser::CycleResult::Duration(d)] => {
@@ -157,16 +157,18 @@ pub fn construct_cycle(
                 let mut pos_vec = Vec::new();
                 dur_vec.push(dur.clone().unwrap());
                 let mut cyc_evs_drain = cyc_evs.drain(..);
-                while let Some(cyc_parser::CycleResult::SoundEvent(e)) = cyc_evs_drain.next() {
-                    pos_vec.push(SourceEvent::Sound(e));
-                }
+                match cyc_evs_drain.next() {
+		    Some(cyc_parser::CycleResult::SoundEvent(s)) => pos_vec.push(SourceEvent::Sound(s)),
+		    Some(cyc_parser::CycleResult::ControlEvent(c)) => pos_vec.push(SourceEvent::Control(c)),
+		    _ => {}
+		}				            
                 ev_vecs.push(pos_vec);
             }
         }
     }
-
+    
     // generated ids
-    let mut last_char: char = '!';
+    let mut last_char: char = '1';
     let first_char = last_char;
 
     let mut event_mapping = HashMap::<char, Vec<SourceEvent>>::new();

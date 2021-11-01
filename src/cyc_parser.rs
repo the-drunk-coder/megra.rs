@@ -36,6 +36,7 @@ pub enum CycleItem {
 // "outer" item that'll be passed to the calling function
 pub enum CycleResult {
     SoundEvent(Event),
+    ControlEvent(ControlEvent),
     Duration(f32),
 }
 
@@ -155,7 +156,7 @@ pub fn eval_cyc_from_str(
     sample_set: &sync::Arc<Mutex<SampleSet>>,
     out_mode: OutputMode,
     template_events: &Vec<String>,
-    event_mappings: &HashMap<String, Vec<Event>>,
+    event_mappings: &HashMap<String, Vec<SourceEvent>>,
 ) -> Vec<Vec<CycleResult>> {
     let items = parse_cyc(src.trim()).map_err(|e: nom::Err<VerboseError<&str>>| {
         let ret = format!("{:#?}", e);
@@ -225,8 +226,10 @@ pub fn eval_cyc_from_str(
                             if let Some(evs) = event_mappings.get(&s) {
                                 // mappings have precedence ...
                                 for ev in evs {
-                                    // sound event might not be correct here as this could be control events ...
-                                    cycle_position.push(CycleResult::SoundEvent(ev.clone()));
+				    match ev {
+					SourceEvent::Sound(s) => cycle_position.push(CycleResult::SoundEvent(s.clone())),
+					SourceEvent::Control(c) => cycle_position.push(CycleResult::ControlEvent(c.clone())),
+				    }                                                                        
                                 }
                             } else {
                                template_params.push(CycleItem::Parameter(CycleParameter::Symbol(s)));

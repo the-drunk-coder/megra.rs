@@ -26,8 +26,8 @@ pub fn construct_friendship(tail: &mut Vec<Expr>) -> Atom {
     let mut cur_key: String = "".to_string();
 
     let mut final_mapping = HashMap::new();
-    let mut center_label: char = '!'; // label chars
-    let mut last_char: char = '!'; // label chars
+    let mut center_label: char = '1'; // label chars
+    let mut last_char: char = '1'; // label chars
     let mut friends_labels = Vec::new();
     let mut dur: Option<Parameter> = Some(Parameter::with_value(200.0));
     let mut repetition_chance: f32 = 0.0;
