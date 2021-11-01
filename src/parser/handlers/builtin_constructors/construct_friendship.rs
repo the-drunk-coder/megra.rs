@@ -26,7 +26,7 @@ pub fn construct_friendship(tail: &mut Vec<Expr>) -> Atom {
     let mut cur_key: String = "".to_string();
 
     let mut final_mapping = HashMap::new();
-    let mut center_label: char = '1'; // label chars
+    let center_label: char = '1'; // label chars
     let mut last_char: char = '1'; // label chars
     let mut friends_labels = Vec::new();
     let mut dur: Option<Parameter> = Some(Parameter::with_value(200.0));
@@ -122,9 +122,9 @@ pub fn construct_friendship(tail: &mut Vec<Expr>) -> Atom {
                 }
                 "center" => {
                     if let Some(Expr::Constant(c)) = tail_drain.next() {
-                        let next_char: char = std::char::from_u32(last_char as u32 + 1).unwrap();
-                        last_char = next_char;
-                        center_label = next_char;
+                        //let next_char: char = std::char::from_u32(last_char as u32 + 1).unwrap();
+                        //last_char = next_char;
+                        //center_label = next_char;
                         let mut final_vec = Vec::new();
 
                         match c {
@@ -145,7 +145,7 @@ pub fn construct_friendship(tail: &mut Vec<Expr>) -> Atom {
                             _ => {}
                         }
 
-                        final_mapping.insert(next_char, final_vec);
+                        final_mapping.insert(center_label, final_vec);
                     }
                     continue;
                 }
