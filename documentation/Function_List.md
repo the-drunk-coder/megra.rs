@@ -375,12 +375,12 @@ This creates a directed version of a Friendship- or Windmill graph.
 
 ```lisp
 (sx 'friend #t
-	(cmp
-		(pear (atk 1) (rel 90) (sus 10) (rev 0.07))
-			(friendship 'ship 
-				:dur 100
-				:center  (saw 'a2) 
-				:friends (saw 'c3) (saw 'e3) (saw 'b3) (saw 'd3) (saw 'f3) (saw 'c4))))
+  (cmp
+    (pear (atk 1) (rel 90) (sus 10) (rev 0.07))
+      (friendship 'ship 
+        :dur 100
+		:center  (saw 'a2) 
+        :friends (saw 'c3) (saw 'e3) (saw 'b3) (saw 'd3) (saw 'f3) (saw 'c4))))
 ```
 
 ![A friendly bassline](./friendship.svg)
@@ -390,35 +390,37 @@ This creates a directed version of a Friendship- or Windmill graph.
 Create ... well, look at the examples.
 
 ### Syntax:
-`(flower <name> [:layers <layers>] <events>)`
+`(flower <name> :pistil <event> :layers <layers> :petals <events>)`
 
 ### Parameters:
 
 * `name` - generator name
 * `:layers` - number of layers
-* `events` - list of events (will be padded to appropriate lenght if necessary)
+* `:pistil` - pistil or central event
+* `:petals` - list of events (will be padded to appropriate lenght if necessary)
 
 ### Examples
 
-Flower with 1 layer:
 ```lisp
-(sx 'a-rose-is-a t
-    (flower 'rose (saw 100)
-             (saw 200) (saw 300) (saw 400)
-             (saw 150) (saw 300) (saw 450)
-             (saw 180) (saw 360) (saw 540)))
+;; flower with one layer and four petals
+(sx 'a-rose-is-a #t
+  (flower 'rose 
+    :pistil (saw 100)
+    :petals (saw 200) (saw 300) (saw 400) (saw 150)))
 ```
-![flower one](./flower_1layer.svg)
+
+![Flower with one layer and four petals.](./flower-one-layer.svg)
 
 Flower with 2 layers:
 ```lisp
-(sx 'a-rose-is-a t
-    (flower 'rose :layers 2 (saw 100)
-             (saw 200) (saw 300) (saw 400)
-             (saw 150) (saw 300) (saw 450)
-             (saw 180) (saw 360) (saw 540)))
+(sx 'a-rose-is-a #t
+  (flower 'rose 
+    :layers 2
+    :pistil (saw 100)
+    :petals (saw 200) (saw 300) (saw 400) (saw 150) 
+            (saw 400) (saw 600) (saw 800) (saw 300)))
 ```
-![flower two](./flower_2layer.svg)
+![Flower with one layer and four petals.](./flower-two-layers.svg)
 
 ## `fully` - Create Fully Connected Generator
 

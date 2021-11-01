@@ -26,8 +26,8 @@ pub fn construct_flower(tail: &mut Vec<Expr>) -> Atom {
     let mut cur_key: String = "".to_string();
 
     let mut final_mapping = HashMap::new();
-    let mut pistil_label: char = '!'; // label chars
-    let mut last_char: char = '!'; // label chars
+    let pistil_label: char = 'a'; // label chars
+    let mut last_char: char = 'a'; // label chars
     let mut petal_labels = Vec::new();
     let mut dur: Option<Parameter> = Some(Parameter::with_value(200.0));
     let mut num_layers = 1;
@@ -112,10 +112,7 @@ pub fn construct_flower(tail: &mut Vec<Expr>) -> Atom {
                     }
                 }
                 "pistil" => {
-                    if let Some(Expr::Constant(c)) = tail_drain.next() {
-                        let next_char: char = std::char::from_u32(last_char as u32 + 1).unwrap();
-                        last_char = next_char;
-                        pistil_label = next_char;
+                    if let Some(Expr::Constant(c)) = tail_drain.next() {                        
                         let mut final_vec = Vec::new();
 
                         match c {
@@ -136,7 +133,7 @@ pub fn construct_flower(tail: &mut Vec<Expr>) -> Atom {
                             _ => {}
                         }
 
-                        final_mapping.insert(next_char, final_vec);
+                        final_mapping.insert(pistil_label, final_vec);
                     }
                     continue;
                 }
