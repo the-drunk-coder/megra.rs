@@ -168,7 +168,7 @@ Executes any function, can be used to conduct execution of generators.
 ;; define some parts
 (defpart 'bass 	
 		(nuc 'bass (saw 100)))
-
+	
 (defpart 'mid 
 	(nuc 'midrange (saw 1000)))
 	
@@ -201,8 +201,8 @@ It might seem simple, but this is one of the most powerful generators in Mégra.
 * `:rep` - probability of repeating an event
 * `:max-rep` - limits number of repetitions
 * `:rnd` - random connection probability (currently not working the way I expected it ...)
-* `map` - map events on parameters
-* `events` - use labeled events
+* `:map` - map events on parameters
+* `:events` - use labeled events
 
 ### Syntax
 
@@ -230,18 +230,37 @@ It might seem simple, but this is one of the most powerful generators in Mégra.
 ```lisp
 ;; with labeled events
 (sx 'simple #t	
-    (cyc 'beat 
-		:events 'a (bd) 'b (hats) 'c (sn)
-		"'a ~ 'b ~ 'c ~ 'b ~"))
+	(cyc 'beat 
+	:events 'a (bd) 'b (hats) 'c (sn)
+	"'a ~ 'b ~ 'c ~ 'b ~"))
 ```
 
 ```lisp
 ;; with parameters and placeholder
 (sx 'simple #t	
-    (cyc 'beat 
-		:map 'saw 
-		"200 ~ 120 140 'a3")) ;; you can use frequencies or note names 
+	(cyc 'beat 
+	:map 'saw 
+	"200 ~ 120 140 'a3")) ;; you can use frequencies or note names 
 ```
+
+```lisp
+;; with escape durations
+(sx 'simple #t
+	(cyc 'beat "bd ~ hats /100 hats /100 ~ sn ~ hats ~"))
+```
+
+```lisp
+;; control cycles with other cycles
+(sx 'control #t
+	(cyc 'ba 
+		:dur 1599 ;; switch just in time ... will run out of sync eventually
+		:events
+		'a (ctrl (sx 'controlled #t (cyc 'fa "bd sn")))
+		'b (ctrl (sx 'controlled #t (cyc 'fa "hats hats")))
+		"'a 'b 'a 'b"
+		))
+```
+
 
 ## `env` - Parameter Envelope
 
