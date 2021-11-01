@@ -716,7 +716,7 @@ Learn a trap-like beat from a sample string.
              hoh"))
 ```
 
-<img src="./learned-beat.svg" alt="A learned beat." width="500" height="500">
+<img src="./learned-beat.svg" alt="A learned beat." width="1000" height="1000">
 
 ## `infer` - Infer Generator from Rules
 
