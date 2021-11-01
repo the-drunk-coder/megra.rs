@@ -724,35 +724,34 @@ Also, exit probablities for each node should add up to 100.
 ### Parameters
 
 * `name` - generator name
-* `:events` - event mapping
-* `:type` - pfa type ('naive or 'pfa) (optional)
+* `:events` - labeled event mapping
 * `:rules` - transition rules - Format '((<source>) <destination> <probability> <duration (optional)>)
 
 ### Example
 
 ```lisp
-
+;; infer 
 (sx 'con #t 
   (infer 'duct :events 
-    'a (ctrl (sx 'ga #t 'a1))
-    'b (ctrl (sx 'ga #t 'a2))
-    'c (ctrl (sx 'ga #t 'a3))
-    'd (ctrl (sx 'ga #t 'a4))
+    'a (saw 'a2)
+    'b (saw 'f2)
+    'c (saw 'c3)
+    'd (saw 'e4)
     :rules 
-    (rule 'a 'a 80 4800)
-    (rule 'a 'b 20 4800)
-    (rule 'aaaa 'c 100 4800)
-    (rule 'b 'b 80 4800)
-    (rule 'b 'c 20 4800)
-    (rule 'bbbb 'd 100 4800)
-    (rule 'c 'c 80 4800)
-    (rule 'c 'd 20 4800)
-    (rule 'cccc 'a 100 4800)
-    (rule 'd 'd 80 4800)
-    (rule 'd 'a 20 4800)
-    (rule 'dddd 'b 100 4800)))
+    (rule 'a 'a 80 200) ;; repeat 'a with 80% chance
+    (rule 'a 'b 20 200) ;; move to 'b with 20% chance
+    (rule 'aaa 'c 100 200) ;; after 3 repetitions of 'a, always move to 'c
+    (rule 'b 'b 100 400) ;; repeat 'b always
+    (rule 'bb 'd 100 400) ;; ... well, 2x max
+    (rule 'c 'c 100 100) ;; same for 'c
+    (rule 'ccc 'a 100 400) 
+    (rule 'd 'd 80 200) ;; 'd is repeated with 80% chance as well
+    (rule 'd 'a 20 200) ;; and moves back to 'a with 20% chance
+    (rule 'ddddd 'b 100 400))) ;; and is repeated 5x max
 
 ```
+![An inferred bassline.](./inferred-generator.svg)
+
 ## `stop` - Stop Event Processing
 
 Stop event processing without deleting generators, thus maintaining current state.
