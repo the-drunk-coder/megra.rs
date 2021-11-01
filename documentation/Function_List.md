@@ -678,6 +678,36 @@ be different from the previous one, obviously.
 
 ## `skip` - Skip Events
 
+## `stages` - Stages Generator
+This generator arranges sound events in "stages". See for yourself.
+
+### Syntax
+
+`(stages <name> :pprev <prob> :pnext <prob> :dur <duration> <events>)`
+
+### Parameters
+
+* `name` - generator name
+* `:dur` - duration between events
+* `:pprev` - probability to return to previous stage
+* `:pnext` - probability to advance to next stage
+* `:cyc` - cyclical (last stage will advance to first stage)
+
+### Example
+```lisp
+;; non-cyclical
+(sx 'ba #t
+  (stages 'ga :pprev 10 :pnext 10 (saw 100) (saw 200) (saw 300) (saw 400)))
+```
+![stages generator](./stages-non-cyclical.svg)
+
+```lisp
+;; cyclical
+(sx 'ba #t
+  (stages 'ga :pprev 10 :pnext 10 (saw 100) (saw 200) (saw 300) (saw 400)))
+```
+![cyclical stages generator](./stages-cyclical.svg)
+
 ## `sx` - Event Sink
 
 ### Example

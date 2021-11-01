@@ -78,7 +78,7 @@ pub fn construct_stages(tail: &mut Vec<Expr>) -> Atom {
     /////////////////////////////////
 
     let mut event_mapping = HashMap::<char, Vec<SourceEvent>>::new();
-    let mut last_char: char = '!'; // label chars
+    let mut last_char: char = '1'; // label chars
     let mut labels = Vec::new();
     for ev in collected_evs.drain(..) {
         event_mapping.insert(last_char, vec![ev]);
