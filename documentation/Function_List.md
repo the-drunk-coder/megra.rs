@@ -752,10 +752,6 @@ Also, exit probablities for each node should add up to 100.
 ```
 ![An inferred bassline.](./inferred-generator.svg)
 
-## `stop` - Stop Event Processing
-
-Stop event processing without deleting generators, thus maintaining current state.
-
 ## `xdup` - Multiply Generators Independently
 
 If you want to juxtapose (obvious reference here) a generator with a modified copy of itself,
