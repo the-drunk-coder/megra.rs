@@ -590,7 +590,7 @@ we can change parameters without starting from scratch every time):
 ```lisp
 (sx 'the-circle #t
     (xspread
-		(pear (pitch-mul 1.5) (life 10 12 0.4 :method 'flower :durs 100 200 200 200 200 400))
+		(pear (freq-mul 1.5) (life 10 12 0.4 :method 'flower :durs 100 200 200 200 200 400))
 		(cyc 'of-life "tri:100 tri:120 ~ ~ tri:120 tri:180 ~ tri:200")))
 ```
 
@@ -674,7 +674,7 @@ Slows down generator for a specified number of steps, by a certain ratio.
 (sx 'more #t
     (xspread     
      (cmp ;; this is another copy with modifiers ...
-          (pear (pitch-mul 3.0))
+          (pear (freq-mul 3.0))
           (every :n 20 (relax 4 0.5))) ;; <- every 20 steps, half-time for four steps
      ;; this is the "original" 
      (cyc 'one "tri:120 tri:90 tri:100 tri:80 ~ ~ tri:120 tri:90 tri:100 tri:80 ~")))
@@ -691,7 +691,7 @@ be different from the previous one, obviously.
 (sx 'more #t
     (xspread     
      (cmp ;; this is another copy with modifiers ...
-          (pear (pitch-mul 3.0))
+          (pear (freq-mul 3.0))
           (every :n 20 (rewind 2))) ;; <- every 20 steps, rewind 2 steps (only the copy)
      ;; this is the "original" 
 	 (cyc 'one "tri:120 tri:90 tri:100 tri:80 ~ ~ tri:120 tri:90 tri:100 tri:80 ~")))
