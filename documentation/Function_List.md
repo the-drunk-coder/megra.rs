@@ -102,7 +102,7 @@ Distributes the weights more evenly, so that the generated sequence becomes less
       (rule 'c 'a 90 100)))
 ```
 
-![A sharp loop.](./sharp.svg) 
+![A sharp loop.](./diagrams/sharp.svg) 
 
 ```lisp
 ;; now blur
@@ -121,7 +121,7 @@ Distributes the weights more evenly, so that the generated sequence becomes less
           (rule 'c 'a 90 100))))
 ```
 
-![A less sharp loop.](./blurred.svg) 
+![A less sharp loop.](./diagrams/blurred.svg) 
 
 ```lisp
 ;; you can use blur over time, too
@@ -293,14 +293,14 @@ It might seem simple, but this is one of the most powerful generators in Mégra.
   (cyc 'beat "bd ~ hats ~ sn ~ hats ~"))
 ```
 
-![A plain beat](./cycle-simple.svg) 
+![A plain beat](./diagrams/cycle-simple.svg) 
 
 ```lisp
 ;; with a 40% chance of repetition, 2 times at max
 (sx 'simple #t
     (cyc 'beat :rep 40 :max-rep 2 "bd ~ hats ~ sn ~ hats ~"))
 ```
-![A beat with repetitions](./cycle-complex.svg)
+![A beat with repetitions](./diagrams/cycle-complex.svg)
 
 
 ```lisp
@@ -459,7 +459,7 @@ This creates a directed version of a Friendship- or Windmill graph.
         :friends (saw 'c3) (saw 'e3) (saw 'b3) (saw 'd3) (saw 'f3) (saw 'c4))))
 ```
 
-![A friendly bassline](./friendship.svg)
+![A friendly bassline](./diagrams/friendship.svg)
 
 ## `flower` - Create Flower Generator
 
@@ -485,7 +485,7 @@ Create ... well, look at the examples.
     :petals (saw 200) (saw 300) (saw 400) (saw 150)))
 ```
 
-![Flower with one layer and four petals.](./flower-one-layer.svg)
+![Flower with one layer and four petals.](./diagrams/flower-one-layer.svg)
 
 Flower with 2 layers:
 ```lisp
@@ -496,7 +496,7 @@ Flower with 2 layers:
     :petals (saw 200) (saw 300) (saw 400) (saw 150) 
             (saw 400) (saw 600) (saw 800) (saw 300)))
 ```
-![Flower with one layer and four petals.](./flower-two-layers.svg)
+![Flower with one layer and four petals.](./diagrams/flower-two-layers.svg)
 
 ## `fully` - Create Fully Connected Generator
 
@@ -516,7 +516,7 @@ Each node follows each other node with equal probablity ... so basically a rando
 
 ```
 
-![Fully connected graph.](./fully-connected.svg)    
+![Fully connected graph.](./diagrams/fully-connected.svg)    
 
 ## `grow` - Enlarge Generator
 
@@ -702,7 +702,7 @@ Generates a one-node repeating generator, i.e. as a starting point for growing.
 (sx 'just #t
   (nuc 'a-bassdrum-and-a-snare :dur 400 (bd) (sn)))
 ```
-![Just a Bassdrum](./nucleus.svg)
+![Just a Bassdrum](./diagrams/nucleus.svg)
 
 ## `bounce` - Parameter Oscillator
 
@@ -789,14 +789,14 @@ This generator arranges sound events in "stages". See for yourself.
 (sx 'ba #t
   (stages 'ga :pprev 10 :pnext 10 (saw 100) (saw 200) (saw 300) (saw 400)))
 ```
-![stages generator](./stages-non-cyclical.svg)
+![stages generator](./diagrams/stages-non-cyclical.svg)
 
 ```lisp
 ;; cyclical
 (sx 'ba #t
   (stages 'ga :pprev 10 :pnext 10 (saw 100) (saw 200) (saw 300) (saw 400)))
 ```
-![cyclical stages generator](./stages-cyclical.svg)
+![cyclical stages generator](./diagrams/stages-cyclical.svg)
 
 ## `sx` - Event Sink
 
@@ -838,7 +838,7 @@ Learn a trap-like beat from a sample string.
              ~xoxoxox~ohxhohxhohxhxhxhxhxhxhxhoho
              hoh"))
 ```
-<img src="./learned-beat.svg" alt="A learned beat." width="1000" height="1000">
+<img src="./diagrams/learned-beat.svg" alt="A learned beat." width="1000" height="1000">
 
 ## `infer` - Infer Generator from Rules
 
@@ -876,7 +876,7 @@ Also, exit probablities for each node should add up to 100.
     (rule 'ddddd 'b 100 400))) ;; and is repeated 5x max
 
 ```
-![An inferred bassline.](./inferred-generator.svg)
+![An inferred bassline.](./diagrams/inferred-generator.svg)
 
 ## `xdup` - Multiply Generators with Modifiers
 
