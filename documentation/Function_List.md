@@ -94,17 +94,18 @@ Distributes the weights more evenly, so that the generated sequence becomes less
     'b (saw 'f2)
     'c (saw 'c3)
     :rules 
-    (rule 'a 'a 10 200) 
-    (rule 'a 'b 90 200) 
-    (rule 'b 'b 10 400) 
-	(rule 'b 'c 90 400) 
-	(rule 'c 'c 10 100) 
-	(rule 'c 'a 90 100)))
+      (rule 'a 'a 10 200) 
+      (rule 'a 'b 90 200) 
+      (rule 'b 'b 10 400) 
+      (rule 'b 'c 90 400) 
+      (rule 'c 'c 10 100) 
+      (rule 'c 'a 90 100)))
 ```
 
 ![A sharp loop.](./sharp.svg) 
 
 ```lisp
+;; now blur
 (sx 'con #t 
   (blur 0.8 
     (infer 'duct :events 
@@ -112,15 +113,32 @@ Distributes the weights more evenly, so that the generated sequence becomes less
       'b (saw 'f2)
       'c (saw 'c3)
       :rules 
-      (rule 'a 'a 10 200) 
-      (rule 'a 'b 90 200) 
-      (rule 'b 'b 10 400) 
-	  (rule 'b 'c 90 400) 
-	  (rule 'c 'c 10 100) 
-	  (rule 'c 'a 90 100))))
+          (rule 'a 'a 10 200) 
+          (rule 'a 'b 90 200) 
+          (rule 'b 'b 10 400) 
+          (rule 'b 'c 90 400) 
+          (rule 'c 'c 10 100) 
+          (rule 'c 'a 90 100))))
 ```
 
 ![A less sharp loop.](./blurred.svg) 
+
+```lisp
+;; you can use blur over time, too
+(sx 'con #t 
+  (every :n 10 (blur 0.1) ;; blur every 10 steps
+    (infer 'duct :events 
+      'a (saw 'a2)
+      'b (saw 'f2)
+      'c (saw 'c3)
+      :rules 
+          (rule 'a 'a 10 200) 
+          (rule 'a 'b 90 200) 
+          (rule 'b 'b 10 400) 
+          (rule 'b 'c 90 400) 
+          (rule 'c 'c 10 100) 
+          (rule 'c 'a 90 100))))
+```
 
 ## `brownian` - Bounded Brownian Motion 
 
