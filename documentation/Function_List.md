@@ -73,6 +73,55 @@ Helpers, session management, etc.
 * [sx - Event Sinks](#sx---multiple-event-sinks)
 * [export-dot - Export to DOT File](#export-dot---export-to-dot-file)
 
+## `blur` - Blur Probabilities
+
+Distributes the weights more evenly, so that the generated sequence becomes less predictable.
+
+### Syntax
+
+`(blur <blur factor>)`
+
+### Parameters 
+* `blur factor` - amount of blurriness, where 0.0 has no effect and 1.0 blurs a lot.
+
+### Example
+
+```lisp
+;; infer a loop with occasional repetitions
+(sx 'con #t 
+  (infer 'duct :events 
+    'a (saw 'a2)
+    'b (saw 'f2)
+    'c (saw 'c3)
+    :rules 
+    (rule 'a 'a 10 200) 
+    (rule 'a 'b 90 200) 
+    (rule 'b 'b 10 400) 
+	(rule 'b 'c 90 400) 
+	(rule 'c 'c 10 100) 
+	(rule 'c 'a 90 100)))
+```
+
+![A sharp loop.](./sharp.svg) 
+
+```lisp
+(sx 'con #t 
+  (blur 0.8 
+    (infer 'duct :events 
+      'a (saw 'a2)
+      'b (saw 'f2)
+      'c (saw 'c3)
+      :rules 
+      (rule 'a 'a 10 200) 
+      (rule 'a 'b 90 200) 
+      (rule 'b 'b 10 400) 
+	  (rule 'b 'c 90 400) 
+	  (rule 'c 'c 10 100) 
+	  (rule 'c 'a 90 100))))
+```
+
+![A less sharp loop.](./blurred.svg) 
+
 ## `brownian` - Bounded Brownian Motion 
 
 Define a bounded brownian motion on a parameter.
