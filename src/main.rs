@@ -28,7 +28,7 @@ use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use directories_next::ProjectDirs;
 use getopts::Options;
 use parking_lot::Mutex;
-use ruffbox_synth::ruffbox::Ruffbox;
+use ruffbox_synth::ruffbox::{Ruffbox, ReverbMode};
 use std::{env, sync, thread};
 
 fn print_help(program: &str, opts: Options) {
@@ -57,6 +57,8 @@ fn main() -> Result<(), anyhow::Error> {
     opts.optopt("o", "output-mode", "output mode (stereo, 8ch)", "stereo");
     opts.optflag("l", "list-devices", "list available devices");
     opts.optopt("d", "device", "choose device", "default");
+    opts.optopt("", "reverb-mode", "reverb mode (freeverb or convolution)", "freeverb");
+    opts.optopt("", "reverb-ir", "reverb impulse response (file)", "");
     opts.optopt(
         "",
         "live-buffer-time",
@@ -65,6 +67,7 @@ fn main() -> Result<(), anyhow::Error> {
     );
 
     let matches = match opts.parse(argv) {
+
         Ok(m) => m,
         Err(e) => {
             eprintln!("Error: {}. Please see --help for more details", e);
@@ -93,6 +96,37 @@ fn main() -> Result<(), anyhow::Error> {
             println!("invalid output mode, assume stereo");
             OutputMode::Stereo
         }
+    };
+
+    let reverb_mode = match matches.opt_str("reverb-mode").as_deref() {
+	Some("freeverb") => ReverbMode::FreeVerb,
+	Some("convolution") => {
+	    match matches.opt_str("reverb-ir").as_deref() {
+		Some(filepath) => {		    
+		    if let Ok(mut reader) = claxon::FlacReader::open(filepath) {
+			let mut sample_buffer: Vec<f32> = Vec::new();
+			// decode to f32
+			let max_val = (i32::MAX >> (32 - reader.streaminfo().bits_per_sample)) as f32;
+			let mut sample_iter = reader.samples();
+			while let Some(sample) = sample_iter.next() {
+			    let s = sample.unwrap() as f32 / max_val;
+			    sample_buffer.push(s);
+			}
+			ReverbMode::Convolution(sample_buffer)
+		    } else {
+			println!("reverb ir path invalid, fall back to freeverb");
+			ReverbMode::FreeVerb
+		    }		    		    
+		},
+		None => {
+		    println!("no reverb ir provided, fall back to freeverb");
+		    ReverbMode::FreeVerb
+		}
+	    }
+	}
+	_ => {	    
+	    ReverbMode::FreeVerb
+	}
     };
 
     let live_buffer_time: f32 = if let Some(s) = matches.opt_str("live-buffer-time") {
@@ -164,6 +198,7 @@ fn main() -> Result<(), anyhow::Error> {
                     live_buffer_time,
                     editor,
                     load_samples,
+		    &reverb_mode
                 )?,
                 cpal::SampleFormat::I16 => run::<i16, 2>(
                     &input_device,
@@ -173,6 +208,7 @@ fn main() -> Result<(), anyhow::Error> {
                     live_buffer_time,
                     editor,
                     load_samples,
+		    &reverb_mode
                 )?,
                 cpal::SampleFormat::U16 => run::<u16, 2>(
                     &input_device,
@@ -182,6 +218,7 @@ fn main() -> Result<(), anyhow::Error> {
                     live_buffer_time,
                     editor,
                     load_samples,
+		    &reverb_mode
                 )?,
             }
         }
@@ -197,6 +234,7 @@ fn main() -> Result<(), anyhow::Error> {
                     live_buffer_time,
                     editor,
                     load_samples,
+		    &reverb_mode
                 )?,
                 cpal::SampleFormat::I16 => run::<i16, 4>(
                     &input_device,
@@ -206,6 +244,7 @@ fn main() -> Result<(), anyhow::Error> {
                     live_buffer_time,
                     editor,
                     load_samples,
+		    &reverb_mode
                 )?,
                 cpal::SampleFormat::U16 => run::<u16, 4>(
                     &input_device,
@@ -215,6 +254,7 @@ fn main() -> Result<(), anyhow::Error> {
                     live_buffer_time,
                     editor,
                     load_samples,
+		    &reverb_mode
                 )?,
             }
         }
@@ -230,6 +270,7 @@ fn main() -> Result<(), anyhow::Error> {
                     live_buffer_time,
                     editor,
                     load_samples,
+		    &reverb_mode
                 )?,
                 cpal::SampleFormat::I16 => run::<i16, 8>(
                     &input_device,
@@ -239,6 +280,7 @@ fn main() -> Result<(), anyhow::Error> {
                     live_buffer_time,
                     editor,
                     load_samples,
+		    &reverb_mode
                 )?,
                 cpal::SampleFormat::U16 => run::<u16, 8>(
                     &input_device,
@@ -248,6 +290,7 @@ fn main() -> Result<(), anyhow::Error> {
                     live_buffer_time,
                     editor,
                     load_samples,
+		    &reverb_mode
                 )?,
             }
         }
@@ -264,6 +307,7 @@ fn run<T, const NCHAN: usize>(
     live_buffer_time: f32,
     editor: bool,
     load_samples: bool,
+    reverb_mode: &ReverbMode,
 ) -> Result<(), anyhow::Error>
 where
     T: cpal::Sample,
@@ -276,9 +320,10 @@ where
     let ruffbox = sync::Arc::new(Mutex::new(Ruffbox::<512, NCHAN>::new(
         true,
         live_buffer_time,
+	reverb_mode
     )));
-    let ruffbox2 = sync::Arc::clone(&ruffbox); // the one for the audio thread ...
-    let ruffbox3 = sync::Arc::clone(&ruffbox); // the one for the audio thread ...
+    let ruffbox2 = sync::Arc::clone(&ruffbox); // the one for the audio thread (out stream)...
+    let ruffbox3 = sync::Arc::clone(&ruffbox); // the one for the audio thread (in stream)...
 
     let in_stream = input_device.build_input_stream(
         config,
