@@ -50,18 +50,22 @@ fn parse_cyc_parameter<'a>(i: &'a str) -> IResult<&'a str, CycleItem, VerboseErr
 
 fn parse_cyc_named_parameter<'a>(i: &'a str) -> IResult<&'a str, CycleItem, VerboseError<&'a str>> {
     map(
-	separated_pair(
-	    map(
-		context("custom_cycle_fun", cut(take_while(valid_fun_name_char))),
-		|fun_str: &str| fun_str.to_string(),
+        separated_pair(
+            map(
+                context("custom_cycle_fun", cut(take_while(valid_fun_name_char))),
+                |fun_str: &str| fun_str.to_string(),
             ),
             tag("="),
-	    alt((parse_cyc_symbol, parse_cyc_float))),
-	|(head, tail)| if let CycleItem::Parameter(p) = tail {
-	    CycleItem::NamedParameter((head, p))
-	} else {
-	    CycleItem::Nothing
-	})(i)
+            alt((parse_cyc_symbol, parse_cyc_float)),
+        ),
+        |(head, tail)| {
+            if let CycleItem::Parameter(p) = tail {
+                CycleItem::NamedParameter((head, p))
+            } else {
+                CycleItem::Nothing
+            }
+        },
+    )(i)
 }
 
 fn parse_cyc_symbol<'a>(i: &'a str) -> IResult<&'a str, CycleItem, VerboseError<&'a str>> {
@@ -108,7 +112,10 @@ fn parse_cyc_application<'a>(i: &'a str) -> IResult<&'a str, CycleItem, VerboseE
                     |fun_str: &str| fun_str.to_string(),
                 ),
                 tag(":"),
-                separated_list0(tag(":"), alt((parse_cyc_parameter, parse_cyc_named_parameter))),
+                separated_list0(
+                    tag(":"),
+                    alt((parse_cyc_parameter, parse_cyc_named_parameter)),
+                ),
             ),
             |(head, tail)| CycleItem::Event((head, tail)),
         ),
@@ -133,15 +140,18 @@ fn parse_cyc_expr<'a>(i: &'a str) -> IResult<&'a str, Vec<CycleItem>, VerboseErr
             ),
             preceded(multispace0, char(']')),
         ),
-	separated_list1(tag(":"), alt((parse_cyc_parameter, parse_cyc_named_parameter))),
-	map(
+        separated_list1(
+            tag(":"),
+            alt((parse_cyc_parameter, parse_cyc_named_parameter)),
+        ),
+        map(
             alt((
-                parse_cyc_parameter,		
+                parse_cyc_parameter,
                 parse_cyc_duration,
                 parse_cyc_application,
             )),
             |x| vec![x],
-        ),	
+        ),
     ))(i)
 }
 
@@ -189,11 +199,17 @@ pub fn eval_cyc_from_str(
                                     }
                                     CycleItem::Parameter(CycleParameter::Symbol(s)) => {
                                         name = name + " \'" + s;
-                                    },
-				    CycleItem::NamedParameter((pname, CycleParameter::Symbol(s))) => {
+                                    }
+                                    CycleItem::NamedParameter((
+                                        pname,
+                                        CycleParameter::Symbol(s),
+                                    )) => {
                                         name = name + &format!(" :{} \'{} ", pname, s);
-                                    },
-				    CycleItem::NamedParameter((pname, CycleParameter::Number(f))) => {
+                                    }
+                                    CycleItem::NamedParameter((
+                                        pname,
+                                        CycleParameter::Number(f),
+                                    )) => {
                                         name = name + &format!(" :{} {} ", pname, f);
                                     }
                                     _ => {
@@ -203,7 +219,7 @@ pub fn eval_cyc_from_str(
                             }
                             // in brackets so it's recognized as a "function"
                             name = format!("({})", name);
-			    println!("{}",name);
+                            println!("{}", name);
                             match parse_expr(&name.trim()) {
                                 Ok((_, expr)) => {
                                     if let Some(Expr::Constant(Atom::SoundEvent(e))) =
@@ -226,16 +242,20 @@ pub fn eval_cyc_from_str(
                             if let Some(evs) = event_mappings.get(&s) {
                                 // mappings have precedence ...
                                 for ev in evs {
-				    match ev {
-					SourceEvent::Sound(s) => cycle_position.push(CycleResult::SoundEvent(s.clone())),
-					SourceEvent::Control(c) => cycle_position.push(CycleResult::ControlEvent(c.clone())),
-				    }                                                                        
+                                    match ev {
+                                        SourceEvent::Sound(s) => {
+                                            cycle_position.push(CycleResult::SoundEvent(s.clone()))
+                                        }
+                                        SourceEvent::Control(c) => cycle_position
+                                            .push(CycleResult::ControlEvent(c.clone())),
+                                    }
                                 }
                             } else {
-                               template_params.push(CycleItem::Parameter(CycleParameter::Symbol(s)));
+                                template_params
+                                    .push(CycleItem::Parameter(CycleParameter::Symbol(s)));
                             }
                         }
-			CycleItem::NamedParameter((pname, param)) => {
+                        CycleItem::NamedParameter((pname, param)) => {
                             template_params.push(CycleItem::NamedParameter((pname, param)));
                         }
                         _ => {
@@ -254,13 +274,13 @@ pub fn eval_cyc_from_str(
                                 CycleItem::Parameter(CycleParameter::Symbol(s)) => {
                                     ev_name = ev_name + " \'" + s;
                                 }
-				CycleItem::NamedParameter((pname, CycleParameter::Number(f))) => {
+                                CycleItem::NamedParameter((pname, CycleParameter::Number(f))) => {
                                     ev_name = ev_name + &format!(" :{} {} ", pname, f);
                                 }
                                 CycleItem::NamedParameter((pname, CycleParameter::Symbol(s))) => {
                                     ev_name = ev_name + &format!(" :{} \'{} ", pname, s);
                                 }
-				_ => {}
+                                _ => {}
                             }
                         }
                         // brackets so it's recognized as a "function"
@@ -540,7 +560,7 @@ mod tests {
             _ => assert!(false),
         }
 
-	match &o[8][0] {
+        match &o[8][0] {
             CycleResult::SoundEvent(e) => assert!(e.name == "sampler"),
             _ => assert!(false),
         }

@@ -112,7 +112,7 @@ pub fn construct_flower(tail: &mut Vec<Expr>) -> Atom {
                     }
                 }
                 "pistil" => {
-                    if let Some(Expr::Constant(c)) = tail_drain.next() {                        
+                    if let Some(Expr::Constant(c)) = tail_drain.next() {
                         let mut final_vec = Vec::new();
 
                         match c {

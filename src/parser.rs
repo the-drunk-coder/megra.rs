@@ -9,7 +9,7 @@ use nom::{
     branch::alt,
     bytes::complete::{tag, take_while},
     character::complete::{char, multispace0},
-    character::{is_alphanumeric, is_space, is_newline},
+    character::{is_alphanumeric, is_newline, is_space},
     combinator::{cut, map, map_res, recognize},
     error::{context, VerboseError},
     multi::many0,
@@ -230,6 +230,8 @@ pub fn parse_events<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<&'
         parse_lp_freq_event,
         parse_lp_q_event,
         parse_lp_dist_event,
+        parse_hp_freq_event,
+        parse_hp_q_event,
         parse_pf_freq_event,
         parse_pf_q_event,
         parse_pf_gain_event,
@@ -294,7 +296,7 @@ pub fn valid_char(chr: char) -> bool {
         || chr == ']'
         || is_alphanumeric(chr as u8)
         || is_space(chr as u8)
-	|| is_newline(chr as u8)
+        || is_newline(chr as u8)
 }
 
 /// valid chars for a function name

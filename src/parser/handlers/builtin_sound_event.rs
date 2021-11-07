@@ -18,8 +18,6 @@ pub fn handle(event_type: &BuiltInSoundEvent, tail: &mut Vec<Expr>) -> Atom {
         }
     };
 
-    
-    
     // first arg is always freq ...
     ev.params.insert(
         SynthParameter::PitchFrequency,

@@ -65,8 +65,7 @@ pub fn construct_cycle(
                 Atom::Symbol(ref s) => {
                     if !cur_key.is_empty() && !collected_evs.is_empty() {
                         println!("found event {}", cur_key);
-                        collected_mapping
-                            .insert(cur_key.clone(), collected_evs.clone());
+                        collected_mapping.insert(cur_key.clone(), collected_evs.clone());
                         collected_evs.clear();
                     }
                     cur_key = s.clone();
@@ -75,7 +74,7 @@ pub fn construct_cycle(
                 Atom::SoundEvent(e) => {
                     collected_evs.push(SourceEvent::Sound(e));
                     continue;
-                }		
+                }
                 Atom::ControlEvent(e) => {
                     collected_evs.push(SourceEvent::Control(e));
                     continue;
@@ -83,8 +82,7 @@ pub fn construct_cycle(
                 _ => {
                     if !cur_key.is_empty() && !collected_evs.is_empty() {
                         println!("found event {}", cur_key);
-                        collected_mapping
-                            .insert(cur_key.clone(), collected_evs.clone());
+                        collected_mapping.insert(cur_key.clone(), collected_evs.clone());
                     }
                     collect_events = false;
                 }
@@ -145,7 +143,7 @@ pub fn construct_cycle(
     if parsed_cycle.is_empty() {
         println!("couldn't parse cycle");
     }
-    
+
     for mut cyc_evs in parsed_cycle.drain(..) {
         match cyc_evs.as_slice() {
             [cyc_parser::CycleResult::Duration(d)] => {
@@ -158,15 +156,19 @@ pub fn construct_cycle(
                 dur_vec.push(dur.clone().unwrap());
                 let mut cyc_evs_drain = cyc_evs.drain(..);
                 match cyc_evs_drain.next() {
-		    Some(cyc_parser::CycleResult::SoundEvent(s)) => pos_vec.push(SourceEvent::Sound(s)),
-		    Some(cyc_parser::CycleResult::ControlEvent(c)) => pos_vec.push(SourceEvent::Control(c)),
-		    _ => {}
-		}				            
+                    Some(cyc_parser::CycleResult::SoundEvent(s)) => {
+                        pos_vec.push(SourceEvent::Sound(s))
+                    }
+                    Some(cyc_parser::CycleResult::ControlEvent(c)) => {
+                        pos_vec.push(SourceEvent::Control(c))
+                    }
+                    _ => {}
+                }
                 ev_vecs.push(pos_vec);
             }
         }
     }
-    
+
     // generated ids
     let mut last_char: char = '1';
     let first_char = last_char;

@@ -51,6 +51,8 @@ pub enum BuiltInParameterEvent {
     PeakFreq(EventOperation),
     PeakQ(EventOperation),
     PeakGain(EventOperation),
+    HpFreq(EventOperation),
+    HpQ(EventOperation),
     Pulsewidth(EventOperation),
     PlaybackStart(EventOperation),
     PlaybackRate(EventOperation),

@@ -67,7 +67,7 @@ pub fn construct_learn(tail: &mut Vec<Expr>) -> Atom {
                 "sample" => {
                     if let Expr::Constant(Atom::Description(desc)) = tail_drain.next().unwrap() {
                         sample = desc.to_string();
-			sample.retain(|c| !c.is_whitespace());
+                        sample.retain(|c| !c.is_whitespace());
                     }
                 }
                 "events" => {

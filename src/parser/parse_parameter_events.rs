@@ -263,6 +263,46 @@ pub fn parse_lp_dist_event<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseE
     ))(i)
 }
 
+pub fn parse_hp_freq_event<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<&'a str>> {
+    alt((
+        map(tag("hpf-add"), |_| {
+            BuiltIn::ParameterEvent(BuiltInParameterEvent::HpFreq(EventOperation::Add))
+        }),
+        map(tag("hpf-mul"), |_| {
+            BuiltIn::ParameterEvent(BuiltInParameterEvent::HpFreq(EventOperation::Multiply))
+        }),
+        map(tag("hpf-sub"), |_| {
+            BuiltIn::ParameterEvent(BuiltInParameterEvent::HpFreq(EventOperation::Subtract))
+        }),
+        map(tag("hpf-div"), |_| {
+            BuiltIn::ParameterEvent(BuiltInParameterEvent::HpFreq(EventOperation::Divide))
+        }),
+        map(tag("hpf"), |_| {
+            BuiltIn::ParameterEvent(BuiltInParameterEvent::HpFreq(EventOperation::Replace))
+        }),
+    ))(i)
+}
+
+pub fn parse_hp_q_event<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<&'a str>> {
+    alt((
+        map(tag("hpq-add"), |_| {
+            BuiltIn::ParameterEvent(BuiltInParameterEvent::HpQ(EventOperation::Add))
+        }),
+        map(tag("hpq-mul"), |_| {
+            BuiltIn::ParameterEvent(BuiltInParameterEvent::HpQ(EventOperation::Multiply))
+        }),
+        map(tag("hpq-sub"), |_| {
+            BuiltIn::ParameterEvent(BuiltInParameterEvent::HpQ(EventOperation::Subtract))
+        }),
+        map(tag("hpq-div"), |_| {
+            BuiltIn::ParameterEvent(BuiltInParameterEvent::HpQ(EventOperation::Divide))
+        }),
+        map(tag("hpq"), |_| {
+            BuiltIn::ParameterEvent(BuiltInParameterEvent::HpQ(EventOperation::Replace))
+        }),
+    ))(i)
+}
+
 pub fn parse_pf_freq_event<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<&'a str>> {
     alt((
         map(tag("pff-add"), |_| {
