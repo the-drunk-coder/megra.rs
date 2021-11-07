@@ -1,6 +1,7 @@
 # Mégra Reference - Sound Events and Parameters
 
 * [Sample Events](#sample-events) - play samples
+* [Live Buffer Events](#live-buffer-events) - live buffers
 * [Simple Synth Events](#simple-synth-events) - simple waves (sine, square etc)
 * [Risset Event](#risset-event) - Risset bells
 * A [Note](#a-note-about-note-names) about Note Names
@@ -40,6 +41,45 @@
 | `:rev`       | 0.0     | reverb amount |
 | `:del`      | 0.0     | delay amount |
 
+
+## Live Buffer Events
+
+Live buffer events allow you to play with the live input buffer. The live input buffer is continously recording the last 3 seconds 
+(or more or less, if specified at startup) of input of the first input channel. Now there's severaly events that allow you to 
+work with it.
+
+### `feedr` - read the live buffer like a regular sample
+Using `(feedr)`, you can read from the live buffer directly. All the parameters are the same as in the sample events above. Be careful 
+about feedback if you have an open mic !
+
+*Example*:
+```lisp
+(sx 'ba #t ;; read from live buffer at varying starting points
+  (nuc 'fa (feedr :start (bounce 0.01 0.99))))
+```
+
+### `freeze` - freeze the live buffer
+This event writes the current live buffer (as-is) to a persistent buffer specified by a number, like `(freeze 1)`.
+If you use this in a `ctrl` event, you can periodically update the content of the frozen buffer.
+
+```lisp
+;; freeze once, to buffer 1
+(freeze 1)
+
+;; freeze periodically, every 6 seconds
+(sx 'ba #t 
+  (nuc 'ta :dur 6000 (ctrl (freeze 1))))
+```
+
+### `freezr` - read from frozen buffers
+This allows you to read from the buffer previously frozen with `freeze`. You can use it like any regular sample.
+First argument specifies the buffer to be read from: `(freezr <bufnum>)`
+
+```lisp
+(sx 'ba #t ;; granular sampling on freeze buffer 1 ...
+  (nuc 'ba :dur 100 (freezr 1 :start (bounce 0.0 1.0) :atk 1 :sus 100 :rel 100)))
+```
+
 ## Simple Synth Events 
 
 **Syntax**: 
@@ -57,7 +97,7 @@
 | Type |Description|
 |-----------|:-------:|
 | sine | simple sine wave |
-| cub  | a sine like shape made of two cubic pieces (LFCub) |
+| cub  | a sine like shape made of two cubic pieces (LFCub in SuperCollider) |
 | tri  | a triangle wave |
 | sqr  | a square wave   |
 | saw  | a sawtooth wave |
