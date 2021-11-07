@@ -43,6 +43,8 @@ The files generated and read by the editor can be found in `.config/megra/sketch
 -l, --list-devices  list available audio devices
 -d, --device        choose device
 --live-buffer-time  the capacity of the live input buffer in seconds, default: 3
+--reverb-mode       convolution or freeverb (default/fallback is freeverb). for convolution, you need to specify an IR
+--reverb-ir         path to an impulse response in FLAC format
 ```
 
 If the `-e` option is omitted, Mégra is started in REPL (command-line) mode. If you want to integrate it in your favourite editor, that might be helpful.
