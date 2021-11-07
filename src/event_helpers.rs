@@ -30,7 +30,7 @@ pub fn map_parameter(name: &str) -> SynthParameter {
         "lpq" => SynthParameter::LowpassQFactor,
         "hpf" => SynthParameter::HighpassCutoffFrequency,
         "hpq" => SynthParameter::HighpassQFactor,
-        "pf" => SynthParameter::PeakFrequency,
+        "pff" => SynthParameter::PeakFrequency,
         "pfq" => SynthParameter::PeakQFactor,
         "pfg" => SynthParameter::PeakGain,
         "pw" => SynthParameter::Pulsewidth,
