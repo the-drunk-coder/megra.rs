@@ -5,7 +5,7 @@ use crate::markov_sequence_generator::{MarkovSequenceGenerator, Rule};
 use crate::parameter::*;
 use crate::session::SyncContext;
 use dashmap::DashMap;
-use std::collections::HashMap;
+use std::collections::{BTreeSet, HashMap};
 
 use ruffbox_synth::ruffbox::synth::SynthParameter;
 
@@ -167,7 +167,8 @@ pub enum Command {
     LoadSampleSets(String),                            // top level sets set path
     LoadPart((String, Part)),                          // set (events), keyword, path
     FreezeBuffer(usize),                               // freeze live buffer
-    ExportDot((String, Generator)),                    // filename, generator
+    ExportDotStatic((String, Generator)),              // filename, generator
+    ExportDotRunning((String, BTreeSet<String>)),      // filename, generator id
     Once((Vec<Event>, Vec<ControlEvent>)),
 }
 

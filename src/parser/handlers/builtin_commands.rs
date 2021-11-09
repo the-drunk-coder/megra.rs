@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use crate::builtin_types::*;
 use crate::parameter::*;
 use crate::parser::parser_helpers::*;
+use std::collections::BTreeSet;
 
 use ruffbox_synth::ruffbox::synth::SynthParameter;
 
@@ -202,13 +203,22 @@ fn handle_export_dot(tail: &mut Vec<Expr>) -> Atom {
         return Atom::Nothing;
     };
 
-    let gen = if let Some(Expr::Constant(Atom::Generator(g))) = tail_drain.next() {
-        g
-    } else {
-        return Atom::Nothing;
-    };
-
-    Atom::Command(Command::ExportDot((filename, gen)))
+    match tail_drain.next() {
+	Some(Expr::Constant(Atom::Generator(g))) => {
+	    Atom::Command(Command::ExportDotStatic((filename, g)))
+	},
+	Some(Expr::Constant(Atom::Symbol(s))) => {
+	    let mut id_tags = BTreeSet::new();
+	    id_tags.insert(s);
+	    // expect more tags
+	    while let Some(Expr::Constant(Atom::Symbol(si))) = tail_drain.next() {
+		id_tags.insert(si);
+	    }
+	    // collect next symbols
+	    Atom::Command(Command::ExportDotRunning((filename, id_tags)))
+	},
+	_ => Atom::Nothing
+    }        
 }
 
 fn handle_once(tail: &mut Vec<Expr>) -> Atom {

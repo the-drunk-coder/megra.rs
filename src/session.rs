@@ -49,7 +49,7 @@ pub struct SyncContext {
 }
 
 pub struct Session<const BUFSIZE: usize, const NCHAN: usize> {
-    schedulers: HashMap<
+    pub schedulers: HashMap<
         BTreeSet<String>,
         (
             Scheduler<BUFSIZE, NCHAN>,

@@ -1,6 +1,6 @@
 use parking_lot::Mutex;
 use std::{
-    collections::{HashMap, HashSet},
+    collections::{HashMap, HashSet, BTreeSet},
     fs,
     path::Path,
     sync,
@@ -185,10 +185,45 @@ pub fn set_global_ruffbox_parameters<const BUFSIZE: usize, const NCHAN: usize>(
     }
 }
 
-pub fn export_dot(filename: &str, generator: &Generator) {
+pub fn export_dot_static(filename: &str, generator: &Generator) {
     let dot_string = pfa::to_dot::<char>(&generator.root_generator.generator);
     println!("export to {}", filename);
     fs::write(filename, dot_string).expect("Unable to write file");
+}
+
+pub fn export_dot_running<const BUFSIZE: usize, const NCHAN: usize>(
+    filename: &str,
+    tags: &BTreeSet<String>,
+    session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>
+) {
+    let mut gens = Vec::new();
+
+    {
+	let sess = session.lock();
+	for (id_tags, (_, sched_data)) in sess.schedulers.iter() {
+	    if !tags.is_disjoint(id_tags) {
+		let data = sched_data.lock();
+		// get a snapshot of the generator in it's current state
+		gens.push((id_tags.clone(), data.generator.clone()));
+	    }
+	}
+    }
+
+    // write generators to dot strings ...
+    for (tags, gen) in gens.iter() {
+	let mut filename_tagged = filename.to_string();
+	filename_tagged.push_str("_");
+	for tag in tags.iter() {
+	    filename_tagged.push_str(tag);
+	    filename_tagged.push_str("_");
+	}
+	// remove trailing _
+	filename_tagged = filename_tagged[..filename_tagged.len() - 1].to_string();
+	filename_tagged.push_str(".dot");
+	let dot_string = pfa::to_dot::<char>(&gen.root_generator.generator);
+	println!("export to {}", filename_tagged);
+	fs::write(filename_tagged, dot_string).expect("Unable to write file");
+    }    
 }
 
 pub fn once<const BUFSIZE: usize, const NCHAN: usize>(

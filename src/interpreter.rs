@@ -123,8 +123,11 @@ pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
                 Command::GlobalRuffboxParams(m) => {
                     commands::set_global_ruffbox_parameters(ruffbox, &m);
                 }
-                Command::ExportDot((f, g)) => {
-                    commands::export_dot(&f, &g);
+                Command::ExportDotStatic((f, g)) => {
+                    commands::export_dot_static(&f, &g);
+                }
+		Command::ExportDotRunning((f, t)) => {
+                    commands::export_dot_running(&f, &t, session);
                 }
                 Command::Once((mut s, mut c)) => {
                     commands::once(
