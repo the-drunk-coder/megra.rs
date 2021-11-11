@@ -27,7 +27,6 @@ Generator Modifiers modify structure, weights or evaluation order/speed of basic
 * [discourage - Stir Up Generator](#discourage---stir-up-generator)
 * [encourage - Consolidate Generator](#encourage---consolidate-generator)
 * [grow - Enlarge Generator](#grow---enlarge-generator)
-* [grown - Enlarge Generator n times](#grown---enlarge-generator-n-times)
 * [haste - speed up evaluation](#haste---speed-up-evaluation)
 * [life - Manipulate Generator](#life---manipulate-generator)
 * [relax - Slow Down Generator](#relax---slow-down-generator)
@@ -72,7 +71,7 @@ Helpers, session management, etc.
 * [control - Control Functions](#ctrl---control-functions)
 * [sx - Event Sinks](#sx---multiple-event-sinks)
 * [export-dot - Export to DOT File](#export-dot---export-to-dot-file)
-* [defpart - Define Parts](#defpar---define-parts)
+* [defpart - Define Parts](#defpart---define-parts)
 
 ## `blur` - Blur Probabilities
 
