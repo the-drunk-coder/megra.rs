@@ -69,6 +69,7 @@ Helpers, session management, etc.
 
 * [cmp - Compose Generators](#cmp---compose-generators)
 * [clear - Clear Session](#clear---clear-session)     
+* [control - Control Functions](#ctrl---control-functions)
 * [sx - Event Sinks](#sx---multiple-event-sinks)
 * [export-dot - Export to DOT File](#export-dot---export-to-dot-file)
 * [defpart - Define Parts](#defpar---define-parts)
@@ -397,6 +398,28 @@ Exhibit event type, that is, mute all other events, with a certain probability.
        (exh 30 'bd)
        (nuc 'beat (bd) (sn) (hats)))) 
 ```
+
+## `export-dot` - Export to DOT File
+
+Export a generator (or at least its underlying structure) to a DOT file that can be 
+rendered with GraphViz.
+
+## Syntax
+`(export-dot <filename> <generator or tag list>)`
+
+### Example
+```
+;; if a generator is provided, it will be exported as a DOT file directly
+(export-dot "dotdotdot"
+	(cyc 'bu "saw ~ saw ~ saw ~"))
+	
+;; if a tag list is provided, all running generators matching the tag list will be exported
+(sx 'ba #t 
+  (cyc 'bu "bd ~ sn ~"))
+  
+(export-dot "babu" 'ba 'bu)
+```
+
 ## `fade` - Parameter Fader
 
 Fade a parameter (sinusoidal).
