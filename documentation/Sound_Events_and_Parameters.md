@@ -4,6 +4,7 @@
 * [Live Buffer Events](#live-buffer-events) - live buffers
 * [Simple Synth Events](#simple-synth-events) - simple waves (sine, square etc)
 * [Risset Event](#risset-event) - Risset bells
+* [Control Events](#ctrl---control-events)
 * A [Note](#a-note-about-note-names) about Note Names
 
 ## Sample Events
@@ -150,6 +151,23 @@ A simple risset bell event.
 | `:rev`       | 0.0     | reverb amount |
 | `:del`      | 0.0     | echo amount |
 
+
+## Control Events
+
+Control events allow you to schedule parts that you'd otherwise execute manually.
+
+### Example
+
+```lisp
+;; Change between two loops 
+(sx 'ba #t 
+  (infer 'ta :events
+    'a (ctrl (sx 'du #t (cyc 'bu "bd ~ sn ~"))) ;; <-- executing the sync context is automated
+    'b (ctrl (sx 'du #t (cyc 'bu "cym cym cym cym")))
+    :rules 
+    (rule 'a 'b 100 1599)
+    (rule 'b 'a 100 1599)))
+```
 
 
 ## A Note about Note Names

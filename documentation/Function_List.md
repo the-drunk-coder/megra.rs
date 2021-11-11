@@ -69,9 +69,9 @@ Helpers, session management, etc.
 
 * [cmp - Compose Generators](#cmp---compose-generators)
 * [clear - Clear Session](#clear---clear-session)     
-* [ctrl - Control Functions](#ctrl---control-functions)
 * [sx - Event Sinks](#sx---multiple-event-sinks)
 * [export-dot - Export to DOT File](#export-dot---export-to-dot-file)
+* [defpart - Define Parts](#defpar---define-parts)
 
 ## `blur` - Blur Probabilities
 
