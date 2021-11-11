@@ -338,13 +338,48 @@ It might seem simple, but this is one of the most powerful generators in Mégra.
 		))
 ```
 
+## `defpart` - Define Parts
+
+Define parts, which are basically lists of generators that you can name.
+Parts are not updated in the running sync contexts, that is, when you
+modify the part, you have to re-evaluate the sync context as well.
+
+### Syntax
+`(defpart <part-id> <generator-list>)`
+
+### Example
+
+```lisp
+(defpart 'drum-and-bass 
+  (cyc 'drums "bd ~ sn ~")
+  (nuc 'bass (saw 100)))
+	
+(defpart 'hats-and-mid 
+  (cyc 'hats "hats hats ~ hats")
+  (nuc 'midrange (saw 1000)))
+	
+(defpart 'treble-and-cym
+  (cyc 'cym "cym ~ cym cym")
+  (nuc 'treble (saw 2000)))
+
+;; Define a score, here as a learned one, even 
+;; though any other generator might be used.
+(sx 'ga #t 
+  (learn 'ta 
+    :events 
+    'a (ctrl (sx 'ba #t 'drum-and-bass))
+    'b (ctrl (sx 'ba #t 'hats-and-mid))
+    'c (ctrl (sx 'ba #t 'treble-and-cym))
+    :sample "ababaabbababcabaababaacabcabac"
+    :dur 2400))
+```
 
 ## `env` - Parameter Envelope
 
 Define an envelope on any parameter. Length of list of levels must be one more than length of list of durations.
 Durations are step based, so the absolute durations depend on the speed your generator runs at.
 
-### Paramters
+### Parameters
 
 * `:v` or `:values` - level points on envelope path
 * `:s` or `:steps` - transition durations (in steps)
