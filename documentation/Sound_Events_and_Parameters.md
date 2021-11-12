@@ -4,7 +4,7 @@
 * [Live Buffer Events](#live-buffer-events) - live buffers
 * [Simple Synth Events](#simple-synth-events) - simple waves (sine, square etc)
 * [Risset Event](#risset-event) - Risset bells
-* [Control Events](#ctrl---control-events)
+* [Control Events](#control-events)
 * A [Note](#a-note-about-note-names) about Note Names
 
 ## Sample Events
