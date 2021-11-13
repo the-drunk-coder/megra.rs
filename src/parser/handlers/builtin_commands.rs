@@ -207,15 +207,27 @@ fn handle_export_dot(tail: &mut Vec<Expr>) -> Atom {
         Some(Expr::Constant(Atom::Generator(g))) => {
             Atom::Command(Command::ExportDotStatic((filename, g)))
         }
-        Some(Expr::Constant(Atom::Symbol(s))) => {
-            let mut id_tags = BTreeSet::new();
-            id_tags.insert(s);
-            // expect more tags
-            while let Some(Expr::Constant(Atom::Symbol(si))) = tail_drain.next() {
-                id_tags.insert(si);
+        Some(Expr::Constant(Atom::Keyword(k))) => {
+            match k.as_str() {
+                "part" => {
+                    if let Some(Expr::Constant(Atom::Symbol(part_name))) = tail_drain.next() {
+                        // collect next symbols
+                        Atom::Command(Command::ExportDotPart((filename, part_name)))
+                    } else {
+                        Atom::Nothing
+                    }
+                }
+                "live" => {
+                    let mut id_tags = BTreeSet::new();
+                    // expect more tags
+                    while let Some(Expr::Constant(Atom::Symbol(si))) = tail_drain.next() {
+                        id_tags.insert(si);
+                    }
+                    // collect next symbols
+                    Atom::Command(Command::ExportDotRunning((filename, id_tags)))
+                }
+                _ => Atom::Nothing,
             }
-            // collect next symbols
-            Atom::Command(Command::ExportDotRunning((filename, id_tags)))
         }
         _ => Atom::Nothing,
     }

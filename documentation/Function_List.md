@@ -440,19 +440,28 @@ Export a generator (or at least its underlying structure) to a DOT file that can
 rendered with GraphViz.
 
 ## Syntax
-`(export-dot <filename> <generator or tag list>)`
+`(export-dot <filename> <generator> or <keyword> and <tag list>)`
 
 ### Example
 ```
 ;; if a generator is provided, it will be exported as a DOT file directly
-(export-dot "dotdotdot"
+(export-dot "dotdotdot.dot"
 	(cyc 'bu "saw ~ saw ~ saw ~"))
 	
-;; if a tag list is provided, all running generators matching the tag list will be exported
+;; if the keyword "live" and a tag list are provided, all running generators matching the tag list will be exported
 (sx 'ba #t 
   (cyc 'bu "bd ~ sn ~"))
   
-(export-dot "babu" 'ba 'bu)
+(export-dot "babu" :live 'ba 'bu)
+
+;; if a part is defined ... 
+(defpart 'ga
+	(cyc 'du "cym cym cym cym")
+	(cyc 'ba "bd ~ sn ~"))
+	
+;; you can export it using the "part" keyword
+(export-dot "partpart" :part 'ga)
+
 ```
 
 ## `fade` - Parameter Fader

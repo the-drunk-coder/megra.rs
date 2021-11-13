@@ -231,6 +231,33 @@ pub fn export_dot_static(filename: &str, generator: &Generator) {
     fs::write(filename, dot_string).expect("Unable to write file");
 }
 
+pub fn export_dot_part(
+    filename: &str,
+    part_name: &String,
+    parts_store: &sync::Arc<Mutex<PartsStore>>,
+) {
+    let ps = parts_store.lock();
+    if let Some(Part::Combined(gens, _)) = ps.get(part_name) {
+        // write generators to dot strings ...
+        for gen in gens.iter() {
+            let mut filename_tagged = filename.to_string();
+            filename_tagged.push_str("_");
+            filename_tagged.push_str(part_name);
+            filename_tagged.push_str("_");
+            for tag in gen.id_tags.iter() {
+                filename_tagged.push_str(tag);
+                filename_tagged.push_str("_");
+            }
+            // remove trailing _
+            filename_tagged = filename_tagged[..filename_tagged.len() - 1].to_string();
+            filename_tagged.push_str(".dot");
+            let dot_string = pfa::to_dot::<char>(&gen.root_generator.generator);
+            println!("export to {}", filename_tagged);
+            fs::write(filename_tagged, dot_string).expect("Unable to write file");
+        }
+    }
+}
+
 pub fn export_dot_running<const BUFSIZE: usize, const NCHAN: usize>(
     filename: &str,
     tags: &BTreeSet<String>,
