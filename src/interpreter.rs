@@ -126,7 +126,7 @@ pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
                 Command::ExportDotStatic((f, g)) => {
                     commands::export_dot_static(&f, &g);
                 }
-		Command::ExportDotRunning((f, t)) => {
+                Command::ExportDotRunning((f, t)) => {
                     commands::export_dot_running(&f, &t, session);
                 }
                 Command::Once((mut s, mut c)) => {
@@ -138,6 +138,16 @@ pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
                         &mut s,
                         &mut c,
                         output_mode,
+                    );
+                }
+                Command::StepPart(name) => {
+                    commands::step_part(
+                        ruffbox,
+                        parts_store,
+                        global_parameters,
+                        session,
+                        output_mode,
+                        name,
                     );
                 }
             };

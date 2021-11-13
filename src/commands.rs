@@ -1,6 +1,6 @@
 use parking_lot::Mutex;
 use std::{
-    collections::{HashMap, HashSet, BTreeSet},
+    collections::{BTreeSet, HashMap, HashSet},
     fs,
     path::Path,
     sync,
@@ -161,6 +161,46 @@ pub fn load_part(parts_store: &sync::Arc<Mutex<PartsStore>>, name: String, part:
     ps.insert(name, part);
 }
 
+/// execute a pre-defined part step by step
+pub fn step_part<const BUFSIZE: usize, const NCHAN: usize>(
+    ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>,
+    parts_store: &sync::Arc<Mutex<PartsStore>>,
+    global_parameters: &sync::Arc<GlobalParameters>,
+    session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
+    output_mode: OutputMode,
+    part_name: String,
+) {
+    let mut sound_events = Vec::new();
+    let mut control_events = Vec::new();
+
+    {
+        let mut ps = parts_store.lock();
+        if let Some(Part::Combined(gens, _)) = ps.get_mut(&part_name) {
+            for gen in gens.iter_mut() {
+                let mut current_events = gen.current_events(global_parameters);
+                for ev in current_events.drain(..) {
+                    match ev {
+                        InterpretableEvent::Control(c) => control_events.push(c),
+                        InterpretableEvent::Sound(s) => sound_events.push(s),
+                    }
+                }
+                gen.current_transition(global_parameters);
+            }
+        }
+    }
+
+    // execute retrieved events
+    once(
+        ruffbox,
+        parts_store,
+        global_parameters,
+        session,
+        &mut sound_events,
+        &mut control_events,
+        output_mode,
+    );
+}
+
 pub fn set_global_tmod(global_parameters: &sync::Arc<GlobalParameters>, p: Parameter) {
     global_parameters.insert(
         BuiltinGlobalParameters::GlobalTimeModifier,
@@ -194,36 +234,36 @@ pub fn export_dot_static(filename: &str, generator: &Generator) {
 pub fn export_dot_running<const BUFSIZE: usize, const NCHAN: usize>(
     filename: &str,
     tags: &BTreeSet<String>,
-    session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>
+    session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
 ) {
     let mut gens = Vec::new();
 
     {
-	let sess = session.lock();
-	for (id_tags, (_, sched_data)) in sess.schedulers.iter() {
-	    if !tags.is_disjoint(id_tags) {
-		let data = sched_data.lock();
-		// get a snapshot of the generator in it's current state
-		gens.push((id_tags.clone(), data.generator.clone()));
-	    }
-	}
+        let sess = session.lock();
+        for (id_tags, (_, sched_data)) in sess.schedulers.iter() {
+            if !tags.is_disjoint(id_tags) {
+                let data = sched_data.lock();
+                // get a snapshot of the generator in it's current state
+                gens.push((id_tags.clone(), data.generator.clone()));
+            }
+        }
     }
 
     // write generators to dot strings ...
     for (tags, gen) in gens.iter() {
-	let mut filename_tagged = filename.to_string();
-	filename_tagged.push_str("_");
-	for tag in tags.iter() {
-	    filename_tagged.push_str(tag);
-	    filename_tagged.push_str("_");
-	}
-	// remove trailing _
-	filename_tagged = filename_tagged[..filename_tagged.len() - 1].to_string();
-	filename_tagged.push_str(".dot");
-	let dot_string = pfa::to_dot::<char>(&gen.root_generator.generator);
-	println!("export to {}", filename_tagged);
-	fs::write(filename_tagged, dot_string).expect("Unable to write file");
-    }    
+        let mut filename_tagged = filename.to_string();
+        filename_tagged.push_str("_");
+        for tag in tags.iter() {
+            filename_tagged.push_str(tag);
+            filename_tagged.push_str("_");
+        }
+        // remove trailing _
+        filename_tagged = filename_tagged[..filename_tagged.len() - 1].to_string();
+        filename_tagged.push_str(".dot");
+        let dot_string = pfa::to_dot::<char>(&gen.root_generator.generator);
+        println!("export to {}", filename_tagged);
+        fs::write(filename_tagged, dot_string).expect("Unable to write file");
+    }
 }
 
 pub fn once<const BUFSIZE: usize, const NCHAN: usize>(
@@ -231,7 +271,7 @@ pub fn once<const BUFSIZE: usize, const NCHAN: usize>(
     parts_store: &sync::Arc<Mutex<PartsStore>>,
     global_parameters: &sync::Arc<GlobalParameters>,
     session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
-    sound_events: &mut Vec<Event>,
+    sound_events: &mut Vec<StaticEvent>,
     control_events: &mut Vec<ControlEvent>,
     output_mode: OutputMode,
 ) {
@@ -251,9 +291,7 @@ pub fn once<const BUFSIZE: usize, const NCHAN: usize>(
         }
     }
 
-    for sev in sound_events.iter_mut() {
-        let s = sev.get_static();
-
+    for s in sound_events.iter_mut() {
         if s.name == "silence" {
             continue;
         }

@@ -204,21 +204,21 @@ fn handle_export_dot(tail: &mut Vec<Expr>) -> Atom {
     };
 
     match tail_drain.next() {
-	Some(Expr::Constant(Atom::Generator(g))) => {
-	    Atom::Command(Command::ExportDotStatic((filename, g)))
-	},
-	Some(Expr::Constant(Atom::Symbol(s))) => {
-	    let mut id_tags = BTreeSet::new();
-	    id_tags.insert(s);
-	    // expect more tags
-	    while let Some(Expr::Constant(Atom::Symbol(si))) = tail_drain.next() {
-		id_tags.insert(si);
-	    }
-	    // collect next symbols
-	    Atom::Command(Command::ExportDotRunning((filename, id_tags)))
-	},
-	_ => Atom::Nothing
-    }        
+        Some(Expr::Constant(Atom::Generator(g))) => {
+            Atom::Command(Command::ExportDotStatic((filename, g)))
+        }
+        Some(Expr::Constant(Atom::Symbol(s))) => {
+            let mut id_tags = BTreeSet::new();
+            id_tags.insert(s);
+            // expect more tags
+            while let Some(Expr::Constant(Atom::Symbol(si))) = tail_drain.next() {
+                id_tags.insert(si);
+            }
+            // collect next symbols
+            Atom::Command(Command::ExportDotRunning((filename, id_tags)))
+        }
+        _ => Atom::Nothing,
+    }
 }
 
 fn handle_once(tail: &mut Vec<Expr>) -> Atom {
@@ -228,13 +228,22 @@ fn handle_once(tail: &mut Vec<Expr>) -> Atom {
 
     while let Some(Expr::Constant(c)) = tail_drain.next() {
         match c {
-            Atom::SoundEvent(e) => sound_events.push(e),
+            Atom::SoundEvent(mut e) => sound_events.push(e.get_static()),
             Atom::ControlEvent(c) => control_events.push(c),
             _ => {}
         }
     }
 
     Atom::Command(Command::Once((sound_events, control_events)))
+}
+
+fn handle_step_part(tail: &mut Vec<Expr>) -> Atom {
+    let mut tail_drain = tail.drain(..);
+    if let Some(Expr::Constant(Atom::Symbol(s))) = tail_drain.next() {
+        Atom::Command(Command::StepPart(s))
+    } else {
+        Atom::Nothing
+    }
 }
 
 pub fn handle(cmd: BuiltInCommand, tail: &mut Vec<Expr>) -> Atom {
@@ -248,6 +257,7 @@ pub fn handle(cmd: BuiltInCommand, tail: &mut Vec<Expr>) -> Atom {
         BuiltInCommand::LoadSampleSet => handle_load_sample_set(tail),
         BuiltInCommand::LoadSampleSets => handle_load_sample_sets(tail),
         BuiltInCommand::LoadPart => handle_load_part(tail),
+        BuiltInCommand::StepPart => handle_step_part(tail),
         BuiltInCommand::ExportDot => handle_export_dot(tail),
         BuiltInCommand::Once => handle_once(tail),
         BuiltInCommand::FreezeBuffer => handle_freeze_buffer(tail),

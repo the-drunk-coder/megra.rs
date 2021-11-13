@@ -134,6 +134,7 @@ pub enum BuiltInCommand {
     LoadSampleSets,
     LoadSampleSet,
     LoadPart,
+    StepPart,
     FreezeBuffer,
     Once,
 }
@@ -166,10 +167,11 @@ pub enum Command {
     LoadSampleSet(String),                             // set path
     LoadSampleSets(String),                            // top level sets set path
     LoadPart((String, Part)),                          // set (events), keyword, path
-    FreezeBuffer(usize),                               // freeze live buffer
-    ExportDotStatic((String, Generator)),              // filename, generator
-    ExportDotRunning((String, BTreeSet<String>)),      // filename, generator id
-    Once((Vec<Event>, Vec<ControlEvent>)),
+    StepPart(String),
+    FreezeBuffer(usize),                          // freeze live buffer
+    ExportDotStatic((String, Generator)),         // filename, generator
+    ExportDotRunning((String, BTreeSet<String>)), // filename, generator id
+    Once((Vec<StaticEvent>, Vec<ControlEvent>)),
 }
 
 #[derive(Clone)]

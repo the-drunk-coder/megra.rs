@@ -67,6 +67,9 @@ fn parse_commands<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<&'a 
         map(tag("defpart"), |_| {
             BuiltIn::Command(BuiltInCommand::LoadPart)
         }),
+        map(tag("step-part"), |_| {
+            BuiltIn::Command(BuiltInCommand::StepPart)
+        }),
         map(tag("export-dot"), |_| {
             BuiltIn::Command(BuiltInCommand::ExportDot)
         }),

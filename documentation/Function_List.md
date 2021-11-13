@@ -72,6 +72,7 @@ Helpers, session management, etc.
 * [sx - Event Sinks](#sx---multiple-event-sinks)
 * [export-dot - Export to DOT File](#export-dot---export-to-dot-file)
 * [defpart - Define Parts](#defpart---define-parts)
+* [step-part - Evaluate Parts Step by Step](#step-part---evaluate-parts-step-by-step)
 
 ## `blur` - Blur Probabilities
 
@@ -784,6 +785,62 @@ Define oscillation on any parameter. The oscillation curve is a bit bouncy, not 
   (nuc 'beat (bd) :dur (bounce 200 600 :steps 80)))
 ```
 
+## `infer` - Infer Generator from Rules
+
+Infer a generator from arbitrary rules. Make sure every event has
+at least one exit, otherwise the generator will stop.
+
+Also, exit probablities for each node should add up to 100.
+
+### Parameters
+
+* `name` - generator name
+* `:events` - labeled event mapping
+* `:rules` - transition rules - Format `(rule <source> <destination> <probability> <duration (optional)>)`
+
+### Example
+
+```lisp
+;; infer 
+(sx 'con #t 
+  (infer 'duct :events 
+    'a (saw 'a2)
+    'b (saw 'f2)
+    'c (saw 'c3)
+    'd (saw 'e4)
+    :rules 
+    (rule 'a 'a 80 200) ;; repeat 'a with 80% chance
+    (rule 'a 'b 20 200) ;; move to 'b with 20% chance
+    (rule 'aaa 'c 100 200) ;; after 3 repetitions of 'a, always move to 'c
+    (rule 'b 'b 100 400) ;; repeat 'b always
+    (rule 'bb 'd 100 400) ;; ... well, 2x max
+    (rule 'c 'c 100 100) ;; same for 'c
+    (rule 'ccc 'a 100 400) 
+    (rule 'd 'd 80 200) ;; 'd is repeated with 80% chance as well
+    (rule 'd 'a 20 200) ;; and moves back to 'a with 20% chance
+    (rule 'ddddd 'b 100 400))) ;; and is repeated 5x max
+
+```
+![An inferred bassline.](./diagrams/inferred-generator.svg)
+
+## `learn` - Learn Generator from Distribution
+
+Learn a generator from a sample string.
+
+### Example
+Learn a trap-like beat from a sample string.
+```lisp
+(sx 'from #t
+  (learn 'data
+    :events 'x (bd) 'o (sn) 'h (hats)
+    :sample "xoxoxoxox~~o~h~~~h~h~h~~h~h~~hhh~x~o
+             ~x~o~x~o~x~o~xh~h~~hhh~x~o~x~o~x~o~x
+             ox~xox~xox~xoxo~xoxo~xoxox~oooo~xxxx
+             ~xoxoxox~ohxhohxhohxhxhxhxhxhxhxhoho
+             hoh"))
+```
+<img src="./diagrams/learned-beat.svg" alt="A learned beat." width="1000" height="1000">
+
 ## `pear` - Apply Modifiers
 
 Appl-ys and Pears ...
@@ -855,7 +912,23 @@ This generator arranges sound events in "stages". See for yourself.
 ```
 ![cyclical stages generator](./diagrams/stages-cyclical.svg)
 
+## `step-part` - Evaluate Parts Step by Step
+
+Define a part and evaluate it step by step. This exists mostly for debugging purposes.
+
+### Example
+
+```lisp
+(defpart 'ba ;; <-- define some part
+  (cyc 'hu "hats cym hats cym cym hats hats cym")
+  (cyc 'du "bd ~ sn ~ bd bd sn ~"))
+
+(step-part 'ba) ;; <-- step through ...
+```
+
 ## `sx` - Event Sink
+
+Short for `SyncconteXt`.
 
 ### Example
 
@@ -878,62 +951,6 @@ This generator arranges sound events in "stages". See for yourself.
   (nuc 'hats (hats) :dur 400)
   (nuc 'bass (bd) :dur 400))
 ```
-
-## `learn` - Learn Generator from Distribution
-
-Learn a generator from a sample string.
-
-### Example
-Learn a trap-like beat from a sample string.
-```lisp
-(sx 'from #t
-  (learn 'data
-    :events 'x (bd) 'o (sn) 'h (hats)
-    :sample "xoxoxoxox~~o~h~~~h~h~h~~h~h~~hhh~x~o
-             ~x~o~x~o~x~o~xh~h~~hhh~x~o~x~o~x~o~x
-             ox~xox~xox~xoxo~xoxo~xoxox~oooo~xxxx
-             ~xoxoxox~ohxhohxhohxhxhxhxhxhxhxhoho
-             hoh"))
-```
-<img src="./diagrams/learned-beat.svg" alt="A learned beat." width="1000" height="1000">
-
-## `infer` - Infer Generator from Rules
-
-Infer a generator from arbitrary rules. Make sure every event has
-at least one exit, otherwise the generator will stop.
-
-Also, exit probablities for each node should add up to 100.
-
-### Parameters
-
-* `name` - generator name
-* `:events` - labeled event mapping
-* `:rules` - transition rules - Format `(rule <source> <destination> <probability> <duration (optional)>)`
-
-### Example
-
-```lisp
-;; infer 
-(sx 'con #t 
-  (infer 'duct :events 
-    'a (saw 'a2)
-    'b (saw 'f2)
-    'c (saw 'c3)
-    'd (saw 'e4)
-    :rules 
-    (rule 'a 'a 80 200) ;; repeat 'a with 80% chance
-    (rule 'a 'b 20 200) ;; move to 'b with 20% chance
-    (rule 'aaa 'c 100 200) ;; after 3 repetitions of 'a, always move to 'c
-    (rule 'b 'b 100 400) ;; repeat 'b always
-    (rule 'bb 'd 100 400) ;; ... well, 2x max
-    (rule 'c 'c 100 100) ;; same for 'c
-    (rule 'ccc 'a 100 400) 
-    (rule 'd 'd 80 200) ;; 'd is repeated with 80% chance as well
-    (rule 'd 'a 20 200) ;; and moves back to 'a with 20% chance
-    (rule 'ddddd 'b 100 400))) ;; and is repeated 5x max
-
-```
-![An inferred bassline.](./diagrams/inferred-generator.svg)
 
 ## `xdup` - Multiply Generators with Modifiers
 
