@@ -219,7 +219,7 @@ pub fn eval_cyc_from_str(
                             }
                             // in brackets so it's recognized as a "function"
                             name = format!("({})", name);
-                            println!("{}", name);
+                            //println!("{}", name);
                             match parse_expr(&name.trim()) {
                                 Ok((_, expr)) => {
                                     if let Some(Expr::Constant(Atom::SoundEvent(e))) =
