@@ -56,6 +56,7 @@ impl GeneratorProcessor for EveryProcessor {
                 self.last_static.push((cur_step, stat_evs));
             }
         }
+        self.step_count += 1;
     }
 
     fn process_generator(
@@ -85,6 +86,5 @@ impl GeneratorProcessor for EveryProcessor {
                 }
             }
         }
-        self.step_count += 1;
     }
 }

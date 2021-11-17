@@ -43,23 +43,8 @@ impl MarkovSequenceGenerator {
     pub fn current_events(&mut self) -> Vec<InterpretableEvent> {
         let mut interpretable_events = Vec::new();
 
-        // try to get a transition if there wasn't one
-        // that'd mean it's probably the initial one, or there's something wrong ...
-        if self.last_transition.is_none() {
-            self.last_transition = self.generator.next_transition();
-            //println!("no last_trans, fetch");
-        }
-        //else if let Some(trans) = self.last_transition.clone() {
-        //println!("trans present, cur sym: {}", &trans.last_symbol);
-        //if !self.event_mapping.contains_key(&trans.last_symbol) {
-        //println!("cur sym invalid, fetch next: {}", &trans.last_symbol);
-        // if transition was invalidated by shrink, for example ...
-        //    self.last_transition = self.generator.next_transition();
-        //}
-        //}
-
         if let Some(trans) = &self.last_transition {
-            //println!("cur sym EFFECTIVE: {}", &trans.last_symbol);
+            // println!("cur sym EFFECTIVE: {}", &trans.last_symbol);
             // increment symbol age ...
             *self.symbol_ages.entry(trans.last_symbol).or_insert(0) += 1;
             // get static events ...
@@ -82,34 +67,23 @@ impl MarkovSequenceGenerator {
     }
 
     pub fn current_transition(&mut self) -> StaticEvent {
-        let mut transition = None;
+        // advance pfa ...
+        self.last_transition = self.generator.next_transition();
 
         if let Some(trans) = &self.last_transition {
             if let Some(dur) = self
                 .duration_mapping
                 .get_mut(&(trans.last_symbol, trans.next_symbol))
             {
-                transition = Some(dur.get_static());
+                dur.get_static()
             } else {
-                //println!("no dur");
-
                 let mut t = Event::with_name("transition".to_string()).get_static();
                 t.params
                     .insert(SynthParameter::Duration, self.default_duration as f32);
-                transition = Some(t);
+                t
             }
-        }
-        //else {
-        //  println!("no old trans");
-        //}
-
-        // advance pfa ...
-        self.last_transition = self.generator.next_transition();
-
-        if let Some(t) = transition {
-            t
         } else {
-            //println!("no new trans");
+            // these double else blocks doing the same thing sometimes make rust ugly
             let mut t = Event::with_name("transition".to_string()).get_static();
             t.params
                 .insert(SynthParameter::Duration, self.default_duration as f32);

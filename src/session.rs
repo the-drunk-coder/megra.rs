@@ -121,7 +121,31 @@ fn resolve_proxy(parts_store: &PartsStore, proxy: PartProxy, generators: &mut Ve
 fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
     data: &mut SchedulerData<BUFSIZE, NCHAN>,
 ) -> (f64, bool) {
+    // global tempo modifier, allows us to do weird stuff with the
+    // global tempo ...
+    let mut tmod: f64 = 1.0;
+
+    if let ConfigParameter::Dynamic(global_tmod) = data
+        .global_parameters
+        .entry(BuiltinGlobalParameters::GlobalTimeModifier)
+        .or_insert(ConfigParameter::Dynamic(Parameter::with_value(1.0))) // init on first attempt
+        .value_mut()
+    {
+        tmod = global_tmod.evaluate() as f64;
+    }
+
+    let time = (data
+        .generator
+        .current_transition(&data.global_parameters)
+        .params[&SynthParameter::Duration] as f64
+        * 0.001
+        * tmod) as f64;
+
+    // retrieve the current events
     let events = data.generator.current_events(&data.global_parameters);
+    if events.is_empty() {
+        println!("really no events");
+    }
 
     // the sync flag will be returned alongside the
     // time to let the scheduler know that it should
@@ -156,48 +180,10 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
                 //println!("block: {:?}", data.block_tags);
 
                 if !data.block_tags.is_empty() && !data.block_tags.is_disjoint(&s.tags) {
-                    // global tempo modifier, allows us to do weird stuff with the
-                    // global tempo ...
-                    let mut tmod: f64 = 1.0;
-
-                    if let ConfigParameter::Dynamic(global_tmod) = data
-                        .global_parameters
-                        .entry(BuiltinGlobalParameters::GlobalTimeModifier)
-                        .or_insert(ConfigParameter::Dynamic(Parameter::with_value(1.0))) // init on first attempt
-                        .value_mut()
-                    {
-                        tmod = global_tmod.evaluate() as f64;
-                    }
-
-                    let time = (data
-                        .generator
-                        .current_transition(&data.global_parameters)
-                        .params[&SynthParameter::Duration] as f64
-                        * 0.001
-                        * tmod) as f64;
                     return (time, sync); // early exit
                 }
 
                 if !data.solo_tags.is_empty() && data.solo_tags.is_disjoint(&s.tags) {
-                    // global tempo modifier, allows us to do weird stuff with the
-                    // global tempo ...
-                    let mut tmod: f64 = 1.0;
-
-                    if let ConfigParameter::Dynamic(global_tmod) = data
-                        .global_parameters
-                        .entry(BuiltinGlobalParameters::GlobalTimeModifier)
-                        .or_insert(ConfigParameter::Dynamic(Parameter::with_value(1.0))) // init on first attempt
-                        .value_mut()
-                    {
-                        tmod = global_tmod.evaluate() as f64;
-                    }
-
-                    let time = (data
-                        .generator
-                        .current_transition(&data.global_parameters)
-                        .params[&SynthParameter::Duration] as f64
-                        * 0.001
-                        * tmod) as f64;
                     return (time, sync); // early exit
                 }
 
@@ -287,25 +273,6 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
         }
     }
 
-    // global tempo modifier, allows us to do weird stuff with the
-    // global tempo ...
-    let mut tmod: f64 = 1.0;
-
-    if let ConfigParameter::Dynamic(global_tmod) = data
-        .global_parameters
-        .entry(BuiltinGlobalParameters::GlobalTimeModifier)
-        .or_insert(ConfigParameter::Dynamic(Parameter::with_value(1.0))) // init on first attempt
-        .value_mut()
-    {
-        tmod = global_tmod.evaluate() as f64;
-    }
-
-    let time = (data
-        .generator
-        .current_transition(&data.global_parameters)
-        .params[&SynthParameter::Duration] as f64
-        * 0.001
-        * tmod) as f64;
     (time, sync)
 }
 // END INNER MAIN SCHEDULER FUNCTION ...

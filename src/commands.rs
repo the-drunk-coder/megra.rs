@@ -177,6 +177,7 @@ pub fn step_part<const BUFSIZE: usize, const NCHAN: usize>(
         let mut ps = parts_store.lock();
         if let Some(Part::Combined(gens, _)) = ps.get_mut(&part_name) {
             for gen in gens.iter_mut() {
+                gen.current_transition(global_parameters);
                 let mut current_events = gen.current_events(global_parameters);
                 for ev in current_events.drain(..) {
                     match ev {
@@ -184,7 +185,6 @@ pub fn step_part<const BUFSIZE: usize, const NCHAN: usize>(
                         InterpretableEvent::Sound(s) => sound_events.push(s),
                     }
                 }
-                gen.current_transition(global_parameters);
             }
         }
     }
