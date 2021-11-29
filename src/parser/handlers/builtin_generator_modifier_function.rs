@@ -3,6 +3,7 @@ use crate::generator::*;
 use std::collections::HashMap;
 
 pub fn handle(gen_mod: &BuiltInGenModFun, tail: &mut Vec<Expr>) -> Atom {
+    //println!("handle schrink?");
     let last = tail.pop();
     match last {
         Some(Expr::Constant(Atom::Generator(mut g))) => {
@@ -180,9 +181,9 @@ pub fn handle(gen_mod: &BuiltInGenModFun, tail: &mut Vec<Expr>) -> Atom {
         Some(l) => {
             tail.push(l);
 
-            let mut tail_drain = tail.drain(..);
             let mut pos_args = Vec::new();
             let mut named_args = HashMap::new();
+            let mut tail_drain = tail.drain(..);
 
             while let Some(Expr::Constant(c)) = tail_drain.next() {
                 match c {
@@ -219,6 +220,21 @@ pub fn handle(gen_mod: &BuiltInGenModFun, tail: &mut Vec<Expr>) -> Atom {
                 }),
             )
         }
-        None => Atom::Nothing,
+        None => {
+            // shrink is the only genmodfun that doesn't need any arguments (for now)
+            match gen_mod {
+                BuiltInGenModFun::Shrink => Atom::GeneratorProcessorOrModifier(
+                    GeneratorProcessorOrModifier::GeneratorModifierFunction((
+                        shrink,
+                        Vec::new(),
+                        HashMap::new(),
+                    )),
+                ),
+                _ => {
+                    println!("genmodfun needs arguments!");
+                    Atom::Nothing
+                }
+            }
+        }
     }
 }
