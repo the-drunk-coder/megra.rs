@@ -57,10 +57,9 @@ impl MarkovSequenceGenerator {
                         SourceEvent::Control(e) => InterpretableEvent::Control(e.clone()),
                     });
                 }
+            } else {
+                println!("no events for sym {}", trans.last_symbol);
             }
-            //else {
-            //	println!("no events for sym {}", trans.last_symbol);
-            //}
         }
 
         interpretable_events
@@ -69,8 +68,9 @@ impl MarkovSequenceGenerator {
     pub fn current_transition(&mut self) -> StaticEvent {
         // advance pfa ...
         self.last_transition = self.generator.next_transition();
-
+        //println!("cur trans");
         if let Some(trans) = &self.last_transition {
+            //println!("last sym: {}", trans.last_symbol);
             if let Some(dur) = self
                 .duration_mapping
                 .get_mut(&(trans.last_symbol, trans.next_symbol))

@@ -43,8 +43,18 @@ pub fn grow_raw(
         _ => gen.generator.grow_old(),
     } {
         //println!("grow!");
+        /*
+           println!(
+           "state history: {}",
+           gen.generator.get_state_history_string());
+           println!(
+           "symbol history: {}",
+           gen.generator.get_symbol_history_string());
+        */
         let template_sym = result.template_symbol.unwrap();
         let added_sym = result.added_symbol.unwrap();
+        //println!("GROW {}\n{}", m, result);
+
         if let Some(old_evs) = gen.event_mapping.get(&template_sym) {
             let mut new_evs = old_evs.clone();
             for ev in new_evs.iter_mut() {
@@ -98,7 +108,7 @@ pub fn grow_raw(
                             let mut dur_ev = Event::with_name("transition".to_string());
                             let dur_val =
                                 durations.choose(&mut rand::thread_rng()).unwrap().clone();
-                            //println!("add from stash {} {} {}", sym, added_sym, dur_val.static_val);
+                            //println!("add from stash {} {} {}", src, dest, dur_val.static_val);
                             dur_ev
                                 .params
                                 .insert(SynthParameter::Duration, Box::new(dur_val));
