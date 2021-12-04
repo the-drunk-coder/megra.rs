@@ -181,7 +181,7 @@ fn parse_generator_modifier_functions<'a>(
         map(tag("sharpen"), |_| {
             BuiltIn::GenModFun(BuiltInGenModFun::Sharpen)
         }),
-	map(tag("solidify"), |_| {
+        map(tag("solidify"), |_| {
             BuiltIn::GenModFun(BuiltInGenModFun::Solidify)
         }),
         map(tag("shake"), |_| {
