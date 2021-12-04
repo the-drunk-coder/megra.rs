@@ -98,6 +98,7 @@ pub enum BuiltInGenModFun {
     Rewind,
     Rnd,
     Rep,
+    Solidify,
 }
 
 #[derive(Clone, Copy)]

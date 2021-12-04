@@ -168,6 +168,10 @@ pub fn rewind_raw(gen: &mut MarkovSequenceGenerator, states: usize) {
     gen.generator.rewind(states);
 }
 
+pub fn solidify_raw(gen: &mut MarkovSequenceGenerator, ctx_len: usize) {
+    gen.generator.solidify(ctx_len);
+}
+
 pub fn rnd_raw(gen: &mut MarkovSequenceGenerator, randomize_chance: f32) {
     if randomize_chance > 0.0 {
         gen.generator
