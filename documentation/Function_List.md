@@ -34,6 +34,7 @@ Generator Modifiers modify structure, weights or evaluation order/speed of basic
 * [sharpen - Sharpen Probabilities](#blur---sharpen-probabilities)
 * [shrink - Shrink Generator](#shrink---shrink-generator)
 * [skip - Skip Events](#skip---skip-events)
+* [solidify - Solidify Generator](#solidify---solidify-generator)
 
 **Generator Multiplexers**:
 
