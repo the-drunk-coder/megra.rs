@@ -64,7 +64,7 @@ pub fn construct_cycle(
             match c {
                 Atom::Symbol(ref s) => {
                     if !cur_key.is_empty() && !collected_evs.is_empty() {
-                        println!("found event {}", cur_key);
+                        //println!("found event {}", cur_key);
                         collected_mapping.insert(cur_key.clone(), collected_evs.clone());
                         collected_evs.clear();
                     }
@@ -81,7 +81,7 @@ pub fn construct_cycle(
                 }
                 _ => {
                     if !cur_key.is_empty() && !collected_evs.is_empty() {
-                        println!("found event {}", cur_key);
+                        //println!("found event {}", cur_key);
                         collected_mapping.insert(cur_key.clone(), collected_evs.clone());
                     }
                     collect_events = false;

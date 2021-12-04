@@ -53,7 +53,7 @@ pub fn construct_infer(tail: &mut Vec<Expr>) -> Atom {
             match c {
                 Atom::Symbol(ref s) => {
                     if !cur_key.is_empty() && !ev_vec.is_empty() {
-                        println!("found event {}", cur_key);
+                        //println!("found event {}", cur_key);
                         event_mapping.insert(cur_key.chars().next().unwrap(), ev_vec.clone());
                         ev_vec.clear();
                     }
@@ -70,7 +70,7 @@ pub fn construct_infer(tail: &mut Vec<Expr>) -> Atom {
                 }
                 _ => {
                     if !cur_key.is_empty() && !ev_vec.is_empty() {
-                        println!("found event {}", cur_key);
+                        //println!("found event {}", cur_key);
                         event_mapping.insert(cur_key.chars().next().unwrap(), ev_vec.clone());
                     }
                     collect_events = false;

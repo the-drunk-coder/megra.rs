@@ -35,7 +35,7 @@ pub fn construct_fully(tail: &mut Vec<Expr>) -> Atom {
             match c {
                 Atom::Symbol(ref s) => {
                     if !cur_key.is_empty() && !collected_evs.is_empty() {
-                        println!("found event {}", cur_key);
+                        //println!("found event {}", cur_key);
                         collected_mapping
                             .insert(cur_key.chars().next().unwrap(), collected_evs.clone());
                         collected_evs.clear();
@@ -53,7 +53,7 @@ pub fn construct_fully(tail: &mut Vec<Expr>) -> Atom {
                 }
                 _ => {
                     if !cur_key.is_empty() && !collected_evs.is_empty() {
-                        println!("found event {}", cur_key);
+                        //println!("found event {}", cur_key);
                         collected_mapping
                             .insert(cur_key.chars().next().unwrap(), collected_evs.clone());
                     }
