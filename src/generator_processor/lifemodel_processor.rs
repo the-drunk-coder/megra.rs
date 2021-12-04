@@ -26,6 +26,9 @@ impl LifemodelDefaults {
     const GROWTH_METHOD: &'static str = "flower";
     const VARIANCE: f32 = 0.2;
     const NODE_LIFESPAN_VARIANCE: f32 = 0.1;
+    const RND_CHANCE: f32 = 0.0;
+    const SOLIDIFY_CHANCE: f32 = 0.05;
+    const SOLIDIFY_LEN: usize = 3;
 }
 
 /// Apple-ys events to the throughcoming ones
@@ -47,6 +50,9 @@ pub struct LifemodelProcessor {
     pub dont_let_die: bool,
     pub keep_param: HashSet<SynthParameter>,
     pub global_contrib: bool,
+    pub solidify_chance: f32,
+    pub solidify_len: usize,
+    pub rnd_chance: f32, 
 }
 
 impl LifemodelProcessor {
@@ -68,6 +74,9 @@ impl LifemodelProcessor {
             dont_let_die: true,
             keep_param: HashSet::new(),
             global_contrib: false,
+	    solidify_chance: LifemodelDefaults::SOLIDIFY_CHANCE,
+	    solidify_len: LifemodelDefaults::SOLIDIFY_LEN,
+	    rnd_chance: LifemodelDefaults::RND_CHANCE, 
         }
     }
 }
@@ -200,6 +209,18 @@ impl GeneratorProcessor for LifemodelProcessor {
             }
         }
 
+	if self.solidify_chance > 0.0 {
+	    let mut rng = rand::thread_rng();
+            let rand =  rng.gen_range(0.0, 1000.0) / 1000.0;
+	    if rand < self.solidify_chance {
+		gen.generator.solidify(self.solidify_len);
+	    } 
+	}
+
+	if self.rnd_chance > 0.0 {
+	    gen.generator.randomize_edges(self.rnd_chance,self.rnd_chance);	   
+	}
+	
         // now rebalance
         if something_happened {
             gen.generator.rebalance();
