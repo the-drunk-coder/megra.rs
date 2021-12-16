@@ -75,6 +75,9 @@ Helpers, session management, etc.
 * [defpart - Define Parts](#defpart---define-parts)
 * [step-part - Evaluate Parts Step by Step](#step-part---evaluate-parts-step-by-step)
 
+Alphabetical Function List
+==========================
+
 ## `apple` - Probability-Based Generator Manipulators
 
 Modify a generator with a certain probability
