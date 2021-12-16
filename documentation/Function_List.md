@@ -396,8 +396,9 @@ Durations are step based, so the absolute durations depend on the speed your gen
 
 ```lisp
 (sx 'simple #t
-	(cmp (pear (lvl (env :v 0.0 0.4 0.0 :s 20 30)))
-         (cyc 'beat "bd ~ hats ~ sn ~ hats ~")))
+    (cmp 
+        (pear (lvl (env :v 0.0 0.4 0.0 :s 20 30)))
+        (cyc 'beat "bd ~ hats ~ sn ~ hats ~")))
 ```
 
 ## `every` - Count-Based Generator Manipulators
@@ -409,8 +410,9 @@ Does not work as a sound modifier (so far).
 
 ```lisp
 (sx 'simple #t
-    (cmp (every :n 20 (skip 2) :n 33 (rewind 2)) ;; <- every 20 steps, skip 2, every 33, rewind 2
-         (cyc 'beat "bd ~ hats ~ sn ~ hats ~")))
+    (cmp 
+	    (every :n 20 (skip 2) :n 33 (rewind 2)) ;; <- every 20 steps, skip 2, every 33, rewind 2
+        (cyc 'beat "bd ~ hats ~ sn ~ hats ~")))
 ```
 
 ## `exh` - Event Stream Manipulator
@@ -430,9 +432,10 @@ Exhibit event type, that is, mute all other events, with a certain probability.
 ### Example
 ```lisp
 (sx 'simple #t 
-  (cmp (exh 30 'hats)
-       (exh 30 'bd)
-       (nuc 'beat (bd) (sn) (hats)))) 
+  (cmp 
+      (exh 30 'hats)
+      (exh 30 'bd)
+      (nuc 'beat (bd) (sn) (hats)))) 
 ```
 
 ## `export-dot` - Export to DOT File
@@ -604,7 +607,7 @@ a little, and adding it to the generator following certain principles.
 ```lisp
 (sx 'al #t
 	(every :n 10 (grow) 
-		(nuc 'gae (shortri 120))))
+		(nuc 'gae (sqr 120))))
 ```
 
 ### Modes
