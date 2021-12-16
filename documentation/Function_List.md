@@ -30,7 +30,7 @@ Generator Modifiers modify structure, weights or evaluation order/speed of basic
 * [haste - speed up evaluation](#haste---speed-up-evaluation)
 * [life - Manipulate Generator](#life---manipulate-generator)
 * [relax - Slow Down Generator](#relax---slow-down-generator)
-* [rew - Rewind Generator](#rew---rewind-generator)
+* [rewind - Rewind Generator](#rewind---rewind-generator)
 * [sharpen - Sharpen Probabilities](#blur---sharpen-probabilities)
 * [shrink - Shrink Generator](#shrink---shrink-generator)
 * [skip - Skip Events](#skip---skip-events)
@@ -938,6 +938,34 @@ Skips ahead a specified number of steps.
      ;; this is the "original" 
 	 (cyc 'one "tri:120 tri:90 tri:100 tri:80 ~ ~ tri:120 tri:90 tri:100 tri:80 ~")))
 ```
+
+## `solidify` - Solidify Generator
+Looks at a generator's history of emitted symbols and adds a higher-order connection to make
+the last sequence more likely to happen again.
+
+### Example
+
+```lisp
+(defpart 'ga
+  (every 
+    :n 8 (solidify 4) ;; <- four last symbol emissions
+    (infer 'ta :events 'a (sqr 550) 'b (sqr 200) 'c (sqr 300) 'd (sqr 400)
+      :rules
+      (rule 'a 'a 10 100)
+      (rule 'a 'b 90 100)
+      (rule 'b 'a 80 100)
+      (rule 'b 'c 20 100)
+      (rule 'c 'd 100 100)
+      (rule 'd 'a 100 100) 
+      )))
+
+;; step 8 times
+(step-part 'ga)
+```
+
+![before_solidification](./diagrams/before_solidification.svg)
+
+![after_solidification](./diagrams/after_solidification.svg)
 
 ## `stages` - Stages Generator
 This generator arranges sound events in "stages". See for yourself.
