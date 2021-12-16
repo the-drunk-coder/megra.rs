@@ -865,7 +865,19 @@ Learn a trap-like beat from a sample string.
 
 ## `pear` - Apply Modifiers
 
-Appl-ys and Pears ...
+Appl-ys and Pears (don't ask me why it's named like this, I like good pears and found it funny).
+
+### Example
+
+```lisp
+(sx 'ba #t
+    (cmp
+        (pear (freq-mul 1.5)) ;; <- always multiply frequency by 1.5
+		(pear :p 10 (freq-mul 0.5) :p 20 (freq-mul 2.0)) ;; <- with a probablility of 10%, multiply with 0.5, and 20% multiply by two
+		(pear :p 20 (rev 0.2)) ;; <- with a probability of 20%, apply reverb
+		(pear :for 'sqr :p 20 (freq-mul 1.7)) ;; <- only for sqr events, apply a multiplicator with a chance of 20%
+	    (cyc 'ta "saw:150 ~ sqr:100 ~ saw:150 ~ sqr:100")))
+```
 
 ## `relax` - Slow Down Generator
 
