@@ -838,7 +838,16 @@ Also, exit probablities for each node should add up to 100.
 
 ## `learn` - Learn Generator from Distribution
 
-Learn a generator from a sample string.
+Learn a generator from a sample string. Based on the variable-order Markov chain learning algorithm
+proposed in *Ron, Singer, Tishby - The Power of Amnesia (1996)*.
+
+### Parameters
+* `:events` - Event definitions.
+* `:sample` - Sample string to learn from. Uses the defined event mapping as characters.
+* `:bound` - The maximum order of the learned markov chain, that is, how far to look back when determining the next step.
+* `:epsilon` - Probability threshold, a connection that's less likely than that won't be learned. The higher, the longer it takes to learn.
+* `:size` - Maximum generator size (nodes in the probabilistic finite automaton generated).
+* `:autosilence` - Use `~` as default character for silence.
 
 ### Example
 Learn a trap-like beat from a sample string.
