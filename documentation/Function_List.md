@@ -962,8 +962,11 @@ the last sequence more likely to happen again.
 ;; step 8 times
 (step-part 'ga)
 ```
+Initial generator:
 
 ![before_solidification](./diagrams/before_solidification.svg)
+
+After solidification:
 
 ![after_solidification](./diagrams/after_solidification.svg)
 
