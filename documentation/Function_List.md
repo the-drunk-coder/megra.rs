@@ -913,8 +913,31 @@ be different from the previous one, obviously.
 ```
 
 ## `shrink` - Shrink Generator
+Removes a symbol from the generator's alphabet. While `grow` adds symbols based on 
+the existing ones, this will remove them.
+
+### Example
+```lisp
+;; this will grow faster than it shrinks
+(sx 'ba #t
+    (every :n 10 (grow 0.2) :n 20 (shrink) 
+        (nuc 'ba (saw 120))))
+```
 
 ## `skip` - Skip Events
+Skips ahead a specified number of steps.
+
+### Example
+
+```lisp
+(sx 'more #t
+    (xspread     
+     (cmp ;; this is another copy with modifiers ...
+          (pear (freq-mul 3.0))
+          (every :n 20 (skip 2))) ;; <- every 20 steps, skip 2 steps ahead (only the copy)
+     ;; this is the "original" 
+	 (cyc 'one "tri:120 tri:90 tri:100 tri:80 ~ ~ tri:120 tri:90 tri:100 tri:80 ~")))
+```
 
 ## `stages` - Stages Generator
 This generator arranges sound events in "stages". See for yourself.
