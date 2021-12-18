@@ -27,7 +27,7 @@ impl LifemodelDefaults {
     const VARIANCE: f32 = 0.2;
     const NODE_LIFESPAN_VARIANCE: f32 = 0.1;
     const RND_CHANCE: f32 = 0.0;
-    const SOLIDIFY_CHANCE: f32 = 0.05;
+    const SOLIDIFY_CHANCE: f32 = 0.01;
     const SOLIDIFY_LEN: usize = 3;
 }
 
@@ -95,9 +95,11 @@ impl GeneratorProcessor for LifemodelProcessor {
         global_parameters: &Arc<GlobalParameters>,
         _: &mut Vec<TimeMod>,
     ) {
-        // check if we need to grow ...
+
+	// check if we need to grow ...
         let mut something_happened = false;
         if self.step_count >= self.growth_cycle {
+	    println!("proc lm");
             // reset step count
             self.step_count = 0;
 
@@ -189,7 +191,7 @@ impl GeneratorProcessor for LifemodelProcessor {
             };
 
             if let Some(symbol_to_remove) = sym {
-                //println!("lm apop {} {:?}", symbol_to_remove, gen.generator.alphabet);
+                println!("lm apop {} {:?}", symbol_to_remove, gen.generator.alphabet);
                 shrink_raw(gen, symbol_to_remove, false);
                 if self.global_contrib {
                     if let ConfigParameter::Numeric(global_resources) = global_parameters
@@ -209,7 +211,7 @@ impl GeneratorProcessor for LifemodelProcessor {
             }
         }
 
-	if self.solidify_chance > 0.0 {
+	if something_happened && self.solidify_chance > 0.0 {
 	    let mut rng = rand::thread_rng();
             let rand =  rng.gen_range(0.0, 1000.0) / 1000.0;
 	    if rand < self.solidify_chance {
@@ -217,7 +219,7 @@ impl GeneratorProcessor for LifemodelProcessor {
 	    } 
 	}
 
-	if self.rnd_chance > 0.0 {
+	if something_happened && self.rnd_chance > 0.0 {
 	    gen.generator.randomize_edges(self.rnd_chance,self.rnd_chance);	   
 	}
 	
