@@ -99,7 +99,7 @@ impl GeneratorProcessor for LifemodelProcessor {
 	// check if we need to grow ...
         let mut something_happened = false;
         if self.step_count >= self.growth_cycle {
-	    println!("proc lm");
+	    // println!("proc lm");
             // reset step count
             self.step_count = 0;
 
@@ -191,7 +191,7 @@ impl GeneratorProcessor for LifemodelProcessor {
             };
 
             if let Some(symbol_to_remove) = sym {
-                println!("lm apop {} {:?}", symbol_to_remove, gen.generator.alphabet);
+                //println!("lm apop {} {:?}", symbol_to_remove, gen.generator.alphabet);
                 shrink_raw(gen, symbol_to_remove, false);
                 if self.global_contrib {
                     if let ConfigParameter::Numeric(global_resources) = global_parameters
