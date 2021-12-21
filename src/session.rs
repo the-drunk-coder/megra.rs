@@ -124,6 +124,7 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
     // global tempo modifier, allows us to do weird stuff with the
     // global tempo ...
     let mut tmod: f64 = 1.0;
+    let mut latency: f64 = 0.05;
 
     if let ConfigParameter::Dynamic(global_tmod) = data
         .global_parameters
@@ -132,6 +133,15 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
         .value_mut()
     {
         tmod = global_tmod.evaluate() as f64;
+    }
+
+    if let ConfigParameter::Dynamic(global_latency) = data
+        .global_parameters
+        .entry(BuiltinGlobalParameters::GlobalLatency)
+        .or_insert(ConfigParameter::Dynamic(Parameter::with_value(0.05))) // init on first attempt
+        .value_mut()
+    {
+        latency = global_latency.evaluate() as f64;
     }
 
     let time = (data
@@ -196,7 +206,7 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
 
                 // latency 0.05, should be made configurable later ...
                 let inst =
-                    ruff.prepare_instance(map_name(&s.name), data.stream_time + 0.05, bufnum);
+                    ruff.prepare_instance(map_name(&s.name), data.stream_time + latency, bufnum);
                 // set parameters and trigger instance
                 for (k, v) in s.params.iter() {
                     // special handling for stereo param

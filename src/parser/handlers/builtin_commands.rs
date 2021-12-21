@@ -113,6 +113,15 @@ fn handle_tmod(tail: &mut Vec<Expr>) -> Atom {
     }))
 }
 
+fn handle_latency(tail: &mut Vec<Expr>) -> Atom {
+    let mut tail_drain = tail.drain(..);
+    Atom::Command(Command::Latency(match tail_drain.next() {
+        Some(Expr::Constant(Atom::Parameter(p))) => p,
+        Some(Expr::Constant(Atom::Float(f))) => Parameter::with_value(f),
+        _ => Parameter::with_value(0.05),
+    }))
+}
+
 fn handle_globres(tail: &mut Vec<Expr>) -> Atom {
     let mut tail_drain = tail.drain(..);
     Atom::Command(Command::GlobRes(match tail_drain.next() {
@@ -262,6 +271,7 @@ pub fn handle(cmd: BuiltInCommand, tail: &mut Vec<Expr>) -> Atom {
     match cmd {
         BuiltInCommand::Clear => Atom::Command(Command::Clear),
         BuiltInCommand::Tmod => handle_tmod(tail),
+	BuiltInCommand::Latency => handle_latency(tail),
         BuiltInCommand::Reverb => handle_reverb(tail),
         BuiltInCommand::Delay => handle_delay(tail),
         BuiltInCommand::GlobRes => handle_globres(tail),

@@ -208,6 +208,13 @@ pub fn set_global_tmod(global_parameters: &sync::Arc<GlobalParameters>, p: Param
     ); // init on first attempt
 }
 
+pub fn set_global_latency(global_parameters: &sync::Arc<GlobalParameters>, p: Parameter) {
+    global_parameters.insert(
+        BuiltinGlobalParameters::GlobalLatency,
+        ConfigParameter::Dynamic(p),
+    ); // init on first attempt
+}
+
 pub fn set_global_lifemodel_resources(global_parameters: &sync::Arc<GlobalParameters>, val: f32) {
     global_parameters.insert(
         BuiltinGlobalParameters::LifemodelGlobalResources,
