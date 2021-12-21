@@ -181,13 +181,17 @@ impl GeneratorProcessor for LifemodelProcessor {
                     (orig + rand).floor() as usize
                 };
 
-                let relevant_age = add_var(
-                    *gen.symbol_ages.get(&res.last_symbol).unwrap() as f32,
-                    self.node_lifespan_variance,
-                );
-                if relevant_age >= self.node_lifespan {
-                    sym = Some(res.last_symbol)
-                }
+		// sometimes the growth/shrink processed might have invalidated or deleted
+		// the last symbol, so let's check just in case ... 
+		if let Some(age) = gen.symbol_ages.get(&res.last_symbol) {
+		    let relevant_age = add_var(
+			*age as f32,
+			self.node_lifespan_variance,
+                    );
+                    if relevant_age >= self.node_lifespan {
+			sym = Some(res.last_symbol)
+                    }
+		}            
             };
 
             if let Some(symbol_to_remove) = sym {
