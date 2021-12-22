@@ -377,19 +377,19 @@ where
                     "create megra resource directory {:?}",
                     proj_dirs.config_dir()
                 );
-                std::fs::create_dir(proj_dirs.config_dir().to_str().unwrap())?;
+                std::fs::create_dir_all(proj_dirs.config_dir().to_str().unwrap())?;
             }
 
             let samples_path = proj_dirs.config_dir().join("samples");
             if !samples_path.exists() {
                 println!("create megra samples directory {:?}", samples_path);
-                std::fs::create_dir(samples_path.to_str().unwrap())?;
+                std::fs::create_dir_all(samples_path.to_str().unwrap())?;
             }
 
             let sketchbook_path = proj_dirs.config_dir().join("sketchbook");
             if !sketchbook_path.exists() {
                 println!("create megra sketchbook directory {:?}", sketchbook_path);
-                std::fs::create_dir(sketchbook_path.to_str().unwrap())?;
+                std::fs::create_dir_all(sketchbook_path.to_str().unwrap())?;
             }
 
             println!("load samples from path: {:?}", samples_path);
