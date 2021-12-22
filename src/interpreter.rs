@@ -117,7 +117,7 @@ pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
                 Command::Tmod(p) => {
                     commands::set_global_tmod(global_parameters, p);
                 }
-		Command::Latency(p) => {
+                Command::Latency(p) => {
                     commands::set_global_latency(global_parameters, p);
                 }
                 Command::GlobRes(v) => {

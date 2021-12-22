@@ -271,7 +271,7 @@ pub fn handle(cmd: BuiltInCommand, tail: &mut Vec<Expr>) -> Atom {
     match cmd {
         BuiltInCommand::Clear => Atom::Command(Command::Clear),
         BuiltInCommand::Tmod => handle_tmod(tail),
-	BuiltInCommand::Latency => handle_latency(tail),
+        BuiltInCommand::Latency => handle_latency(tail),
         BuiltInCommand::Reverb => handle_reverb(tail),
         BuiltInCommand::Delay => handle_delay(tail),
         BuiltInCommand::GlobRes => handle_globres(tail),

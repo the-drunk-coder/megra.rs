@@ -440,21 +440,21 @@ fn collect_lifemodel(tail: &mut Vec<Expr>) -> Box<LifemodelProcessor> {
                         proc.global_contrib = b;
                     }
                 }
-		"rnd" => {
+                "rnd" => {
                     if let Some(Expr::Constant(Atom::Float(f))) = tail_drain.next() {
                         proc.rnd_chance = f;
                     }
                 }
-		"solidify" => {
+                "solidify" => {
                     if let Some(Expr::Constant(Atom::Float(f))) = tail_drain.next() {
                         proc.solidify_chance = f;
                     }
                 }
-		"solidify-len" => {
+                "solidify-len" => {
                     if let Some(Expr::Constant(Atom::Float(f))) = tail_drain.next() {
                         proc.solidify_len = f as usize;
                     }
-                }		
+                }
                 _ => {}
             }
         }

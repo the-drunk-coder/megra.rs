@@ -87,7 +87,7 @@ impl<'a> epi::App for MegraEditor<'a> {
         self.function_names.push("step-part");
         self.function_names.push("friendship");
         self.function_names.push("tmod");
-	self.function_names.push("latency");
+        self.function_names.push("latency");
         self.function_names.push("global-resources");
         self.function_names.push("learn");
         self.function_names.push("delay");

@@ -52,7 +52,7 @@ pub struct LifemodelProcessor {
     pub global_contrib: bool,
     pub solidify_chance: f32,
     pub solidify_len: usize,
-    pub rnd_chance: f32, 
+    pub rnd_chance: f32,
 }
 
 impl LifemodelProcessor {
@@ -74,9 +74,9 @@ impl LifemodelProcessor {
             dont_let_die: true,
             keep_param: HashSet::new(),
             global_contrib: false,
-	    solidify_chance: LifemodelDefaults::SOLIDIFY_CHANCE,
-	    solidify_len: LifemodelDefaults::SOLIDIFY_LEN,
-	    rnd_chance: LifemodelDefaults::RND_CHANCE, 
+            solidify_chance: LifemodelDefaults::SOLIDIFY_CHANCE,
+            solidify_len: LifemodelDefaults::SOLIDIFY_LEN,
+            rnd_chance: LifemodelDefaults::RND_CHANCE,
         }
     }
 }
@@ -95,11 +95,10 @@ impl GeneratorProcessor for LifemodelProcessor {
         global_parameters: &Arc<GlobalParameters>,
         _: &mut Vec<TimeMod>,
     ) {
-
-	// check if we need to grow ...
+        // check if we need to grow ...
         let mut something_happened = false;
         if self.step_count >= self.growth_cycle {
-	    // println!("proc lm");
+            // println!("proc lm");
             // reset step count
             self.step_count = 0;
 
@@ -181,17 +180,14 @@ impl GeneratorProcessor for LifemodelProcessor {
                     (orig + rand).floor() as usize
                 };
 
-		// sometimes the growth/shrink processed might have invalidated or deleted
-		// the last symbol, so let's check just in case ... 
-		if let Some(age) = gen.symbol_ages.get(&res.last_symbol) {
-		    let relevant_age = add_var(
-			*age as f32,
-			self.node_lifespan_variance,
-                    );
+                // sometimes the growth/shrink processed might have invalidated or deleted
+                // the last symbol, so let's check just in case ...
+                if let Some(age) = gen.symbol_ages.get(&res.last_symbol) {
+                    let relevant_age = add_var(*age as f32, self.node_lifespan_variance);
                     if relevant_age >= self.node_lifespan {
-			sym = Some(res.last_symbol)
+                        sym = Some(res.last_symbol)
                     }
-		}            
+                }
             };
 
             if let Some(symbol_to_remove) = sym {
@@ -215,18 +211,19 @@ impl GeneratorProcessor for LifemodelProcessor {
             }
         }
 
-	if something_happened && self.solidify_chance > 0.0 {
-	    let mut rng = rand::thread_rng();
-            let rand =  rng.gen_range(0.0, 1000.0) / 1000.0;
-	    if rand < self.solidify_chance {
-		gen.generator.solidify(self.solidify_len);
-	    } 
-	}
+        if something_happened && self.solidify_chance > 0.0 {
+            let mut rng = rand::thread_rng();
+            let rand = rng.gen_range(0.0, 1000.0) / 1000.0;
+            if rand < self.solidify_chance {
+                gen.generator.solidify(self.solidify_len);
+            }
+        }
 
-	if something_happened && self.rnd_chance > 0.0 {
-	    gen.generator.randomize_edges(self.rnd_chance,self.rnd_chance);	   
-	}
-	
+        if something_happened && self.rnd_chance > 0.0 {
+            gen.generator
+                .randomize_edges(self.rnd_chance, self.rnd_chance);
+        }
+
         // now rebalance
         if something_happened {
             gen.generator.rebalance();
