@@ -125,7 +125,7 @@ fn main() -> Result<(), anyhow::Error> {
                             let s = sample.unwrap() as f32 / max_val;
                             sample_buffer.push(s);
                         }
-                        ReverbMode::Convolution(sample_buffer)
+                        ReverbMode::Convolution(sample_buffer, reader.streaminfo().sample_rate as f32)
                     } else {
                         println!("reverb ir path invalid, fall back to freeverb");
                         ReverbMode::FreeVerb
