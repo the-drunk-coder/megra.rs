@@ -6,9 +6,9 @@ Mégra implemented in Rust !
 
 This is still in an early development stage and has some severe limitations! 
 
-* It only works at a blocksize of 512
+* It only works at a blocksize of 512 (Linux and macOS, as Windows WASAPI doesn't provide fixed blocksizes)
 * So far only on MacOS and Linux (with Jack)
-* There's no user- or developer documentation so far
+* There's no proper developer documentation so far
 
 These issues are being addressed in no particular order ...
 
@@ -28,6 +28,8 @@ cargo run --release -- -e -o 2ch
 If you don't already have a sample set at hand, some samples (enough to follow the documentation) can be found here: https://github.com/the-drunk-coder/megra-public-samples
 
 Place the samples (on Linux at least) in the folder `.config/megra/samples`. Now you'll have a sound event for every sample.
+
+Make sure you cofigure your audio system to the samplerate of your samples, otherwise loading samples will be slow due to resampling !
 
 ## Sketchbook
 The files generated and read by the editor can be found in `.config/megra/sketchbook`.
