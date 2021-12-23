@@ -45,6 +45,14 @@ Usage:
     println!("{}", opts.usage(&description));
 }
 
+// change this if you need to compile for really unreliable systems that need
+// a lot of latency
+// will be ignored if ringbuffer feature isn't activated
+#[cfg(feature = "ringbuffer")]
+const RINGBUFFER_SIZE: usize = 8000;
+#[cfg(feature = "ringbuffer")]
+const BLOCKSIZE: usize = 512;
+
 fn main() -> Result<(), anyhow::Error> {
     let mut argv = env::args();
     let program = argv.next().unwrap();
@@ -184,19 +192,25 @@ fn main() -> Result<(), anyhow::Error> {
     }
     .expect("failed to find input device");
 
-    let config: cpal::SupportedStreamConfig = input_device.default_input_config().unwrap();
-    println!("chan: {:?}", config);
-    let sample_format = config.sample_format();
+    let out_config: cpal::SupportedStreamConfig = output_device.default_output_config().unwrap();
+    let in_config: cpal::SupportedStreamConfig = input_device.default_input_config().unwrap();
+    println!("in chan: {:?}", in_config);
+    println!("out chan: {:?}", out_config);
 
+    // let's assume it's the same for both ...
+    let sample_format = out_config.sample_format();
+    
     match out_mode {
         OutputMode::Stereo => {
-            let mut conf: cpal::StreamConfig = config.into();
-            conf.channels = 2;
+            let mut out_conf: cpal::StreamConfig = out_config.into();
+            let in_conf: cpal::StreamConfig = in_config.into();
+            out_conf.channels = 2;
             match sample_format {
                 cpal::SampleFormat::F32 => run::<f32, 2>(
                     &input_device,
                     &output_device,
-                    &conf,
+                    &out_conf,
+                    &in_conf,
                     out_mode,
                     live_buffer_time,
                     editor,
@@ -206,7 +220,8 @@ fn main() -> Result<(), anyhow::Error> {
                 cpal::SampleFormat::I16 => run::<i16, 2>(
                     &input_device,
                     &output_device,
-                    &conf,
+                    &out_conf,
+                    &in_conf,
                     out_mode,
                     live_buffer_time,
                     editor,
@@ -216,7 +231,8 @@ fn main() -> Result<(), anyhow::Error> {
                 cpal::SampleFormat::U16 => run::<u16, 2>(
                     &input_device,
                     &output_device,
-                    &conf,
+                    &out_conf,
+                    &in_conf,
                     out_mode,
                     live_buffer_time,
                     editor,
@@ -226,13 +242,15 @@ fn main() -> Result<(), anyhow::Error> {
             }
         }
         OutputMode::FourChannel => {
-            let mut conf: cpal::StreamConfig = config.into();
-            conf.channels = 4;
+            let mut out_conf: cpal::StreamConfig = out_config.into();
+            let in_conf: cpal::StreamConfig = in_config.into();
+            out_conf.channels = 4;
             match sample_format {
                 cpal::SampleFormat::F32 => run::<f32, 4>(
                     &input_device,
                     &output_device,
-                    &conf,
+                    &out_conf,
+                    &in_conf,
                     out_mode,
                     live_buffer_time,
                     editor,
@@ -242,7 +260,8 @@ fn main() -> Result<(), anyhow::Error> {
                 cpal::SampleFormat::I16 => run::<i16, 4>(
                     &input_device,
                     &output_device,
-                    &conf,
+                    &out_conf,
+                    &in_conf,
                     out_mode,
                     live_buffer_time,
                     editor,
@@ -252,7 +271,8 @@ fn main() -> Result<(), anyhow::Error> {
                 cpal::SampleFormat::U16 => run::<u16, 4>(
                     &input_device,
                     &output_device,
-                    &conf,
+                    &out_conf,
+                    &in_conf,
                     out_mode,
                     live_buffer_time,
                     editor,
@@ -262,13 +282,15 @@ fn main() -> Result<(), anyhow::Error> {
             }
         }
         OutputMode::EightChannel => {
-            let mut conf: cpal::StreamConfig = config.into();
-            conf.channels = 8;
+            let mut out_conf: cpal::StreamConfig = out_config.into();
+            let in_conf: cpal::StreamConfig = in_config.into();
+            out_conf.channels = 8;
             match sample_format {
                 cpal::SampleFormat::F32 => run::<f32, 8>(
                     &input_device,
                     &output_device,
-                    &conf,
+                    &out_conf,
+                    &in_conf,
                     out_mode,
                     live_buffer_time,
                     editor,
@@ -278,7 +300,8 @@ fn main() -> Result<(), anyhow::Error> {
                 cpal::SampleFormat::I16 => run::<i16, 8>(
                     &input_device,
                     &output_device,
-                    &conf,
+                    &out_conf,
+                    &in_conf,
                     out_mode,
                     live_buffer_time,
                     editor,
@@ -288,7 +311,8 @@ fn main() -> Result<(), anyhow::Error> {
                 cpal::SampleFormat::U16 => run::<u16, 8>(
                     &input_device,
                     &output_device,
-                    &conf,
+                    &out_conf,
+                    &in_conf,
                     out_mode,
                     live_buffer_time,
                     editor,
@@ -305,7 +329,8 @@ fn main() -> Result<(), anyhow::Error> {
 fn run<T, const NCHAN: usize>(
     input_device: &cpal::Device,
     output_device: &cpal::Device,
-    config: &cpal::StreamConfig,
+    out_config: &cpal::StreamConfig,
+    in_config: &cpal::StreamConfig,
     mode: OutputMode,
     live_buffer_time: f32,
     editor: bool,
@@ -316,8 +341,9 @@ where
     T: cpal::Sample,
 {
     // at some point i'll need to implement more samplerates i suppose ...
-    let sample_rate = config.sample_rate.0 as f32;
-    let channels = config.channels as usize;
+    let sample_rate = out_config.sample_rate.0 as f32;
+    let out_channels = out_config.channels as usize;
+    let in_channels = in_config.channels as usize;
     let err_fn = |err| eprintln!("an error occurred on stream: {}", err);
 
     let ruffbox = sync::Arc::new(Mutex::new(Ruffbox::<512, NCHAN>::new(
@@ -330,20 +356,26 @@ where
     let ruffbox3 = sync::Arc::clone(&ruffbox); // the one for the audio thread (in stream)...
 
     let in_stream = input_device.build_input_stream(
-        config,
+        in_config,
         move |data: &[f32], _: &cpal::InputCallbackInfo| {
             let mut ruff = ruffbox3.lock();
 
             // there might be a faster way to de-interleave here ...
-            for (_, frame) in data.chunks(channels).enumerate() {
+	    // only use first input channel
+            for (_, frame) in data.chunks(in_channels).enumerate() {
                 ruff.write_sample_to_live_buffer(frame[0]);
             }
         },
         err_fn,
     )?;
 
+    // main audio callback (plain)
+    // the plain audio callback for platforms where the blocksize
+    // is static, configurable and a power of two (preferably 512)
+    // (i.e. jack, coreaudio)
+    #[cfg(not(feature = "ringbuffer"))]
     let out_stream = output_device.build_output_stream(
-        config,
+        out_config,
         move |data: &mut [f32], _: &cpal::OutputCallbackInfo| {
             let mut ruff = ruffbox2.lock();
 
@@ -352,11 +384,103 @@ where
             let ruff_out = ruff.process(0.0, true);
 
             // there might be a faster way to de-interleave here ...
-            for (frame_count, frame) in data.chunks_mut(channels).enumerate() {
-                for ch in 0..channels {
+            for (frame_count, frame) in data.chunks_mut(out_channels).enumerate() {
+                for ch in 0..out_channels {
                     frame[ch] = ruff_out[ch][frame_count];
                 }
             }
+        },
+        err_fn,
+    )?;
+    
+    // main audio callback (with )
+    // this is the ringbuffer version that internally buffers the audio
+    // stream to allow a fixed blocksize being used for the ruffbox synth
+    // even if the system doesn't provide a fixed and/or configurable blocksize
+    // might require a higher latency
+    #[cfg(feature = "ringbuffer")]
+    println!("using ringbuffer to adapt blocksize, you might need to use a higher latency");
+
+    #[cfg(feature = "ringbuffer")]
+    let mut ringbuffer: [[f32; RINGBUFFER_SIZE]; NCHAN] = [[0.0; RINGBUFFER_SIZE]; NCHAN];
+    #[cfg(feature = "ringbuffer")]
+    let mut write_idx: usize = 0;
+    #[cfg(feature = "ringbuffer")]
+    let mut read_idx: usize = 0;
+    #[cfg(feature = "ringbuffer")]
+    let out_stream = output_device.build_output_stream(
+        out_config,
+        move |data: &mut [f32], _: &cpal::OutputCallbackInfo| {
+            let mut ruff = ruffbox2.lock();
+
+            let samples_available = if write_idx < read_idx {
+                write_idx + RINGBUFFER_SIZE - read_idx
+            } else if write_idx > read_idx {
+                write_idx - read_idx
+            } else {
+                0
+            };
+            //let mut produced:usize = 0;
+
+            let current_blocksize = data.len() / out_channels;
+
+            //println!(
+            //   "av {} need {} read {} write {}",
+            //   samples_available, current_blocksize, read_idx, write_idx
+            //);
+
+            if samples_available < current_blocksize {
+                let mut samples_actually_needed = current_blocksize - samples_available;
+
+                while samples_actually_needed > 0 {
+                    let ruff_out = ruff.process(0.0, true);
+                    //produced += BLOCKSIZE;
+                    for ch in 0..out_channels {
+                        let mut tmp_write_idx = write_idx;
+                        for s in 0..BLOCKSIZE {
+                            ringbuffer[ch][tmp_write_idx] = ruff_out[ch][s];
+                            tmp_write_idx += 1;
+                            if tmp_write_idx >= RINGBUFFER_SIZE {
+                                tmp_write_idx = 0;
+                            }
+                        }
+                    }
+
+                    write_idx += BLOCKSIZE;
+                    if write_idx >= RINGBUFFER_SIZE {
+                        write_idx = write_idx - RINGBUFFER_SIZE;
+                    }
+
+                    samples_actually_needed = if samples_actually_needed > BLOCKSIZE {
+                        samples_actually_needed - BLOCKSIZE
+                    } else {
+                        0
+                    }
+                }
+            }
+
+            // there might be a faster way to de-interleave here ...
+            for (_, frame) in data.chunks_mut(out_channels).enumerate() {
+                for ch in 0..out_channels {
+                    frame[ch] = ringbuffer[ch][read_idx];
+                }
+                read_idx += 1;
+                if read_idx >= RINGBUFFER_SIZE {
+                    read_idx = 0;
+                }
+            }
+            /*
+            println!(
+               "POST BLOCK av {} bs {} to prod {} prod {} r idx {} w idx {} NOW {}",
+               samples_available,
+               current_blocksize,
+               current_blocksize - samples_available,
+               produced,
+               read_idx,
+               write_idx,
+               ruff.get_now()
+            );
+            */
         },
         err_fn,
     )?;

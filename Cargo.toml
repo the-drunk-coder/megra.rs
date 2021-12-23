@@ -31,3 +31,7 @@ chrono = "0.4"
 
 [dev-dependencies]
 assert_approx_eq = "1.1.0"
+
+[features]
+default = [] # enable ringbuffer for WASAPI !
+ringbuffer = []
