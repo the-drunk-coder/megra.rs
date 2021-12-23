@@ -316,13 +316,14 @@ where
     T: cpal::Sample,
 {
     // at some point i'll need to implement more samplerates i suppose ...
-    let _sample_rate = config.sample_rate.0 as f32;
+    let sample_rate = config.sample_rate.0 as f32;
     let channels = config.channels as usize;
     let err_fn = |err| eprintln!("an error occurred on stream: {}", err);
 
     let ruffbox = sync::Arc::new(Mutex::new(Ruffbox::<512, NCHAN>::new(
+        sample_rate.into(),
         true,
-        live_buffer_time,
+        live_buffer_time.into(),
         reverb_mode,
     )));
     let ruffbox2 = sync::Arc::clone(&ruffbox); // the one for the audio thread (out stream)...
