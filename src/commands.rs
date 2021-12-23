@@ -61,8 +61,8 @@ pub fn load_sample<const BUFSIZE: usize, const NCHAN: usize>(
     // adds interpolation samples to sample buffer, don't use afterwards
     let bufnum = ruff.load_sample(
         &mut sample_buffer,
-        reader.streaminfo().sample_rate as f32,
         true,
+        reader.streaminfo().sample_rate as f32,
     );
 
     let mut keyword_set = HashSet::new();

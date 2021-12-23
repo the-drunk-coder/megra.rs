@@ -125,7 +125,10 @@ fn main() -> Result<(), anyhow::Error> {
                             let s = sample.unwrap() as f32 / max_val;
                             sample_buffer.push(s);
                         }
-                        ReverbMode::Convolution(sample_buffer, reader.streaminfo().sample_rate as f32)
+                        ReverbMode::Convolution(
+                            sample_buffer,
+                            reader.streaminfo().sample_rate as f32,
+                        )
                     } else {
                         println!("reverb ir path invalid, fall back to freeverb");
                         ReverbMode::FreeVerb
@@ -199,7 +202,7 @@ fn main() -> Result<(), anyhow::Error> {
 
     // let's assume it's the same for both ...
     let sample_format = out_config.sample_format();
-    
+
     match out_mode {
         OutputMode::Stereo => {
             let mut out_conf: cpal::StreamConfig = out_config.into();
@@ -348,21 +351,20 @@ where
 
     #[cfg(feature = "ringbuffer")]
     let ruffbox = sync::Arc::new(Mutex::new(Ruffbox::<128, NCHAN>::new(
-        sample_rate.into(),
         true,
         live_buffer_time.into(),
         reverb_mode,
+        sample_rate.into(),
     )));
 
     #[cfg(not(feature = "ringbuffer"))]
     let ruffbox = sync::Arc::new(Mutex::new(Ruffbox::<512, NCHAN>::new(
-        sample_rate.into(),
         true,
         live_buffer_time.into(),
         reverb_mode,
+        sample_rate.into(),
     )));
 
-    
     let ruffbox2 = sync::Arc::clone(&ruffbox); // the one for the audio thread (out stream)...
     let ruffbox3 = sync::Arc::clone(&ruffbox); // the one for the audio thread (in stream)...
 
@@ -372,7 +374,7 @@ where
             let mut ruff = ruffbox3.lock();
 
             // there might be a faster way to de-interleave here ...
-	    // only use first input channel
+            // only use first input channel
             for (_, frame) in data.chunks(in_channels).enumerate() {
                 ruff.write_sample_to_live_buffer(frame[0]);
             }
@@ -403,7 +405,7 @@ where
         },
         err_fn,
     )?;
-    
+
     // main audio callback (with )
     // this is the ringbuffer version that internally buffers the audio
     // stream to allow a fixed blocksize being used for the ruffbox synth
