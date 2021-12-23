@@ -27,6 +27,8 @@ cargo run --release -- -e -o 2ch
 ## Finding and Using Samples
 If you don't already have a sample set at hand, some samples (enough to follow the documentation) can be found here: https://github.com/the-drunk-coder/megra-public-samples
 
+Mégra currently only supports samples in **FLAC** format.
+
 Place the samples (on Linux at least) in the folder `.config/megra/samples`. Now you'll have a sound event for every sample.
 
 You can also load individual samples to a set by hand using `(load-sample :set '<set> :path "<path-to-sample>")`.
