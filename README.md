@@ -29,6 +29,8 @@ If you don't already have a sample set at hand, some samples (enough to follow t
 
 Place the samples (on Linux at least) in the folder `.config/megra/samples`. Now you'll have a sound event for every sample.
 
+You can also load individual samples to a set by hand using `(load-sample :set '<set> :path "<path-to-sample>")`.
+
 Make sure you cofigure your audio system to the samplerate of your samples, otherwise loading samples will be slow due to resampling !
 
 ## Sketchbook
