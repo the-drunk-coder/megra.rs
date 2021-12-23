@@ -49,33 +49,29 @@ pub fn load_sample<const BUFSIZE: usize, const NCHAN: usize>(
         duration = 10000;
     }
 
-    println!(
-        "sample path: {} channels: {} dur: {}",
-        path,
-        reader.streaminfo().channels,
-        duration
-    );
-
     // decode to f32
     let max_val = (i32::MAX >> (32 - reader.streaminfo().bits_per_sample)) as f32;
-    sample_buffer.push(0.0); // interpolation sample
     for sample in reader.samples() {
         let s = sample.unwrap() as f32 / max_val;
         sample_buffer.push(s);
     }
-    sample_buffer.push(0.0); // interpolation sample
-    sample_buffer.push(0.0); // interpolation sample
 
     let mut ruff = ruffbox.lock();
-    let bufnum = ruff.load_sample(&sample_buffer);
+
+    // adds interpolation samples to sample buffer, don't use afterwards
+    let bufnum = ruff.load_sample(
+        &mut sample_buffer,
+        reader.streaminfo().sample_rate as f32,
+        true,
+    );
 
     let mut keyword_set = HashSet::new();
     for k in keywords.drain(..) {
         keyword_set.insert(k);
     }
 
-    let path = Path::new(&path);
-    if let Some(os_filename) = path.file_stem() {
+    let path2 = Path::new(&path);
+    if let Some(os_filename) = path2.file_stem() {
         if let Some(str_filename) = os_filename.to_str() {
             let tokens = str_filename.split(|c| c == ' ' || c == '_' || c == '-' || c == '.');
             for token in tokens {
@@ -83,6 +79,22 @@ pub fn load_sample<const BUFSIZE: usize, const NCHAN: usize>(
             }
         }
     }
+
+    if reader.streaminfo().sample_rate != ruff.samplerate as u32 {
+        println!("adapt duration");
+        duration =
+            (duration as f32 * (reader.streaminfo().sample_rate as f32 / ruff.samplerate)) as usize;
+    }
+
+    println!(
+        "sample path: {} channels: {} dur: {} orig sr: {} ruf sr: {} resampled: {}",
+        path,
+        reader.streaminfo().channels,
+        duration,
+        reader.streaminfo().sample_rate,
+        ruff.samplerate,
+        reader.streaminfo().sample_rate != ruff.samplerate as u32
+    );
 
     sample_set.lock().insert(set, keyword_set, bufnum, duration);
 }
