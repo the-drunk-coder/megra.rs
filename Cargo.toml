@@ -22,9 +22,12 @@ claxon = "0.4.3"
 getopts = "0.2"
 rand = "0.7"
 rust-music-theory = {git = "https://github.com/the-drunk-coder/rust-music-theory"}
-egui = { git = "https://github.com/the-drunk-coder/egui", branch="megra", features = ["persistence"]}
-egui_glium = { git = "https://github.com/the-drunk-coder/egui", branch="megra", features = ["persistence"]}
-epi = { git = "https://github.com/the-drunk-coder/egui", branch="megra", features = ["persistence"]}
+#egui = { git = "https://github.com/the-drunk-coder/egui", branch="megra", features = ["persistence"]}
+#egui_glium = { git = "https://github.com/the-drunk-coder/egui", branch="megra", features = ["persistence"]}
+#epi = { git = "https://github.com/the-drunk-coder/egui", branch="megra", features = ["persistence"]}
+egui = { path = "../thirdparty/egui_upstream/egui" }
+egui_glium = { path = "../thirdparty/egui_upstream/egui_glium" }
+epi = { path = "../thirdparty/egui_upstream/epi" }
 serde = { version = "1", features = ["derive"] }
 dashmap = "4.0.0"
 chrono = "0.4"

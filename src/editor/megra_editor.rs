@@ -23,8 +23,8 @@ pub struct MegraEditor<'a> {
     sketch_number: usize,
     #[serde(skip)]
     function_names: Vec<&'a str>,
-    #[serde(skip)]
-    colors: HashMap<egui::CodeColors, egui::Color32>,
+    //#[serde(skip)]
+    //colors: HashMap<egui::CodeColors, egui::Color32>,
 }
 
 impl<'a> Default for MegraEditor<'a> {
@@ -37,7 +37,7 @@ impl<'a> Default for MegraEditor<'a> {
             current_sketch: "".to_string(),
             sketch_number: 0,
             function_names: Vec::new(),
-            colors: HashMap::new(),
+            //colors: HashMap::new(),
         }
     }
 }
@@ -117,6 +117,7 @@ impl<'a> epi::App for MegraEditor<'a> {
         self.function_names.push("inexh");
         self.function_names.push("stages");
 
+	/*
         self.colors.insert(
             egui::CodeColors::Keyword,
             egui::Color32::from_rgb(200, 20, 200),
@@ -134,7 +135,7 @@ impl<'a> epi::App for MegraEditor<'a> {
         self.colors.insert(
             egui::CodeColors::String,
             egui::Color32::from_rgb(200, 200, 10),
-        );
+        );*/
 
         // create sketch and load sketch file list ...
         if let Some(proj_dirs) = ProjectDirs::from("de", "parkellipsen", "megra") {
@@ -246,30 +247,26 @@ impl<'a> epi::App for MegraEditor<'a> {
 
             ui.separator();
 
-            ScrollArea::auto_sized()
+            ScrollArea::vertical()
                 .always_show_scroll(true)
                 .show(ui, |ui| {
                     let num_lines = self.content.lines().count() + 1;
 
                     let tx = if let Some(cb) = self.callback.as_ref() {
-                        egui::LivecodeTextEdit::multiline(
-                            &mut self.content,
-                            &self.function_names,
-                            &self.colors,
+                        egui::TextEdit::multiline(
+                            &mut self.content,                            
                         )
                         .desired_rows(22)
-                        .reset_cursor(sketch_switched)
+                        //.reset_cursor(sketch_switched)
                         .text_style(egui::TextStyle::Monospace)
                         .desired_width(800.0)
-                        .eval_callback(&cb)
+                        //.eval_callback(&cb)
                     } else {
-                        egui::LivecodeTextEdit::multiline(
-                            &mut self.content,
-                            &self.function_names,
-                            &self.colors,
+                        egui::TextEdit::multiline(
+                            &mut self.content,                            
                         )
                         .desired_rows(22)
-                        .reset_cursor(sketch_switched)
+                        //.reset_cursor(sketch_switched)
                         .desired_width(800.0)
                         .text_style(egui::TextStyle::Monospace)
                     };
@@ -279,7 +276,7 @@ impl<'a> epi::App for MegraEditor<'a> {
                         linenums.push_str(format!("{}\n", i).as_str());
                     }
 
-                    let ln = egui::Label::new(&mut linenums).text_style(egui::TextStyle::Monospace);
+                    let ln = egui::Label::new(linenums).text_style(egui::TextStyle::Monospace);
 
                     ui.horizontal(|ui| {
                         ui.add(ln);
