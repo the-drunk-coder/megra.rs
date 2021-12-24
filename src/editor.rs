@@ -1,3 +1,4 @@
+mod livecode_text_edit;
 use parking_lot::Mutex;
 use ruffbox_synth::ruffbox::Ruffbox;
 use std::sync;

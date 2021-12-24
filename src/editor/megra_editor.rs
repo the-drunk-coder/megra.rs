@@ -2,7 +2,10 @@ use chrono::*;
 use directories_next::ProjectDirs;
 use egui::ScrollArea;
 use parking_lot::Mutex;
-use std::{collections::HashMap, fs, path, sync::*};
+use std::{fs, path, sync::*};
+
+// custom text edit window
+use crate::editor::livecode_text_edit::LivecodeTextEdit;
 
 #[derive(PartialEq)]
 enum SketchNumber {
@@ -196,10 +199,9 @@ impl<'a> epi::App for MegraEditor<'a> {
 
             ui.horizontal(|ui| {
                 ui.add(
-                    egui::Label::new("Mégra Editor")
-                        .text_color(egui::Color32::from_rgb(150, 250, 100))
-                        .wrap(false)
-                        .monospace(),
+                    egui::Label::new(egui::RichText::new("Mégra Editor").text_style(egui::TextStyle::Monospace))          
+                    .wrap(false)
+                    .monospace()
                 );
 
                 let id = ui.make_persistent_id("file_chooser_box");
@@ -253,7 +255,7 @@ impl<'a> epi::App for MegraEditor<'a> {
                     let num_lines = self.content.lines().count() + 1;
 
                     let tx = if let Some(cb) = self.callback.as_ref() {
-                        egui::text_edit::LivecodeTextEdit::multiline(
+                        LivecodeTextEdit::multiline(
                             &mut self.content,                            
                         )
                             .desired_rows(22)
@@ -262,7 +264,7 @@ impl<'a> epi::App for MegraEditor<'a> {
                             .desired_width(800.0)
                             .eval_callback(&cb)
                     } else {
-                        egui::text_edit::LivecodeTextEdit::multiline(
+                        LivecodeTextEdit::multiline(
                             &mut self.content,                            
                         )
                             .desired_rows(22)
