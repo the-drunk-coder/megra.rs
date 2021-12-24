@@ -253,19 +253,20 @@ impl<'a> epi::App for MegraEditor<'a> {
                     let num_lines = self.content.lines().count() + 1;
 
                     let tx = if let Some(cb) = self.callback.as_ref() {
-                        egui::TextEdit::multiline(
+                        egui::text_edit::LivecodeTextEdit::multiline(
                             &mut self.content,                            
                         )
-                        .desired_rows(22)
+                            .desired_rows(22)
                         //.reset_cursor(sketch_switched)
-                        .text_style(egui::TextStyle::Monospace)
-                        .desired_width(800.0)
-                        //.eval_callback(&cb)
+                            .code_editor()
+                            .desired_width(800.0)
+                            .eval_callback(&cb)
                     } else {
-                        egui::TextEdit::multiline(
+                        egui::text_edit::LivecodeTextEdit::multiline(
                             &mut self.content,                            
                         )
-                        .desired_rows(22)
+                            .desired_rows(22)
+			    .code_editor()
                         //.reset_cursor(sketch_switched)
                         .desired_width(800.0)
                         .text_style(egui::TextStyle::Monospace)
