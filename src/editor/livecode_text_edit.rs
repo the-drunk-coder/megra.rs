@@ -1047,8 +1047,30 @@ fn on_key_press(
                 if modifiers.alt || modifiers.ctrl {
                     // alt on mac, ctrl on windows
                     delete_previous_word(text, cursor.ccursor)
+                } else if text.as_str().len() > 0 {
+                    // this seems inefficient ...
+                    if let Some(cur_char) = text.as_str().chars().nth(cursor.ccursor.index - 1) {
+                        //println!("cur char {}", cur_char);
+                        if let Some(next_char) = text.as_str().chars().nth(cursor.ccursor.index) {
+                            //println!("next char {}", next_char);
+                            if (cur_char == '(' && next_char == ')')
+                                || (cur_char == '[' && next_char == ']')
+				|| (cur_char == '{' && next_char == '}')
+                                || (cur_char == '\"' && next_char == '\"')
+                            {
+                                let icur = delete_previous_char(text, cursor.ccursor);
+                                delete_next_char(text, icur)
+                            } else {
+                                delete_previous_char(text, cursor.ccursor)
+                            }
+                        } else {
+                            delete_previous_char(text, cursor.ccursor)
+                        }
+                    } else {
+                        delete_previous_char(text, cursor.ccursor)
+                    }
                 } else {
-                    delete_previous_char(text, cursor.ccursor)
+                    CCursor::new(0)
                 }
             } else {
                 delete_selected(text, cursor_range)
