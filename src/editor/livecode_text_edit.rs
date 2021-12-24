@@ -674,6 +674,42 @@ fn livecode_events(
                         // go to opening paren so the function name can be entered ...
                         ccursor.index -= selection_len + 1;
                         Some(CCursorRange::one(ccursor))
+		    } else if text_to_insert == "[" {
+			 // enclose selection in parenthesis and
+                        // jump to opening ...
+                        let selection = selected_str(text, &cursor_range).clone().to_string();
+                        let selection_len = selection.len();
+                        let mut ccursor = delete_selected(text, &cursor_range);
+                        insert_text(&mut ccursor, text, format!("[{}]", selection).as_str());
+                        // clear selection
+                        state.selection_toggle = false;
+                        // go to opening paren so the function name can be entered ...
+                        ccursor.index -= selection_len + 1;
+                        Some(CCursorRange::one(ccursor))
+		    } else if text_to_insert == "{" {
+			 // enclose selection in parenthesis and
+                        // jump to opening ...
+                        let selection = selected_str(text, &cursor_range).clone().to_string();
+                        let selection_len = selection.len();
+                        let mut ccursor = delete_selected(text, &cursor_range);
+                        insert_text(&mut ccursor, text, format!("{{{}}}", selection).as_str());
+                        // clear selection
+                        state.selection_toggle = false;
+                        // go to opening paren so the function name can be entered ...
+                        ccursor.index -= selection_len + 1;
+                        Some(CCursorRange::one(ccursor))
+		    } else if text_to_insert == "\"" {
+			 // enclose selection in parenthesis and
+                        // jump to opening ...
+                        let selection = selected_str(text, &cursor_range).clone().to_string();
+                        let selection_len = selection.len();
+                        let mut ccursor = delete_selected(text, &cursor_range);
+                        insert_text(&mut ccursor, text, format!("\"{}\"", selection).as_str());
+                        // clear selection
+                        state.selection_toggle = false;
+                        // go to opening paren so the function name can be entered ...
+                        ccursor.index -= selection_len + 1;
+                        Some(CCursorRange::one(ccursor))
 		    } else {
 			let mut ccursor = delete_selected(text, &cursor_range);
 			insert_text(&mut ccursor, text, text_to_insert);
