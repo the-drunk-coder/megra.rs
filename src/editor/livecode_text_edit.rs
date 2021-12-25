@@ -640,6 +640,9 @@ fn livecode_events(
     for event in &ui.input().events {
         let did_mutate_text = match event {
             Event::Copy => {
+		// clear selection
+                state.selection_toggle = false;
+		
                 if cursor_range.is_empty() {
                     copy_if_not_password(ui, text.as_ref().to_owned());
                 } else {
@@ -648,6 +651,9 @@ fn livecode_events(
                 None
             }
             Event::Cut => {
+		 // clear selection
+                state.selection_toggle = false;
+		
                 if cursor_range.is_empty() {
                     copy_if_not_password(ui, text.take());
                     Some(CCursorRange::default())
@@ -657,6 +663,10 @@ fn livecode_events(
                 }
             }
             Event::Text(text_to_insert) => {
+
+		 // clear selection
+                state.selection_toggle = false;
+		
                 // Newlines are handled by `Key::Enter`.
                 if !text_to_insert.is_empty()
 		    && text_to_insert != "\n"
@@ -790,12 +800,33 @@ fn livecode_events(
                     None
                 }
             }
-
+	    Event::Key {
+                key: Key::Escape,
+                pressed: true,
+                ..
+            } => {
+                // clear selection
+                state.selection_toggle = false;
+                cursor_range.secondary = cursor_range.primary;
+                //ui.memory().surrender_focus(id);
+                break;
+            }
+	    Event::Key {
+                key: Key::Space,
+                pressed: true,
+                modifiers,
+            } => {
+                if modifiers.command {
+		    //println!("toggle {}",state.selection_toggle);
+                    state.selection_toggle = !state.selection_toggle;
+                }
+                None
+            }
             Event::Key {
                 key,
                 pressed: true,
                 modifiers,
-            } => on_key_press(&mut cursor_range, text, galley, *key, modifiers),
+            } => on_key_press(&mut cursor_range, text, galley, *key, modifiers, state.selection_toggle),
 
             Event::CompositionStart => {
                 state.has_ime = true;
@@ -1038,6 +1069,7 @@ fn on_key_press(
     galley: &Galley,
     key: Key,
     modifiers: &Modifiers,
+    selection_toggle: bool,
 ) -> Option<CCursorRange> {
     match key {
         Key::Backspace => {
@@ -1121,19 +1153,10 @@ fn on_key_press(
             };
             Some(CCursorRange::one(ccursor))
         }
-
-        Key::ArrowLeft | Key::ArrowRight if modifiers.is_none() && !cursor_range.is_empty() => {
-            if key == Key::ArrowLeft {
-                *cursor_range = CursorRange::one(cursor_range.sorted()[0]);
-            } else {
-                *cursor_range = CursorRange::one(cursor_range.sorted()[1]);
-            }
-            None
-        }
-
+	
         Key::ArrowLeft | Key::ArrowRight | Key::ArrowUp | Key::ArrowDown | Key::Home | Key::End => {
             move_single_cursor(&mut cursor_range.primary, galley, key, modifiers);
-            if !modifiers.shift {
+            if !modifiers.shift && !selection_toggle {
                 cursor_range.secondary = cursor_range.primary;
             }
             None
