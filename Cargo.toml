@@ -2,7 +2,7 @@
 name = "megra_rs"
 version = "0.0.1"
 authors = ["nik <nik@parkellipsen.de>"]
-edition = "2018"
+edition = "2021"
 license = "GPL-3.0+"
 
 [dependencies]
