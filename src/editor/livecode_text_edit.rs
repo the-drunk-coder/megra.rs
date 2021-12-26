@@ -113,7 +113,6 @@ pub struct LivecodeTextEdit<'t> {
     text_style: Option<TextStyle>,
     text_color: Option<Color32>,
     layouter: Option<&'t mut dyn FnMut(&Ui, &str, f32) -> Arc<Galley>>,
-    frame: bool,
     desired_width: Option<f32>,
     desired_height_rows: usize,
     lock_focus: bool,
@@ -146,7 +145,6 @@ impl<'t> LivecodeTextEdit<'t> {
             text_style: None,
             text_color: None,
             layouter: None,
-            frame: true,
             desired_width: None,
             desired_height_rows: 4,
             lock_focus: false,
@@ -230,12 +228,6 @@ impl<'t> LivecodeTextEdit<'t> {
         self
     }
 
-    /// Default is `true`. If set to `false` there will be no frame showing that this is editable text!
-    pub fn frame(mut self, frame: bool) -> Self {
-        self.frame = frame;
-        self
-    }
-
     /// Set to 0.0 to keep as small as possible.
     /// Set to [`f32::INFINITY`] to take up all available space (i.e. disable automatic word wrap).
     pub fn desired_width(mut self, desired_width: f32) -> Self {
@@ -282,7 +274,6 @@ impl<'t> LivecodeTextEdit<'t> {
     /// Show the [`LivecodeTextEdit`], returning a rich [`TextEditOutput`].
     pub fn show(self, ui: &mut Ui) -> LivecodeTextEditOutput {
         let is_mutable = self.text.is_mutable();
-        let frame = self.frame;
         let where_to_put_background = ui.painter().add(Shape::Noop);
 
         let margin = Vec2::new(4.0, 2.0);
@@ -298,42 +289,7 @@ impl<'t> LivecodeTextEdit<'t> {
         if output.response.clicked() && !output.response.lost_focus() {
             ui.memory().request_focus(output.response.id);
         }
-
-        if frame {
-            let visuals = ui.style().interact(&output.response);
-            let frame_rect = frame_rect.expand(visuals.expansion);
-            let shape = if is_mutable {
-                if output.response.has_focus() {
-                    epaint::RectShape {
-                        rect: frame_rect,
-                        corner_radius: visuals.corner_radius,
-                        // fill: ui.visuals().selection.bg_fill,
-                        fill: ui.visuals().extreme_bg_color,
-                        stroke: ui.visuals().selection.stroke,
-                    }
-                } else {
-                    epaint::RectShape {
-                        rect: frame_rect,
-                        corner_radius: visuals.corner_radius,
-                        fill: ui.visuals().extreme_bg_color,
-                        stroke: visuals.bg_stroke, // TODO: we want to show something here, or a text-edit field doesn't "pop".
-                    }
-                }
-            } else {
-                let visuals = &ui.style().visuals.widgets.inactive;
-                epaint::RectShape {
-                    rect: frame_rect,
-                    corner_radius: visuals.corner_radius,
-                    // fill: ui.visuals().extreme_bg_color,
-                    // fill: visuals.bg_fill,
-                    fill: Color32::TRANSPARENT,
-                    stroke: visuals.bg_stroke, // TODO: we want to show something here, or a text-edit field doesn't "pop".
-                }
-            };
-
-            ui.painter().set(where_to_put_background, shape);
-        }
-
+       
         output
     }
 
@@ -345,8 +301,7 @@ impl<'t> LivecodeTextEdit<'t> {
             id_source,
             text_style,
             text_color,
-            layouter,
-            frame: _,
+            layouter,       
             desired_width,
             desired_height_rows,
             lock_focus,
@@ -675,7 +630,6 @@ fn livecode_events(
                 }
             }
             Event::Text(text_to_insert) => {
-                println!("text to insert");
                 // clear selection
                 state.selection_toggle = false;
 
