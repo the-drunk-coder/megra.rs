@@ -53,7 +53,6 @@ pub struct LivecodeTextEditOutput {
 type Undoer = egui::util::undoer::Undoer<(CCursorRange, String)>;
 
 impl LivecodeTextEditState {
-        
     pub fn load(ctx: &Context, id: Id) -> Option<Self> {
         ctx.memory().data.get_persisted(id)
     }
@@ -425,9 +424,8 @@ impl<'t> LivecodeTextEdit<'t> {
 
             // TODO: triple-click to select whole paragraph
             // TODO: drag selected text to either move or clone (ctrl on windows, alt on mac)
-            
-            let cursor_at_pointer =
-                galley.cursor_from_pos(pointer_pos - response.rect.min );
+
+            let cursor_at_pointer = galley.cursor_from_pos(pointer_pos - response.rect.min);
 
             if ui.visuals().text_cursor_preview
                 && response.hovered()
@@ -640,9 +638,9 @@ fn livecode_events(
     for event in &ui.input().events {
         let did_mutate_text = match event {
             Event::Copy => {
-		// clear selection
+                // clear selection
                 state.selection_toggle = false;
-		
+
                 if cursor_range.is_empty() {
                     copy_if_not_password(ui, text.as_ref().to_owned());
                 } else {
@@ -651,9 +649,9 @@ fn livecode_events(
                 None
             }
             Event::Cut => {
-		 // clear selection
+                // clear selection
                 state.selection_toggle = false;
-		
+
                 if cursor_range.is_empty() {
                     copy_if_not_password(ui, text.take());
                     Some(CCursorRange::default())
@@ -662,18 +660,29 @@ fn livecode_events(
                     Some(CCursorRange::one(delete_selected(text, &cursor_range)))
                 }
             }
+            Event::Key {
+                key: Key::W,
+                pressed: true,
+                modifiers,
+            } => {
+                if modifiers.ctrl {
+                    // clear selection
+                    state.selection_toggle = false;
+                    copy_if_not_password(ui, selected_str(text, &cursor_range).to_owned());
+                    Some(CCursorRange::one(delete_selected(text, &cursor_range)))
+                } else {
+                    None
+                }
+            }
             Event::Text(text_to_insert) => {
-
-		 // clear selection
+                println!("text to insert");
+                // clear selection
                 state.selection_toggle = false;
-		
+
                 // Newlines are handled by `Key::Enter`.
-                if !text_to_insert.is_empty()
-		    && text_to_insert != "\n"
-		    && text_to_insert != "\r"
-		{			
-		    if text_to_insert == "(" {
-			 // enclose selection in parenthesis and
+                if !text_to_insert.is_empty() && text_to_insert != "\n" && text_to_insert != "\r" {
+                    if text_to_insert == "(" {
+                        // enclose selection in parenthesis and
                         // jump to opening ...
                         let selection = selected_str(text, &cursor_range).clone().to_string();
                         let selection_len = selection.len();
@@ -684,8 +693,8 @@ fn livecode_events(
                         // go to opening paren so the function name can be entered ...
                         ccursor.index -= selection_len + 1;
                         Some(CCursorRange::one(ccursor))
-		    } else if text_to_insert == "[" {
-			 // enclose selection in parenthesis and
+                    } else if text_to_insert == "[" {
+                        // enclose selection in parenthesis and
                         // jump to opening ...
                         let selection = selected_str(text, &cursor_range).clone().to_string();
                         let selection_len = selection.len();
@@ -696,8 +705,8 @@ fn livecode_events(
                         // go to opening paren so the function name can be entered ...
                         ccursor.index -= selection_len + 1;
                         Some(CCursorRange::one(ccursor))
-		    } else if text_to_insert == "{" {
-			 // enclose selection in parenthesis and
+                    } else if text_to_insert == "{" {
+                        // enclose selection in parenthesis and
                         // jump to opening ...
                         let selection = selected_str(text, &cursor_range).clone().to_string();
                         let selection_len = selection.len();
@@ -708,8 +717,8 @@ fn livecode_events(
                         // go to opening paren so the function name can be entered ...
                         ccursor.index -= selection_len + 1;
                         Some(CCursorRange::one(ccursor))
-		    } else if text_to_insert == "\"" {
-			 // enclose selection in parenthesis and
+                    } else if text_to_insert == "\"" {
+                        // enclose selection in parenthesis and
                         // jump to opening ...
                         let selection = selected_str(text, &cursor_range).clone().to_string();
                         let selection_len = selection.len();
@@ -720,11 +729,11 @@ fn livecode_events(
                         // go to opening paren so the function name can be entered ...
                         ccursor.index -= selection_len + 1;
                         Some(CCursorRange::one(ccursor))
-		    } else {
-			let mut ccursor = delete_selected(text, &cursor_range);
-			insert_text(&mut ccursor, text, text_to_insert);
-			Some(CCursorRange::one(ccursor))
-		    }
+                    } else {
+                        let mut ccursor = delete_selected(text, &cursor_range);
+                        insert_text(&mut ccursor, text, text_to_insert);
+                        Some(CCursorRange::one(ccursor))
+                    }
                 } else {
                     None
                 }
@@ -800,7 +809,7 @@ fn livecode_events(
                     None
                 }
             }
-	    Event::Key {
+            Event::Key {
                 key: Key::Escape,
                 pressed: true,
                 ..
@@ -811,13 +820,13 @@ fn livecode_events(
                 //ui.memory().surrender_focus(id);
                 break;
             }
-	    Event::Key {
+            Event::Key {
                 key: Key::Space,
                 pressed: true,
                 modifiers,
             } => {
                 if modifiers.command {
-		    //println!("toggle {}",state.selection_toggle);
+                    //println!("toggle {}",state.selection_toggle);
                     state.selection_toggle = !state.selection_toggle;
                 }
                 None
@@ -826,7 +835,14 @@ fn livecode_events(
                 key,
                 pressed: true,
                 modifiers,
-            } => on_key_press(&mut cursor_range, text, galley, *key, modifiers, state.selection_toggle),
+            } => on_key_press(
+                &mut cursor_range,
+                text,
+                galley,
+                *key,
+                modifiers,
+                state.selection_toggle,
+            ),
 
             Event::CompositionStart => {
                 state.has_ime = true;
@@ -1087,7 +1103,7 @@ fn on_key_press(
                             //println!("next char {}", next_char);
                             if (cur_char == '(' && next_char == ')')
                                 || (cur_char == '[' && next_char == ']')
-				|| (cur_char == '{' && next_char == '}')
+                                || (cur_char == '{' && next_char == '}')
                                 || (cur_char == '\"' && next_char == '\"')
                             {
                                 let icur = delete_previous_char(text, cursor.ccursor);
@@ -1145,15 +1161,6 @@ fn on_key_press(
             Some(CCursorRange::one(ccursor))
         }
 
-        Key::W if modifiers.ctrl => {
-            let ccursor = if let Some(cursor) = cursor_range.single() {
-                delete_previous_word(text, cursor.ccursor)
-            } else {
-                delete_selected(text, cursor_range)
-            };
-            Some(CCursorRange::one(ccursor))
-        }
-	
         Key::ArrowLeft | Key::ArrowRight | Key::ArrowUp | Key::ArrowDown | Key::Home | Key::End => {
             move_single_cursor(&mut cursor_range.primary, galley, key, modifiers);
             if !modifiers.shift && !selection_toggle {

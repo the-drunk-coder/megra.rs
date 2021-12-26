@@ -120,7 +120,7 @@ impl<'a> epi::App for MegraEditor<'a> {
         self.function_names.push("inexh");
         self.function_names.push("stages");
 
-	/*
+        /*
         self.colors.insert(
             egui::CodeColors::Keyword,
             egui::Color32::from_rgb(200, 20, 200),
@@ -199,9 +199,11 @@ impl<'a> epi::App for MegraEditor<'a> {
 
             ui.horizontal(|ui| {
                 ui.add(
-                    egui::Label::new(egui::RichText::new("Mégra Editor").text_style(egui::TextStyle::Monospace))          
+                    egui::Label::new(
+                        egui::RichText::new("Mégra Editor").text_style(egui::TextStyle::Monospace),
+                    )
                     .wrap(false)
-                    .monospace()
+                    .monospace(),
                 );
 
                 let id = ui.make_persistent_id("file_chooser_box");
@@ -255,23 +257,19 @@ impl<'a> epi::App for MegraEditor<'a> {
                     let num_lines = self.content.lines().count() + 1;
 
                     let tx = if let Some(cb) = self.callback.as_ref() {
-                        LivecodeTextEdit::multiline(
-                            &mut self.content,                            
-                        )
+                        LivecodeTextEdit::multiline(&mut self.content)
                             .desired_rows(22)
-                        //.reset_cursor(sketch_switched)
+                            //.reset_cursor(sketch_switched)
                             .code_editor()
                             .desired_width(800.0)
                             .eval_callback(&cb)
                     } else {
-                        LivecodeTextEdit::multiline(
-                            &mut self.content,                            
-                        )
+                        LivecodeTextEdit::multiline(&mut self.content)
                             .desired_rows(22)
-			    .code_editor()
-                        //.reset_cursor(sketch_switched)
-                        .desired_width(800.0)
-                        .text_style(egui::TextStyle::Monospace)
+                            .code_editor()
+                            //.reset_cursor(sketch_switched)
+                            .desired_width(800.0)
+                            .text_style(egui::TextStyle::Monospace)
                     };
 
                     let mut linenums = "".to_owned();
