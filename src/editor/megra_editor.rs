@@ -258,14 +258,14 @@ impl<'a> epi::App for MegraEditor<'a> {
 
                     let tx = if let Some(cb) = self.callback.as_ref() {
                         LivecodeTextEdit::multiline(&mut self.content)
-                            .desired_rows(22)
+                            .desired_rows(30)
                             //.reset_cursor(sketch_switched)
                             .code_editor()
                             .desired_width(800.0)
                             .eval_callback(&cb)
                     } else {
                         LivecodeTextEdit::multiline(&mut self.content)
-                            .desired_rows(22)
+                            .desired_rows(30)
                             .code_editor()
                             //.reset_cursor(sketch_switched)
                             .desired_width(800.0)

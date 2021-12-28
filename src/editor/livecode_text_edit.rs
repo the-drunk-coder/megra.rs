@@ -276,7 +276,7 @@ impl<'t> LivecodeTextEdit<'t> {
         let is_mutable = self.text.is_mutable();
         let where_to_put_background = ui.painter().add(Shape::Noop);
 
-        let margin = Vec2::new(4.0, 2.0);
+        let margin = Vec2::new(0.0, 0.0);
         let max_rect = ui.available_rect_before_wrap().shrink2(margin);
         let mut content_ui = ui.child_ui(max_rect, *ui.layout());
         let mut output = self.show_content(&mut content_ui);
@@ -321,12 +321,16 @@ impl<'t> LivecodeTextEdit<'t> {
         let row_height = ui.fonts().row_height(text_style);
         const MIN_WIDTH: f32 = 24.0; // Never make a `LivecodeTextEdit` more narrow than this.
         let available_width = ui.available_width().at_least(MIN_WIDTH);
-        let desired_width = desired_width.unwrap_or_else(|| ui.spacing().text_edit_width);
+	//println!("available {}", available_width);
+        let desired_width = available_width; // desired_width.unwrap_or_else(|| ui.spacing().text_edit_width);
+	let wrap_width = available_width;
+
+	/*
         let wrap_width = if ui.layout().horizontal_justify() {
             available_width
         } else {
             desired_width.min(available_width)
-        };
+        };*/
 
         let mut default_layouter = move |ui: &Ui, text: &str, wrap_width: f32| {
             ui.fonts().layout_job(LayoutJob::simple(
