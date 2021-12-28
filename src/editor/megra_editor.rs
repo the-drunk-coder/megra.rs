@@ -63,7 +63,7 @@ impl<'a> epi::App for MegraEditor<'a> {
     fn setup(
         &mut self,
         _ctx: &egui::CtxRef,
-        _frame: &mut epi::Frame<'_>,
+        _frame: &epi::Frame,
         storage: Option<&dyn epi::Storage>,
     ) {
         // make sure callback is carried over after loading
@@ -189,7 +189,7 @@ impl<'a> epi::App for MegraEditor<'a> {
 
     /// Called each time the UI needs repainting, which may be many times per second.
     /// Put your widgets into a `SidePanel`, `TopPanel`, `CentralPanel`, `Window` or `Area`.
-    fn update(&mut self, ctx: &egui::CtxRef, _: &mut epi::Frame<'_>) {
+    fn update(&mut self, ctx: &egui::CtxRef, _: &epi::Frame) {
         // some frame options ...
         let mut frame = egui::Frame::none();
         frame.fill = egui::Color32::BLACK;

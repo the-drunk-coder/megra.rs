@@ -435,7 +435,8 @@ impl<'t> LivecodeTextEdit<'t> {
         let mut cursor_range = None;
         let prev_cursor_range = state.cursor_range(&*galley);
         if ui.memory().has_focus(id) {
-            //ui.memory().lock_focus(id, lock_focus);
+	    
+            ui.memory().lock_focus(id, lock_focus);
 
             let default_cursor_range = if cursor_at_end {
                 CursorRange::one(galley.end())
