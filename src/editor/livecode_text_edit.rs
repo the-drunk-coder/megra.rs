@@ -276,11 +276,12 @@ impl<'t> LivecodeTextEdit<'t> {
         let is_mutable = self.text.is_mutable();
         let where_to_put_background = ui.painter().add(Shape::Noop);
 
-        let max_rect = ui.available_rect_before_wrap();
+        let margin = Vec2::new(4.0, 2.0);
+        let max_rect = ui.available_rect_before_wrap().shrink2(margin);
         let mut content_ui = ui.child_ui(max_rect, *ui.layout());
         let mut output = self.show_content(&mut content_ui);
         let id = output.response.id;
-        let frame_rect = output.response.rect;
+        let frame_rect = output.response.rect.expand2(margin);
         ui.allocate_space(frame_rect.size());
 
         output.response |= ui.interact(frame_rect, id, Sense::click());
