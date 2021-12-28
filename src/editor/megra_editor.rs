@@ -6,6 +6,7 @@ use std::{fs, path, sync::*};
 
 // custom text edit window
 use crate::editor::livecode_text_edit::LivecodeTextEdit;
+use crate::editor::syntax_highlighting::*;
 
 #[derive(PartialEq)]
 enum SketchNumber {
@@ -14,7 +15,7 @@ enum SketchNumber {
 
 /// We derive Deserialize/Serialize so we can persist app state on shutdown.
 #[derive(serde::Deserialize, serde::Serialize)]
-pub struct MegraEditor<'a> {
+pub struct MegraEditor {
     content: String,
     #[serde(skip)]
     callback: Option<Arc<Mutex<dyn FnMut(&String)>>>,
@@ -24,13 +25,9 @@ pub struct MegraEditor<'a> {
     current_sketch: String,
     #[serde(skip)]
     sketch_number: usize,
-    #[serde(skip)]
-    function_names: Vec<&'a str>,
-    //#[serde(skip)]
-    //colors: HashMap<egui::CodeColors, egui::Color32>,
 }
 
-impl<'a> Default for MegraEditor<'a> {
+impl Default for MegraEditor {
     fn default() -> Self {
         Self {
             content: "(sx 'ga #t (infer 'troll :events 'a (saw 400) :rules (rule 'a 'a 100 400)))"
@@ -39,19 +36,17 @@ impl<'a> Default for MegraEditor<'a> {
             sketch_list: Vec::new(),
             current_sketch: "".to_string(),
             sketch_number: 0,
-            function_names: Vec::new(),
-            //colors: HashMap::new(),
         }
     }
 }
 
-impl<'a> MegraEditor<'a> {
+impl MegraEditor {
     pub fn set_callback(&mut self, callback: &Arc<Mutex<dyn FnMut(&String)>>) {
         self.callback = Some(Arc::clone(callback));
     }
 }
 
-impl<'a> epi::App for MegraEditor<'a> {
+impl epi::App for MegraEditor {
     fn name(&self) -> &str {
         "Mégra Editor"
     }
@@ -84,61 +79,6 @@ impl<'a> epi::App for MegraEditor<'a> {
             ";; Created {}",
             Local::now().format("%A, %F, %H:%M:%S ... good luck!")
         );
-
-        self.function_names.push("apple");
-        self.function_names.push("export-dot");
-        self.function_names.push("step-part");
-        self.function_names.push("friendship");
-        self.function_names.push("tmod");
-        self.function_names.push("latency");
-        self.function_names.push("global-resources");
-        self.function_names.push("learn");
-        self.function_names.push("delay");
-        self.function_names.push("reverb");
-        self.function_names.push("pear");
-        self.function_names.push("nuc");
-        self.function_names.push("fully");
-        self.function_names.push("flower");
-        self.function_names.push("sx");
-        self.function_names.push("cyc");
-        self.function_names.push("xspread");
-        self.function_names.push("xdup");
-        self.function_names.push("life");
-        self.function_names.push("ls");
-        self.function_names.push("every");
-        self.function_names.push("defpart");
-        self.function_names.push("infer");
-        self.function_names.push("clear");
-        self.function_names.push("once");
-        self.function_names.push("cub");
-        self.function_names.push("cmp");
-        self.function_names.push("chop");
-        self.function_names.push("rnd");
-        self.function_names.push("rep");
-        self.function_names.push("inh");
-        self.function_names.push("exh");
-        self.function_names.push("inexh");
-        self.function_names.push("stages");
-
-        /*
-        self.colors.insert(
-            egui::CodeColors::Keyword,
-            egui::Color32::from_rgb(200, 20, 200),
-        );
-        self.colors.insert(
-            egui::CodeColors::Function,
-            egui::Color32::from_rgb(220, 20, 100),
-        );
-        self.colors
-            .insert(egui::CodeColors::Comment, egui::Color32::from_gray(128));
-        self.colors.insert(
-            egui::CodeColors::Boolean,
-            egui::Color32::from_rgb(0, 200, 100),
-        );
-        self.colors.insert(
-            egui::CodeColors::String,
-            egui::Color32::from_rgb(200, 200, 10),
-        );*/
 
         // create sketch and load sketch file list ...
         if let Some(proj_dirs) = ProjectDirs::from("de", "parkellipsen", "megra") {
@@ -256,6 +196,12 @@ impl<'a> epi::App for MegraEditor<'a> {
                 .show(ui, |ui| {
                     let num_lines = self.content.lines().count() + 1;
 
+                    let theme = CodeTheme::from_memory(ui.ctx());
+                    let mut layouter = |ui: &egui::Ui, string: &str, _wrap_width: f32| {
+                        let layout_job = highlight(ui.ctx(), &theme, string);
+                        ui.fonts().layout_job(layout_job)
+                    };
+
                     let tx = if let Some(cb) = self.callback.as_ref() {
                         LivecodeTextEdit::multiline(&mut self.content)
                             .desired_rows(30)
@@ -263,13 +209,14 @@ impl<'a> epi::App for MegraEditor<'a> {
                             .code_editor()
                             .desired_width(800.0)
                             .eval_callback(&cb)
+                            .layouter(&mut layouter)
                     } else {
                         LivecodeTextEdit::multiline(&mut self.content)
                             .desired_rows(30)
                             .code_editor()
                             //.reset_cursor(sketch_switched)
                             .desired_width(800.0)
-                            .text_style(egui::TextStyle::Monospace)
+                            .layouter(&mut layouter)
                     };
 
                     let mut linenums = "".to_owned();

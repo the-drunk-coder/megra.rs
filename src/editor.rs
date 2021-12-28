@@ -1,4 +1,7 @@
+// editor modules
 mod livecode_text_edit;
+mod syntax_highlighting;
+
 use parking_lot::Mutex;
 use ruffbox_synth::ruffbox::Ruffbox;
 use std::sync;

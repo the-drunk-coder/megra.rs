@@ -289,7 +289,7 @@ impl<'t> LivecodeTextEdit<'t> {
         if output.response.clicked() && !output.response.lost_focus() {
             ui.memory().request_focus(output.response.id);
         }
-       
+
         output
     }
 
@@ -301,7 +301,7 @@ impl<'t> LivecodeTextEdit<'t> {
             id_source,
             text_style,
             text_color,
-            layouter,       
+            layouter,
             desired_width,
             desired_height_rows,
             lock_focus,
@@ -321,11 +321,11 @@ impl<'t> LivecodeTextEdit<'t> {
         let row_height = ui.fonts().row_height(text_style);
         const MIN_WIDTH: f32 = 24.0; // Never make a `LivecodeTextEdit` more narrow than this.
         let available_width = ui.available_width().at_least(MIN_WIDTH);
-	//println!("available {}", available_width);
+        //println!("available {}", available_width);
         let desired_width = available_width; // desired_width.unwrap_or_else(|| ui.spacing().text_edit_width);
-	let wrap_width = available_width;
+        let wrap_width = available_width;
 
-	/*
+        /*
         let wrap_width = if ui.layout().horizontal_justify() {
             available_width
         } else {
@@ -439,7 +439,6 @@ impl<'t> LivecodeTextEdit<'t> {
         let mut cursor_range = None;
         let prev_cursor_range = state.cursor_range(&*galley);
         if ui.memory().has_focus(id) {
-	    
             ui.memory().lock_focus(id, lock_focus);
 
             let default_cursor_range = if cursor_at_end {
