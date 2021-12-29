@@ -614,14 +614,13 @@ fn livecode_events(
             Event::Cut => {
                 // clear selection
                 state.selection_toggle = false;
-
-                if cursor_range.is_empty() {
-                    copy_if_not_password(ui, text.take());
-                    Some(CCursorRange::default())
-                } else {
+                                    
+                if !cursor_range.is_empty() {
                     copy_if_not_password(ui, selected_str(text, &cursor_range).to_owned());
                     Some(CCursorRange::one(delete_selected(text, &cursor_range)))
-                }
+                } else {
+		    None
+		}
             }
             Event::Key {
                 key: Key::W,
