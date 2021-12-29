@@ -1052,7 +1052,12 @@ fn on_key_press(
                     delete_previous_word(text, cursor.ccursor)
                 } else if text.as_str().len() > 0 {
                     // this seems inefficient ...
-                    if let Some(cur_char) = text.as_str().chars().nth(cursor.ccursor.index - 1) {
+                    if let Some(cur_char) = text.as_str().chars().nth(
+			if cursor.ccursor.index > 0 {
+			    cursor.ccursor.index - 1
+			} else {
+			    0
+			}) {
                         //println!("cur char {}", cur_char);
                         if let Some(next_char) = text.as_str().chars().nth(cursor.ccursor.index) {
                             //println!("next char {}", next_char);
