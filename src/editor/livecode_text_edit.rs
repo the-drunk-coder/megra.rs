@@ -20,11 +20,17 @@ pub struct LivecodeTextEditState {
     ccursor_range: Option<CCursorRange>,
 
     #[serde(skip)]
-    pub flash_cursor_range: Option<CursorRange>,
+    pub flash_cursor_range: Option<CursorRange>, // flashed on ctrl-enter
     #[serde(skip)]
-    pub flash_alpha: u8,
+    pub flash_alpha: u8, // soft fade out
     #[serde(skip)]
-    pub selection_toggle: bool,
+    pub selection_toggle: bool, // toggle selection emacs-style
+
+    #[serde(skip)]
+    pub opening_paren_range: Option<CursorRange>, // mark parenthesis
+
+    #[serde(skip)]
+    pub closing_paren_range: Option<CursorRange>, // mark parenthesis
 
     /// Wrapped in Arc for cheaper clones.
     #[cfg_attr(feature = "serde", serde(skip))]
@@ -507,6 +513,27 @@ impl<'t> LivecodeTextEdit<'t> {
                         }
                     }
 
+                    if let Some(opening_cursor) = state.opening_paren_range {
+                        if let Some(closing_cursor) = state.closing_paren_range {
+                            paint_cursor_selection(
+                                ui,
+                                &painter,
+                                text_draw_pos,
+                                &galley,
+                                &opening_cursor,
+                                Some(Color32::from_rgba_unmultiplied(100, 200, 120, 100)),
+                            );
+                            paint_cursor_selection(
+                                ui,
+                                &painter,
+                                text_draw_pos,
+                                &galley,
+                                &closing_cursor,
+                                Some(Color32::from_rgba_unmultiplied(100, 200, 120, 100)),
+                            );
+                        }
+                    }
+
                     paint_cursor_end(
                         ui,
                         row_height,
@@ -793,14 +820,7 @@ fn livecode_events(
                 key,
                 pressed: true,
                 modifiers,
-            } => on_key_press(
-                &mut cursor_range,
-                text,
-                galley,
-                *key,
-                modifiers,
-                state.selection_toggle,
-            ),
+            } => on_key_press(&mut cursor_range, text, galley, *key, modifiers, state),
 
             Event::CompositionStart => {
                 state.has_ime = true;
@@ -1043,7 +1063,7 @@ fn on_key_press(
     galley: &Galley,
     key: Key,
     modifiers: &Modifiers,
-    selection_toggle: bool,
+    state: &mut LivecodeTextEditState,
 ) -> Option<CCursorRange> {
     match key {
         Key::Backspace => {
@@ -1121,9 +1141,72 @@ fn on_key_press(
 
         Key::ArrowLeft | Key::ArrowRight | Key::ArrowUp | Key::ArrowDown | Key::Home | Key::End => {
             move_single_cursor(&mut cursor_range.primary, galley, key, modifiers);
-            if !modifiers.shift && !selection_toggle {
+            if !modifiers.shift && !state.selection_toggle {
                 cursor_range.secondary = cursor_range.primary;
             }
+
+            let idx = cursor_range.primary.ccursor.index;
+            let chars = text.as_str().chars().collect::<Vec<char>>();
+            let next_char = if idx < chars.len() {
+                chars[idx]
+            } else {
+                *chars.last().unwrap()
+            };
+
+            let prev_char = if idx > 0 { chars[idx - 1] } else { chars[idx] };
+
+            // mark parenthesis for easier orientation
+            if next_char == '(' {
+                let open_cursor = CCursor {
+                    index: idx + 1,
+                    prefer_next_row: false,
+                };
+
+                if let Some(closing) = find_closing_paren(text.as_str(), &open_cursor) {
+                    //println!("find range so {} {}", idx + 1, closing.index);
+                    state.opening_paren_range = Some(CursorRange {
+                        primary: galley.from_ccursor(CCursor {
+                            index: idx,
+                            prefer_next_row: false,
+                        }),
+                        secondary: galley.from_ccursor(open_cursor),
+                    });
+                    state.closing_paren_range = Some(CursorRange {
+                        primary: galley.from_ccursor(CCursor {
+                            index: closing.index - 1,
+                            prefer_next_row: false,
+                        }),
+                        secondary: galley.from_ccursor(closing),
+                    });
+                }
+            } else if prev_char == ')' {
+                let close_cursor = CCursor {
+                    index: idx - 1,
+                    prefer_next_row: false,
+                };
+
+                if let Some(opening) = find_opening_paren(text.as_str(), &close_cursor) {
+                    //println!("find range sc {} {}", opening.index, idx);
+                    state.opening_paren_range = Some(CursorRange {
+                        primary: galley.from_ccursor(opening),
+                        secondary: galley.from_ccursor(CCursor {
+                            index: opening.index + 1,
+                            prefer_next_row: false,
+                        }),
+                    });
+                    state.closing_paren_range = Some(CursorRange {
+                        primary: galley.from_ccursor(close_cursor),
+                        secondary: galley.from_ccursor(CCursor {
+                            index: idx,
+                            prefer_next_row: false,
+                        }),
+                    });
+                }
+            } else {
+                state.opening_paren_range = None;
+                state.closing_paren_range = None;
+            }
+
             None
         }
 
@@ -1468,4 +1551,62 @@ fn sexp_indent_level(input: &str) -> usize {
         }
     }
     lvl
+}
+
+fn find_closing_paren(text: &str, ccursor: &CCursor) -> Option<CCursor> {
+    let mut pos = ccursor.index;
+
+    // spool forward to current position
+    let mut it = text.chars();
+    for _ in 0..pos {
+        it.next();
+    }
+
+    let mut par_lvl = 1;
+
+    while let Some(next_char) = it.next() {
+        if next_char == '(' {
+            par_lvl += 1;
+        } else if next_char == ')' {
+            par_lvl -= 1;
+        }
+        pos += 1;
+        if par_lvl == 0 {
+            return Some(CCursor {
+                index: pos,
+                prefer_next_row: false,
+            });
+        }
+    }
+    None
+}
+
+fn find_opening_paren(text: &str, ccursor: &CCursor) -> Option<CCursor> {
+    let pos = ccursor.index;
+    let mut rev_pos = text.len() - pos;
+    //println!("pos {} rev pos {} len {}", pos, rev_pos, text.len());
+    // spool backward to current position
+    let mut it = text.chars().rev();
+    for _ in 0..rev_pos {
+        it.next();
+    }
+
+    // well, should be reverse par level ...
+    let mut par_lvl = 1;
+    let mut count = 0;
+    while let Some(next_char) = it.next() {
+        if next_char == '(' {
+            par_lvl -= 1;
+        } else if next_char == ')' {
+            par_lvl += 1;
+        }
+        count += 1;
+        if par_lvl == 0 {
+            return Some(CCursor {
+                index: pos - count,
+                prefer_next_row: false,
+            });
+        }
+    }
+    None
 }
