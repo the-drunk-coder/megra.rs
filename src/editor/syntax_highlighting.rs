@@ -1,5 +1,4 @@
 use egui::text::LayoutJob;
-use std::collections::BTreeMap;
 
 /// Memoized Code highlighting
 pub fn highlight(ctx: &egui::Context, theme: &CodeTheme, code: &str) -> LayoutJob {
