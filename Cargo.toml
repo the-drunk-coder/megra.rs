@@ -24,6 +24,7 @@ rand = "0.7"
 rust-music-theory = {git = "https://github.com/the-drunk-coder/rust-music-theory"}
 egui = { git = "https://github.com/emilk/egui", features = ["persistence"]}
 epi = { git = "https://github.com/emilk/egui", features = ["persistence"]}
+epaint = { git = "https://github.com/emilk/egui"}
 egui_glium = { git = "https://github.com/emilk/egui", features = ["persistence"]}
 #egui = { version ="0.15.0", features = ["persistence"] }
 serde = { version = "1", features = ["derive", "rc"], optional = true }

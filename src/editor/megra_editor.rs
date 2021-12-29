@@ -4,6 +4,8 @@ use egui::ScrollArea;
 use parking_lot::Mutex;
 use std::{fs, path, sync::*};
 
+use epaint::text::{FontData, FontDefinitions, FontFamily};
+
 // custom text edit window
 use crate::editor::livecode_text_edit::LivecodeTextEdit;
 use crate::editor::syntax_highlighting::*;
@@ -57,10 +59,27 @@ impl epi::App for MegraEditor {
 
     fn setup(
         &mut self,
-        _ctx: &egui::CtxRef,
+        ctx: &egui::CtxRef,
         _frame: &epi::Frame,
         storage: Option<&dyn epi::Storage>,
     ) {
+        let mut fonts = FontDefinitions::default();
+
+        // Install my own font (maybe supporting non-latin characters):
+        fonts.font_data.insert(
+            "my_font".to_owned(),
+            FontData::from_static(include_bytes!("../../fonts/ComicMono.ttf")),
+        ); // .ttf and .otf supported
+
+        // Put my font as last fallback for monospace:
+        fonts
+            .fonts_for_family
+            .get_mut(&FontFamily::Monospace)
+            .unwrap()
+            .insert(0, "my_font".to_owned());
+
+        ctx.set_fonts(fonts);
+
         // make sure callback is carried over after loading
         let callback = self
             .callback
