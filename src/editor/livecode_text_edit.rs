@@ -498,7 +498,7 @@ impl<'t> LivecodeTextEdit<'t> {
                                 text_draw_pos,
                                 &galley,
                                 &opening_cursor,
-                                Some(Color32::from_rgba_unmultiplied(207, 52, 118, 190)),
+                                Some(Color32::from_rgba_unmultiplied(226, 33, 115, 190)),
                             );
                             paint_cursor_selection(
                                 ui,
@@ -506,7 +506,7 @@ impl<'t> LivecodeTextEdit<'t> {
                                 text_draw_pos,
                                 &galley,
                                 &closing_cursor,
-                                Some(Color32::from_rgba_unmultiplied(207, 52, 118, 190)),
+                                Some(Color32::from_rgba_unmultiplied(226, 33, 115, 190)),
                             );
                         }
                     }
