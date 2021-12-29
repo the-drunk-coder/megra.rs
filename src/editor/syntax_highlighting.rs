@@ -52,11 +52,11 @@ impl CodeTheme {
             .unwrap_or_else(CodeTheme::dark)
     }
 
-    pub fn store_in_memory(&self, ctx: &egui::Context) {
-        ctx.memory()
-            .data
-            .insert_persisted(egui::Id::new("dark"), *self);
-    }
+    //pub fn store_in_memory(&self, ctx: &egui::Context) {
+    //    ctx.memory()
+    //        .data
+    //        .insert_persisted(egui::Id::new("dark"), *self);
+    //}
 }
 
 impl CodeTheme {

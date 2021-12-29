@@ -67,19 +67,19 @@ impl LivecodeTextEditState {
         ctx.memory().data.insert_persisted(id, self);
     }
 
-    /// The the currently selected range of characters.
-    pub fn ccursor_range(&self) -> Option<CCursorRange> {
-        self.ccursor_range.or_else(|| {
-            self.cursor_range
-                .map(|cursor_range| cursor_range.as_ccursor_range())
-        })
-    }
+    /// The the currently selected range of characters.    
+    //pub fn ccursor_range(&self) -> Option<CCursorRange> {
+    //  self.ccursor_range.or_else(|| {
+    //        self.cursor_range
+    //            .map(|cursor_range| cursor_range.as_ccursor_range())
+    //    })
+    //}
 
     /// Sets the currently selected range of characters.
-    pub fn set_ccursor_range(&mut self, ccursor_range: Option<CCursorRange>) {
-        self.cursor_range = None;
-        self.ccursor_range = ccursor_range;
-    }
+    //pub fn set_ccursor_range(&mut self, ccursor_range: Option<CCursorRange>) {
+    //    self.cursor_range = None;
+    //    self.ccursor_range = ccursor_range;
+    //}
 
     pub fn set_cursor_range(&mut self, cursor_range: Option<CursorRange>) {
         self.cursor_range = cursor_range;
@@ -130,6 +130,7 @@ impl<'t> WidgetWithState for LivecodeTextEdit<'t> {
     type State = LivecodeTextEditState;
 }
 
+/*
 impl<'t> LivecodeTextEdit<'t> {
     pub fn load_state(ctx: &Context, id: Id) -> Option<LivecodeTextEditState> {
         LivecodeTextEditState::load(ctx, id)
@@ -139,6 +140,7 @@ impl<'t> LivecodeTextEdit<'t> {
         state.store(ctx, id);
     }
 }
+*/
 
 impl<'t> LivecodeTextEdit<'t> {
     /// A `LivecodeTextEdit` for multiple lines. Pressing enter key will create a new line.
@@ -168,10 +170,10 @@ impl<'t> LivecodeTextEdit<'t> {
     }
 
     /// Use if you want to set an explicit `Id` for this widget.
-    pub fn id(mut self, id: Id) -> Self {
-        self.id = Some(id);
-        self
-    }
+    //pub fn id(mut self, id: Id) -> Self {
+    //    self.id = Some(id);
+    //    self
+    //}
 
     pub fn eval_callback(mut self, callback: &Arc<Mutex<dyn FnMut(&String)>>) -> Self {
         self.eval_callback = Some(Arc::clone(callback));
@@ -179,31 +181,15 @@ impl<'t> LivecodeTextEdit<'t> {
     }
 
     /// A source for the unique `Id`, e.g. `.id_source("second_text_edit_field")` or `.id_source(loop_index)`.
-    pub fn id_source(mut self, id_source: impl std::hash::Hash) -> Self {
-        self.id_source = Some(Id::new(id_source));
-        self
-    }
-
-    /// Show a faint hint text when the text field is empty.
-    pub fn hint_text(mut self, hint_text: impl Into<WidgetText>) -> Self {
-        self.hint_text = hint_text.into();
-        self
-    }
-
+    //pub fn id_source(mut self, id_source: impl std::hash::Hash) -> Self {
+    //    self.id_source = Some(Id::new(id_source));
+    //    self
+    //}
+    
     pub fn text_style(mut self, text_style: TextStyle) -> Self {
         self.text_style = Some(text_style);
         self
-    }
-
-    pub fn text_color(mut self, text_color: Color32) -> Self {
-        self.text_color = Some(text_color);
-        self
-    }
-
-    pub fn text_color_opt(mut self, text_color: Option<Color32>) -> Self {
-        self.text_color = text_color;
-        self
-    }
+    }    
 
     /// Override how text is being shown inside the `LivecodeTextEdit`.
     ///
@@ -258,14 +244,6 @@ impl<'t> LivecodeTextEdit<'t> {
         self.lock_focus = b;
         self
     }
-
-    /// When `true` (default), the cursor will initially be placed at the end of the text.
-    ///
-    /// When `false`, the cursor will initially be placed at the beginning of the text.
-    pub fn cursor_at_end(mut self, b: bool) -> Self {
-        self.cursor_at_end = b;
-        self
-    }
 }
 
 // ----------------------------------------------------------------------------
@@ -279,9 +257,8 @@ impl<'t> Widget for LivecodeTextEdit<'t> {
 impl<'t> LivecodeTextEdit<'t> {
     /// Show the [`LivecodeTextEdit`], returning a rich [`TextEditOutput`].
     pub fn show(self, ui: &mut Ui) -> LivecodeTextEditOutput {
-        let is_mutable = self.text.is_mutable();
-        let where_to_put_background = ui.painter().add(Shape::Noop);
-
+        //let is_mutable = self.text.is_mutable();
+        //let where_to_put_background = ui.painter().add(Shape::Noop);
         let margin = Vec2::new(0.0, 0.0);
         let max_rect = ui.available_rect_before_wrap().shrink2(margin);
         let mut content_ui = ui.child_ui(max_rect, *ui.layout());
@@ -308,7 +285,7 @@ impl<'t> LivecodeTextEdit<'t> {
             text_style,
             text_color,
             layouter,
-            desired_width,
+            desired_width:_,
             desired_height_rows,
             lock_focus,
             cursor_at_end,
@@ -328,7 +305,7 @@ impl<'t> LivecodeTextEdit<'t> {
         const MIN_WIDTH: f32 = 24.0; // Never make a `LivecodeTextEdit` more narrow than this.
         let available_width = ui.available_width().at_least(MIN_WIDTH);
         //println!("available {}", available_width);
-        let desired_width = available_width; // desired_width.unwrap_or_else(|| ui.spacing().text_edit_width);
+        //let desired_width = available_width; // desired_width.unwrap_or_else(|| ui.spacing().text_edit_width);
         let wrap_width = available_width;
 
         /*
@@ -1583,7 +1560,7 @@ fn find_closing_paren(text: &str, ccursor: &CCursor) -> Option<CCursor> {
 
 fn find_opening_paren(text: &str, ccursor: &CCursor) -> Option<CCursor> {
     let pos = ccursor.index;
-    let mut rev_pos = text.len() - pos;
+    let rev_pos = text.len() - pos;
     //println!("pos {} rev pos {} len {}", pos, rev_pos, text.len());
     // spool backward to current position
     let mut it = text.chars().rev();

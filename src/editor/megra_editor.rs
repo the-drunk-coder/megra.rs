@@ -142,8 +142,7 @@ impl epi::App for MegraEditor {
                     egui::Label::new(
                         egui::RichText::new("Mégra Editor").text_style(egui::TextStyle::Monospace),
                     )
-                    .wrap(false)
-                    .monospace(),
+                    .wrap(false)		    
                 );
 
                 let id = ui.make_persistent_id("file_chooser_box");
@@ -162,7 +161,7 @@ impl epi::App for MegraEditor {
 
             let SketchNumber::Num(sk_num) = sketch_number;
 
-            let mut sketch_switched = false;
+            //let mut sketch_switched = false;
             if sk_num != self.sketch_number {
                 println!("switch sketch from {} to {}", self.sketch_number, sk_num);
                 self.sketch_number = sk_num;
@@ -186,7 +185,7 @@ impl epi::App for MegraEditor {
                         println!("couldn't read sketch {}", e);
                     }
                 }
-                sketch_switched = true;
+                //sketch_switched = true;
             }
 
             ui.separator();
@@ -214,7 +213,7 @@ impl epi::App for MegraEditor {
                         LivecodeTextEdit::multiline(&mut self.content)
                             .desired_rows(30)
                             .code_editor()
-                            //.reset_cursor(sketch_switched)
+                            //.reset_cursor(!sketch_switched)
                             .desired_width(800.0)
                             .layouter(&mut layouter)
                     };
@@ -224,7 +223,7 @@ impl epi::App for MegraEditor {
                         linenums.push_str(format!("{}\n", i).as_str());
                     }
 
-                    let ln = egui::Label::new(linenums).text_style(egui::TextStyle::Monospace);
+                    let ln = egui::Label::new(egui::RichText::new(linenums).text_style(egui::TextStyle::Monospace));
 
                     ui.horizontal(|ui| {
                         ui.add(ln);
