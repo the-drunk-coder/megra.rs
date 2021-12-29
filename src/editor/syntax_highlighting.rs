@@ -65,15 +65,15 @@ impl CodeTheme {
         use egui::{Color32, TextFormat};
         Self {
             formats: enum_map::enum_map![
-                TokenType::Comment => TextFormat::simple(text_style, Color32::from_gray(120)),
-		TokenType::Normal => TextFormat::simple(text_style, Color32::from_gray(200)),
-		TokenType::Boolean => TextFormat::simple(text_style, Color32::from_rgb(0, 200, 100)),
-                TokenType::Keyword => TextFormat::simple(text_style, Color32::from_rgb(200, 20, 200)),
-                TokenType::StringLiteral => TextFormat::simple(text_style, egui::Color32::from_rgb(200, 200, 10)),
-                TokenType::Function => TextFormat::simple(text_style, Color32::from_rgb(220, 20, 100)),
-                TokenType::Whitespace => TextFormat::simple(text_style, Color32::TRANSPARENT),
-		TokenType::Linebreak => TextFormat::simple(text_style, Color32::TRANSPARENT),
-            ],
+                    TokenType::Comment => TextFormat::simple(text_style, Color32::from_gray(120)),
+            TokenType::Normal => TextFormat::simple(text_style, Color32::from_gray(200)),
+            TokenType::Boolean => TextFormat::simple(text_style, Color32::from_rgb(0, 200, 100)),
+                    TokenType::Keyword => TextFormat::simple(text_style, Color32::from_rgb(200, 20, 200)),
+                    TokenType::StringLiteral => TextFormat::simple(text_style, egui::Color32::from_rgb(200, 200, 10)),
+                    TokenType::Function => TextFormat::simple(text_style, Color32::from_rgb(220, 20, 100)),
+                    TokenType::Whitespace => TextFormat::simple(text_style, Color32::TRANSPARENT),
+            TokenType::Linebreak => TextFormat::simple(text_style, Color32::TRANSPARENT),
+                ],
         }
     }
 }

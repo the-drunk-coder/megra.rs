@@ -185,11 +185,11 @@ impl<'t> LivecodeTextEdit<'t> {
     //    self.id_source = Some(Id::new(id_source));
     //    self
     //}
-    
+
     pub fn text_style(mut self, text_style: TextStyle) -> Self {
         self.text_style = Some(text_style);
         self
-    }    
+    }
 
     /// Override how text is being shown inside the `LivecodeTextEdit`.
     ///
@@ -285,7 +285,7 @@ impl<'t> LivecodeTextEdit<'t> {
             text_style,
             text_color,
             layouter,
-            desired_width:_,
+            desired_width: _,
             desired_height_rows,
             lock_focus,
             cursor_at_end,
@@ -748,10 +748,32 @@ fn livecode_events(
                     }
                     break; // need to break here because of callback move ...
                 } else {
-                    let mut ccursor = delete_selected(text, &cursor_range);
-                    insert_text(&mut ccursor, text, "\n");
-                    // TODO: if code editor, auto-indent by same leading tabs, + one if the lines end on an opening bracket
-                    Some(CCursorRange::one(ccursor))
+                    // let's check if we're in an s-expression
+                    // auto-indent in that case
+                    if let Some(sexp_cursors) = find_toplevel_sexp(text.as_str(), &cursor_range) {
+                        let mut ccursorp = cursor_range.as_ccursor_range();
+                        // only need indentation, so let's get the text
+                        // from the beginning of the current s-expression
+                        // to the current cursor pos
+                        let cup = CursorRange {
+                            primary: galley.from_ccursor(sexp_cursors.primary),
+                            secondary: galley.from_ccursor(ccursorp.primary),
+                        };
+                        // get indentation level
+                        let indent_level = sexp_indent_level(selected_str(text, &cup));
+                        // insert line break and indentation ...
+                        insert_text(&mut ccursorp.secondary, text, "\n");
+                        if indent_level != 0 {
+                            for _ in 0..indent_level {
+                                insert_text(&mut ccursorp.secondary, text, "  ");
+                            }
+                        }
+                        Some(CCursorRange::one(ccursorp.secondary))
+                    } else {
+                        let mut ccursor = delete_selected(text, &cursor_range);
+                        insert_text(&mut ccursor, text, "\n");
+                        Some(CCursorRange::one(ccursor))
+                    }
                 }
             }
             Event::Key {
@@ -1052,12 +1074,11 @@ fn on_key_press(
                     delete_previous_word(text, cursor.ccursor)
                 } else if text.as_str().len() > 0 {
                     // this seems inefficient ...
-                    if let Some(cur_char) = text.as_str().chars().nth(
-			if cursor.ccursor.index > 0 {
-			    cursor.ccursor.index - 1
-			} else {
-			    0
-			}) {
+                    if let Some(cur_char) = text.as_str().chars().nth(if cursor.ccursor.index > 0 {
+                        cursor.ccursor.index - 1
+                    } else {
+                        0
+                    }) {
                         //println!("cur char {}", cur_char);
                         if let Some(next_char) = text.as_str().chars().nth(cursor.ccursor.index) {
                             //println!("next char {}", next_char);
