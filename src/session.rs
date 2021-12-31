@@ -519,7 +519,8 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
             }
 
             if let Some(old_ctx) = an_old_ctx {
-                let old_ctx_vec = old_ctx.difference(&BTreeSet::new()).cloned().collect();
+                let old_ctx_vec: Vec<BTreeSet<String>> =
+                    old_ctx.difference(&BTreeSet::new()).cloned().collect();
                 let session2 = sync::Arc::clone(session);
                 thread::spawn(move || {
                     Session::stop_generators(&session2, &old_ctx_vec);
@@ -794,7 +795,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
 
     pub fn stop_generators(
         session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
-        gen_names: &Vec<BTreeSet<String>>,
+        gen_names: &[BTreeSet<String>],
     ) {
         // get scheds out of map, try to keep lock only shortly ...
         let mut sched_proxies = Vec::new();
