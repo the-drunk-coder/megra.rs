@@ -14,6 +14,7 @@ pub mod generator;
 pub mod generator_processor;
 pub mod interpreter;
 pub mod markov_sequence_generator;
+pub mod music_theory;
 pub mod parameter;
 pub mod parser;
 pub mod pfa_growth;
@@ -60,7 +61,11 @@ fn main() -> Result<(), anyhow::Error> {
 
     let mut opts = Options::new();
     opts.optflag("v", "version", "Print version");
-    opts.optflag("r", "repl", "no editor, repl only (i.e. for integration with other editors)");
+    opts.optflag(
+        "r",
+        "repl",
+        "no editor, repl only (i.e. for integration with other editors)",
+    );
     opts.optflag("h", "help", "Print this help");
     opts.optflag("n", "no-samples", "don't load default samples");
     opts.optopt("o", "output-mode", "output mode (stereo, 8ch)", "stereo");

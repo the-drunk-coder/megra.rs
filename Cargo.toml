@@ -21,11 +21,11 @@ rustyline = "6.3.0"
 claxon = "0.4.3"
 getopts = "0.2"
 rand = "0.8.4"
-rust-music-theory = {git = "https://github.com/the-drunk-coder/rust-music-theory"}
-egui = { version="0.16.0", features = ["persistence"]}
-epi = { version="0.16.0", features = ["persistence"]}
+rust-music-theory = "0.2"
+egui = { version="0.16.0", features = ["persistence"] }
+epi = { version="0.16.0", features = ["persistence"] }
 epaint = "0.16.0"
-egui_glium = { version="0.16.0", features = ["persistence"]}
+egui_glium = { version="0.16.0", features = ["persistence"] }
 serde = { version = "1", features = ["derive", "rc"], optional = true }
 dashmap = "4.0.0"
 chrono = "0.4"
