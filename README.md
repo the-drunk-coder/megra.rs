@@ -42,7 +42,7 @@ The files generated and read by the editor can be found in `.config/megra/sketch
 
 ```
 -v, --version       Print version
--e, --editor        Use integrated editor (experimental)
+-r, --repl          no editor, repl only (i.e. for integration with other editors)
 -h, --help          Print this help
 -n, --no-samples    don't load default samples
 -o, --output-mode   output mode (stereo, 2ch, 8ch), default: stereo
@@ -53,7 +53,7 @@ The files generated and read by the editor can be found in `.config/megra/sketch
 --reverb-ir         path to an impulse response in FLAC format
 ```
 
-If the `-e` option is omitted, Mégra is started in REPL (command-line) mode. If you want to integrate it in your favourite editor, that might be helpful.
+If the `-r` option is used, Mégra is started in REPL (command-line) mode. If you want to integrate it in your favourite editor, that might be helpful.
 
 
 
