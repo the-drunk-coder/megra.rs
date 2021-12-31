@@ -3,6 +3,7 @@ use crate::{
     generator::TimeMod,
     markov_sequence_generator::MarkovSequenceGenerator,
     parameter::Parameter,
+    pfa_growth::*
 };
 use rand::seq::SliceRandom;
 use ruffbox_synth::ruffbox::synth::SynthParameter;
@@ -35,12 +36,12 @@ pub fn grow_raw(
     durations: &[Parameter],
 ) {
     if let Some(result) = match m {
-        "flower" => gen.generator.grow_flower(),
-        "old" => gen.generator.grow_old(),
-        "loop" => gen.generator.grow_loop(),
-        "triloop" => gen.generator.grow_triloop(),
-        "quadloop" => gen.generator.grow_quadloop(),
-        _ => gen.generator.grow_old(),
+        "flower" => grow_flower(&mut gen.generator),
+        "old" => grow_old(&mut gen.generator),
+        "loop" => grow_loop(&mut gen.generator),
+        "triloop" => grow_triloop(&mut gen.generator),
+        "quadloop" => grow_quadloop(&mut gen.generator),
+        _ => grow_old(&mut gen.generator),
     } {
         //println!("grow!");
         /*

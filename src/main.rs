@@ -20,6 +20,7 @@ pub mod repl;
 pub mod sample_set;
 pub mod scheduler;
 pub mod session;
+pub mod pfa_growth;
 
 use crate::builtin_types::*;
 use crate::sample_set::SampleSet;
