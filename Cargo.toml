@@ -22,11 +22,10 @@ claxon = "0.4.3"
 getopts = "0.2"
 rand = "0.8.4"
 rust-music-theory = {git = "https://github.com/the-drunk-coder/rust-music-theory"}
-egui = { git = "https://github.com/emilk/egui", features = ["persistence"]}
-epi = { git = "https://github.com/emilk/egui", features = ["persistence"]}
-epaint = { git = "https://github.com/emilk/egui"}
-egui_glium = { git = "https://github.com/emilk/egui", features = ["persistence"]}
-#egui = { version ="0.15.0", features = ["persistence"] }
+egui = { version="0.16.0", features = ["persistence"]}
+epi = { version="0.16.0", features = ["persistence"]}
+epaint = "0.16.0"
+egui_glium = { version="0.16.0", features = ["persistence"]}
 serde = { version = "1", features = ["derive", "rc"], optional = true }
 dashmap = "4.0.0"
 chrono = "0.4"
