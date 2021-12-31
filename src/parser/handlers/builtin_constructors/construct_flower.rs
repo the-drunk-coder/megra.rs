@@ -219,10 +219,8 @@ pub fn construct_flower(tail: &mut Vec<Expr>) -> Atom {
                 //////////////////////
                 // pistil repetition exit
                 if label_a == pistil_label && repetition_chance > 0.0 && max_repetitions >= 2.0 {
-                    let mut max_rep_source = Vec::new();
-                    for _ in 0..max_repetitions as usize {
-                        max_rep_source.push(pistil_label);
-                    }
+                    let max_rep_source = vec![pistil_label; max_repetitions as usize];
+
                     // max repetition rule
                     rules.push(Rule {
                         source: max_rep_source,

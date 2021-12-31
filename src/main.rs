@@ -121,8 +121,8 @@ fn main() -> Result<(), anyhow::Error> {
                         // decode to f32
                         let max_val =
                             (i32::MAX >> (32 - reader.streaminfo().bits_per_sample)) as f32;
-                        let mut sample_iter = reader.samples();
-                        while let Some(sample) = sample_iter.next() {
+
+                        for sample in reader.samples() {
                             let s = sample.unwrap() as f32 / max_val;
                             sample_buffer.push(s);
                         }
@@ -330,6 +330,7 @@ fn main() -> Result<(), anyhow::Error> {
     Ok(())
 }
 
+#[allow(clippy::too_many_arguments)]
 fn run<T, const NCHAN: usize>(
     input_device: &cpal::Device,
     output_device: &cpal::Device,

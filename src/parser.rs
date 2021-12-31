@@ -440,7 +440,7 @@ pub fn eval_expression(
                     }
                 })),
                 Expr::Custom(s) => {
-                    handlers::custom_sample_event::handle(&mut reduced_tail, s, &sample_set)
+                    handlers::custom_sample_event::handle(&mut reduced_tail, s, sample_set)
                 }
                 _ => {
                     println!("something else");

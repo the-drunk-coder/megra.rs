@@ -68,8 +68,7 @@ fn resolve_proxy(parts_store: &PartsStore, proxy: PartProxy, generators: &mut Ve
                 // this can be done for sure ...
                 for mut gen in part_generators.clone().drain(..) {
                     let mut procs_clone = procs.clone();
-                    let mut gpl_drain = procs_clone.drain(..);
-                    while let Some(gpom) = gpl_drain.next() {
+                    for gpom in procs_clone.drain(..) {
                         match gpom {
                             GeneratorProcessorOrModifier::GeneratorProcessor(gp) => {
                                 gen.processors.push(gp)
@@ -90,8 +89,7 @@ fn resolve_proxy(parts_store: &PartsStore, proxy: PartProxy, generators: &mut Ve
                     resolve_proxy(parts_store, sub_proxy, &mut sub_gens);
                     for mut gen in sub_gens.drain(..) {
                         let mut procs_clone = procs.clone();
-                        let mut gpl_drain = procs_clone.drain(..);
-                        while let Some(gpom) = gpl_drain.next() {
+                        for gpom in procs_clone.drain(..) {
                             match gpom {
                                 GeneratorProcessorOrModifier::GeneratorProcessor(gp) => {
                                     gen.processors.push(gp)
@@ -342,8 +340,8 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                 let sess = session.lock();
                 if let Some(old_gens) = sess.contexts.get(&name) {
                     // this means context is running
-                    remainders = new_gens.intersection(&old_gens).cloned().collect();
-                    newcomers = new_gens.difference(&old_gens).cloned().collect();
+                    remainders = new_gens.intersection(old_gens).cloned().collect();
+                    newcomers = new_gens.difference(old_gens).cloned().collect();
                     quitters = old_gens.difference(&new_gens).cloned().collect();
                 }
             }
@@ -399,7 +397,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                     let gen = gen_map.remove(&nc).unwrap();
                     Session::start_generator_push_sync(
                         Box::new(gen),
-                        &session,
+                        session,
                         &ext_sync,
                         ctx.shift as f64 * 0.001,
                     );
@@ -409,7 +407,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                     let gen = gen_map.remove(&nc).unwrap();
                     Session::start_generator_push_sync(
                         Box::new(gen),
-                        &session,
+                        session,
                         &int_sync,
                         ctx.shift as f64 * 0.001,
                     );
@@ -419,10 +417,10 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                     let gen = gen_map.remove(&nc).unwrap();
                     Session::start_generator_no_sync(
                         Box::new(gen),
-                        &session,
-                        &ruffbox,
-                        &parts_store,
-                        &global_parameters,
+                        session,
+                        ruffbox,
+                        parts_store,
+                        global_parameters,
                         output_mode,
                         ctx.shift as f64 * 0.001,
                         &ctx.block_tags,
@@ -438,9 +436,9 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                     let gen = gen_map.remove(&rem).unwrap();
                     Session::resume_generator_sync(
                         Box::new(gen),
-                        &session,
-                        &ruffbox,
-                        &parts_store,
+                        session,
+                        ruffbox,
+                        parts_store,
                         &ext_sync,
                         ctx.shift as f64 * 0.001,
                         &ctx.block_tags,
@@ -452,9 +450,9 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                     let gen = gen_map.remove(&rem).unwrap();
                     Session::resume_generator(
                         Box::new(gen),
-                        &session,
-                        &ruffbox,
-                        &parts_store,
+                        session,
+                        ruffbox,
+                        parts_store,
                         ctx.shift as f64 * 0.001,
                         &ctx.block_tags,
                         &ctx.solo_tags,
@@ -474,7 +472,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                     for (_, gen) in gen_map.drain() {
                         Session::start_generator_push_sync(
                             Box::new(gen),
-                            &session,
+                            session,
                             &ext_sync,
                             ctx.shift as f64 * 0.001,
                         );
@@ -484,7 +482,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                     for (_, gen) in gen_map.drain() {
                         Session::start_generator_push_sync(
                             Box::new(gen),
-                            &session,
+                            session,
                             &int_sync,
                             ctx.shift as f64 * 0.001,
                         );
@@ -494,10 +492,10 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                     for (_, gen) in gen_map.drain() {
                         Session::start_generator_no_sync(
                             Box::new(gen),
-                            &session,
-                            &ruffbox,
-                            &parts_store,
-                            &global_parameters,
+                            session,
+                            ruffbox,
+                            parts_store,
+                            global_parameters,
                             output_mode,
                             ctx.shift as f64 * 0.001,
                             &ctx.block_tags,
@@ -566,6 +564,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
         }
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn resume_generator_sync(
         gen: Box<Generator>,
         session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
@@ -672,7 +671,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
     ) {
         //this is prob kinda redundant
         let mut sess = session.lock();
-        if let Some((_, data)) = sess.schedulers.get_mut(&sync_tags) {
+        if let Some((_, data)) = sess.schedulers.get_mut(sync_tags) {
             print!("start generator \'");
             for tag in gen.id_tags.iter() {
                 print!("{} ", tag);
@@ -689,6 +688,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
         }
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub fn start_generator_no_sync(
         gen: Box<Generator>,
         session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
@@ -741,11 +741,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
             thread_name.push_str(&(format!("{} ", tag)));
         }
 
-        sched.start(
-            &thread_name.trim(),
-            eval_loop,
-            sync::Arc::clone(&sched_data),
-        );
+        sched.start(thread_name.trim(), eval_loop, sync::Arc::clone(&sched_data));
 
         // get sched out of map, try to keep lock only shortly ...
         let sched_prox;
@@ -805,7 +801,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
         {
             let mut sess = session.lock();
             for name in gen_names.iter() {
-                sched_proxies.push(sess.schedulers.remove(&name));
+                sched_proxies.push(sess.schedulers.remove(name));
             }
         }
 

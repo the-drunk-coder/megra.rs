@@ -252,7 +252,7 @@ pub fn export_dot_static(filename: &str, generator: &Generator) {
 
 pub fn export_dot_part(
     filename: &str,
-    part_name: &String,
+    part_name: &str,
     parts_store: &sync::Arc<Mutex<PartsStore>>,
 ) {
     let ps = parts_store.lock();
@@ -260,12 +260,12 @@ pub fn export_dot_part(
         // write generators to dot strings ...
         for gen in gens.iter() {
             let mut filename_tagged = filename.to_string();
-            filename_tagged.push_str("_");
+            filename_tagged.push('_');
             filename_tagged.push_str(part_name);
-            filename_tagged.push_str("_");
+            filename_tagged.push('_');
             for tag in gen.id_tags.iter() {
                 filename_tagged.push_str(tag);
-                filename_tagged.push_str("_");
+                filename_tagged.push('_');
             }
             // remove trailing _
             filename_tagged = filename_tagged[..filename_tagged.len() - 1].to_string();
@@ -298,10 +298,10 @@ pub fn export_dot_running<const BUFSIZE: usize, const NCHAN: usize>(
     // write generators to dot strings ...
     for (tags, gen) in gens.iter() {
         let mut filename_tagged = filename.to_string();
-        filename_tagged.push_str("_");
+        filename_tagged.push('_');
         for tag in tags.iter() {
             filename_tagged.push_str(tag);
-            filename_tagged.push_str("_");
+            filename_tagged.push('_');
         }
         // remove trailing _
         filename_tagged = filename_tagged[..filename_tagged.len() - 1].to_string();

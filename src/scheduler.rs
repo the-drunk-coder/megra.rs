@@ -40,6 +40,7 @@ pub struct SchedulerData<const BUFSIZE: usize, const NCHAN: usize> {
 }
 
 impl<const BUFSIZE: usize, const NCHAN: usize> SchedulerData<BUFSIZE, NCHAN> {
+    #[allow(clippy::too_many_arguments)]
     pub fn from_previous(
         old: &SchedulerData<BUFSIZE, NCHAN>,
         shift: f64,
@@ -72,6 +73,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> SchedulerData<BUFSIZE, NCHAN> {
         }
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub fn from_time_data(
         old: &SchedulerData<BUFSIZE, NCHAN>,
         shift: f64,
@@ -104,6 +106,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> SchedulerData<BUFSIZE, NCHAN> {
         }
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub fn from_data(
         data: Box<Generator>,
         shift: f64,
@@ -134,8 +137,8 @@ impl<const BUFSIZE: usize, const NCHAN: usize> SchedulerData<BUFSIZE, NCHAN> {
             session: sync::Arc::clone(session),
             parts_store: sync::Arc::clone(parts_store),
             global_parameters: sync::Arc::clone(global_parameters),
-            output_mode: output_mode,
-            sync_mode: sync_mode,
+            output_mode,
+            sync_mode,
             block_tags: block_tags.clone(),
             solo_tags: solo_tags.clone(),
         }
@@ -225,7 +228,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Scheduler<BUFSIZE, NCHAN> {
     /// Join this scheduler thread.
     pub fn join(&mut self) {
         if let Some(h) = self.handle.take() {
-            if let Ok(_) = h.join() {
+            if h.join().is_ok() {
                 println!("joined!");
             } else {
                 println!("Could not join spawned thread");

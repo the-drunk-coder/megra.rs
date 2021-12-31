@@ -238,20 +238,18 @@ pub fn construct_cycle(
                         });
                     }
                 }
+            } else if count == num_events - 1 {
+                rules.push(Rule {
+                    source: vec![last_char],
+                    symbol: first_char,
+                    probability: 1.0,
+                });
             } else {
-                if count == num_events - 1 {
-                    rules.push(Rule {
-                        source: vec![last_char],
-                        symbol: first_char,
-                        probability: 1.0,
-                    });
-                } else {
-                    rules.push(Rule {
-                        source: vec![last_char],
-                        symbol: next_char,
-                        probability: 1.0,
-                    });
-                }
+                rules.push(Rule {
+                    source: vec![last_char],
+                    symbol: next_char,
+                    probability: 1.0,
+                });
             }
 
             last_char = next_char;

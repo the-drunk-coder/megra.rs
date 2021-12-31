@@ -229,7 +229,7 @@ pub fn construct_stages(tail: &mut Vec<Expr>) -> Atom {
         root_generator: MarkovSequenceGenerator {
             name,
             generator: pfa,
-            event_mapping: event_mapping,
+            event_mapping,
             duration_mapping,
             modified: false,
             symbol_ages: HashMap::new(),

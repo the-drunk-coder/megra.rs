@@ -165,7 +165,7 @@ pub fn eval_cyc_from_str(
     src: &str,
     sample_set: &sync::Arc<Mutex<SampleSet>>,
     out_mode: OutputMode,
-    template_events: &Vec<String>,
+    template_events: &[String],
     event_mappings: &HashMap<String, Vec<SourceEvent>>,
 ) -> Vec<Vec<CycleResult>> {
     let items = parse_cyc(src.trim()).map_err(|e: nom::Err<VerboseError<&str>>| {
@@ -177,14 +177,12 @@ pub fn eval_cyc_from_str(
     match items {
         Ok((_, mut i)) => {
             let mut results = Vec::new();
-            let mut item_drain = i.drain(..);
 
-            while let Some(mut inner) = item_drain.next() {
+            for mut inner in i.drain(..) {
                 // iterate through cycle positions ...
-                let mut inner_drain = inner.drain(..);
                 let mut cycle_position = Vec::new();
                 let mut template_params = Vec::new(); // collect params for templates ..
-                while let Some(item) = inner_drain.next() {
+                for item in inner.drain(..) {
                     match item {
                         CycleItem::Duration(d) => {
                             cycle_position.push(CycleResult::Duration(d));
@@ -220,7 +218,7 @@ pub fn eval_cyc_from_str(
                             // in brackets so it's recognized as a "function"
                             name = format!("({})", name);
                             //println!("{}", name);
-                            match parse_expr(&name.trim()) {
+                            match parse_expr(name.trim()) {
                                 Ok((_, expr)) => {
                                     if let Some(Expr::Constant(Atom::SoundEvent(e))) =
                                         eval_expression(expr, sample_set, out_mode)
@@ -285,7 +283,7 @@ pub fn eval_cyc_from_str(
                         }
                         // brackets so it's recognized as a "function"
                         ev_name = format!("({})", ev_name);
-                        match parse_expr(&ev_name.trim()) {
+                        match parse_expr(ev_name.trim()) {
                             Ok((_, expr)) => {
                                 if let Some(Expr::Constant(Atom::SoundEvent(e))) =
                                     eval_expression(expr, sample_set, out_mode)

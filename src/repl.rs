@@ -34,7 +34,7 @@ pub fn start_repl<const BUFSIZE: usize, const NCHAN: usize>(
                     continue;
                 }
 
-                let pfa_in = parser::eval_from_str(&line.as_str(), sample_set, mode);
+                let pfa_in = parser::eval_from_str(line.as_str(), sample_set, mode);
 
                 match pfa_in {
                     Err(e) => {
@@ -46,14 +46,14 @@ pub fn start_repl<const BUFSIZE: usize, const NCHAN: usize>(
                         // once a complete input is found,
                         if e.contains("closing paren") {
                             let mut line_buffer: String = "".to_string();
-                            line_buffer.push_str(&line.as_str());
+                            line_buffer.push_str(line.as_str());
                             loop {
                                 let readline_inner = rl.readline(".. ");
                                 match readline_inner {
                                     Ok(line) => {
-                                        line_buffer.push_str(&line.as_str());
+                                        line_buffer.push_str(line.as_str());
                                         let inner_pfa_in = parser::eval_from_str(
-                                            &line_buffer.as_str(),
+                                            line_buffer.as_str(),
                                             sample_set,
                                             mode,
                                         );

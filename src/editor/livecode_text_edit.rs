@@ -42,9 +42,9 @@ pub struct LivecodeTextEditState {
 }
 
 impl LivecodeTextEditState {
-    pub fn clear_paren_selection(&mut self) {	
-	self.opening_paren_range = None;
-	self.closing_paren_range = None;
+    pub fn clear_paren_selection(&mut self) {
+        self.opening_paren_range = None;
+        self.closing_paren_range = None;
     }
 }
 
@@ -652,7 +652,7 @@ fn livecode_events(
                     if text_to_insert == "(" {
                         // enclose selection in parenthesis and
                         // jump to opening ...
-                        let selection = selected_str(text, &cursor_range).clone().to_string();
+                        let selection = selected_str(text, &cursor_range).to_string();
                         let selection_len = selection.len();
                         let mut ccursor = delete_selected(text, &cursor_range);
                         insert_text(&mut ccursor, text, format!("({})", selection).as_str());
@@ -664,7 +664,7 @@ fn livecode_events(
                     } else if text_to_insert == "[" {
                         // enclose selection in parenthesis and
                         // jump to opening ...
-                        let selection = selected_str(text, &cursor_range).clone().to_string();
+                        let selection = selected_str(text, &cursor_range).to_string();
                         let selection_len = selection.len();
                         let mut ccursor = delete_selected(text, &cursor_range);
                         insert_text(&mut ccursor, text, format!("[{}]", selection).as_str());
@@ -676,7 +676,7 @@ fn livecode_events(
                     } else if text_to_insert == "{" {
                         // enclose selection in parenthesis and
                         // jump to opening ...
-                        let selection = selected_str(text, &cursor_range).clone().to_string();
+                        let selection = selected_str(text, &cursor_range).to_string();
                         let selection_len = selection.len();
                         let mut ccursor = delete_selected(text, &cursor_range);
                         insert_text(&mut ccursor, text, format!("{{{}}}", selection).as_str());
@@ -688,7 +688,7 @@ fn livecode_events(
                     } else if text_to_insert == "\"" {
                         // enclose selection in parenthesis and
                         // jump to opening ...
-                        let selection = selected_str(text, &cursor_range).clone().to_string();
+                        let selection = selected_str(text, &cursor_range).to_string();
                         let selection_len = selection.len();
                         let mut ccursor = delete_selected(text, &cursor_range);
                         insert_text(&mut ccursor, text, format!("\"{}\"", selection).as_str());
@@ -815,7 +815,7 @@ fn livecode_events(
                 pressed: true,
                 modifiers,
             } => {
-		state.clear_paren_selection();
+                state.clear_paren_selection();
                 if modifiers.command {
                     //println!("toggle {}",state.selection_toggle);
                     state.selection_toggle = !state.selection_toggle;
@@ -1080,7 +1080,7 @@ fn on_key_press(
                 if modifiers.alt || modifiers.ctrl {
                     // alt on mac, ctrl on windows
                     delete_previous_word(text, cursor.ccursor)
-                } else if text.as_str().len() > 0 {
+                } else if !text.as_str().is_empty() {
                     // this seems inefficient ...
                     if let Some(cur_char) = text.as_str().chars().nth(if cursor.ccursor.index > 0 {
                         cursor.ccursor.index - 1
@@ -1432,7 +1432,7 @@ fn find_toplevel_sexp(text: &str, cursorp: &CursorRange) -> Option<CCursorRange>
                 r_pos = pos + 1;
                 last_closing = pos + 1;
                 last_opening = pos + 1;
-                pos = pos + 1;
+                pos += 1;
             }
         }
     }
@@ -1448,7 +1448,7 @@ fn find_toplevel_sexp(text: &str, cursorp: &CursorRange) -> Option<CCursorRange>
     let mut balance: i32 = 0;
     // beginning: lparen right after newline
     let mut lparen_found = false;
-    while let Some(l_char) = it_l.next() {
+    for l_char in it_l {
         if l_char == '\n' && lparen_found {
             // two newlines - assume end
             break;
@@ -1468,7 +1468,7 @@ fn find_toplevel_sexp(text: &str, cursorp: &CursorRange) -> Option<CCursorRange>
         }
     }
 
-    while let Some(r_char) = it_r.next() {
+    for r_char in it_r {
         if r_char == '(' {
             r_pos += 1;
             balance += 1;
@@ -1574,7 +1574,7 @@ fn find_closing_paren(text: &str, ccursor: &CCursor) -> Option<CCursor> {
 
     let mut par_lvl = 1;
 
-    while let Some(next_char) = it.next() {
+    for next_char in it {
         if next_char == '(' {
             par_lvl += 1;
         } else if next_char == ')' {
@@ -1604,7 +1604,7 @@ fn find_opening_paren(text: &str, ccursor: &CCursor) -> Option<CCursor> {
     // well, should be reverse par level ...
     let mut par_lvl = 1;
     let mut count = 0;
-    while let Some(next_char) = it.next() {
+    for next_char in it {
         if next_char == '(' {
             par_lvl -= 1;
         } else if next_char == ')' {

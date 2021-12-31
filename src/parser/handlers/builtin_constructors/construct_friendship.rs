@@ -209,10 +209,7 @@ pub fn construct_friendship(tail: &mut Vec<Expr>) -> Atom {
 
                 // center max repetition
                 if repetition_chance > 0.0 && max_repetitions >= 2.0 {
-                    let mut max_rep_source = Vec::new();
-                    for _ in 0..max_repetitions as usize {
-                        max_rep_source.push(center_label);
-                    }
+                    let max_rep_source = vec![center_label; max_repetitions as usize];
 
                     // max repetition rule
                     rules.push(Rule {

@@ -33,7 +33,7 @@ pub fn grow_old(pfa: &mut Pfa<char>) -> Option<PfaOperationResult<char>> {
         }
     }
 
-    if rand_state.len() == 0 {
+    if rand_state.is_empty() {
         // can't find random state id
         return None;
     }
@@ -41,23 +41,25 @@ pub fn grow_old(pfa: &mut Pfa<char>) -> Option<PfaOperationResult<char>> {
     pfa.add_state(&rand_state);
 
     // update pst
-    if let Some(mut root) = pfa.pst_root.as_mut() {
-        pst::add_leaf(&mut root, &rand_state);
+    if let Some(root) = pfa.pst_root.as_mut() {
+        pst::add_leaf(root, &rand_state);
     }
 
-    let mut additions = Vec::new();
-    additions.push(pfa.add_state_transition(
-        &rand_state,
-        &source_id,
-        0.05 + (rng.gen_range(0.0..20.0) / 100.0),
-        false,
-    ));
-    additions.push(pfa.add_state_transition(
-        &rand_state,
-        &dest_id,
-        0.05 + (rng.gen_range(0.0..20.0) / 100.0),
-        false,
-    ));
+    let mut additions = vec![
+        pfa.add_state_transition(
+            &rand_state,
+            &source_id,
+            0.05 + (rng.gen_range(0.0..20.0) / 100.0),
+            false,
+        ),
+        pfa.add_state_transition(
+            &rand_state,
+            &dest_id,
+            0.05 + (rng.gen_range(0.0..20.0) / 100.0),
+            false,
+        ),
+    ];
+
     additions.append(&mut pfa.add_symbol_transition(
         *source_id.first().unwrap(),
         &rand_state,
@@ -117,7 +119,7 @@ pub fn grow_flower(pfa: &mut Pfa<char>) -> Option<PfaOperationResult<char>> {
         }
     }
 
-    if rand_state.len() == 0 {
+    if rand_state.is_empty() {
         // can't find random state id
         return None;
     }
@@ -125,17 +127,17 @@ pub fn grow_flower(pfa: &mut Pfa<char>) -> Option<PfaOperationResult<char>> {
     pfa.add_state(&rand_state);
 
     // update pst
-    if let Some(mut root) = pfa.pst_root.as_mut() {
-        pst::add_leaf(&mut root, &rand_state);
+    if let Some(root) = pfa.pst_root.as_mut() {
+        pst::add_leaf(root, &rand_state);
     }
 
-    let mut additions = Vec::new();
-    additions.push(pfa.add_state_transition(
+    let mut additions = vec![pfa.add_state_transition(
         &rand_state,
         &source_id,
         0.2 + (rng.gen_range(0.0..20.0) / 100.0),
         false,
-    ));
+    )];
+
     additions.append(&mut pfa.add_symbol_transition(
         *source_id.first().unwrap(),
         &rand_state,
@@ -184,7 +186,7 @@ pub fn grow_triloop(pfa: &mut Pfa<char>) -> Option<PfaOperationResult<char>> {
         }
     }
 
-    if rand_state.len() == 0 {
+    if rand_state.is_empty() {
         // can't find random state id
         return None;
     }
@@ -192,17 +194,17 @@ pub fn grow_triloop(pfa: &mut Pfa<char>) -> Option<PfaOperationResult<char>> {
     pfa.add_state(&rand_state);
 
     // update pst
-    if let Some(mut root) = pfa.pst_root.as_mut() {
-        pst::add_leaf(&mut root, &rand_state);
+    if let Some(root) = pfa.pst_root.as_mut() {
+        pst::add_leaf(root, &rand_state);
     }
 
-    let mut additions = Vec::new();
-    additions.push(pfa.add_state_transition(
+    let mut additions = vec![pfa.add_state_transition(
         &rand_state,
         &dest_id,
         0.2 + (rng.gen_range(0.0..20.0) / 100.0),
         false,
-    ));
+    )];
+
     additions.append(&mut pfa.add_symbol_transition(
         *source_id.first().unwrap(),
         &rand_state,
@@ -257,7 +259,7 @@ pub fn grow_loop(pfa: &mut Pfa<char>) -> Option<PfaOperationResult<char>> {
         }
     }
 
-    if rand_state.len() == 0 {
+    if rand_state.is_empty() {
         // can't find random state id
         return None;
     }
@@ -265,8 +267,8 @@ pub fn grow_loop(pfa: &mut Pfa<char>) -> Option<PfaOperationResult<char>> {
     pfa.add_state(&rand_state);
 
     // update pst
-    if let Some(mut root) = pfa.pst_root.as_mut() {
-        pst::add_leaf(&mut root, &rand_state);
+    if let Some(root) = pfa.pst_root.as_mut() {
+        pst::add_leaf(root, &rand_state);
     }
 
     let mut removals = Vec::new();
@@ -276,13 +278,13 @@ pub fn grow_loop(pfa: &mut Pfa<char>) -> Option<PfaOperationResult<char>> {
         false,
     ));
 
-    let mut additions = Vec::new();
-    additions.push(pfa.add_state_transition(
+    let mut additions = vec![pfa.add_state_transition(
         &rand_state,
         &dest_id,
         0.2 + (rng.gen_range(0.0..20.0) / 100.0),
         false,
-    ));
+    )];
+
     //println!("{:?}", pfa.alphabet);
 
     additions.append(&mut pfa.add_symbol_transition(
@@ -336,7 +338,7 @@ pub fn grow_quadloop(pfa: &mut Pfa<char>) -> Option<PfaOperationResult<char>> {
         }
     }
 
-    if rand_state.len() == 0 {
+    if rand_state.is_empty() {
         // can't find random state id
         return None;
     }
@@ -344,17 +346,17 @@ pub fn grow_quadloop(pfa: &mut Pfa<char>) -> Option<PfaOperationResult<char>> {
     pfa.add_state(&rand_state);
 
     // update pst
-    if let Some(mut root) = pfa.pst_root.as_mut() {
-        pst::add_leaf(&mut root, &rand_state);
+    if let Some(root) = pfa.pst_root.as_mut() {
+        pst::add_leaf(root, &rand_state);
     }
 
-    let mut additions = Vec::new();
-    additions.push(pfa.add_state_transition(
+    let mut additions = vec![pfa.add_state_transition(
         &rand_state,
         &dest_id,
         0.2 + (rng.gen_range(0.0..20.0) / 100.0),
         false,
-    ));
+    )];
+
     additions.append(&mut pfa.add_symbol_transition(
         *source_id.first().unwrap(),
         &rand_state,

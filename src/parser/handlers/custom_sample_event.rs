@@ -113,7 +113,7 @@ pub fn handle(
             .insert(SynthParameter::Attack, Box::new(Parameter::with_value(1.0)));
         ev.params.insert(
             SynthParameter::Sustain,
-            Box::new(Parameter::with_value(500 as f32)),
+            Box::new(Parameter::with_value(500_f32)),
         );
         ev.params.insert(
             SynthParameter::Release,
@@ -154,7 +154,7 @@ pub fn handle(
             .insert(SynthParameter::Attack, Box::new(Parameter::with_value(1.0)));
         ev.params.insert(
             SynthParameter::Sustain,
-            Box::new(Parameter::with_value(500 as f32)),
+            Box::new(Parameter::with_value(500_f32)),
         );
         ev.params.insert(
             SynthParameter::Release,

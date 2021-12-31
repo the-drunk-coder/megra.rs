@@ -148,13 +148,12 @@ pub fn handle(mul: &BuiltInMultiplexer, tail: &mut Vec<Expr>, out_mode: OutputMo
 
     let mut gen_proc_list_list = Vec::new();
 
-    let mut tail_drain = tail.drain(..);
-    while let Some(Expr::Constant(c)) = tail_drain.next() {
+    for c in tail.drain(..) {
         match c {
-            Atom::GeneratorProcessorOrModifierList(gpl) => {
+            Expr::Constant(Atom::GeneratorProcessorOrModifierList(gpl)) => {
                 gen_proc_list_list.push(gpl);
             }
-            Atom::GeneratorProcessorOrModifier(gp) => {
+            Expr::Constant(Atom::GeneratorProcessorOrModifier(gp)) => {
                 let gpl = vec![gp];
                 gen_proc_list_list.push(gpl);
             }
@@ -225,8 +224,7 @@ pub fn handle(mul: &BuiltInMultiplexer, tail: &mut Vec<Expr>, out_mode: OutputMo
                     }
                 }
 
-                let mut gpl_drain = gpl.drain(..);
-                while let Some(gpom) = gpl_drain.next() {
+                for gpom in gpl.drain(..) {
                     match gpom {
                         GeneratorProcessorOrModifier::GeneratorProcessor(gp) => {
                             pclone.processors.push(gp)
@@ -273,8 +271,7 @@ pub fn handle(mul: &BuiltInMultiplexer, tail: &mut Vec<Expr>, out_mode: OutputMo
                     }
 
                     let mut gpl_clone = gpl.clone();
-                    let mut gpl_drain = gpl_clone.drain(..);
-                    while let Some(gpom) = gpl_drain.next() {
+                    for gpom in gpl_clone.drain(..) {
                         match gpom {
                             GeneratorProcessorOrModifier::GeneratorProcessor(gp) => {
                                 pclone.processors.push(gp)

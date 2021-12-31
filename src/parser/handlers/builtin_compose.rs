@@ -42,10 +42,9 @@ pub fn handle(tail: &mut Vec<Expr>) -> Atom {
         }
         Some(Expr::Constant(Atom::Generator(mut g))) => {
             let mut proc_or_mods = collect_compose(tail);
-            let mut prom_drain = proc_or_mods.drain(..);
             let mut procs = Vec::new();
 
-            while let Some(gpom) = prom_drain.next() {
+            for gpom in proc_or_mods.drain(..) {
                 match gpom {
                     GeneratorProcessorOrModifier::GeneratorProcessor(gp) => procs.push(gp),
                     GeneratorProcessorOrModifier::GeneratorModifierFunction((fun, pos, named)) => {
@@ -69,7 +68,7 @@ pub fn handle(tail: &mut Vec<Expr>) -> Atom {
                             fun,
                             pos,
                             named,
-                        )) => fun(&mut gen.root_generator, &mut Vec::new(), &pos, &named),
+                        )) => fun(&mut gen.root_generator, &mut Vec::new(), pos, named),
                     }
                 }
             }

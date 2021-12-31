@@ -51,11 +51,8 @@ impl Generator {
         let mut events = self.root_generator.current_events();
 
         for ev in events.iter_mut() {
-            match ev {
-                InterpretableEvent::Sound(s) => {
-                    s.tags = self.id_tags.union(&s.tags).cloned().collect()
-                }
-                _ => {}
+            if let InterpretableEvent::Sound(s) = ev {
+                s.tags = self.id_tags.union(&s.tags).cloned().collect();
             }
         }
 

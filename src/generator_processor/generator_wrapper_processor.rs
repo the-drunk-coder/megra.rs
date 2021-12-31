@@ -48,7 +48,7 @@ impl GeneratorProcessor for GeneratorWrapperProcessor {
                 for in_ev in events.iter_mut() {
                     match in_ev {
                         InterpretableEvent::Sound(s) => {
-                            s.apply(&sev, &self.filter, true);
+                            s.apply(sev, &self.filter, true);
                             s.tags = sev.tags.union(&s.tags).cloned().collect();
                         }
                         InterpretableEvent::Control(_) => {
@@ -63,7 +63,7 @@ impl GeneratorProcessor for GeneratorWrapperProcessor {
     fn process_transition(&mut self, trans: &mut StaticEvent, glob: &Arc<GlobalParameters>) {
         for ev in self.current_events.iter_mut() {
             if let InterpretableEvent::Sound(sev) = ev {
-                trans.apply(&sev, &self.filter, true);
+                trans.apply(sev, &self.filter, true);
             }
         }
         self.wrapped_generator.current_transition(glob);

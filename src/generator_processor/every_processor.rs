@@ -82,7 +82,7 @@ impl GeneratorProcessor for EveryProcessor {
             if self.step_count % cur_step == 0 {
                 for (filter, evs) in filtered_events.iter() {
                     for ev in evs.iter() {
-                        trans.apply(&ev, filter, true); // not sure
+                        trans.apply(ev, filter, true); // not sure
                     }
                 }
             }

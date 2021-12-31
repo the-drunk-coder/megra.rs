@@ -65,10 +65,10 @@ pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
             );
             Session::handle_context(
                 &mut s,
-                &session,
-                &ruffbox,
+                session,
+                ruffbox,
                 parts_store,
-                &global_parameters,
+                global_parameters,
                 output_mode,
             );
         }

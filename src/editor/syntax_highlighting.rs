@@ -88,7 +88,7 @@ impl Highlighter {
 
         while !text.is_empty() {
             if text.starts_with(";;") {
-                let end = text.find('\n').unwrap_or_else(|| text.len());
+                let end = text.find('\n').unwrap_or(text.len());
                 job.append(&text[..end], 0.0, theme.formats[TokenType::Comment]);
                 text = &text[end..];
             } else if text.starts_with('"') {
@@ -96,7 +96,7 @@ impl Highlighter {
                     .find('"')
                     .map(|i| i + 2)
                     .or_else(|| text.find('\n'))
-                    .unwrap_or_else(|| text.len());
+                    .unwrap_or(text.len());
                 job.append(&text[..end], 0.0, theme.formats[TokenType::StringLiteral]);
                 text = &text[end..];
             } else if text.starts_with(':') {

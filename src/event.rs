@@ -57,9 +57,10 @@ impl StaticEvent {
 
         // check if tags contain one of the filters (filters are always or-matched)
         for f in filters.iter() {
-            if f.is_empty() || (positive_mode && self.tags.contains(f)) {
-                apply = true;
-            } else if f.is_empty() || !positive_mode && !self.tags.contains(f) {
+            if f.is_empty()
+                || (positive_mode && self.tags.contains(f))
+                || (!positive_mode && !self.tags.contains(f))
+            {
                 apply = true;
             }
         }

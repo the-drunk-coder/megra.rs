@@ -379,7 +379,7 @@ fn collect_lifemodel(tail: &mut Vec<Expr>) -> Box<LifemodelProcessor> {
         if collect_keeps {
             match c {
                 Atom::Symbol(ref s) => {
-                    proc.keep_param.insert(map_parameter(&s));
+                    proc.keep_param.insert(map_parameter(s));
                 }
                 _ => {
                     collect_keeps = false;

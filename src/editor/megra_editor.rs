@@ -84,7 +84,7 @@ impl epi::App for MegraEditor {
         let callback = self
             .callback
             .as_ref()
-            .map(|tmp_callback| Arc::clone(&tmp_callback));
+            .map(|tmp_callback| Arc::clone(tmp_callback));
 
         if let Some(s) = storage {
             *self = epi::get_value(s, epi::APP_KEY).unwrap_or_default();
@@ -226,7 +226,7 @@ impl epi::App for MegraEditor {
                             //.reset_cursor(sketch_switched)
                             .code_editor()
                             .desired_width(800.0)
-                            .eval_callback(&cb)
+                            .eval_callback(cb)
                             .layouter(&mut layouter)
                     } else {
                         LivecodeTextEdit::multiline(&mut self.content)
