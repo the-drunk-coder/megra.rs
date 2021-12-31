@@ -41,6 +41,13 @@ pub struct LivecodeTextEditState {
     pub has_ime: bool,
 }
 
+impl LivecodeTextEditState {
+    pub fn clear_paren_selection(&mut self) {	
+	self.opening_paren_range = None;
+	self.closing_paren_range = None;
+    }
+}
+
 /// The output from a `TextEdit`.
 pub struct LivecodeTextEditOutput {
     /// The interaction response.
@@ -808,6 +815,7 @@ fn livecode_events(
                 pressed: true,
                 modifiers,
             } => {
+		state.clear_paren_selection();
                 if modifiers.command {
                     //println!("toggle {}",state.selection_toggle);
                     state.selection_toggle = !state.selection_toggle;
@@ -1063,6 +1071,7 @@ fn on_key_press(
     modifiers: &Modifiers,
     state: &mut LivecodeTextEditState,
 ) -> Option<CCursorRange> {
+    state.clear_paren_selection();
     match key {
         Key::Backspace => {
             let ccursor = if modifiers.mac_cmd {
@@ -1205,8 +1214,7 @@ fn on_key_press(
                     });
                 }
             } else {
-                state.opening_paren_range = None;
-                state.closing_paren_range = None;
+                state.clear_paren_selection();
             }
 
             None
