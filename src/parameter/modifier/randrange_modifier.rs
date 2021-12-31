@@ -23,9 +23,9 @@ impl Modifier for RandRangeModifier {
             // min == max
             max
         } else if min > max {
-            rng.gen_range(max, min)
+            rng.gen_range(max..min)
         } else {
-            rng.gen_range(min, max)
+            rng.gen_range(min..max)
         }
     }
 

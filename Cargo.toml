@@ -20,7 +20,7 @@ vom_rs = { git = "https://gitlab.com/ellipsenpark/vom.rs" }
 rustyline = "6.3.0"
 claxon = "0.4.3"
 getopts = "0.2"
-rand = "0.7"
+rand = "0.8.4"
 rust-music-theory = {git = "https://github.com/the-drunk-coder/rust-music-theory"}
 egui = { git = "https://github.com/emilk/egui", features = ["persistence"]}
 epi = { git = "https://github.com/emilk/egui", features = ["persistence"]}

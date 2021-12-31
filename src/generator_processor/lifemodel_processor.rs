@@ -176,7 +176,7 @@ impl GeneratorProcessor for LifemodelProcessor {
                 // helper to add some variance to the age ...
                 let add_var = |orig: f32, var: f32| -> usize {
                     let mut rng = rand::thread_rng();
-                    let rand = (var * (1000.0 - rng.gen_range(0.0, 2000.0))) * (orig / 1000.0);
+                    let rand = (var * (1000.0 - rng.gen_range(0.0..2000.0))) * (orig / 1000.0);
                     (orig + rand).floor() as usize
                 };
 
@@ -213,7 +213,7 @@ impl GeneratorProcessor for LifemodelProcessor {
 
         if something_happened && self.solidify_chance > 0.0 {
             let mut rng = rand::thread_rng();
-            let rand = rng.gen_range(0.0, 1000.0) / 1000.0;
+            let rand = rng.gen_range(0.0..1000.0) / 1000.0;
             if rand < self.solidify_chance {
                 gen.generator.solidify(self.solidify_len);
             }

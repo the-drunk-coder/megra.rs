@@ -16,7 +16,7 @@ impl Modifier for BrownianModifier {
         // why doesn't rust has a hashable float ?????
         let mut rng = rand::thread_rng();
         // heuristic ... from old megra ... not sure what i thought back then, let's see ...
-        let rand = rng.gen_range(0, 2000);
+        let rand = rng.gen_range(0..2000);
         let step_size = self.step_size.evaluate();
         let min = self.min.evaluate();
         let max = self.max.evaluate();

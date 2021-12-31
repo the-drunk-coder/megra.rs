@@ -33,7 +33,7 @@ impl Parameter {
         factor = factor.clamp(0.0, 1.0);
         let mut rng = rand::thread_rng();
         // heuristic ... from old megra ... not sure what i thought back then, let's see ...
-        let rand = (factor * (1000.0 - rng.gen_range(0.0, 2000.0))) * (self.val / 1000.0);
+        let rand = (factor * (1000.0 - rng.gen_range(0.0..2000.0))) * (self.val / 1000.0);
         self.val += rand;
         if let Some(m) = self.modifier.as_mut() {
             m.shake(factor);

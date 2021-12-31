@@ -3,7 +3,7 @@ use crate::{
     generator::TimeMod,
     markov_sequence_generator::MarkovSequenceGenerator,
     parameter::Parameter,
-    pfa_growth::*
+    pfa_growth::*,
 };
 use rand::seq::SliceRandom;
 use ruffbox_synth::ruffbox::synth::SynthParameter;
