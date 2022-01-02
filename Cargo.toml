@@ -16,8 +16,9 @@ ruffbox_synth = "0.1"
 #ruffbox_synth = { git = "https://github.com/the-drunk-coder/ruffbox-synth" }
 #ruffbox_synth = { path = "../ruffbox-synth" }
 nom = "6.0"
-vom_rs = { git = "https://gitlab.com/ellipsenpark/vom.rs" }
+#vom_rs = { git = "https://gitlab.com/ellipsenpark/vom.rs" }
 #vom_rs = { path = "../vom.rs" }
+vom_rs = "0.1.0"
 rustyline = "6.3.0"
 claxon = "0.4.3"
 getopts = "0.2"
