@@ -16,6 +16,7 @@ pub fn handle(
     set: String,
     sample_set_sync: &sync::Arc<Mutex<SampleSet>>,
 ) -> Option<Expr> {
+    let mut keyword_set: HashSet<String> = HashSet::new();
     let sample_set = sample_set_sync.lock();
     if sample_set.exists_not_empty(&set) {
         let mut drain_idx = 0;
@@ -24,7 +25,6 @@ pub fn handle(
         } else {
             match &tail[0] {
                 Expr::Constant(Atom::Symbol(s)) => {
-                    let mut keyword_set: HashSet<String> = HashSet::new();
                     keyword_set.insert(s.to_string());
                     drain_idx += 1;
                     for t in tail.iter().skip(1) {
@@ -52,6 +52,11 @@ pub fn handle(
 
         let mut ev = Event::with_name("sampler".to_string());
         ev.tags.insert(set);
+        if !keyword_set.is_empty() {
+            for kw in keyword_set.drain() {
+                ev.tags.insert(kw);
+            }
+        }
         for k in sample_info.key.iter() {
             ev.tags.insert(k.to_string());
         }
