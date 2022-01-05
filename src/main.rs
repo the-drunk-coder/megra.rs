@@ -171,7 +171,7 @@ fn main() -> Result<(), anyhow::Error> {
 
     #[cfg(not(any(target_os = "linux", target_os = "dragonfly", target_os = "freebsd")))]
     let host = cpal::default_host();
-    
+
     if matches.opt_present("l") {
         for dev in host.output_devices()? {
             println!("{:?}", dev.name());
@@ -202,45 +202,46 @@ fn main() -> Result<(), anyhow::Error> {
     .expect("failed to find input device");
 
     println!("odev {}", output_device.name().unwrap());
-    
-    let input_configs = match input_device.supported_input_configs() {
+    /*
+        let input_configs = match input_device.supported_input_configs() {
         Ok(f) => f.collect(),
         Err(e) => {
-            println!("    Error getting supported input configs: {:?}", e);
-            Vec::new()
-        }
+        println!("    Error getting supported input configs: {:?}", e);
+        Vec::new()
+    }
     };
-    if !input_configs.is_empty() {
+        if !input_configs.is_empty() {
         println!("    All supported input stream configs:");
         for (config_index, config) in input_configs.into_iter().enumerate() {
-            println!(
-                "      {}. {:?}",
-                //device_index + 1,
-                config_index + 1,
-                config
-            );
-        }
+        println!(
+        "      {}. {:?}",
+        //device_index + 1,
+        config_index + 1,
+        config
+    );
+    }
     }
 
-    let output_configs = match output_device.supported_input_configs() {
+        let output_configs = match output_device.supported_input_configs() {
         Ok(f) => f.collect(),
         Err(e) => {
-            println!("    Error getting supported input configs: {:?}", e);
-            Vec::new()
-        }
+        println!("    Error getting supported input configs: {:?}", e);
+        Vec::new()
+    }
     };
-    if !output_configs.is_empty() {
+        if !output_configs.is_empty() {
         println!("    All supported output stream configs:");
         for (config_index, config) in output_configs.into_iter().enumerate() {
-            println!(
-                "      {}. {:?}",
-                //device_index + 1,
-                config_index + 1,
-                config
-            );
-        }
+        println!(
+        "      {}. {:?}",
+        //device_index + 1,
+        config_index + 1,
+        config
+    );
     }
-    
+    }
+         */
+
     let out_config: cpal::SupportedStreamConfig = output_device.default_output_config().unwrap();
     let in_config: cpal::SupportedStreamConfig = input_device.default_input_config().unwrap();
     println!("in chan: {:?}", in_config);
@@ -530,17 +531,17 @@ where
                 }
             }
             /*
-            println!(
-               "POST BLOCK av {} bs {} to prod {} prod {} r idx {} w idx {} NOW {}",
-               samples_available,
-               current_blocksize,
-               current_blocksize - samples_available,
-               produced,
-               read_idx,
-               write_idx,
-               ruff.get_now()
+                println!(
+                "POST BLOCK av {} bs {} to prod {} prod {} r idx {} w idx {} NOW {}",
+                samples_available,
+                current_blocksize,
+                current_blocksize - samples_available,
+                produced,
+                read_idx,
+                write_idx,
+                ruff.get_now()
             );
-            */
+                 */
         },
         err_fn,
     )?;
