@@ -5,6 +5,17 @@ Its predecessor was implemented in Common Lisp, this one is implemented in pure 
 
 This readme should contain all the necessary information to get Mégra up and running.
 
+## Table Of Contents
+* [WARNING](#warning)
+* [Features](#features)
+* [Limitations](#limitations)
+* [Installation](#installation)
+* [Audio Configuration](#audio-configuration)
+* [Finding and Using Samples](#finding-and-using-samples)
+* [Sketchbook](#sketchbook)
+* [Running and Startup Options](#running-and-startup-options)
+* [Learning Mégra](#learning-mégra) 
+
 ## WARNING
 
 This is still in a relatively early development stage and has some limitations! It hasn't been
@@ -21,7 +32,7 @@ excessively tested on all platforms.
 
 * It isn't a turing-complete programming language.
 * It loads all your samples to memory, so if you have a lot of samples, make sure you have enough RAM.
-* It's focused on samples, synthesis is pretty primitive and limited to some basic waveforms at this point.
+* It's focused on samples. Synthesis is pretty primitive and limited to some basic waveforms at this point.
 * It currently doesn't allow you to create fancy synths unless you want to code them in Rust.
 * The editor is fairly primitive (you can use it in REPL mode and integrate in other editors if you want).
 
@@ -29,10 +40,15 @@ These issues are being addressed in no particular order ...
 
 ## Installation
 
-Currently you still need rustc / cargo (https://doc.rust-lang.org/cargo/) installed !
+Currently you still need `rustc` and `cargo` installed !
+
+To install this, go to this page: https://www.rust-lang.org/learn/get-started.
+This will guide you to the process of installing the necessary tools for your operating system.
+
 On Windows, that's a bit annoying because you need some VisualStudio components which
 might take a lot of space. 
-Any version above 1.57 (stable version as of early 2022) should work (last tested with 1.57).
+
+Any version of Rust above 1.57 (stable version as of early 2022) should work (last tested with 1.57).
 
 My goal is to provide precompiled binaries later on.
 
@@ -63,6 +79,7 @@ systems.
 ```
 cargo run --release -- -e -o 2ch
 ```
+Before starting, make sure you read the chapter about the audio configuration!
 
 ## Audio Configuration
 
@@ -96,7 +113,7 @@ The files generated and read by the editor can be found in:
 * Windows:
 * macOS: `/Users/<username>/Library/Application Support/de.parkellipsen.megra/sketchbook`
 
-## Startup optinos
+## Running and Startup Options
 
 ```
 -v, --version       Print version
@@ -113,5 +130,8 @@ The files generated and read by the editor can be found in:
 
 If the `-r` option is used, Mégra is started in REPL (command-line) mode. If you want to integrate it in your favourite editor, that might be helpful.
 
+## Learning Mégra
+
+Now that you should have things up and running, it's time to learn how to use this langunage, right ? Here's where you can start!
 
 
