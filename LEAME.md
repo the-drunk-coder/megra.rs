@@ -109,14 +109,14 @@ Ya sea que comience con carga o desde una terminal o un programa de lanzamiento,
 ```
 -v, --version       imprimir versión
 -r, --repl          no editor, solo repl (i.e. for integration with other editors)
--h, --help          Print this help
--n, --no-samples    don't load default samples
--o, --output-mode   output mode (stereo, 2ch, 8ch), default: stereo
--l, --list-devices  list available audio devices
--d, --device        choose device
---live-buffer-time  the capacity of the live input buffer in seconds, default: 3
---reverb-mode       convolution or freeverb (default/fallback is freeverb). for convolution, you need to specify an IR
---reverb-ir         path to an impulse response in FLAC format
+-h, --help          imprimir este ayudo
+-n, --no-samples    no cargue los samples de la carpeta
+-o, --output-mode   modo (stereo, 2ch, 8ch), default: stereo
+-l, --list-devices  listar tarjetas de sonido
+-d, --device        escoger tarjeta de sonido
+--live-buffer-time  capacidad del bufer de entrada, default: 3
+--reverb-mode       modo de reverberacion, convolution o freeverb (default/fallback es freeverb). para convolution, se debe proporcionar un IR
+--reverb-ir         archivo impulse response, formato FLAC
 ```
 
 Si se utiliza la opción `-r`, Mégra se inicia en modo REPL (línea de comandos). Si desea integrarlo en su editor favorito, puede ser útil.
