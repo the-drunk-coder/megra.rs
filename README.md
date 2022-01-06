@@ -1,7 +1,9 @@
 # megra.rs
 
 Mégra is a **domain-specific** programming **language** (DSL for short) designed for **live-coding music** with stochastic elements.
-Its predecessor was implemented in Common Lisp, this one is implemented in pure Rust ! 
+Its predecessor was implemented in Common Lisp, this one is implemented in pure Rust !
+
+This readme should contain all the necessary information to get Mégra up and running.
 
 ## WARNING
 
