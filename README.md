@@ -1,21 +1,59 @@
 # megra.rs
 
-Mégra implemented in Rust ! 
+Mégra is a **domain-specific** programming **language** (DSL for short) designed for **live-coding music** with stochastic elements.
+Its predecessor was implemented in Common Lisp, this one is implemented in pure Rust ! 
 
 ## WARNING
 
-This is still in an early development stage and has some severe limitations! 
+This is still in a relatively early development stage and has some limitations! It hasn't been
+excessively tested on all platforms.
 
-* It only works at a blocksize of 512 (Linux and macOS, as Windows WASAPI doesn't provide fixed blocksizes)
-* So far only on MacOS and Linux (with Jack)
-* There's no proper developer documentation so far
+## Features
+
+* It lets you make music with Markov chains!
+* It follows a sequencing paradigm rather than a modular synth paradigm.
+* It comes with its own (simple) editor.
+* It works with Linux (JACK or PipeWire), Windows 10/11 (WASAPI), and macOS.
+
+## Limitations
+
+* It isn't a turing-complete programming language.
+* It loads all your samples to memory, so if you have a lot of samples, make sure you have enough RAM.
+* It's focused on samples, synthesis is pretty primitive at this point.
+* It currently doesn't allow you to create fancy synths unless you want to code them in Rust.
+* The editor is fairly primitive (you can use it in REPL mode and integrate in other editors if you want).
 
 These issues are being addressed in no particular order ...
 
 ## Installation
 
-Currently you still need cargo (https://doc.rust-lang.org/cargo/) installed !
-Any version above 1.45 should work (last tested with 1.55).
+Currently you still need rustc / cargo (https://doc.rust-lang.org/cargo/) installed !
+On Windows, that's a bit annoying because you need some VisualStudio components which
+might take a lot of space. 
+Any version above 1.57 (stable version as of early 2022) should work (last tested with 1.57).
+
+My goal is to provide precompiled binaries later on.
+
+### Install with Cargo
+
+In a terminal, type:
+
+```
+cargo install megra.rs
+```
+
+On Windows, type:
+
+```
+cargo install megra.rs --features ringbuffer
+```
+
+The ringbuffer features makes sure you can use various blocksizes. The blocksize is otherwise fixed to 512. If you can
+control the blocksize in your system (with JACK and CoreAudio that's typically possible), you can use the version without
+the ringbuffer. If you're not sure, use the ringbuffer. It has a small performance penalty but shouldn't matter on modern
+systems.
+
+### Compile from Source
 
 * Download the repo ...
 * In repo folder, type ...
@@ -24,19 +62,37 @@ Any version above 1.45 should work (last tested with 1.55).
 cargo run --release -- -e -o 2ch
 ```
 
+## Audio Configuration
+
+As mentioned, the default version of Mégra only works at a fixed blocksize of 512, so if that is the version you installed, make sure
+your system blocksize is at 512. Any samplerate should work, but be aware that all samples you use will be resampled to the current samplerate
+if they don't match, which might increase loading time. I recommend using the samplerate your samples are stored in. 
+
 ## Finding and Using Samples
-If you don't already have a sample set at hand, some samples (enough to follow the documentation) can be found here: https://github.com/the-drunk-coder/megra-public-samples
+
+If you don't already have a sample set at hand, some samples (enough to follow the documentation) can be found here:
+https://github.com/the-drunk-coder/megra-public-samples
 
 Mégra currently only supports samples in **FLAC** format.
 
-Place the samples (on Linux at least) in the folder `.config/megra/samples`. Now you'll have a sound event for every sample.
+Place the samples in the folder (folder will be created at first start):
+
+* Linux: `.config/megra/samples`.
+* Windows:
+* macOS:  
+
+Now you'll have a sound event for every sample.
 
 You can also load individual samples to a set by hand using `(load-sample :set '<set> :path "<path-to-sample>")`.
 
-Make sure you cofigure your audio system to the samplerate of your samples, otherwise loading samples will be slow due to resampling !
+As mentioned above, make sure you cofigure your audio system to the samplerate of your samples, otherwise loading samples will be slow due to resampling !
 
 ## Sketchbook
-The files generated and read by the editor can be found in `.config/megra/sketchbook`.
+The files generated and read by the editor can be found in:
+
+* Linux: `.config/megra/sketchbook`.
+* Windows:
+* macOS: 
 
 ## Startup optinos
 
