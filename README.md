@@ -77,9 +77,9 @@ Mégra currently only supports samples in **FLAC** format.
 
 Place the samples in the folder (folder will be created at first start):
 
-* Linux: `.config/megra/samples`.
+* Linux: `~/.config/megra/samples`.
 * Windows:
-* macOS:  
+* macOS: `/Users/<username>/Library/Application Support/de.parkellipsen.megra/samples`
 
 Now you'll have a sound event for every sample.
 
@@ -90,9 +90,9 @@ As mentioned above, make sure you cofigure your audio system to the samplerate o
 ## Sketchbook
 The files generated and read by the editor can be found in:
 
-* Linux: `.config/megra/sketchbook`.
+* Linux: `~/.config/megra/sketchbook`.
 * Windows:
-* macOS: 
+* macOS: `/Users/<username>/Library/Application Support/de.parkellipsen.megra/sketchbook`
 
 ## Startup optinos
 
