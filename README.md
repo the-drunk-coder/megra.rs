@@ -19,7 +19,7 @@ excessively tested on all platforms.
 
 * It isn't a turing-complete programming language.
 * It loads all your samples to memory, so if you have a lot of samples, make sure you have enough RAM.
-* It's focused on samples, synthesis is pretty primitive at this point.
+* It's focused on samples, synthesis is pretty primitive and limited to some basic waveforms at this point.
 * It currently doesn't allow you to create fancy synths unless you want to code them in Rust.
 * The editor is fairly primitive (you can use it in REPL mode and integrate in other editors if you want).
 
