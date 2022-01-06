@@ -1,11 +1,14 @@
 # megra.rs
 
+(Versión español: LEAME.md)
+
 Mégra is a **domain-specific** programming **language** (DSL for short) designed for **live-coding music** with stochastic elements.
 Its predecessor was implemented in Common Lisp, this one is implemented in pure Rust !
 
 This readme should contain all the necessary information to get Mégra up and running.
 
 ## Table Of Contents
+
 * [WARNING](#warning)
 * [Features](#features)
 * [Limitations](#limitations)
@@ -42,7 +45,7 @@ These issues are being addressed in no particular order ...
 
 Currently you still need `rustc` and `cargo` installed !
 
-To install this, go to this page: https://www.rust-lang.org/learn/get-started.
+To install this, go to this page: https://www.rust-lang.org/learn/get-started .
 This will guide you to the process of installing the necessary tools for your operating system.
 
 On Windows, that's a bit annoying because you need some VisualStudio components which
@@ -66,7 +69,7 @@ On Windows, type:
 cargo install megra.rs --features ringbuffer
 ```
 
-The ringbuffer features makes sure you can use various blocksizes. The blocksize is otherwise fixed to 512. If you can
+The ringbuffer feature makes sure you can use various blocksizes. The blocksize is otherwise fixed to 512. If you can
 control the blocksize in your system (with JACK and CoreAudio that's typically possible), you can use the version without
 the ringbuffer. If you're not sure, use the ringbuffer. It has a small performance penalty but shouldn't matter on modern
 systems.
@@ -115,6 +118,8 @@ The files generated and read by the editor can be found in:
 
 ## Running and Startup Options
 
+Whether you start with Cargo or from a terminal or program launcher, the options are:
+
 ```
 -v, --version       Print version
 -r, --repl          no editor, repl only (i.e. for integration with other editors)
@@ -132,11 +137,11 @@ If the `-r` option is used, Mégra is started in REPL (command-line) mode. If yo
 
 ## Learning Mégra
 
-Now that you should have things up and running, it's time to learn how to use this langunage, right ? Here's where you can start!
+Now that you should have things up and running, it's time to learn how to use this language, right ? Here's where you can start!
 
 ### Tutorial
 
-The `documentation` folder contains a file called `tutorial/megra_basic_tutorial.megra3`. You can put that in your sketchbook folder (see above) and 
+The `documentation` folder contains a file called `tutorial/en/megra_basic_tutorial.megra3`. You can put that in your sketchbook folder (see above) and 
 directly follow the tutorial. There might be more files in there that you can follow later.
 
 ### Examples
