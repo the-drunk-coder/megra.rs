@@ -134,4 +134,18 @@ If the `-r` option is used, Mégra is started in REPL (command-line) mode. If yo
 
 Now that you should have things up and running, it's time to learn how to use this langunage, right ? Here's where you can start!
 
+### Tutorial
 
+The `documentation` folder contains a file called `tutorial/megra_basic_tutorial.megra3`. You can put that in your sketchbook folder (see above) and 
+directly follow the tutorial. There might be more files in there that you can follow later.
+
+### Examples
+
+There's also a folder called `documentation/examples/`, a growing selection of interesting examples.
+
+### Reference Documentation
+
+The documentation folder contains two markdown files, called `Function_List.md` which is an ongoing project to document all the functions 
+that Mégra currently provides. There should also be an example to play around with for each function.
+
+Regarding the sound events, there's a file called `Sound_Events_and_Parameters.md` which should cover all the currently available sound events.
