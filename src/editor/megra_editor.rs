@@ -68,7 +68,7 @@ impl epi::App for MegraEditor {
         // Install my own font (maybe supporting non-latin characters):
         fonts.font_data.insert(
             "my_font".to_owned(),
-            FontData::from_static(include_bytes!("../../fonts/ComicMono.ttf")),
+            FontData::from_static(include_bytes!("../../fonts/mononoki-Bold.ttf")),
         ); // .ttf and .otf supported
 
         // Put my font as last fallback for monospace:
