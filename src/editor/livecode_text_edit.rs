@@ -106,7 +106,6 @@ impl LivecodeTextEditState {
 #[must_use = "You should put this widget in an ui with `ui.add(widget);`"]
 pub struct LivecodeTextEdit<'t> {
     text: &'t mut dyn TextBuffer,
-    hint_text: WidgetText,
     id: Option<Id>,
     id_source: Option<Id>,
     text_style: Option<TextStyle>,
@@ -128,7 +127,6 @@ impl<'t> LivecodeTextEdit<'t> {
     pub fn multiline(text: &'t mut dyn TextBuffer) -> Self {
         Self {
             text,
-            hint_text: Default::default(),
             id: None,
             id_source: None,
             text_style: None,
@@ -247,7 +245,6 @@ impl<'t> LivecodeTextEdit<'t> {
     fn show_content(self, ui: &mut Ui) -> LivecodeTextEditOutput {
         let LivecodeTextEdit {
             text,
-            hint_text,
             id,
             id_source,
             text_style,
@@ -419,13 +416,7 @@ impl<'t> LivecodeTextEdit<'t> {
 
         if ui.is_rect_visible(rect) {
             painter.galley(text_draw_pos, galley.clone());
-
-            if text.as_ref().is_empty() && !hint_text.is_empty() {
-                let hint_text_color = ui.visuals().weak_text_color();
-                let galley = hint_text.into_galley(ui, Some(true), desired_size.x, text_style);
-                galley.paint_with_fallback_color(&painter, response.rect.min, hint_text_color);
-            }
-
+            
             if ui.memory().has_focus(id) {
                 if let Some(cursor_range) = state.cursor_range(&*galley) {
                     // We paint the cursor on top of the text, in case
@@ -1327,7 +1318,7 @@ fn find_toplevel_sexp(text: &str, cursorp: &CursorRange) -> Option<CCursorRange>
 
     let mut pos = min.ccursor.index;
     let mut rev_pos = text.len() - pos;
-
+    
     let mut l_pos = pos;
     let mut r_pos = pos;
     let mut last_closing = pos;
@@ -1337,19 +1328,18 @@ fn find_toplevel_sexp(text: &str, cursorp: &CursorRange) -> Option<CCursorRange>
 
     // special case: if the cursor is right on an opening paren,
     // move one right ...
-    if let Some(cur_chars) = text.get(pos..(pos + 1)) {
-        if let Some(cur_char) = cur_chars.chars().next() {
-            if cur_char == '(' {
-                rev_pos = text.len() - (pos + 1);
-                l_pos = pos + 1;
-                r_pos = pos + 1;
-                last_closing = pos + 1;
-                last_opening = pos + 1;
-                pos += 1;
-            }
+    
+    if let Some(cur_char) = text.chars().skip(pos).next() {
+        if cur_char == '(' {
+            rev_pos = text.len() - (pos + 1);
+            l_pos = pos + 1;
+            r_pos = pos + 1;
+            last_closing = pos + 1;
+            last_opening = pos + 1;
+            pos += 1;
         }
     }
-
+    
     let mut balance: i32 = 0;
     // beginning: lparen right after newline
     let mut lparen_found = false;
@@ -1495,7 +1485,6 @@ fn find_opening_paren(text: &str, ccursor: &CCursor) -> Option<CCursor> {
     let pos = ccursor.index;
     let rev_pos = text.len() - pos;
     println!("pos {} rev pos {} len {}", pos, rev_pos, text.len());
-
     
     // well, should be reverse par level ...
     let mut par_lvl = 1;
