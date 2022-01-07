@@ -605,7 +605,7 @@ fn livecode_events(
                         // enclose selection in parenthesis and
                         // jump to opening ...
                         let selection = selected_str(text, &cursor_range).to_string();
-                        let selection_len = selection.len();
+                        let selection_len = selection.chars().count();
                         let mut ccursor = delete_selected(text, &cursor_range);
                         insert_text(&mut ccursor, text, format!("({})", selection).as_str());
                         // clear selection
@@ -617,7 +617,7 @@ fn livecode_events(
                         // enclose selection in parenthesis and
                         // jump to opening ...
                         let selection = selected_str(text, &cursor_range).to_string();
-                        let selection_len = selection.len();
+                        let selection_len = selection.chars().count();
                         let mut ccursor = delete_selected(text, &cursor_range);
                         insert_text(&mut ccursor, text, format!("[{}]", selection).as_str());
                         // clear selection
@@ -629,7 +629,7 @@ fn livecode_events(
                         // enclose selection in parenthesis and
                         // jump to opening ...
                         let selection = selected_str(text, &cursor_range).to_string();
-                        let selection_len = selection.len();
+                        let selection_len = selection.chars().count();
                         let mut ccursor = delete_selected(text, &cursor_range);
                         insert_text(&mut ccursor, text, format!("{{{}}}", selection).as_str());
                         // clear selection
@@ -641,7 +641,7 @@ fn livecode_events(
                         // enclose selection in parenthesis and
                         // jump to opening ...
                         let selection = selected_str(text, &cursor_range).to_string();
-                        let selection_len = selection.len();
+                        let selection_len = selection.chars().count();
                         let mut ccursor = delete_selected(text, &cursor_range);
                         insert_text(&mut ccursor, text, format!("\"{}\"", selection).as_str());
                         // clear selection
@@ -1103,20 +1103,29 @@ fn on_key_press(
         }
 
         Key::ArrowLeft | Key::ArrowRight | Key::ArrowUp | Key::ArrowDown | Key::Home | Key::End => {
+	    if text.as_str().is_empty() {
+		return None;
+	    }
+	    // now we can be shure that the text isn't empty ...
+	    
             move_single_cursor(&mut cursor_range.primary, galley, key, modifiers);
             if !modifiers.shift && !state.selection_toggle {
                 cursor_range.secondary = cursor_range.primary;
             }
-
+	    
             let idx = cursor_range.primary.ccursor.index;
-            let chars = text.as_str().chars().collect::<Vec<char>>();
-            let next_char = if idx < chars.len() {
-                chars[idx]
-            } else {
-                *chars.last().unwrap()
-            };
-
-            let prev_char = if idx > 0 { chars[idx - 1] } else { chars[idx] };
+            
+	    let next_char = if let Some(ch) = text.as_str().chars().skip(idx).next() {
+		ch
+	    } else {
+		text.as_str().chars().last().unwrap() // we know text isn't empty
+	    };
+            
+            let prev_char = if let Some(ch) = text.as_str().chars().skip(idx - 1).next() {
+		ch
+	    } else {
+		next_char
+	    };
 
             // mark parenthesis for easier orientation
             if next_char == '(' {
@@ -1317,7 +1326,7 @@ fn find_toplevel_sexp(text: &str, cursorp: &CursorRange) -> Option<CCursorRange>
     let [min, _] = cursorp.sorted();
 
     let mut pos = min.ccursor.index;
-    let mut rev_pos = text.len() - pos;
+    let mut rev_pos = text.chars().count() - pos;
     
     let mut l_pos = pos;
     let mut r_pos = pos;
@@ -1328,10 +1337,9 @@ fn find_toplevel_sexp(text: &str, cursorp: &CursorRange) -> Option<CCursorRange>
 
     // special case: if the cursor is right on an opening paren,
     // move one right ...
-    
     if let Some(cur_char) = text.chars().skip(pos).next() {
         if cur_char == '(' {
-            rev_pos = text.len() - (pos + 1);
+            rev_pos = text.chars().count() - (pos + 1);
             l_pos = pos + 1;
             r_pos = pos + 1;
             last_closing = pos + 1;
@@ -1462,7 +1470,6 @@ fn find_closing_paren(text: &str, ccursor: &CCursor) -> Option<CCursor> {
     let mut pos = ccursor.index;
     let mut par_lvl = 1;
     
-    println!("find closing");
     // spool forward to current position
     for next_char in text.chars().skip(pos) {
         if next_char == '(' {
@@ -1483,8 +1490,7 @@ fn find_closing_paren(text: &str, ccursor: &CCursor) -> Option<CCursor> {
 
 fn find_opening_paren(text: &str, ccursor: &CCursor) -> Option<CCursor> {
     let pos = ccursor.index;
-    let rev_pos = text.len() - pos;
-    println!("pos {} rev pos {} len {}", pos, rev_pos, text.len());
+    let rev_pos = text.chars().count() - pos;
     
     // well, should be reverse par level ...
     let mut par_lvl = 1;
