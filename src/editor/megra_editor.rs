@@ -199,12 +199,16 @@ impl epi::App for MegraEditor {
                 self.current_sketch = self.sketch_list[sk_num].clone();
                 let p = path::Path::new(&self.current_sketch);
                 match fs::read_to_string(p) {
-                    Ok(s) => self.content = s,
+                    Ok(mut s) => {
+                        if !s.ends_with('\n') {
+                            s.push('\n');
+                        }
+                        self.content = s
+                    }
                     Err(e) => {
                         println!("couldn't read sketch {}", e);
                     }
                 }
-                //sketch_switched = true;
             }
 
             ui.separator();
