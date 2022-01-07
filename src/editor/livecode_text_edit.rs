@@ -73,21 +73,7 @@ impl LivecodeTextEditState {
     pub fn store(self, ctx: &Context, id: Id) {
         ctx.memory().data.insert_persisted(id, self);
     }
-
-    /// The the currently selected range of characters.    
-    //pub fn ccursor_range(&self) -> Option<CCursorRange> {
-    //  self.ccursor_range.or_else(|| {
-    //        self.cursor_range
-    //            .map(|cursor_range| cursor_range.as_ccursor_range())
-    //    })
-    //}
-
-    /// Sets the currently selected range of characters.
-    //pub fn set_ccursor_range(&mut self, ccursor_range: Option<CCursorRange>) {
-    //    self.cursor_range = None;
-    //    self.ccursor_range = ccursor_range;
-    //}
-
+     
     pub fn set_cursor_range(&mut self, cursor_range: Option<CursorRange>) {
         self.cursor_range = cursor_range;
         self.ccursor_range = None;
@@ -137,18 +123,6 @@ impl<'t> WidgetWithState for LivecodeTextEdit<'t> {
     type State = LivecodeTextEditState;
 }
 
-/*
-impl<'t> LivecodeTextEdit<'t> {
-    pub fn load_state(ctx: &Context, id: Id) -> Option<LivecodeTextEditState> {
-        LivecodeTextEditState::load(ctx, id)
-    }
-
-    pub fn store_state(ctx: &Context, id: Id, state: LivecodeTextEditState) {
-        state.store(ctx, id);
-    }
-}
-*/
-
 impl<'t> LivecodeTextEdit<'t> {
     /// A `LivecodeTextEdit` for multiple lines. Pressing enter key will create a new line.
     pub fn multiline(text: &'t mut dyn TextBuffer) -> Self {
@@ -175,24 +149,12 @@ impl<'t> LivecodeTextEdit<'t> {
     pub fn code_editor(self) -> Self {
         self.text_style(TextStyle::Monospace).lock_focus(true)
     }
-
-    /// Use if you want to set an explicit `Id` for this widget.
-    //pub fn id(mut self, id: Id) -> Self {
-    //    self.id = Some(id);
-    //    self
-    //}
-
+ 
     pub fn eval_callback(mut self, callback: &Arc<Mutex<dyn FnMut(&String)>>) -> Self {
         self.eval_callback = Some(Arc::clone(callback));
         self
     }
-
-    /// A source for the unique `Id`, e.g. `.id_source("second_text_edit_field")` or `.id_source(loop_index)`.
-    //pub fn id_source(mut self, id_source: impl std::hash::Hash) -> Self {
-    //    self.id_source = Some(Id::new(id_source));
-    //    self
-    //}
-
+    
     pub fn text_style(mut self, text_style: TextStyle) -> Self {
         self.text_style = Some(text_style);
         self
@@ -223,7 +185,6 @@ impl<'t> LivecodeTextEdit<'t> {
     /// ```
     pub fn layouter(mut self, layouter: &'t mut dyn FnMut(&Ui, &str, f32) -> Arc<Galley>) -> Self {
         self.layouter = Some(layouter);
-
         self
     }
 
@@ -1359,51 +1320,6 @@ fn is_word_char(c: char) -> bool {
     c.is_ascii_alphanumeric() || c == '_'
 }
 
-/// Accepts and returns character offset (NOT byte offset!).
-#[allow(dead_code)]
-fn find_line_start(text: &str, current_index: CCursor) -> CCursor {
-    // We know that new lines, '\n', are a single byte char, but we have to
-    // work with char offsets because before the new line there may be any
-    // number of multi byte chars.
-    // We need to know the char index to be able to correctly set the cursor
-    // later.
-    let chars_count = text.chars().count();
-
-    let position = text
-        .chars()
-        .rev()
-        .skip(chars_count - current_index.index)
-        .position(|x| x == '\n');
-
-    match position {
-        Some(pos) => CCursor::new(current_index.index - pos),
-        None => CCursor::new(0),
-    }
-}
-#[allow(dead_code)]
-fn decrease_identation(ccursor: &mut CCursor, text: &mut dyn TextBuffer) {
-    let line_start = find_line_start(text.as_ref(), *ccursor);
-
-    let remove_len = if text.as_ref()[line_start.index..].starts_with('\t') {
-        Some(1)
-    } else if text.as_ref()[line_start.index..]
-        .chars()
-        .take(text::TAB_SIZE)
-        .all(|c| c == ' ')
-    {
-        Some(text::TAB_SIZE)
-    } else {
-        None
-    };
-
-    if let Some(len) = remove_len {
-        text.delete_char_range(line_start.index..(line_start.index + len));
-        if *ccursor != line_start {
-            *ccursor -= len;
-        }
-    }
-}
-
 // LIVECODE TEXT EDIT HELPERS
 /// find toplevel s-expression from current cursor position ...
 fn find_toplevel_sexp(text: &str, cursorp: &CursorRange) -> Option<CCursorRange> {
@@ -1411,9 +1327,6 @@ fn find_toplevel_sexp(text: &str, cursorp: &CursorRange) -> Option<CCursorRange>
 
     let mut pos = min.ccursor.index;
     let mut rev_pos = text.len() - pos;
-
-    let mut it_l = text.chars().rev();
-    let mut it_r = text.chars();
 
     let mut l_pos = pos;
     let mut r_pos = pos;
@@ -1437,18 +1350,10 @@ fn find_toplevel_sexp(text: &str, cursorp: &CursorRange) -> Option<CCursorRange>
         }
     }
 
-    for _ in 0..rev_pos {
-        it_l.next();
-    }
-
-    for _ in 0..pos {
-        it_r.next();
-    }
-
     let mut balance: i32 = 0;
     // beginning: lparen right after newline
     let mut lparen_found = false;
-    for l_char in it_l {
+    for l_char in text.chars().rev().skip(rev_pos) {
         if l_char == '\n' && lparen_found {
             // two newlines - assume end
             break;
@@ -1468,7 +1373,7 @@ fn find_toplevel_sexp(text: &str, cursorp: &CursorRange) -> Option<CCursorRange>
         }
     }
 
-    for r_char in it_r {
+    for r_char in text.chars().skip(pos) {
         if r_char == '(' {
             r_pos += 1;
             balance += 1;
@@ -1565,16 +1470,11 @@ fn sexp_indent_level(input: &str) -> usize {
 
 fn find_closing_paren(text: &str, ccursor: &CCursor) -> Option<CCursor> {
     let mut pos = ccursor.index;
-
-    // spool forward to current position
-    let mut it = text.chars();
-    for _ in 0..pos {
-        it.next();
-    }
-
     let mut par_lvl = 1;
-
-    for next_char in it {
+    
+    println!("find closing");
+    // spool forward to current position
+    for next_char in text.chars().skip(pos) {
         if next_char == '(' {
             par_lvl += 1;
         } else if next_char == ')' {
@@ -1594,17 +1494,13 @@ fn find_closing_paren(text: &str, ccursor: &CCursor) -> Option<CCursor> {
 fn find_opening_paren(text: &str, ccursor: &CCursor) -> Option<CCursor> {
     let pos = ccursor.index;
     let rev_pos = text.len() - pos;
-    //println!("pos {} rev pos {} len {}", pos, rev_pos, text.len());
-    // spool backward to current position
-    let mut it = text.chars().rev();
-    for _ in 0..rev_pos {
-        it.next();
-    }
+    println!("pos {} rev pos {} len {}", pos, rev_pos, text.len());
 
+    
     // well, should be reverse par level ...
     let mut par_lvl = 1;
     let mut count = 0;
-    for next_char in it {
+    for next_char in text.chars().rev().skip(rev_pos) {
         if next_char == '(' {
             par_lvl -= 1;
         } else if next_char == ')' {
