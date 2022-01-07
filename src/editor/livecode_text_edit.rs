@@ -73,7 +73,7 @@ impl LivecodeTextEditState {
     pub fn store(self, ctx: &Context, id: Id) {
         ctx.memory().data.insert_persisted(id, self);
     }
-     
+
     pub fn set_cursor_range(&mut self, cursor_range: Option<CursorRange>) {
         self.cursor_range = cursor_range;
         self.ccursor_range = None;
@@ -147,12 +147,12 @@ impl<'t> LivecodeTextEdit<'t> {
     pub fn code_editor(self) -> Self {
         self.text_style(TextStyle::Monospace).lock_focus(true)
     }
- 
+
     pub fn eval_callback(mut self, callback: &Arc<Mutex<dyn FnMut(&String)>>) -> Self {
         self.eval_callback = Some(Arc::clone(callback));
         self
     }
-    
+
     pub fn text_style(mut self, text_style: TextStyle) -> Self {
         self.text_style = Some(text_style);
         self
@@ -274,7 +274,7 @@ impl<'t> LivecodeTextEdit<'t> {
         let wrap_width = available_width;
 
         /*
-        let wrap_width = if ui.layout().horizontal_justify() {
+            let wrap_width = if ui.layout().horizontal_justify() {
             available_width
         } else {
             desired_width.min(available_width)
@@ -416,7 +416,7 @@ impl<'t> LivecodeTextEdit<'t> {
 
         if ui.is_rect_visible(rect) {
             painter.galley(text_draw_pos, galley.clone());
-            
+
             if ui.memory().has_focus(id) {
                 if let Some(cursor_range) = state.cursor_range(&*galley) {
                     // We paint the cursor on top of the text, in case
@@ -717,11 +717,12 @@ fn livecode_events(
                             primary: galley.from_ccursor(sexp_cursors.primary),
                             secondary: galley.from_ccursor(ccursorp.primary),
                         };
+
                         // get indentation level
                         let indent_level = sexp_indent_level(selected_str(text, &cup));
                         // insert line break and indentation ...
                         insert_text(&mut ccursorp.secondary, text, "\n");
-                        if indent_level != 0 {
+                        if indent_level > 0 {
                             for _ in 0..indent_level {
                                 insert_text(&mut ccursorp.secondary, text, "  ");
                             }
@@ -1103,29 +1104,29 @@ fn on_key_press(
         }
 
         Key::ArrowLeft | Key::ArrowRight | Key::ArrowUp | Key::ArrowDown | Key::Home | Key::End => {
-	    if text.as_str().is_empty() {
-		return None;
-	    }
-	    // now we can be shure that the text isn't empty ...
-	    
+            if text.as_str().is_empty() {
+                return None;
+            }
+            // now we can be shure that the text isn't empty ...
+
             move_single_cursor(&mut cursor_range.primary, galley, key, modifiers);
             if !modifiers.shift && !state.selection_toggle {
                 cursor_range.secondary = cursor_range.primary;
             }
-	    
+
             let idx = cursor_range.primary.ccursor.index;
-            
-	    let next_char = if let Some(ch) = text.as_str().chars().skip(idx).next() {
-		ch
-	    } else {
-		text.as_str().chars().last().unwrap() // we know text isn't empty
-	    };
-            
+
+            let next_char = if let Some(ch) = text.as_str().chars().skip(idx).next() {
+                ch
+            } else {
+                text.as_str().chars().last().unwrap() // we know text isn't empty
+            };
+
             let prev_char = if let Some(ch) = text.as_str().chars().skip(idx - 1).next() {
-		ch
-	    } else {
-		next_char
-	    };
+                ch
+            } else {
+                next_char
+            };
 
             // mark parenthesis for easier orientation
             if next_char == '(' {
@@ -1327,77 +1328,87 @@ fn find_toplevel_sexp(text: &str, cursorp: &CursorRange) -> Option<CCursorRange>
 
     let mut pos = min.ccursor.index;
     let mut rev_pos = text.chars().count() - pos;
-    
-    let mut l_pos = pos;
-    let mut r_pos = pos;
-    let mut last_closing = pos;
-    let mut last_opening = pos;
 
-    let mut sexp_found = false;
+    let mut last_closing = 0;
+    let mut last_opening = 0;
+
+    let mut sexp_beginning_found = false;
 
     // special case: if the cursor is right on an opening paren,
     // move one right ...
     if let Some(cur_char) = text.chars().skip(pos).next() {
         if cur_char == '(' {
             rev_pos = text.chars().count() - (pos + 1);
-            l_pos = pos + 1;
-            r_pos = pos + 1;
-            last_closing = pos + 1;
-            last_opening = pos + 1;
             pos += 1;
         }
     }
-    
+
     let mut balance: i32 = 0;
+    let mut first_encounter: i32 = -1;
     // beginning: lparen right after newline
     let mut lparen_found = false;
     for l_char in text.chars().rev().skip(rev_pos) {
         if l_char == '\n' && lparen_found {
-            // two newlines - assume end
+            // assume end when a left paren is found
+            // on the beginning of a new line
+            sexp_beginning_found = true;
             break;
         } else if l_char == '(' {
-            sexp_found = true;
-            l_pos -= 1;
-            last_opening = l_pos;
+            if first_encounter == -1 {
+                first_encounter = pos as i32;
+            }
+            pos -= 1;
+            last_opening = pos;
             balance += 1;
             lparen_found = true;
         } else if l_char == ')' {
-            l_pos -= 1;
+            if first_encounter == -1 {
+                first_encounter = pos as i32;
+            }
+            pos -= 1;
             balance -= 1;
             lparen_found = false;
         } else {
-            l_pos -= 1;
+            pos -= 1;
             lparen_found = false;
         }
     }
 
-    for r_char in text.chars().skip(pos) {
-        if r_char == '(' {
-            r_pos += 1;
-            balance += 1;
-        } else if r_char == ')' {
-            r_pos += 1;
-            last_closing = r_pos;
-            balance -= 1;
+    // jump to the place where we found the first paren,
+    // because we know everything from there on is accounted for
+    pos = first_encounter as usize;
+
+    if sexp_beginning_found {
+        for r_char in text.chars().skip(pos) {
+            if r_char == '(' {
+                pos += 1;
+                balance += 1;
+            } else if r_char == ')' {
+                pos += 1;
+                last_closing = pos;
+                balance -= 1;
+            } else {
+                pos += 1;
+            }
+
+            if balance == 0 {
+                break;
+            }
+        }
+        // only return position if we're actually in the s-expression
+        if balance == 0 && last_closing >= min.ccursor.index {
+            let left = CCursor {
+                index: last_opening,
+                prefer_next_row: true,
+            };
+            let right = CCursor {
+                index: last_closing,
+                prefer_next_row: false,
+            };
+            return Some(CCursorRange::two(right, left));
         } else {
-            r_pos += 1;
+            return None;
         }
-
-        if balance == 0 {
-            break;
-        }
-    }
-
-    if balance == 0 && sexp_found {
-        let left = CCursor {
-            index: last_opening,
-            prefer_next_row: true,
-        };
-        let right = CCursor {
-            index: last_closing,
-            prefer_next_row: false,
-        };
-        Some(CCursorRange::two(right, left))
     } else {
         None
     }
@@ -1450,7 +1461,7 @@ fn format_sexp(input: &str) -> String {
 /// get the level of indentation needed up to the end of the
 /// slice.
 #[allow(dead_code)]
-fn sexp_indent_level(input: &str) -> usize {
+fn sexp_indent_level(input: &str) -> i32 {
     let mut lvl = 0;
     for c in input.chars() {
         match c {
@@ -1469,7 +1480,7 @@ fn sexp_indent_level(input: &str) -> usize {
 fn find_closing_paren(text: &str, ccursor: &CCursor) -> Option<CCursor> {
     let mut pos = ccursor.index;
     let mut par_lvl = 1;
-    
+
     // spool forward to current position
     for next_char in text.chars().skip(pos) {
         if next_char == '(' {
@@ -1491,7 +1502,7 @@ fn find_closing_paren(text: &str, ccursor: &CCursor) -> Option<CCursor> {
 fn find_opening_paren(text: &str, ccursor: &CCursor) -> Option<CCursor> {
     let pos = ccursor.index;
     let rev_pos = text.chars().count() - pos;
-    
+
     // well, should be reverse par level ...
     let mut par_lvl = 1;
     let mut count = 0;
