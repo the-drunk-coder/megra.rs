@@ -202,46 +202,7 @@ fn main() -> Result<(), anyhow::Error> {
     .expect("failed to find input device");
 
     println!("odev {}", output_device.name().unwrap());
-    /*
-        let input_configs = match input_device.supported_input_configs() {
-        Ok(f) => f.collect(),
-        Err(e) => {
-        println!("    Error getting supported input configs: {:?}", e);
-        Vec::new()
-    }
-    };
-        if !input_configs.is_empty() {
-        println!("    All supported input stream configs:");
-        for (config_index, config) in input_configs.into_iter().enumerate() {
-        println!(
-        "      {}. {:?}",
-        //device_index + 1,
-        config_index + 1,
-        config
-    );
-    }
-    }
-
-        let output_configs = match output_device.supported_input_configs() {
-        Ok(f) => f.collect(),
-        Err(e) => {
-        println!("    Error getting supported input configs: {:?}", e);
-        Vec::new()
-    }
-    };
-        if !output_configs.is_empty() {
-        println!("    All supported output stream configs:");
-        for (config_index, config) in output_configs.into_iter().enumerate() {
-        println!(
-        "      {}. {:?}",
-        //device_index + 1,
-        config_index + 1,
-        config
-    );
-    }
-    }
-         */
-
+    
     let out_config: cpal::SupportedStreamConfig = output_device.default_output_config().unwrap();
     let in_config: cpal::SupportedStreamConfig = input_device.default_input_config().unwrap();
     println!("in chan: {:?}", in_config);
