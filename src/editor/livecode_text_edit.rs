@@ -1116,13 +1116,13 @@ fn on_key_press(
 
             let idx = cursor_range.primary.ccursor.index;
 
-            let next_char = if let Some(ch) = text.as_str().chars().skip(idx).next() {
+            let next_char = if let Some(ch) = text.as_str().chars().nth(idx) {
                 ch
             } else {
                 text.as_str().chars().last().unwrap() // we know text isn't empty
             };
 
-            let prev_char = if let Some(ch) = text.as_str().chars().skip(idx - 1).next() {
+            let prev_char = if let Some(ch) = text.as_str().chars().nth(idx - 1) {
                 ch
             } else {
                 next_char
@@ -1336,7 +1336,7 @@ fn find_toplevel_sexp(text: &str, cursorp: &CursorRange) -> Option<CCursorRange>
 
     // special case: if the cursor is right on an opening paren,
     // move one right ...
-    if let Some(cur_char) = text.chars().skip(pos).next() {
+    if let Some(cur_char) = text.chars().nth(pos) {
         if cur_char == '(' {
             rev_pos = text.chars().count() - (pos + 1);
             pos += 1;
@@ -1405,9 +1405,9 @@ fn find_toplevel_sexp(text: &str, cursorp: &CursorRange) -> Option<CCursorRange>
                 index: last_closing,
                 prefer_next_row: false,
             };
-            return Some(CCursorRange::two(right, left));
+            Some(CCursorRange::two(right, left))
         } else {
-            return None;
+            None
         }
     } else {
         None
