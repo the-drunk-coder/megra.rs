@@ -129,6 +129,7 @@ Whether you start with Cargo or from a terminal or program launcher, the options
 -l, --list-devices  list available audio devices
 -d, --device        choose device
 --live-buffer-time  the capacity of the live input buffer in seconds, default: 3
+--font              editor font (mononoki, ComicMono or custom path, default: mononoki)
 --reverb-mode       convolution or freeverb (default/fallback is freeverb). for convolution, you need to specify an IR
 --reverb-ir         path to an impulse response in FLAC format
 ```

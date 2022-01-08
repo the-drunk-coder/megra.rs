@@ -15,6 +15,12 @@ enum SketchNumber {
     Num(usize),
 }
 
+pub enum EditorFont {
+    ComicMono,
+    Mononoki,
+    Custom(String),
+}
+
 /// We derive Deserialize/Serialize so we can persist app state on shutdown.
 #[derive(serde::Deserialize, serde::Serialize)]
 pub struct MegraEditor {
@@ -27,6 +33,8 @@ pub struct MegraEditor {
     current_sketch: String,
     #[serde(skip)]
     sketch_number: usize,
+    #[serde(skip)]
+    font: Option<EditorFont>,
 }
 
 impl Default for MegraEditor {
@@ -38,11 +46,16 @@ impl Default for MegraEditor {
             sketch_list: Vec::new(),
             current_sketch: "".to_string(),
             sketch_number: 0,
+            font: None,
         }
     }
 }
 
 impl MegraEditor {
+    pub fn set_font(&mut self, font: EditorFont) {
+        self.font = Some(font);
+    }
+
     pub fn set_callback(&mut self, callback: &Arc<Mutex<dyn FnMut(&String)>>) {
         self.callback = Some(Arc::clone(callback));
     }
@@ -65,18 +78,60 @@ impl epi::App for MegraEditor {
     ) {
         let mut fonts = FontDefinitions::default();
 
-        // Install my own font (maybe supporting non-latin characters):
+        // Two built-in options ...
         fonts.font_data.insert(
-            "my_font".to_owned(),
+            "mononoki".to_owned(),
             FontData::from_static(include_bytes!("../../fonts/mononoki-Bold.ttf")),
-        ); // .ttf and .otf supported
+        );
 
-        // Put my font as last fallback for monospace:
-        fonts
-            .fonts_for_family
-            .get_mut(&FontFamily::Monospace)
-            .unwrap()
-            .insert(0, "my_font".to_owned());
+        fonts.font_data.insert(
+            "ComicMono".to_owned(),
+            FontData::from_static(include_bytes!("../../fonts/ComicMono.ttf")),
+        );
+
+        match &self.font {
+            Some(EditorFont::ComicMono) => {
+                fonts
+                    .fonts_for_family
+                    .get_mut(&FontFamily::Monospace)
+                    .unwrap()
+                    .insert(0, "ComicMono".to_owned());
+            }
+            Some(EditorFont::Mononoki) => {
+                fonts
+                    .fonts_for_family
+                    .get_mut(&FontFamily::Monospace)
+                    .unwrap()
+                    .insert(0, "ComicMono".to_owned());
+            }
+            Some(EditorFont::Custom(path)) => match fs::read(path) {
+                Ok(font_data) => {
+                    fonts
+                        .font_data
+                        .insert("custom_font".to_owned(), FontData::from_owned(font_data));
+                    fonts
+                        .fonts_for_family
+                        .get_mut(&FontFamily::Monospace)
+                        .unwrap()
+                        .insert(0, "custom_font".to_owned());
+                }
+                Err(_) => {
+                    println!("couldn't read custom font, using default");
+                    fonts
+                        .fonts_for_family
+                        .get_mut(&FontFamily::Monospace)
+                        .unwrap()
+                        .insert(0, "ComicMono".to_owned());
+                }
+            },
+            None => {
+                fonts
+                    .fonts_for_family
+                    .get_mut(&FontFamily::Monospace)
+                    .unwrap()
+                    .insert(0, "mononoki".to_owned());
+            }
+        }
 
         ctx.set_fonts(fonts);
 

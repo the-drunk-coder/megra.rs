@@ -7,7 +7,7 @@ use ruffbox_synth::ruffbox::Ruffbox;
 use std::sync;
 
 mod megra_editor;
-use megra_editor::MegraEditor;
+use megra_editor::{EditorFont, MegraEditor};
 
 use crate::builtin_types::*;
 use crate::interpreter;
@@ -22,9 +22,22 @@ pub fn run_editor<const BUFSIZE: usize, const NCHAN: usize>(
     sample_set: &sync::Arc<Mutex<SampleSet>>,
     parts_store: &sync::Arc<Mutex<PartsStore>>,
     mode: OutputMode,
+    font: Option<&str>,
 ) {
     // Restore editor from file, or create new editor:
     let mut app: MegraEditor = MegraEditor::default();
+    match font {
+        Some("mononoki") => {
+            app.set_font(EditorFont::Mononoki);
+        }
+        Some("ComicMono") => {
+            app.set_font(EditorFont::ComicMono);
+        }
+        Some(path) => {
+            app.set_font(EditorFont::Custom(path.to_string()));
+        }
+        _ => {}
+    }
 
     let session2 = sync::Arc::clone(session);
     let ruffbox2 = sync::Arc::clone(ruffbox);

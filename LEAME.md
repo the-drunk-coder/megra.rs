@@ -108,13 +108,14 @@ Ya sea que comience con carga o desde una terminal o un programa de lanzamiento,
 
 ```
 -v, --version       imprimir versión
--r, --repl          no editor, solo repl (i.e. for integration with other editors)
+-r, --repl          no editor, solo repl (i.e. para integración con otros editores)
 -h, --help          imprimir este ayudo
 -n, --no-samples    no cargue los samples de la carpeta
 -o, --output-mode   modo (stereo, 2ch, 8ch), default: stereo
 -l, --list-devices  listar tarjetas de sonido
 -d, --device        escoger tarjeta de sonido
 --live-buffer-time  capacidad del bufer de entrada, default: 3
+--font              editor font (mononoki, ComicMono or custom path, default: mononoki)
 --reverb-mode       modo de reverberacion, convolution o freeverb (default/fallback es freeverb). para convolution, se debe proporcionar un IR
 --reverb-ir         archivo impulse response, formato FLAC
 ```

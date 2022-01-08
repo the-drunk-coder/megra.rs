@@ -77,6 +77,12 @@ fn main() -> Result<(), anyhow::Error> {
         "reverb mode (freeverb or convolution)",
         "freeverb",
     );
+    opts.optopt(
+        "",
+        "font",
+        "editor font (ComicMono, mononoki or custom path)",
+        "mononoki",
+    );
     opts.optopt("", "reverb-ir", "reverb impulse response (file)", "");
     opts.optopt(
         "",
@@ -202,7 +208,7 @@ fn main() -> Result<(), anyhow::Error> {
     .expect("failed to find input device");
 
     println!("odev {}", output_device.name().unwrap());
-    
+
     let out_config: cpal::SupportedStreamConfig = output_device.default_output_config().unwrap();
     let in_config: cpal::SupportedStreamConfig = input_device.default_input_config().unwrap();
     println!("in chan: {:?}", in_config);
@@ -227,6 +233,7 @@ fn main() -> Result<(), anyhow::Error> {
                     editor,
                     load_samples,
                     &reverb_mode,
+                    matches.opt_str("font").as_deref(),
                 )?,
                 cpal::SampleFormat::I16 => run::<i16, 2>(
                     &input_device,
@@ -238,6 +245,7 @@ fn main() -> Result<(), anyhow::Error> {
                     editor,
                     load_samples,
                     &reverb_mode,
+                    matches.opt_str("font").as_deref(),
                 )?,
                 cpal::SampleFormat::U16 => run::<u16, 2>(
                     &input_device,
@@ -249,6 +257,7 @@ fn main() -> Result<(), anyhow::Error> {
                     editor,
                     load_samples,
                     &reverb_mode,
+                    matches.opt_str("font").as_deref(),
                 )?,
             }
         }
@@ -267,6 +276,7 @@ fn main() -> Result<(), anyhow::Error> {
                     editor,
                     load_samples,
                     &reverb_mode,
+                    matches.opt_str("font").as_deref(),
                 )?,
                 cpal::SampleFormat::I16 => run::<i16, 4>(
                     &input_device,
@@ -278,6 +288,7 @@ fn main() -> Result<(), anyhow::Error> {
                     editor,
                     load_samples,
                     &reverb_mode,
+                    matches.opt_str("font").as_deref(),
                 )?,
                 cpal::SampleFormat::U16 => run::<u16, 4>(
                     &input_device,
@@ -289,6 +300,7 @@ fn main() -> Result<(), anyhow::Error> {
                     editor,
                     load_samples,
                     &reverb_mode,
+                    matches.opt_str("font").as_deref(),
                 )?,
             }
         }
@@ -307,6 +319,7 @@ fn main() -> Result<(), anyhow::Error> {
                     editor,
                     load_samples,
                     &reverb_mode,
+                    matches.opt_str("font").as_deref(),
                 )?,
                 cpal::SampleFormat::I16 => run::<i16, 8>(
                     &input_device,
@@ -318,6 +331,7 @@ fn main() -> Result<(), anyhow::Error> {
                     editor,
                     load_samples,
                     &reverb_mode,
+                    matches.opt_str("font").as_deref(),
                 )?,
                 cpal::SampleFormat::U16 => run::<u16, 8>(
                     &input_device,
@@ -329,6 +343,7 @@ fn main() -> Result<(), anyhow::Error> {
                     editor,
                     load_samples,
                     &reverb_mode,
+                    matches.opt_str("font").as_deref(),
                 )?,
             }
         }
@@ -348,6 +363,7 @@ fn run<T, const NCHAN: usize>(
     editor: bool,
     load_samples: bool,
     reverb_mode: &ReverbMode,
+    font: Option<&str>,
 ) -> Result<(), anyhow::Error>
 where
     T: cpal::Sample,
@@ -557,6 +573,7 @@ where
             &sample_set,
             &parts_store,
             mode,
+            font,
         );
         Ok(())
     } else {
