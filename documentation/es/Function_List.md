@@ -44,9 +44,9 @@ Los multiplicadores de generadores duplican los generadores básicos y eventualm
 * [xspread - Multiply Generators with Modifiers, Spread over Loudspeakers](#xspread---multiply-generators-with-modifiers-and-spread-over-channels)
 * [ls - Create Generator List](#ls---create-generator-list)
 
-**Parameter Modifiers**:
+**Modificadores de Parámetros**:
 
-Dynamic parameters.
+Parámetros dinámicos.
 
 * [brownian - Bounded Brownian Motion](#brownian---bounded-brownian-motion)   
 * [env - Parameter Envelope](#env---parameter-envelope)
@@ -55,9 +55,9 @@ Dynamic parameters.
 * [inh - Event Stream Manipulator](#inh---event-stream-manipulator)
 * [bounce - Parameter Oscillator](#bounce---parameter-oscillator)
 
-**Applicators**:
+**Applicadores**:
 
-Apply modifications to generators or the event stream that passes through. Count- or probability based. 
+Aplique modificaciones a los generadores o al flujo de eventos que los atraviesa. Basado en conteo o probabilidad.
 
 * [pear - Apply Event Modifiers](#pear---apply-event-modifiers)
 * [apple - Probability-Based Generator Manipulators](#apple---probability-based-generator-manipulators)
@@ -65,7 +65,7 @@ Apply modifications to generators or the event stream that passes through. Count
 
 **Misc**:
 
-Helpers, session management, etc.
+Ayudantes, gestión de sesiones, etc.
 
 * [cmp - Compose Generators](#cmp---compose-generators)
 * [clear - Clear Session](#clear---clear-session)     
@@ -75,14 +75,14 @@ Helpers, session management, etc.
 * [defpart - Define Parts](#defpart---define-parts)
 * [step-part - Evaluate Parts Step by Step](#step-part---evaluate-parts-step-by-step)
 
-Alphabetical Function List
-==========================
+Lista de Funciones Alfabéticas
+=============================
 
 ## `apple` - Probability-Based Generator Manipulators
 
-Modify a generator with a certain probability
+Modificar un generador con cierta probabilidad
 
-### Example
+### Ejemplo
 
 ```lisp
 (sx 'ba #t 
@@ -92,19 +92,20 @@ Modify a generator with a certain probability
 
 ## `blur` - Blur Probabilities
 
-Distributes the weights more evenly, so that the generated sequence becomes less predictable.
+Distribuye los pesos de manera más uniforme, de modo que la secuencia generada se vuelve menos predecible.
 
 ### Syntax
 
 `(blur <blur factor>)`
 
-### Parameters 
-* `blur factor` - amount of blurriness, where 0.0 has no effect and 1.0 blurs a lot.
+### Parámetros
 
-### Example
+* `blur factor` - Cantidad de desenfoque, donde 0.0 no tiene ningún efecto y 1.0 desenfoca mucho.
+
+### Ejemplo
 
 ```lisp
-;; infer a loop with occasional repetitions
+;; inferir un ciclo con repeticiones ocasionales
 (sx 'con #t 
   (infer 'duct :events 
     'a (saw 'a2)
@@ -159,9 +160,9 @@ Distributes the weights more evenly, so that the generated sequence becomes less
 
 ## `brownian` - Bounded Brownian Motion 
 
-Define a bounded brownian motion on a parameter.
+Defina un movimiento browniano acotado en un parámetro.
 
-### Parameters
+### Parámetros
 
 * lower boundary (float)
 * upper boundary (float)
@@ -174,7 +175,7 @@ Define a bounded brownian motion on a parameter.
 (brownian <lower boundary> <upper boundary> :wrap <wrap> :step <step-size>)
 ```
 
-### Examples
+### Ejemplos
 	
 ```lisp
 (sx 'some #t
@@ -184,10 +185,10 @@ Define a bounded brownian motion on a parameter.
 
 ## `chop` - Chop a sample
 
-Chop a sample into parts, that will be played as a loop. All other parameters of 
-a loop can be applied (`rep`, `max-rep` and `rnd`).
+Corte un *sample* en partes, que se reproducirán como un bucle. Todos los demás parámetros de
+se puede aplicar un bucle (`rep`,` max-rep` y `rnd`).
 
-### Examples
+### Ejemplos
 
 ```lisp
 ;; chop violin sample into 8 parts (each of which is 200ms long)
@@ -195,11 +196,11 @@ a loop can be applied (`rep`, `max-rep` and `rnd`).
   (chop 'chops 8 (violin 'a3 :sus 200))) 
 ```
 
-## `clear` - Clear Session
+## `clear` - Cerrar 
 
-Stops and deletes all present generators.
+Detiene y elimina todos los generadores presentes.
 
-### Examples
+### Ejemplos
 
 ```lisp
 (sx 'some #t
@@ -208,7 +209,7 @@ Stops and deletes all present generators.
 (sx 'more #t :sync 'some
   (cyc 'bass "saw:100 ~"))
 
-(clear) ;; clear everything
+(clear) ;; cerrar todo
 ```
 
 ## `cmp` - Compose Generators
@@ -218,7 +219,7 @@ Stops and deletes all present generators.
 (cmp <generators>)
 ```
 
-### Examples
+### Ejemplos
 
 ```lisp
 ;; The plain lisp approach would be:
@@ -243,9 +244,9 @@ Stops and deletes all present generators.
 
 ## `ctrl` - Control Functions
 
-Executes any function, can be used to conduct execution of generators.
+Ejecuta cualquier función, se puede utilizar para realizar la ejecución de generadores.
 
-### Parameters
+### Parámetros
 
 * function
 
@@ -255,7 +256,7 @@ Executes any function, can be used to conduct execution of generators.
 (ctrl <function>)
 ```
 
-### Example
+### Ejemplo
 
 ```lisp
 ;; define some parts
@@ -282,13 +283,13 @@ Executes any function, can be used to conduct execution of generators.
 
 ## `cyc` - Cycle Generator
 
-Generates a cycle (aka loop) from a simple sequencing language. You can specify parameters within the sequence language,
-or placeholders. Also, you can specify deviations from the default duration between events within the sequencing language.
-It might seem simple, but this is one of the most powerful generators in Mégra.
+Genera un ciclo (también conocido como 'loop') a partir de un lenguaje de secuenciación simple. Puede especificar parámetros dentro del lenguaje de secuencia,
+o marcadores de posición. Además, puede especificar desviaciones de la duración predeterminada entre eventos dentro del lenguaje de secuenciación.
+Parece simple, pero este es uno de los generadores más potentes de Mégra.
 
-### Parameters
+### Parámetros
 
-* name - generator name
+* name - nombre del generador
 * sequence - sequence description
 * `:dur` - default space between events 
 * `:rep` - probability of repeating an event
@@ -303,7 +304,7 @@ It might seem simple, but this is one of the most powerful generators in Mégra.
 (cyc <name> :dur <duration> :rep <repetition probability> :max-rep <max number of repetitions> :rnd <random connection prob> <sequence>)
 ```
 
-### Example 
+### Ejemplo 
 ```lisp
 ;; plain
 (sx 'simple #t
@@ -363,7 +364,7 @@ modify the part, you have to re-evaluate the sync context as well.
 ### Syntax
 `(defpart <part-id> <generator-list>)`
 
-### Example
+### Ejemplo
 
 ```lisp
 (defpart 'drum-and-bass 
@@ -392,10 +393,10 @@ modify the part, you have to re-evaluate the sync context as well.
 
 ## `env` - Parameter Envelope
 
-Define an envelope on any parameter. Length of list of levels must be one more than length of list of durations.
-Durations are step based, so the absolute durations depend on the speed your generator runs at.
+Defina una envolvente en cualquier parámetro. La longitud de la lista de niveles debe ser uno más que la longitud de la lista de duraciones.
+Las duraciones se basan en pasos, por lo que las duraciones absolutas dependen de la velocidad a la que funciona el generador.
 
-### Parameters
+### Parámetros
 
 * `:v` or `:values` - level points on envelope path
 * `:s` or `:steps` - transition durations (in steps)
@@ -407,7 +408,7 @@ Durations are step based, so the absolute durations depend on the speed your gen
 (env :values/:v <levels> :steps/:s <durations> :repeat <#t/#f>)
 ```
 
-### Example
+### Ejemplo
 
 ```lisp
 (sx 'simple #t
@@ -421,7 +422,7 @@ Durations are step based, so the absolute durations depend on the speed your gen
 Every so-and-so steps, do something with the generator.
 Does not work as a sound modifier (so far).
 
-### Examples
+### Ejemplos
 
 ```lisp
 (sx 'simple #t
@@ -434,7 +435,7 @@ Does not work as a sound modifier (so far).
 
 Exhibit event type, that is, mute all other events, with a certain probability.
 
-### Parameters
+### Parámetros
 
 * probablility (int) - exhibit probablility
 * filter (filter function) - event type filter
@@ -444,7 +445,7 @@ Exhibit event type, that is, mute all other events, with a certain probability.
 (exh <probability> <filter>)
 ```
 
-### Example
+### Ejemplo
 ```lisp
 (sx 'simple #t 
   (cmp 
@@ -461,7 +462,7 @@ rendered with GraphViz.
 ## Syntax
 `(export-dot <filename> <generator> or <keyword> and <tag list>)`
 
-### Example
+### Ejemplo
 ```
 ;; if a generator is provided, it will be exported as a DOT file directly
 (export-dot "dotdotdot.dot"
@@ -491,7 +492,7 @@ Fade a parameter (sinusoidal).
 
 `(fade <from> <to> :steps <steps>)`
 
-### Example
+### Ejemplo
 ```lisp
 
 ;; fade cutoff frequency
@@ -523,7 +524,7 @@ This creates a directed version of a Friendship- or Windmill graph.
 
 `(friendship <name> :center <center event> :friends <list of events>)`
 
-### Parameters
+### Parámetros
 
 * `name` - the generator name
 * `:center` - the center of the "social circle"
@@ -533,7 +534,7 @@ This creates a directed version of a Friendship- or Windmill graph.
 * `:rnd` - generate random shortcuts
 * `:events` - collect labeled events
 
-### Example
+### Ejemplo
 
 ```lisp
 (sx 'friend #t
@@ -554,14 +555,14 @@ Create ... well, look at the examples.
 ### Syntax:
 `(flower <name> :pistil <event> :layers <layers> :petals <events>)`
 
-### Parameters:
+### Parámetros:
 
 * `name` - generator name
 * `:layers` - number of layers
 * `:pistil` - pistil or central event
 * `:petals` - list of events (will be padded to appropriate lenght if necessary)
 
-### Examples
+### Ejemplos
 
 ```lisp
 ;; flower with one layer and four petals
@@ -593,7 +594,7 @@ Each node follows each other node with equal probablity ... so basically a rando
 (fully <name> :rest <list of events> :events <labeled events>)
 ```
 
-### Example
+### Ejemplo
 
 ```lisp
 ;; random generator with five events
@@ -610,14 +611,14 @@ The growth algorithm allows adding information to an already existing generator.
 It does so by picking an event the generator yielded in the past, shaking up the values
 a little, and adding it to the generator following certain principles.
 
-### Parameters
+### Parámetros
 
 * `:var` (float) - variation factor (smaller -> less variation)
 * `:method` (symbol) - growth method/mode (see below)
 * `:durs` (list of ints) - durations to mix in
 * `:rnd` (int) - chance to add random edges after growth
 
-### Examples
+### Ejemplos
 
 ```lisp
 (sx 'al #t
@@ -639,7 +640,7 @@ Each growth mode pushes the generator in a certain direction.
 
 Speed up evaluation for a specified number of steps, by a certain ratio.
 
-### Examples
+### Ejemplos
 
 ```lisp
 (sx 'more #t
@@ -655,7 +656,7 @@ Speed up evaluation for a specified number of steps, by a certain ratio.
 
 Inhibit event type, that is, mute event of that type, with a certain probability.
 
-### Parameters
+### Parámetros
 
 * probablility (int) - inhibit probablility
 * filter (filter function) - event type filter
@@ -666,7 +667,7 @@ Inhibit event type, that is, mute event of that type, with a certain probability
 (inh <probability> <filter>)
 ```
 
-### Example
+### Ejemplo
 
 ```lisp
 (sx 'simple #t
@@ -693,7 +694,7 @@ age they can perish, freeing a certain amount of resources (which are added to t
 Furthermore, if specified, the generator can be configured to "eat itself up" when a shortage of resources occurs. That means 
 that an element will be removed before its time, freeing resources for further growth (which, again, are added to the local resources).
 
-### Parameters
+### Parámetros
 
 * growth cycle (int)
 * average lifespan (int)
@@ -708,7 +709,7 @@ that an element will be removed before its time, freeing resources for further g
 (global-resources 30000)
 ```
 
-### Examples
+### Ejemplos
 
 The algorithm is quite configurable, but to use the default configuration, you can simply use:
 
@@ -751,7 +752,7 @@ we can change parameters without starting from scratch every time):
 
 If you want to modifiy multiple generators, you can collect them in a list.
 
-### Example
+### Ejemplo
 
 ```lisp
 (sx 'ba #t
@@ -765,7 +766,7 @@ If you want to modifiy multiple generators, you can collect them in a list.
 
 Generates a one-node repeating generator, i.e. as a starting point for growing.
 
-### Parameters
+### Parámetros
 
 * name (symbol)
 * event(s) (event or list of events) - events to be repeated
@@ -777,7 +778,7 @@ Generates a one-node repeating generator, i.e. as a starting point for growing.
 (nuc <name> :dur <duration> <event(s)>)
 ```
 
-### Example
+### Ejemplo
 
 ```lisp
 ;; with one event
@@ -794,7 +795,7 @@ Generates a one-node repeating generator, i.e. as a starting point for growing.
 
 Define oscillation on any parameter. The oscillation curve is a bit bouncy, not really sinusoidal.
 
-### Parameters 
+### Parámetros 
 
 * upper limit - upper limit for oscillation 
 * lower limit - lower limit for oscillation 
@@ -806,7 +807,7 @@ Define oscillation on any parameter. The oscillation curve is a bit bouncy, not 
 (bounce <upper limit> <lower limit> :cycle <cycle length in steps>)
 ```
 
-### Example
+### Ejemplo
 
 ```lisp
 (sx 'simple #t
@@ -820,13 +821,13 @@ at least one exit, otherwise the generator will stop.
 
 Also, exit probablities for each node should add up to 100.
 
-### Parameters
+### Parámetros
 
 * `name` - generator name
 * `:events` - labeled event mapping
 * `:rules` - transition rules - Format `(rule <source> <destination> <probability> <duration (optional)>)`
 
-### Example
+### Ejemplo
 
 ```lisp
 ;; infer 
@@ -856,7 +857,7 @@ Also, exit probablities for each node should add up to 100.
 Learn a generator from a sample string. Based on the variable-order Markov chain learning algorithm
 proposed in *Ron, Singer, Tishby - The Power of Amnesia (1996)*.
 
-### Parameters
+### Parámetros
 * `:events` - Event definitions.
 * `:sample` - Sample string to learn from. Uses the defined event mapping as characters.
 * `:bound` - The maximum order of the learned markov chain, that is, how far to look back when determining the next step.
@@ -864,7 +865,7 @@ proposed in *Ron, Singer, Tishby - The Power of Amnesia (1996)*.
 * `:size` - Maximum generator size (nodes in the probabilistic finite automaton generated).
 * `:autosilence` - Use `~` as default character for silence.
 
-### Example
+### Ejemplo
 Learn a trap-like beat from a sample string.
 ```lisp
 (sx 'from #t
@@ -882,7 +883,7 @@ Learn a trap-like beat from a sample string.
 
 Appl-ys and Pears (don't ask me why it's named like this, I like good pears and found it funny).
 
-### Example
+### Ejemplo
 
 ```lisp
 (sx 'ba #t
@@ -898,7 +899,7 @@ Appl-ys and Pears (don't ask me why it's named like this, I like good pears and 
 
 Slows down generator for a specified number of steps, by a certain ratio.
 
-### Examples
+### Ejemplos
 
 ```lisp
 (sx 'more #t
@@ -915,7 +916,7 @@ Slows down generator for a specified number of steps, by a certain ratio.
 Re-winds the generator by a specified number of steps. The further unfolding might
 be different from the previous one, obviously.
 
-### Examples
+### Ejemplos
 
 ```lisp
 (sx 'more #t
@@ -931,7 +932,7 @@ be different from the previous one, obviously.
 Removes a symbol from the generator's alphabet. While `grow` adds symbols based on 
 the existing ones, this will remove them.
 
-### Example
+### Ejemplo
 ```lisp
 ;; this will grow faster than it shrinks
 (sx 'ba #t
@@ -942,7 +943,7 @@ the existing ones, this will remove them.
 ## `skip` - Skip Events
 Skips ahead a specified number of steps.
 
-### Example
+### Ejemplo
 
 ```lisp
 (sx 'more #t
@@ -958,7 +959,7 @@ Skips ahead a specified number of steps.
 Looks at a generator's history of emitted symbols and adds a higher-order connection to make
 the last sequence more likely to happen again.
 
-### Example
+### Ejemplo
 
 ```lisp
 (defpart 'ga
@@ -992,15 +993,15 @@ This generator arranges sound events in "stages". See for yourself.
 
 `(stages <name> :pprev <prob> :pnext <prob> :dur <duration> <events>)`
 
-### Parameters
+### Parámetros
 
-* `name` - generator name
+* `name` - nombre del generator
 * `:dur` - duration between events
 * `:pprev` - probability to return to previous stage
 * `:pnext` - probability to advance to next stage
 * `:cyc` - cyclical (last stage will advance to first stage)
 
-### Example
+### Ejemplo
 ```lisp
 ;; non-cyclical
 (sx 'ba #t
@@ -1019,7 +1020,7 @@ This generator arranges sound events in "stages". See for yourself.
 
 Define a part and evaluate it step by step. This exists mostly for debugging purposes.
 
-### Example
+### Ejemplo
 
 ```lisp
 (defpart 'ba ;; <-- define some part
@@ -1033,7 +1034,7 @@ Define a part and evaluate it step by step. This exists mostly for debugging pur
 
 Short for `SyncconteXt`.
 
-### Example
+### Ejemplo
 
 ```lisp
 (sx 'simple #t
@@ -1060,7 +1061,7 @@ Short for `SyncconteXt`.
 If you want to juxtapose (obvious reference here) a generator with a modified copy of itself,
 without re-writing the whole generator. 
 
-### Example
+### Ejemplo
 ```lisp
 (sx 'more #t
     (xdup
@@ -1077,7 +1078,7 @@ If you want to juxtapose (obvious reference here) a generator with a modified co
 without re-writing the whole generator. As opposed to `xdup`, this one spreads the copies over
 the available loudspeakers/channels, or spatial spectrum (once binaural stereo or ambisonics are available).
 
-### Example
+### Ejemplo
 ```lisp
 (sx 'more #t
     (xspread
