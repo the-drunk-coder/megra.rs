@@ -1,6 +1,6 @@
 # megra.rs
 
-(Versión español: LEAME.md)
+(Versión español: [LEAME.md](https://github.com/the-drunk-coder/megra.rs/blob/main/LEAME.md))
 
 Mégra is a **domain-specific** programming **language** (DSL for short) designed for **live-coding music** with stochastic elements.
 Its predecessor was implemented in Common Lisp, this one is implemented in pure Rust !

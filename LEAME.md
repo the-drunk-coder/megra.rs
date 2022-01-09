@@ -1,6 +1,6 @@
 # megra.rs
 
-(English version: README.md)
+(English version: [README.md](https://github.com/the-drunk-coder/megra.rs/blob/main/README.md))
 
 Mégra es un lenguaje de programación específico de dominio (*domain-specific language* en inglés, o DSL, para abreviar) diseñado para **programar música en vivo** 
 con elementos estocásticos. Su predecesor se implementó en Common Lisp, ¡este está implementado en Rust puro!
