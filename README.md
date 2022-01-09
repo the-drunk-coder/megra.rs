@@ -103,7 +103,18 @@ Place the samples in the folder (folder will be created at first start):
 * Windows: `C:\Users\<username>\AppData\Roaming\parkellipsen\megra\config\samples`
 * macOS: `/Users/<username>/Library/Application Support/de.parkellipsen.megra/samples`
 
-Now you'll have a sound event for every sample.
+Now you'll have a sound event for every sample. That means, if you have a folder called `bd` in the folder, you can call it like this:
+
+```(lisp)
+(once (bd))
+```
+You can also search by keyword ... if you have a sample called `jazz.flac` in your `bd` folder, you can call it like:
+
+```(lisp)
+(once (bd 'jazz))
+```
+
+If you don't provide any keyword, a random sample from the folder is chosen.
 
 You can also load individual samples to a set by hand using `(load-sample :set '<set> :path "<path-to-sample>")`.
 

@@ -41,7 +41,7 @@ Excesivamente probado en todas las plataformas.
 Estos problemas se están abordando sin ningún orden en particular.
 
 ## Instalación
-¡Actualmente todavía se necesita `rustc` y ` cargo` instalados!
+¡Actualmente todavía se necesita `rustc` y `cargo` instalados!
 
 Para instalar esto, vaya a esta página: https://www.rust-lang.org/es/learn/get-started .
 Esto lo guiará en el proceso de instalación de las herramientas necesarias para su sistema operativo.
@@ -88,7 +88,18 @@ Coloque los *samples* en la carpeta (la carpeta se creará en el primer inicio):
 * Windows: `C:\Users\<username>\AppData\Roaming\parkellipsen\megra\config\samples`
 * macOS: `/Users/<username>/Library/Application Support/de.parkellipsen.megra/samples`
 
-Ahora tendrás un evento de sonido para cada *sample*.
+Ahora tendrás un evento de sonido para cada *sample*. Eso significa que, si tiene una carpeta llamada `bd` en la carpeta de *samples*, puede llamarlo así:
+
+```(lisp)
+(once (bd))
+```
+También se puede buscar por palabra clave ... si tiene una muestra llamada `jazz.flac` en su carpeta `bd`, puede llamarla así:
+
+```(lisp)
+(once (bd 'jazz))
+```
+
+Si no se proporciona ninguna palabra clave, se elige un *sample* aleatorio de la carpeta.
 
 También puede cargar *samples* individuales a un *set* a mano usando `(load-sample: set '<set>: path" <path-to-sample> ")`.
 
