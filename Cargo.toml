@@ -4,6 +4,11 @@ version = "0.0.1"
 authors = ["nik <nik@parkellipsen.de>"]
 edition = "2021"
 license = "GPL-3.0+"
+description = "A live-coding language with Markov chains."
+readme = "README.md"
+repository = "https://github.com/the-drunk-coder/megra.rs/"
+categories = ["multimedia::audio"]
+keywords = ["audio", "livecoding", "dsl", "sampler"]
 
 [dependencies]
 num = "0.4"
