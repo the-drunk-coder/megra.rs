@@ -60,13 +60,13 @@ My goal is to provide precompiled binaries later on.
 In a terminal, type:
 
 ```
-cargo install megra.rs
+cargo install megra_rs
 ```
 
 On Windows, type:
 
 ```
-cargo install megra.rs --features ringbuffer
+cargo install megra_rs --features ringbuffer
 ```
 
 The ringbuffer feature makes sure you can use various blocksizes. The blocksize is otherwise fixed to 512. If you can

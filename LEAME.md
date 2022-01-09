@@ -57,13 +57,13 @@ Mi objetivo es proporcionar binarios precompilados más adelante.
 En una terminal, escriba:
 
 ```
-cargo install megra.rs
+cargo install megra_rs
 ```
 
 En Windows, escriba:
 
 ```
-cargo install megra.rs --features ringbuffer
+cargo install megra_rs --features ringbuffer
 ```
 
 La función *ringbuffer* asegura que pueda usar varios tamaños de bloques (*blocksize*). Sin este función, el tamaño del bloque se fija en 512. Si puede
