@@ -11,10 +11,10 @@ use crate::session::OutputMode;
 
 // there'll be more later !
 #[allow(clippy::single_match)]
-fn spread_gens(mul: &BuiltInMultiplexer, gens: &mut Vec<Generator>, out_mode: &OutputMode) {
+fn spread_gens(mul: &BuiltInMultiplyer, gens: &mut Vec<Generator>, out_mode: &OutputMode) {
     // for xdup, this would be enough ... for xspread etc, we need to prepend another processor ...
     match mul {
-        BuiltInMultiplexer::XSpread => {
+        BuiltInMultiplyer::XSpread => {
             let positions = match out_mode {
                 OutputMode::Stereo => {
                     if gens.len() == 1 {
@@ -76,10 +76,10 @@ fn spread_gens(mul: &BuiltInMultiplexer, gens: &mut Vec<Generator>, out_mode: &O
 
 // there'll be more later !
 #[allow(clippy::single_match)]
-fn spread_proxies(mul: &BuiltInMultiplexer, proxies: &mut Vec<PartProxy>, out_mode: &OutputMode) {
+fn spread_proxies(mul: &BuiltInMultiplyer, proxies: &mut Vec<PartProxy>, out_mode: &OutputMode) {
     // for xdup, this would be enough ... for xspread etc, we need to prepend another processor ...
     match mul {
-        BuiltInMultiplexer::XSpread => {
+        BuiltInMultiplyer::XSpread => {
             let positions = match out_mode {
                 OutputMode::Stereo => {
                     if proxies.len() == 1 {
@@ -143,7 +143,7 @@ fn spread_proxies(mul: &BuiltInMultiplexer, proxies: &mut Vec<PartProxy>, out_mo
 }
 
 #[allow(clippy::mut_range_bound)]
-pub fn handle(mul: &BuiltInMultiplexer, tail: &mut Vec<Expr>, out_mode: OutputMode) -> Atom {
+pub fn handle(mul: &BuiltInMultiplyer, tail: &mut Vec<Expr>, out_mode: OutputMode) -> Atom {
     let last = tail.pop(); // generator or generator list ...
 
     let mut gen_proc_list_list = Vec::new();
@@ -158,7 +158,7 @@ pub fn handle(mul: &BuiltInMultiplexer, tail: &mut Vec<Expr>, out_mode: OutputMo
                 gen_proc_list_list.push(gpl);
             }
             _ => {
-                println!("can't multiplex this ...");
+                println!("can't multiply this ...");
             }
         }
     }
@@ -210,7 +210,7 @@ pub fn handle(mul: &BuiltInMultiplexer, tail: &mut Vec<Expr>, out_mode: OutputMo
             let mut gens = Vec::new();
             let mut idx: usize = 0;
 
-            // multiplex into duplicates by cloning ...
+            // multiply into duplicates by cloning ...
             for mut gpl in gen_proc_list_list.drain(..) {
                 let mut pclone = g.clone();
 
@@ -246,7 +246,7 @@ pub fn handle(mul: &BuiltInMultiplexer, tail: &mut Vec<Expr>, out_mode: OutputMo
         Some(Expr::Constant(Atom::GeneratorList(mut gl))) => {
             let mut gens = Vec::new();
 
-            // collect tags ... make sure the multiplexing process leaves
+            // collect tags ... make sure the multiplying process leaves
             // each generator individually, but deterministically tagged ...
             let mut all_tags: BTreeSet<String> = BTreeSet::new();
 
@@ -256,7 +256,7 @@ pub fn handle(mul: &BuiltInMultiplexer, tail: &mut Vec<Expr>, out_mode: OutputMo
 
             let mut idx: usize = 0;
             for gen in gl.drain(..) {
-                // multiplex into duplicates by cloning ...
+                // multiply into duplicates by cloning ...
                 for gpl in gen_proc_list_list.iter() {
                     let mut pclone = gen.clone();
 

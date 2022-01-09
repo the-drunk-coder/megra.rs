@@ -36,9 +36,9 @@ Generator Modifiers modify structure, weights or evaluation order/speed of basic
 * [skip - Skip Events](#skip---skip-events)
 * [solidify - Solidify Generator](#solidify---solidify-generator)
 
-**Generator Multiplexers**:
+**Generator Multiplyers**:
 
-Generator Multiplexers duplicate basic generators, eventually applying modifiers (generator or event stream modifiers).
+Generator Multiplyers duplicate basic generators, eventually applying modifiers (generator or event stream modifiers).
 
 * [xdup - Multiply Generators with Modifiers](#xdup---multiply-generators-with-modifiers)
 * [xspread - Multiply Generators with Modifiers, Spread over Loudspeakers](#xspread---multiply-generators-with-modifiers-and-spread-over-channels)

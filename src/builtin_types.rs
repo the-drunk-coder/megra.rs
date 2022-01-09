@@ -103,7 +103,7 @@ pub enum BuiltInGenModFun {
 }
 
 #[derive(Clone, Copy)]
-pub enum BuiltInMultiplexer {
+pub enum BuiltInMultiplyer {
     XDup,
     XSpread,
     //XBounce,
@@ -156,7 +156,7 @@ pub enum BuiltIn {
     ParameterEvent(BuiltInParameterEvent),
     GenProc(BuiltInGenProc),
     GenModFun(BuiltInGenModFun),
-    Multiplexer(BuiltInMultiplexer),
+    Multiplyer(BuiltInMultiplyer),
     GeneratorList,
 }
 

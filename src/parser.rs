@@ -42,7 +42,7 @@ fn parse_builtin<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<&'a s
         parse_events,
         parse_dynamic_parameters,
         parse_generator_processors,
-        parse_multiplexer,
+        parse_multiplyer,
     ))(i)
 }
 
@@ -105,13 +105,13 @@ pub fn parse_dynamic_parameters<'a>(
     ))(i)
 }
 
-fn parse_multiplexer<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<&'a str>> {
+fn parse_multiplyer<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<&'a str>> {
     alt((
         map(tag("xdup"), |_| {
-            BuiltIn::Multiplexer(BuiltInMultiplexer::XDup)
+            BuiltIn::Multiplyer(BuiltInMultiplyer::XDup)
         }),
         map(tag("xspread"), |_| {
-            BuiltIn::Multiplexer(BuiltInMultiplexer::XSpread)
+            BuiltIn::Multiplyer(BuiltInMultiplyer::XSpread)
         }),
     ))(i)
 }
@@ -432,8 +432,8 @@ pub fn eval_expression(
                     BuiltIn::GenModFun(g) => {
                         handlers::builtin_generator_modifier_function::handle(&g, &mut reduced_tail)
                     }
-                    BuiltIn::Multiplexer(m) => {
-                        handlers::builtin_multiplexer::handle(&m, &mut reduced_tail, out_mode)
+                    BuiltIn::Multiplyer(m) => {
+                        handlers::builtin_multiplyer::handle(&m, &mut reduced_tail, out_mode)
                     }
                     BuiltIn::GeneratorList => {
                         handlers::builtin_generator_list::handle(&mut reduced_tail)
