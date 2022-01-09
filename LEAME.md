@@ -139,19 +139,19 @@ Ahora que debería tener todo en funcionamiento, es hora de aprender a usar este
 
 ### Tutorial
 
-La carpeta `documentación` contiene un archivo llamado `tutorial/es/megra_basic_tutorial.megra3`. Puede poner eso en la carpeta *sketchbook* (ver arriba) y
+La carpeta `documentation` contiene un archivo llamado `es/tutorial/megra_tutorial_basico.megra3`. Puede poner eso en la carpeta *sketchbook* (ver arriba) y
 siga directamente el tutorial. Es posible que haya más archivos allí que pueda seguir más tarde.
 
 ### Ejemplos
 
-También hay una carpeta llamada `documentation/examples/`, una selección creciente de ejemplos interesantes.
+También hay una carpeta llamada `documentation/es/ejemplos/`, una selección creciente de ejemplos interesantes.
 
 ### Documentación de referencia (inglés)
 
-La carpeta de documentación contiene dos archivos *markdown*, llamados `Function_List.md`, que es un proyecto en curso para documentar todas las funciones
+La carpeta de documentación contiene dos archivos *markdown*, llamados `documentation/en/Function_List.md`, que es un proyecto en curso para documentar todas las funciones
 que Mégra ofrece actualmente. También debería haber un ejemplo para jugar con cada función.
 
-Con respecto a los eventos de sonido, hay un archivo llamado `Sound_Events_and_Parameters.md` que debería cubrir todos los eventos de sonido disponibles actualmente.
+Con respecto a los eventos de sonido, hay un archivo llamado `documentation/en/Sound_Events_and_Parameters.md` que debería cubrir todos los eventos de sonido disponibles actualmente.
 
 
 
