@@ -392,7 +392,7 @@
 ;; VI - Multiplying Generators ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-;; The idea behind multiplyers is to provide a shorthand for layers.
+;; The idea behind multipliers is to provide a shorthand for layers.
 
 ;; Imagine the following ... you want to create a slightly modified version
 ;; of the same cycle and spred them over the stereo spectrum. (If you already know 
