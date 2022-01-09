@@ -1,4 +1,5 @@
 use egui::text::LayoutJob;
+use crate::parser;
 
 /// Memoized Code highlighting
 pub fn highlight(ctx: &egui::Context, theme: &CodeTheme, code: &str) -> LayoutJob {
@@ -111,7 +112,7 @@ impl Highlighter {
                 text = &text[end..];
             } else if text.starts_with(|c: char| c.is_ascii_alphanumeric()) {
                 let end = text[1..]
-                    .find(|c: char| !c.is_ascii_alphanumeric())
+                    .find(|c: char| !parser::valid_fun_name_char(c))
                     .map_or_else(|| text.len(), |i| i + 1);
                 let word = &text[..end];
                 let tt = if is_function(word) {

@@ -1027,6 +1027,9 @@ fn on_key_press(
     state.clear_paren_selection();
     match key {
         Key::Backspace => {
+	    // clear selection
+            state.selection_toggle = false;
+	    
             let ccursor = if modifiers.mac_cmd {
                 delete_paragraph_before_cursor(text, galley, cursor_range)
             } else if let Some(cursor) = cursor_range.single() {
