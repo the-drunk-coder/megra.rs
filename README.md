@@ -74,6 +74,9 @@ control the blocksize in your system (with JACK and CoreAudio that's typically p
 the ringbuffer. If you're not sure, use the ringbuffer. It has a small performance penalty but shouldn't matter on modern
 systems.
 
+Now you can call Mégra from a terminal calling `megra_rs`. On Linux, make sure JACK is started (or call with the `pw-jack` prefix 
+if using *PipeWire*). On Windows, you can also find the exe file and double-click it.
+
 ### Compile from Source
 
 * Download the repo ...
@@ -103,9 +106,10 @@ Place the samples in the folder (folder will be created at first start):
 * Windows: `C:\Users\<username>\AppData\Roaming\parkellipsen\megra\config\samples`
 * macOS: `/Users/<username>/Library/Application Support/de.parkellipsen.megra/samples`
 
-Now you'll have a sound event for every sample. That means, if you have a folder called `bd` in the folder, you can call it like this:
+Now you'll have a sound event for every sample. That means, if you have a folder called `bd` in the samples folder, you can call it like this:
 
 ```(lisp)
+;; call this in the Mégra editor (place cursor between outer parenthesis and hit "Ctrl+Return")
 (once (bd))
 ```
 You can also search by keyword ... if you have a sample called `jazz.flac` in your `bd` folder, you can call it like:
@@ -114,9 +118,10 @@ You can also search by keyword ... if you have a sample called `jazz.flac` in yo
 (once (bd 'jazz))
 ```
 
-If you don't provide any keyword, a random sample from the folder is chosen.
+If you don't provide any keyword, a random sample from the folder is chosen. Samples outside of the abovementioned samples folder can't be called.
 
-You can also load individual samples to a set by hand using `(load-sample :set '<set> :path "<path-to-sample>")`.
+There's currently no way to specify custom sample folders, but you can also load individual samples to a set by 
+hand using `(load-sample :set '<set> :path "<path-to-sample>")`. These don't need to be in the samples folder, the path can point anywhere. 
 
 As mentioned above, make sure you cofigure your audio system to the samplerate of your samples, otherwise loading samples will be slow due to resampling !
 
@@ -127,7 +132,11 @@ The files generated and read by the editor can be found in:
 * Windows: `C:\Users\<username>\AppData\Roaming\parkellipsen\megra\config\sketchbook`
 * macOS: `/Users/<username>/Library/Application Support/de.parkellipsen.megra/sketchbook`
 
+Files in these folders will be automatically displayed in the editor's selection menu.
+
 ## Running and Startup Options
+
+To run Mégra after installation, call `megra_rs` in a terminal or (i.e. on Windows) double-click on the executable.
 
 Whether you start with Cargo or from a terminal or program launcher, the options are:
 
@@ -151,18 +160,20 @@ If the `-r` option is used, Mégra is started in REPL (command-line) mode. If yo
 
 Now that you should have things up and running, it's time to learn how to use this language, right ? Here's where you can start!
 
+The english documentation can be found in the main repository: https://github.com/the-drunk-coder/megra.rs/tree/main/documentation/en
+
 ### Tutorial
 
-The `documentation` folder contains a file called `en/tutorial/megra_basic_tutorial.megra3`. You can put that in your sketchbook folder (see above) and 
+The folder contains a file called `tutorial/megra_basic_tutorial.megra3`. You can put that in your sketchbook folder (see above) and 
 directly follow the tutorial. There might be more files in there that you can follow later.
 
 ### Examples
 
-There's also a folder called `documentation/en/examples/`, a growing selection of interesting examples.
+There's also a folder called `examples/`, a growing selection of interesting examples.
 
 ### Reference Documentation
 
-The documentation folder contains two markdown files, called `documentation/en/Function_List.md` which is an ongoing project to document all the functions 
+The documentation folder contains two markdown files, called `Function_List.md` which is an ongoing project to document all the functions 
 that Mégra currently provides. There should also be an example to play around with for each function.
 
-Regarding the sound events, there's a file called `documentation/en/Sound_Events_and_Parameters.md` which should cover all the currently available sound events.
+Regarding the sound events, there's a file called `Sound_Events_and_Parameters.md` which should cover all the currently available sound events.

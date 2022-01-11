@@ -70,6 +70,9 @@ La función *ringbuffer* asegura que pueda usar varios tamaños de bloques (*blo
 controlar el tamaño de bloque en su sistema (con JACK y CoreAudio eso es típicamente posible), puede usar la versión sin
 *ringbuffer*. Si no está seguro, utilice el *ringbuffer*. Tiene una pequeña penalización en el rendimiento, pero no debería importar en sistemas modernos.
 
+Ahora puedes llamar a Mégra desde un terminal llamando `megra_rs`. En Linux, asegúrese de que JACK esté iniciado (o llame con el prefijo `pw-jack`
+si usa *PipeWire*). En Windows, también puede buscar el archivo exe y hacer doble clic en él.
+
 ## Configuración Audio
 
 Como se mencionó, la versión *default* de Mégra solo funciona en un *blocksize* fijo de 512, así que si esa es la versión que instaló, asegúrese de
@@ -91,6 +94,7 @@ Coloque los *samples* en la carpeta (la carpeta se creará en el primer inicio):
 Ahora tendrás un evento de sonido para cada *sample*. Eso significa que, si tiene una carpeta llamada `bd` en la carpeta de *samples*, puede llamarlo así:
 
 ```(lisp)
+;; llame a esto en el editor de Mégra (coloque el cursor entre paréntesis y pincha "Ctrl+Return")
 (once (bd))
 ```
 También se puede buscar por palabra clave ... si tiene una muestra llamada `jazz.flac` en su carpeta `bd`, puede llamarla así:
@@ -99,9 +103,9 @@ También se puede buscar por palabra clave ... si tiene una muestra llamada `jaz
 (once (bd 'jazz))
 ```
 
-Si no se proporciona ninguna palabra clave, se elige un *sample* aleatorio de la carpeta.
+Si no se proporciona ninguna palabra clave, se elige un *sample* aleatorio de la carpeta. *Samples* fuera de la carpeta de muestras mencionada anteriormente no se pueden llamar.
 
-También puede cargar *samples* individuales a un *set* a mano usando `(load-sample: set '<set>: path" <path-to-sample> ")`.
+También puede cargar *samples* individuales a un *set* a mano usando `(load-sample: set '<set>: path" <path-to-sample> ")`. Estos no necesitan estar en la carpeta de *samples*, la ruta puede apuntar a cualquier lugar.
 
 Como se mencionó anteriormente, asegúrese de configurar su sistema de audio con el *samplerate* de sus *samples*, de lo contrario, la carga de las muestras será lenta debido al *resampling*.
 
@@ -113,7 +117,11 @@ Los archivos generados y leídos por el editor se pueden encontrar en:
 * Windows: `C:\Users\<username>\AppData\Roaming\parkellipsen\megra\config\sketchbook`
 * macOS: `/Users/<username>/Library/Application Support/de.parkellipsen.megra/sketchbook`
 
+Los archivos en estas carpetas se mostrarán automáticamente en el menú de selección del editor.
+
 ## Ejecutar Mégra y Opciones Inicial
+
+Para ejecutar Mégra después de la instalación, llame a `megra_rs` en una terminal o (es decir, en Windows) haga doble clic en el ejecutable.
 
 Ya sea que comience con carga o desde una terminal o un programa de lanzamiento, las opciones son:
 
@@ -137,21 +145,23 @@ Si se utiliza la opción `-r`, Mégra se inicia en modo REPL (línea de comandos
 
 Ahora que debería tener todo en funcionamiento, es hora de aprender a usar este idioma, ¿verdad? ¡Aquí es donde puede empezar!
 
+La documentación en español se puede encontrar en el repositorio principal: https://github.com/the-drunk-coder/megra.rs/tree/main/documentation/es
+
 ### Tutorial
 
-La carpeta `documentation` contiene un archivo llamado `es/tutorial/megra_tutorial_basico.megra3`. Puede poner eso en la carpeta *sketchbook* (ver arriba) y
+La carpeta contiene un archivo llamado `tutorial/megra_tutorial_basico.megra3`. Puede poner eso en la carpeta *sketchbook* (ver arriba) y
 siga directamente el tutorial. Es posible que haya más archivos allí que pueda seguir más tarde.
 
 ### Ejemplos
 
-También hay una carpeta llamada `documentation/es/ejemplos/`, una selección creciente de ejemplos interesantes.
+También hay una carpeta llamada `ejemplos/`, una selección creciente de ejemplos interesantes.
 
 ### Documentación de referencia (inglés)
 
-La carpeta de documentación contiene dos archivos *markdown*, llamados `documentation/en/Function_List.md`, que es un proyecto en curso para documentar todas las funciones
+La carpeta de documentación contiene dos archivos *markdown*, llamados `Function_List.md`, que es un proyecto en curso para documentar todas las funciones
 que Mégra ofrece actualmente. También debería haber un ejemplo para jugar con cada función.
 
-Con respecto a los eventos de sonido, hay un archivo llamado `documentation/en/Sound_Events_and_Parameters.md` que debería cubrir todos los eventos de sonido disponibles actualmente.
+Con respecto a los eventos de sonido, hay un archivo llamado `Sound_Events_and_Parameters.md` que debería cubrir todos los eventos de sonido disponibles actualmente.
 
 
 
