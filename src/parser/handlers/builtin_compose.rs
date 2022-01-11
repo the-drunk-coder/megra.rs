@@ -14,6 +14,9 @@ fn collect_compose(tail: &mut Vec<Expr>) -> Vec<GeneratorProcessorOrModifier> {
                     GeneratorWrapperProcessor::with_generator(g),
                 )));
             }
+            Atom::GeneratorProcessorOrModifierList(mut gpl) => {
+                gen_procs.append(&mut gpl);
+            }
             _ => {}
         }
     }

@@ -1,5 +1,5 @@
-use egui::text::LayoutJob;
 use crate::parser;
+use egui::text::LayoutJob;
 
 /// Memoized Code highlighting
 pub fn highlight(ctx: &egui::Context, theme: &CodeTheme, code: &str) -> LayoutJob {

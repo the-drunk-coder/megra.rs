@@ -534,20 +534,20 @@ pub fn handle(proc_type: &BuiltInGenProc, tail: &mut Vec<Expr>) -> Atom {
             Atom::GeneratorList(gl)
         }
         Some(Expr::Constant(Atom::GeneratorProcessorOrModifier(gp))) => {
-	    match gp {
-		GeneratorProcessorOrModifier::GeneratorModifierFunction(gmf) => {
-		    // if it's a generator modifier function, such as shrink or skip,
-		    // push it back as it belongs to the overarching processor
-		    tail.push(Expr::Constant(Atom::GeneratorProcessorOrModifier(GeneratorProcessorOrModifier::GeneratorModifierFunction(gmf))));
-		    Atom::GeneratorProcessorOrModifier(collect_generator_processor(proc_type, tail))
-		}
-		_ => {
-		    Atom::GeneratorProcessorOrModifierList(vec![
-			gp,
-			collect_generator_processor(proc_type, tail),
-		    ])
-		}
-	    }            
+            match gp {
+                GeneratorProcessorOrModifier::GeneratorModifierFunction(gmf) => {
+                    // if it's a generator modifier function, such as shrink or skip,
+                    // push it back as it belongs to the overarching processor
+                    tail.push(Expr::Constant(Atom::GeneratorProcessorOrModifier(
+                        GeneratorProcessorOrModifier::GeneratorModifierFunction(gmf),
+                    )));
+                    Atom::GeneratorProcessorOrModifier(collect_generator_processor(proc_type, tail))
+                }
+                _ => Atom::GeneratorProcessorOrModifierList(vec![
+                    gp,
+                    collect_generator_processor(proc_type, tail),
+                ]),
+            }
         }
         Some(Expr::Constant(Atom::GeneratorProcessorOrModifierList(mut l))) => {
             l.push(collect_generator_processor(proc_type, tail));
