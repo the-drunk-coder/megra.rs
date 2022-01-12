@@ -188,11 +188,13 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
                 //println!("block: {:?}", data.block_tags);
 
                 if !data.block_tags.is_empty() && !data.block_tags.is_disjoint(&s.tags) {
-                    return (time, sync); // early exit
+		    // ignore event
+		    continue;
                 }
 
                 if !data.solo_tags.is_empty() && data.solo_tags.is_disjoint(&s.tags) {
-                    return (time, sync); // early exit
+		    // ignore event
+		    continue;
                 }
 
                 let mut bufnum: usize = 0;
