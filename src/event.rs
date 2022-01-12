@@ -6,6 +6,7 @@ use crate::builtin_types::Command;
 use crate::parameter::Parameter;
 use crate::session::SyncContext;
 
+/// Events can represent arithmetic operations.
 #[derive(Clone, Copy)]
 pub enum EventOperation {
     Replace,
@@ -15,6 +16,7 @@ pub enum EventOperation {
     Divide,
 }
 
+/// Parser result.
 #[derive(Clone)]
 pub struct Event {
     pub name: String,
@@ -23,7 +25,8 @@ pub struct Event {
     pub op: EventOperation,
 }
 
-// an event is also an operation
+/// This is the final sound or operation event. An event can also represent an operation,
+/// such as an addition or multiplication.
 #[derive(Clone)]
 pub struct StaticEvent {
     pub name: String,
@@ -32,6 +35,7 @@ pub struct StaticEvent {
     pub op: EventOperation,
 }
 
+/// A ControlEvent can call any function when interpreted.
 #[derive(Clone)]
 pub struct ControlEvent {
     pub tags: BTreeSet<String>,
@@ -39,12 +43,15 @@ pub struct ControlEvent {
     pub cmd: Option<Vec<Command>>,
 }
 
+/// This is the "latent" event, where the parameters haven't been evaluated yet.
 #[derive(Clone)]
 pub enum SourceEvent {
     Sound(Event),
     Control(ControlEvent),
 }
 
+/// This is the "final" event after all the parameters have been evaluated,
+/// so that it can be interpreted to either actual sound or control.
 #[derive(Clone)]
 pub enum InterpretableEvent {
     Sound(StaticEvent),
