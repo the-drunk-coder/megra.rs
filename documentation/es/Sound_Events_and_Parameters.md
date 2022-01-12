@@ -41,43 +41,45 @@
 | `:pfg`   | 0.0     | peak filter gain |
 | `:rev`       | 0.0     | reverb amount |
 | `:del`      | 0.0     | delay amount |
+| `:tags`     |none|  etiquetas adicionales |
 
 
 ## Live Buffer Events
 
-Live buffer events allow you to play with the live input buffer. The live input buffer is continously recording the last 3 seconds 
-(or more or less, if specified at startup) of input of the first input channel. Now there's severaly events that allow you to 
-work with it.
+Los eventos de búfer en vivo le permiten trabajar con el búfer de entrada en vivo. El búfer de entrada en vivo está grabando continuamente los últimos 3 segundos
+(o más o menos, si se especifica al inicio) de sonido del primer canal de entrada. Existen varios eventos que te permiten trabajar con eso.
 
-### `feedr` - read the live buffer like a regular sample
-Using `(feedr)`, you can read from the live buffer directly. All the parameters are the same as in the sample events above. Be careful 
-about feedback if you have an open mic !
+### `feedr` - leer el búfer en vivo como una muestra regular
 
-*Example*:
+Usando `(feedr)`, puede leer directamente desde el búfer en vivo. Todos los parámetros son los mismos que en los eventos de *samples* anteriores. Ten cuidado
+sobre retroalimantación si tienes un micrófono abierto!
+
+*Ejemplo*:
 ```lisp
-(sx 'ba #t ;; read from live buffer at varying starting points
+(sx 'ba #t ;; leer desde el búfer en vivo en diferentes puntos de inicio
   (nuc 'fa (feedr :start (bounce 0.01 0.99))))
 ```
 
 ### `freeze` - freeze the live buffer
-This event writes the current live buffer (as-is) to a persistent buffer specified by a number, like `(freeze 1)`.
-If you use this in a `ctrl` event, you can periodically update the content of the frozen buffer.
+
+Este evento escribe el búfer en vivo actual (tal cual) en un búfer persistente especificado por un número, como `(freeze 1)`.
+Si usa esto en un evento `ctrl`, puede actualizar periódicamente el contenido del búfer congelado.
 
 ```lisp
-;; freeze once, to buffer 1
+;; congelar una vez, al búfer 1
 (freeze 1)
 
-;; freeze periodically, every 6 seconds
+;; congelar periódicamente, cada 6 segundos
 (sx 'ba #t 
   (nuc 'ta :dur 6000 (ctrl (freeze 1))))
 ```
 
 ### `freezr` - read from frozen buffers
-This allows you to read from the buffer previously frozen with `freeze`. You can use it like any regular sample.
-First argument specifies the buffer to be read from: `(freezr <bufnum>)`
+Esto le permite leer desde el búfer previamente congelado con `freeze`. Puede usarlo como cualquier *sample* regular.
+El primer argumento especifica el búfer desde el que se leerá: `(freezr <bufnum>)`
 
 ```lisp
-(sx 'ba #t ;; granular sampling on freeze buffer 1 ...
+(sx 'ba #t ;; sampling granular en búfer 1 ...
   (nuc 'ba :dur 100 (freezr 1 :start (bounce 0.0 1.0) :atk 1 :sus 100 :rel 100)))
 ```
 
@@ -119,6 +121,7 @@ First argument specifies the buffer to be read from: `(freezr <bufnum>)`
 | `:rev`       | 0.0     | reverb amount |
 | `:del`      | 0.0     | delay amount |
 | `:pw`        | 0.5     | pulsewidth (ONLY `sqr`) |
+| `:tags`     |none|  etiquetas adicionales |
 
 ## Risset Event
 
@@ -150,6 +153,7 @@ A simple risset bell event.
 | `:lpd`   | 0.0     | lowpass filter distortion|
 | `:rev`       | 0.0     | reverb amount |
 | `:del`      | 0.0     | echo amount |
+| `:tags`     |none|  etiquetas adicionales |
 
 
 ## Control Events
@@ -170,5 +174,19 @@ Control events allow you to schedule parts that you'd otherwise execute manually
 ```
 
 
-## A Note about Note Names
-Note names follow the Common Music 2.x convention, where `'a4` is the concert pitch of 440hz, above the *middle c* which is `'c4`. `'cs4` denotes a sharp note, `'cf4` denotes a flat note. The sharp/flat schema is consistent over all notes.
+## Una nota sobre las nombre de notas
+Los nombres de las notas siguen la convención Common Music 2.x, donde `'a4` es el tono de concierto de 440 Hz, por encima de la *do central* que es `'c4`. `'cs4` denota una nota sostenida, `'cf4` denota una nota bemol. El esquema sostenido/bemol es consistente en todas las notas.
+
+## Una nota sobre las etiquetas de eventos
+Cada evento contiene ciertas etiquetas por defecto, como el tipo de evento y las etiquetas de búsqueda en el caso de eventos de muestra.
+Como habrás visto, puedes agregar etiquetas personalizadas. Todas las etiquetas se pueden usar para filtrar en los respectivos aplicadores o modificadores,
+así como solo y silenciar en el contexto de sincronización. Aquí hay un ejemplo:
+
+```lisp
+(sx 'ba #t :solo 'bass ;; <-- puede solo o bloquear según las etiquetas 
+	(nuc 'fa (bd :tags 'drums) (sn :tags 'drums) (saw 100 :tags 'bass)))
+
+(sx 'ba #t
+	(pear :for 'drums (rev 0.2) ;; <-- solo aplica reverberación a la batería
+		(nuc 'fa (bd :tags 'drums) (sn :tags 'drums) (saw 100 :tags 'bass))))
+```
