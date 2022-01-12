@@ -49,7 +49,10 @@ To install this, go to this page: https://www.rust-lang.org/learn/get-started .
 This will guide you to the process of installing the necessary tools for your operating system.
 
 On Windows, that's a bit annoying because you need some VisualStudio components which
-might take a lot of space. 
+might take a lot of space. The rust installation will show you a link to the necessary software. The 
+installer defaults should be fine, you'll only need the C++ part.
+
+On macOS, you'll need the Xcode command-line tools, which can be installed calling `xcode-select --install` in a terminal.
 
 Any version of Rust above 1.57 (stable version as of early 2022) should work (last tested with 1.57).
 
