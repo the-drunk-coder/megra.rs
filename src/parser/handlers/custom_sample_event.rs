@@ -97,7 +97,7 @@ pub fn handle(
         );
 
         let mut tail_drain = tail.drain(drain_idx..);
-        get_keyword_params(&mut ev.params, &mut tail_drain);
+        get_event_params(&mut ev, &mut tail_drain);
 
         Some(Expr::Constant(Atom::SoundEvent(ev)))
     } else if set == "feedr" {
@@ -142,7 +142,7 @@ pub fn handle(
         );
 
         let mut tail_drain = tail.drain(..);
-        get_keyword_params(&mut ev.params, &mut tail_drain);
+        get_event_params(&mut ev, &mut tail_drain);
 
         Some(Expr::Constant(Atom::SoundEvent(ev)))
     } else if set == "freezr" {
@@ -203,7 +203,7 @@ pub fn handle(
             Box::new(Parameter::with_value(freeze_buffer)),
         );
 
-        get_keyword_params(&mut ev.params, &mut tail_drain);
+        get_event_params(&mut ev, &mut tail_drain);
 
         Some(Expr::Constant(Atom::SoundEvent(ev)))
     } else {

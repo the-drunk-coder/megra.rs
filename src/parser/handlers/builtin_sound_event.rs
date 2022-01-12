@@ -42,7 +42,7 @@ pub fn handle(event_type: &BuiltInSoundEvent, tail: &mut Vec<Expr>) -> Atom {
         Box::new(Parameter::with_value(0.00)),
     );
 
-    get_keyword_params(&mut ev.params, &mut tail_drain);
+    get_event_params(&mut ev, &mut tail_drain);
 
     Atom::SoundEvent(ev)
 }

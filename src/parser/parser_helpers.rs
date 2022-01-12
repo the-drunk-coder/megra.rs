@@ -1,9 +1,9 @@
 use crate::builtin_types::*;
+use crate::event;
 use crate::event_helpers::*;
 use crate::music_theory;
 use crate::parameter::*;
 
-use ruffbox_synth::ruffbox::synth::SynthParameter;
 use std::collections::HashMap;
 
 pub fn get_float_from_expr(e: &Expr) -> Option<f32> {
@@ -42,12 +42,17 @@ pub fn get_string_from_expr(e: &Expr) -> Option<String> {
     }
 }
 
-pub fn get_keyword_params(
-    params: &mut HashMap<SynthParameter, Box<Parameter>>,
-    tail_drain: &mut std::vec::Drain<Expr>,
-) {
+pub fn get_event_params(event: &mut event::Event, tail_drain: &mut std::vec::Drain<Expr>) {
     while let Some(Expr::Constant(Atom::Keyword(k))) = tail_drain.next() {
-        params.insert(map_parameter(&k), Box::new(get_next_param(tail_drain, 0.0)));
+        if k == "tags" {
+            while let Some(Expr::Constant(Atom::Symbol(s))) = tail_drain.next() {
+                event.tags.insert(s);
+            }
+        } else {
+            event
+                .params
+                .insert(map_parameter(&k), Box::new(get_next_param(tail_drain, 0.0)));
+        }
     }
 }
 
