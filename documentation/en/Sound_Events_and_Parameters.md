@@ -41,7 +41,7 @@
 | `:pfg`   | 0.0     | peak filter gain |
 | `:rev`       | 0.0     | reverb amount |
 | `:del`      | 0.0     | delay amount |
-
+| `:tags`     |none| additional tags |
 
 ## Live Buffer Events
 
@@ -119,6 +119,7 @@ First argument specifies the buffer to be read from: `(freezr <bufnum>)`
 | `:rev`       | 0.0     | reverb amount |
 | `:del`      | 0.0     | delay amount |
 | `:pw`        | 0.5     | pulsewidth (ONLY `sqr`) |
+| `:tags`     |none| additional tags |
 
 ## Risset Event
 
@@ -150,6 +151,7 @@ A simple risset bell event.
 | `:lpd`   | 0.0     | lowpass filter distortion|
 | `:rev`       | 0.0     | reverb amount |
 | `:del`      | 0.0     | echo amount |
+| `:tags`     |none| additional tags |
 
 
 ## Control Events
@@ -172,3 +174,17 @@ Control events allow you to schedule parts that you'd otherwise execute manually
 
 ## A Note about Note Names
 Note names follow the Common Music 2.x convention, where `'a4` is the concert pitch of 440hz, above the *middle c* which is `'c4`. `'cs4` denotes a sharp note, `'cf4` denotes a flat note. The sharp/flat schema is consistent over all notes.
+
+## A Note about Event Tags
+Each events contain certain tags by default, such as the event type and the search tags in the case of sample events.
+As you might have seen, you can add custom tags. All tags can be used to filter in the respective applicators or modifiers,
+as well as to solo and mute in the sync context. Here's an example:
+
+```lisp
+(sx 'ba #t :solo 'bass ;; <-- you can solo or block based on the custom tags
+	(nuc 'fa (bd :tags 'drums) (sn :tags 'drums) (saw 100 :tags 'bass)))
+
+(sx 'ba #t
+	(pear :for 'drums (rev 0.2) ;; <-- only apply reverb to drums
+		(nuc 'fa (bd :tags 'drums) (sn :tags 'drums) (saw 100 :tags 'bass))))
+```
