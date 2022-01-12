@@ -223,6 +223,7 @@ pub fn eval_cyc_from_str(
                                     if let Some(Expr::Constant(Atom::SoundEvent(e))) =
                                         eval_expression(expr, sample_set, out_mode)
                                     {
+                                        //println!("ev {}", e.name);
                                         cycle_position.push(CycleResult::SoundEvent(e));
                                     } else {
                                         println!("couldn't eval cycle expr");
@@ -299,6 +300,7 @@ pub fn eval_cyc_from_str(
                         }
                     }
                 }
+                //println!("r {} p {}", results.len(), cycle_position.len());
                 results.push(cycle_position);
             }
             results

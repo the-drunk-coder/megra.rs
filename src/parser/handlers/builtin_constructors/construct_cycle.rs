@@ -154,16 +154,19 @@ pub fn construct_cycle(
             _ => {
                 let mut pos_vec = Vec::new();
                 dur_vec.push(dur.clone().unwrap());
-                let mut cyc_evs_drain = cyc_evs.drain(..);
-                match cyc_evs_drain.next() {
-                    Some(cyc_parser::CycleResult::SoundEvent(s)) => {
-                        pos_vec.push(SourceEvent::Sound(s))
+
+                for ev in cyc_evs.drain(..) {
+                    match ev {
+                        cyc_parser::CycleResult::SoundEvent(s) => {
+                            pos_vec.push(SourceEvent::Sound(s))
+                        }
+                        cyc_parser::CycleResult::ControlEvent(c) => {
+                            pos_vec.push(SourceEvent::Control(c))
+                        }
+                        _ => {}
                     }
-                    Some(cyc_parser::CycleResult::ControlEvent(c)) => {
-                        pos_vec.push(SourceEvent::Control(c))
-                    }
-                    _ => {}
                 }
+
                 ev_vecs.push(pos_vec);
             }
         }
