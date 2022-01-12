@@ -100,7 +100,7 @@ fn main() -> Result<(), anyhow::Error> {
     };
 
     if matches.opt_present("v") {
-        println!("0.0.1");
+        println!("0.0.3");
         return Ok(());
     }
 
