@@ -87,7 +87,7 @@ pub fn grow_old(pfa: &mut Pfa<char>) -> Option<PfaOperationResult<char>> {
     })
 }
 
-/// grow into a shape akin to the 'flower' PFA 
+/// grow into a shape akin to the 'flower' PFA
 pub fn grow_flower(pfa: &mut Pfa<char>) -> Option<PfaOperationResult<char>> {
     //pfa.pad_history();
 
@@ -226,7 +226,6 @@ pub fn grow_triloop(pfa: &mut Pfa<char>) -> Option<PfaOperationResult<char>> {
         added_symbol: Some(*rand_state.first().unwrap()),
     })
 }
-
 
 /// a continously growing loop
 pub fn grow_loop(pfa: &mut Pfa<char>) -> Option<PfaOperationResult<char>> {

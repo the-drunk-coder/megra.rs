@@ -103,6 +103,12 @@ pub fn handle(gen_mod: &BuiltInGenModFun, tail: &mut Vec<Expr>) -> Atom {
                     &pos_args,
                     &named_args,
                 ),
+                BuiltInGenModFun::Reverse => reverse(
+                    &mut g.root_generator,
+                    &mut g.time_mods,
+                    &pos_args,
+                    &named_args,
+                ),
             }
             Atom::Generator(g)
         }
@@ -142,6 +148,7 @@ pub fn handle(gen_mod: &BuiltInGenModFun, tail: &mut Vec<Expr>) -> Atom {
                 BuiltInGenModFun::Rewind => (rewind, pos_args, named_args),
                 BuiltInGenModFun::Rnd => (rnd, pos_args, named_args),
                 BuiltInGenModFun::Rep => (rep, pos_args, named_args),
+                BuiltInGenModFun::Reverse => (reverse, pos_args, named_args),
             });
 
             Atom::GeneratorProcessorOrModifierList(vec![gpom, gm])
@@ -182,6 +189,7 @@ pub fn handle(gen_mod: &BuiltInGenModFun, tail: &mut Vec<Expr>) -> Atom {
                 BuiltInGenModFun::Rewind => (rewind, pos_args, named_args),
                 BuiltInGenModFun::Rnd => (rnd, pos_args, named_args),
                 BuiltInGenModFun::Rep => (rep, pos_args, named_args),
+                BuiltInGenModFun::Reverse => (rep, pos_args, named_args),
             });
             gpoml.push(gm);
             Atom::GeneratorProcessorOrModifierList(gpoml)
@@ -226,24 +234,29 @@ pub fn handle(gen_mod: &BuiltInGenModFun, tail: &mut Vec<Expr>) -> Atom {
                     BuiltInGenModFun::Rewind => (rewind, pos_args, named_args),
                     BuiltInGenModFun::Rnd => (rnd, pos_args, named_args),
                     BuiltInGenModFun::Rep => (rep, pos_args, named_args),
+                    BuiltInGenModFun::Reverse => (reverse, pos_args, named_args),
                 }),
             )
         }
-        None => {
-            // shrink is the only genmodfun that doesn't need any arguments (for now)
-            match gen_mod {
-                BuiltInGenModFun::Shrink => Atom::GeneratorProcessorOrModifier(
-                    GeneratorProcessorOrModifier::GeneratorModifierFunction((
-                        shrink,
-                        Vec::new(),
-                        HashMap::new(),
-                    )),
-                ),
-                _ => {
-                    println!("genmodfun needs arguments!");
-                    Atom::Nothing
-                }
+        None => match gen_mod {
+            BuiltInGenModFun::Shrink => Atom::GeneratorProcessorOrModifier(
+                GeneratorProcessorOrModifier::GeneratorModifierFunction((
+                    shrink,
+                    Vec::new(),
+                    HashMap::new(),
+                )),
+            ),
+            BuiltInGenModFun::Reverse => Atom::GeneratorProcessorOrModifier(
+                GeneratorProcessorOrModifier::GeneratorModifierFunction((
+                    reverse,
+                    Vec::new(),
+                    HashMap::new(),
+                )),
+            ),
+            _ => {
+                println!("genmodfun needs arguments!");
+                Atom::Nothing
             }
-        }
+        },
     }
 }

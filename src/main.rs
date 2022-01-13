@@ -18,6 +18,7 @@ pub mod music_theory;
 pub mod parameter;
 pub mod parser;
 pub mod pfa_growth;
+pub mod pfa_reverse;
 pub mod repl;
 pub mod sample_set;
 pub mod scheduler;

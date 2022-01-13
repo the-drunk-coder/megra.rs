@@ -100,6 +100,7 @@ pub enum BuiltInGenModFun {
     Rnd,
     Rep,
     Solidify,
+    Reverse,
 }
 
 #[derive(Clone, Copy)]

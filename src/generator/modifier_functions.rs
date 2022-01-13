@@ -29,6 +29,15 @@ pub fn haste(
     }
 }
 
+pub fn reverse(
+    gen: &mut MarkovSequenceGenerator,
+    _: &mut Vec<TimeMod>,
+    _: &[ConfigParameter],
+    _: &HashMap<String, ConfigParameter>,
+) {
+    reverse_raw(gen);
+}
+
 pub fn relax(
     _: &mut MarkovSequenceGenerator,
     time_mods: &mut Vec<TimeMod>,

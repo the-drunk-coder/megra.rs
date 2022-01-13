@@ -176,6 +176,9 @@ fn parse_generator_modifier_functions<'a>(
         map(tag("relax"), |_| {
             BuiltIn::GenModFun(BuiltInGenModFun::Relax)
         }),
+        map(tag("reverse"), |_| {
+            BuiltIn::GenModFun(BuiltInGenModFun::Reverse)
+        }),
         map(tag("grow"), |_| BuiltIn::GenModFun(BuiltInGenModFun::Grow)),
         map(tag("shrink"), |_| {
             BuiltIn::GenModFun(BuiltInGenModFun::Shrink)

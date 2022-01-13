@@ -4,6 +4,7 @@ use crate::{
     markov_sequence_generator::MarkovSequenceGenerator,
     parameter::Parameter,
     pfa_growth::*,
+    pfa_reverse::*,
 };
 use rand::seq::SliceRandom;
 use ruffbox_synth::ruffbox::synth::SynthParameter;
@@ -26,6 +27,10 @@ pub fn relax_raw(time_mods: &mut Vec<TimeMod>, v: f32, n: usize) {
             op: EventOperation::Divide,
         });
     }
+}
+
+pub fn reverse_raw(gen: &mut MarkovSequenceGenerator) {
+    gen.generator = reverse_pfa(&gen.generator);
 }
 
 pub fn grow_raw(
