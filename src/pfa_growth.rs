@@ -5,7 +5,8 @@ use vom_rs::pst;
 
 /// growth methods that allow us to expand a pfa using certain heuristic principles
 
-#[allow(dead_code)]
+/// this is the "old" method because it's the first one I devised,
+/// guided by intuition ...
 pub fn grow_old(pfa: &mut Pfa<char>) -> Option<PfaOperationResult<char>> {
     //pfa.pad_history();
     if pfa.history.is_empty() {
@@ -86,7 +87,7 @@ pub fn grow_old(pfa: &mut Pfa<char>) -> Option<PfaOperationResult<char>> {
     })
 }
 
-#[allow(dead_code)]
+/// grow into a shape akin to the 'flower' PFA 
 pub fn grow_flower(pfa: &mut Pfa<char>) -> Option<PfaOperationResult<char>> {
     //pfa.pad_history();
 
@@ -158,7 +159,7 @@ pub fn grow_flower(pfa: &mut Pfa<char>) -> Option<PfaOperationResult<char>> {
     })
 }
 
-#[allow(dead_code)]
+/// try to grow into little loops of 3 events
 pub fn grow_triloop(pfa: &mut Pfa<char>) -> Option<PfaOperationResult<char>> {
     //pfa.pad_history();
 
@@ -226,12 +227,13 @@ pub fn grow_triloop(pfa: &mut Pfa<char>) -> Option<PfaOperationResult<char>> {
     })
 }
 
-#[allow(dead_code)]
-// if this is called when the history is still padded, it shows
-// an interesting splitting behaviour, as source and dest id are the
-// same and no transition is removed ...
-// it's not quite "correct" but somehow neat ...
+
+/// a continously growing loop
 pub fn grow_loop(pfa: &mut Pfa<char>) -> Option<PfaOperationResult<char>> {
+    // if this is called when the history is still padded, it shows
+    // an interesting splitting behaviour, as source and dest id are the
+    // same and no transition is removed ...
+    // it's not quite "correct" but somehow neat ...
     //pfa.pad_history();
 
     // unwraps should be fine because the history is padded ...
@@ -310,7 +312,7 @@ pub fn grow_loop(pfa: &mut Pfa<char>) -> Option<PfaOperationResult<char>> {
     })
 }
 
-#[allow(dead_code)]
+/// try to grow into little loops of four events ...
 pub fn grow_quadloop(pfa: &mut Pfa<char>) -> Option<PfaOperationResult<char>> {
     //pfa.pad_history();
     // unwraps should be fine because the history is padded ...
