@@ -35,6 +35,7 @@ Generator Modifiers modify structure, weights or evaluation order/speed of basic
 * [shrink - Shrink Generator](#shrink---shrink-generator)
 * [skip - Skip Events](#skip---skip-events)
 * [solidify - Solidify Generator](#solidify---solidify-generator)
+* [reverse - Reverse generator](#reverse---reverse-generator)
 
 **Generator Multipliers**:
 
@@ -909,6 +910,35 @@ Slows down generator for a specified number of steps, by a certain ratio.
      ;; this is the "original" 
      (cyc 'one "tri:120 tri:90 tri:100 tri:80 ~ ~ tri:120 tri:90 tri:100 tri:80 ~")))
 ```
+## `reverse` - Reverse Generator
+
+This function reverses every edge in the PFA. 
+
+### Example 
+
+```lisp
+;; let cycles run in opposite direcions, from the same starting point ...
+(sx 'ba #t 
+  (xspread
+    (reverse)
+    (cyc 'da "saw:100 ~ saw:200 saw:400")))
+```
+
+```lisp
+;; regular
+(cyc 'da :rep 20 :max-rep 2 "saw:100 saw:200 saw:300 saw:400")
+```
+
+![regular](./diagrams/regular.svg)
+
+
+```lisp
+;; reversed
+(reverse (cyc 'da :rep 20 :max-rep 2 "saw:100 saw:200 saw:300 saw:400"))
+```
+
+![reversed](./diagrams/reversed.svg)
+
 
 ## `rewind` - Rewind Generator
 
