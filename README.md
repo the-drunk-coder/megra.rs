@@ -40,7 +40,7 @@ odd if you're familiar with other live coding systems.
 * It loads all your samples to memory, so if you have a lot of samples, make sure you have enough RAM.
 * It's focused on samples. Synthesis is pretty primitive and limited to some basic waveforms at this point.
 * It currently doesn't allow you to create fancy synths unless you want to code them in Rust.
-* Except for some basic note names, Mégra doesn't reflect (traditional) music theory. There's no scales, scale completions, chords, chord completions or tunings, or helpers to work with functional harmony. Maybe there never will be. 
+* Except for some basic note names, Mégra doesn't reflect (traditional) music theory. There's no scales, scale completions, chords, chord completions or tunings, nor any helpers to work with functional harmony. Maybe there never will be. 
 * The editor is fairly primitive (you can use it in REPL mode and integrate in other editors if you want).
 
 These issues are being addressed in no particular order ...
