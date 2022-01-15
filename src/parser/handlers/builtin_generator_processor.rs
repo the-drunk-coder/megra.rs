@@ -28,6 +28,14 @@ fn collect_every(tail: &mut Vec<Expr>) -> Box<EveryProcessor> {
                 gen_mod_funs.push(gmf);
                 collect_filters = false;
             }
+            Atom::GeneratorModifierList(mut ml) => {
+                for gpom in ml.drain(..) {
+                    if let GeneratorProcessorOrModifier::GeneratorModifierFunction(gmf) = gpom {
+                        gen_mod_funs.push(gmf);
+                    }
+                }
+                collect_filters = false;
+            }
             Atom::SoundEvent(e) => {
                 events.push(e);
                 collect_filters = false;
@@ -321,6 +329,13 @@ fn collect_apple(tail: &mut Vec<Expr>) -> Box<AppleProcessor> {
             ) => {
                 gen_mod_funs.push(gmf);
             }
+            Atom::GeneratorModifierList(mut ml) => {
+                for gpom in ml.drain(..) {
+                    if let GeneratorProcessorOrModifier::GeneratorModifierFunction(gmf) = gpom {
+                        gen_mod_funs.push(gmf);
+                    }
+                }
+            }
             Atom::Keyword(k) => {
                 if k == "p" {
                     if !gen_mod_funs.is_empty() {
@@ -552,6 +567,11 @@ pub fn handle(proc_type: &BuiltInGenProc, tail: &mut Vec<Expr>) -> Atom {
         Some(Expr::Constant(Atom::GeneratorProcessorOrModifierList(mut l))) => {
             l.push(collect_generator_processor(proc_type, tail));
             Atom::GeneratorProcessorOrModifierList(l)
+        }
+        // pure modifier lists are handled differently
+        Some(Expr::Constant(Atom::GeneratorModifierList(ml))) => {
+            tail.push(Expr::Constant(Atom::GeneratorModifierList(ml)));
+            Atom::GeneratorProcessorOrModifier(collect_generator_processor(proc_type, tail))
         }
         Some(l) => {
             tail.push(l);
