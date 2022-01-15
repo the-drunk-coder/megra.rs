@@ -132,6 +132,7 @@ pub fn construct_learn(tail: &mut Vec<Expr>) -> Atom {
             symbol_ages: HashMap::new(),
             default_duration: dur.unwrap().static_val as u64,
             last_transition: None,
+            last_symbol: None,
         },
         processors: Vec::new(),
         time_mods: Vec::new(),

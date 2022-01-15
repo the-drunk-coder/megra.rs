@@ -30,6 +30,7 @@ pub struct MarkovSequenceGenerator {
     pub symbol_ages: HashMap<char, u64>,
     pub default_duration: u64,
     pub last_transition: Option<pfa::PfaQueryResult<char>>,
+    pub last_symbol: Option<char>,
 }
 
 impl MarkovSequenceGenerator {
@@ -43,12 +44,12 @@ impl MarkovSequenceGenerator {
     pub fn current_events(&mut self) -> Vec<InterpretableEvent> {
         let mut interpretable_events = Vec::new();
 
-        if let Some(trans) = &self.last_transition {
-            // println!("cur sym EFFECTIVE: {}", &trans.last_symbol);
+        if let Some(last_symbol) = &self.last_symbol {
+            //println!("cur sym EFFECTIVE: {}", last_symbol);
             // increment symbol age ...
-            *self.symbol_ages.entry(trans.last_symbol).or_insert(0) += 1;
+            *self.symbol_ages.entry(*last_symbol).or_insert(0) += 1;
             // get static events ...
-            if let Some(events) = self.event_mapping.get_mut(&trans.last_symbol) {
+            if let Some(events) = self.event_mapping.get_mut(last_symbol) {
                 for e in events.iter_mut() {
                     interpretable_events.push(match e {
                         SourceEvent::Sound(e) => InterpretableEvent::Sound(e.get_static()),
@@ -58,18 +59,32 @@ impl MarkovSequenceGenerator {
                     });
                 }
             } else {
-                println!("no events for sym {}", trans.last_symbol);
+                println!("no events for sym {}", last_symbol);
             }
+        }
+
+        // assume this is an end state ...
+        if self.last_symbol.is_some() && self.last_transition.is_none() {
+            println!("seems like this generator has reached it's end");
+            self.last_symbol = None;
         }
 
         interpretable_events
     }
 
     pub fn current_transition(&mut self) -> StaticEvent {
+        // keep in case there's no next transition because
+        // the generator has reached it's end ...
+        let tmp_next = if self.last_transition.is_some() {
+            Some(self.last_transition.as_ref().unwrap().next_symbol)
+        } else {
+            None
+        };
         // advance pfa ...
         self.last_transition = self.generator.next_transition();
         //println!("cur trans");
         if let Some(trans) = &self.last_transition {
+            self.last_symbol = Some(trans.last_symbol);
             //println!("last sym: {}", trans.last_symbol);
             if let Some(dur) = self
                 .duration_mapping
@@ -83,6 +98,7 @@ impl MarkovSequenceGenerator {
                 t
             }
         } else {
+            self.last_symbol = tmp_next;
             // these double else blocks doing the same thing sometimes make rust ugly
             let mut t = Event::with_name("transition".to_string()).get_static();
             t.params

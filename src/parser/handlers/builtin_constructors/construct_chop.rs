@@ -177,7 +177,7 @@ pub fn construct_chop(tail: &mut Vec<Expr>) -> Atom {
         });
     }
 
-    let mut pfa = Pfa::<char>::infer_from_rules(&mut rules);
+    let mut pfa = Pfa::<char>::infer_from_rules(&mut rules, true);
 
     // this seems to be heavy ...
     // what's so heavy here ??
@@ -201,6 +201,7 @@ pub fn construct_chop(tail: &mut Vec<Expr>) -> Atom {
             symbol_ages: HashMap::new(),
             default_duration: dur.unwrap().static_val as u64,
             last_transition: None,
+            last_symbol: None,
         },
         processors: Vec::new(),
         time_mods: Vec::new(),

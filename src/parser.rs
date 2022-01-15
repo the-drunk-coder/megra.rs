@@ -133,6 +133,9 @@ fn parse_constructors<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<
         map(tag("cyc"), |_| {
             BuiltIn::Constructor(BuiltInConstructor::Cycle)
         }),
+        map(tag("lin"), |_| {
+            BuiltIn::Constructor(BuiltInConstructor::Linear)
+        }),
         map(tag("fully"), |_| {
             BuiltIn::Constructor(BuiltInConstructor::Fully)
         }),

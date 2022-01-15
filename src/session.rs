@@ -151,9 +151,9 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
 
     // retrieve the current events
     let events = data.generator.current_events(&data.global_parameters);
-    if events.is_empty() {
-        println!("really no events");
-    }
+    //if events.is_empty() {
+    //    println!("really no events");
+    //}
 
     // the sync flag will be returned alongside the
     // time to let the scheduler know that it should

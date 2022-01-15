@@ -123,6 +123,7 @@ pub enum BuiltInConstructor {
     Friendship,
     Chop,
     Stages,
+    Linear,
     // Pseq, ?
 }
 

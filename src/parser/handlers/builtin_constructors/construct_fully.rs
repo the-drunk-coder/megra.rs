@@ -132,7 +132,7 @@ pub fn construct_fully(tail: &mut Vec<Expr>) -> Atom {
         }
     }
 
-    let pfa = Pfa::<char>::infer_from_rules(&mut rules);
+    let pfa = Pfa::<char>::infer_from_rules(&mut rules, true);
 
     let mut id_tags = BTreeSet::new();
     id_tags.insert(name.clone());
@@ -148,6 +148,7 @@ pub fn construct_fully(tail: &mut Vec<Expr>) -> Atom {
             symbol_ages: HashMap::new(),
             default_duration: dur.unwrap().static_val as u64,
             last_transition: None,
+            last_symbol: None,
         },
         processors: Vec::new(),
         time_mods: Vec::new(),
