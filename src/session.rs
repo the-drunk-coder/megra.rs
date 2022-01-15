@@ -274,6 +274,14 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
                             Command::GlobalRuffboxParams(m) => {
                                 commands::set_global_ruffbox_parameters(&data.ruffbox, &m);
                             }
+			    Command::Clear => {
+				let session2 = sync::Arc::clone(&data.session);
+				let parts_store2 = sync::Arc::clone(&data.parts_store);
+				thread::spawn(move || {
+				    Session::clear_session(&session2, &parts_store2);
+				    println!("a command (stop session)");
+				});
+			    }
                             _ => {
                                 println!("ignore command")
                             }
