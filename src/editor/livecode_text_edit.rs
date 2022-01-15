@@ -1345,12 +1345,19 @@ fn find_toplevel_sexp(text: &str, cursorp: &CursorRange) -> Option<CCursorRange>
 
     let mut sexp_beginning_found = false;
 
-    // special case: if the cursor is right on an opening paren,
+    // special cases:
+    // if the cursor is right on an opening paren,
     // move one right ...
     if let Some(cur_char) = text.chars().nth(pos) {
         if cur_char == '(' {
             rev_pos = text.chars().count() - (pos + 1);
             pos += 1;
+        }
+    }
+    if let Some(prev_char) = text.chars().nth(pos - 1) {
+        if prev_char == ')' {
+            rev_pos = text.chars().count() - (pos - 1);
+            pos -= 1;
         }
     }
 
