@@ -675,6 +675,14 @@ fn livecode_events(
                 }
             }
             Event::Key {
+                key: Key::F,
+                pressed: true,
+                modifiers,
+            } if modifiers.command => {
+                cursor_range.primary = galley.cursor_right_one_character(&cursor_range.primary);
+                Some(CCursorRange::one(cursor_range.primary.ccursor))
+            }
+            Event::Key {
                 key: Key::Enter,
                 pressed: true,
                 modifiers,
