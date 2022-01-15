@@ -162,6 +162,7 @@ fn is_function(word: &str) -> bool {
             | "xspread"
             | "xdup"
             | "life"
+            | "lin"
             | "ls"
             | "every"
             | "defpart"
