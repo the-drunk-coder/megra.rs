@@ -912,7 +912,9 @@ Slows down generator for a specified number of steps, by a certain ratio.
 ```
 ## `reverse` - Reverse Generator
 
-This function reverses every edge in the PFA. 
+This function reverses every edge in the PFA. If you're a TidalCycles user, keep in mind that this works quite differently from TidalCycle's `rev`!
+The generators will still have the same starting point, they will just move in the opposite direction. Especially if you use it with `cyc`, the
+visual impression might be misleading.
 
 ### Example 
 
@@ -921,6 +923,13 @@ This function reverses every edge in the PFA.
 (sx 'ba #t 
   (xspread
     (reverse)
+    (cyc 'da "saw:100 ~ saw:200 saw:400")))
+    
+;; If you want to change the starting point (with the reversed generator starting on the last note),
+;; you can skip forward:
+(sx 'ba #t 
+  (xspread
+    (reverse (skip 3))
     (cyc 'da "saw:100 ~ saw:200 saw:400")))
 ```
 
