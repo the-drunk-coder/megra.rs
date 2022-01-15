@@ -236,7 +236,12 @@ pub fn handle(mul: &BuiltInMultiplyer, tail: &mut Vec<Expr>, out_mode: OutputMod
                             fun,
                             pos,
                             named,
-                        )) => fun(&mut pclone.root_generator, &mut pclone.time_mods, &pos, &named),
+                        )) => fun(
+                            &mut pclone.root_generator,
+                            &mut pclone.time_mods,
+                            &pos,
+                            &named,
+                        ),
                     }
                 }
 
@@ -283,7 +288,12 @@ pub fn handle(mul: &BuiltInMultiplyer, tail: &mut Vec<Expr>, out_mode: OutputMod
                                 fun,
                                 pos,
                                 named,
-                            )) => fun(&mut pclone.root_generator, &mut pclone.time_mods, &pos, &named),
+                            )) => fun(
+                                &mut pclone.root_generator,
+                                &mut pclone.time_mods,
+                                &pos,
+                                &named,
+                            ),
                         }
                     }
 
