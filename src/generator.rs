@@ -44,6 +44,10 @@ impl Generator {
         // genprocs follow later ...
     }
 
+    pub fn reached_end_state(&self) -> bool {
+        self.root_generator.reached_end_state()
+    }
+
     pub fn current_events(
         &mut self,
         global_parameters: &Arc<GlobalParameters>,

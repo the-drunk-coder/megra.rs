@@ -106,4 +106,9 @@ impl MarkovSequenceGenerator {
             t
         }
     }
+
+    /// this generator has reached a state that has no exits
+    pub fn reached_end_state(&self) -> bool {
+        self.last_symbol.is_none() && self.last_transition.is_none()
+    }
 }

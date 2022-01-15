@@ -28,6 +28,7 @@ pub struct SchedulerData<const BUFSIZE: usize, const NCHAN: usize> {
     pub last_diff: f64,
     pub shift: f64,
     pub generator: Box<Generator>,
+    pub finished: bool,
     pub synced_generators: Vec<(Box<Generator>, f64)>,
     pub ruffbox: sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>,
     pub session: sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
@@ -61,6 +62,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> SchedulerData<BUFSIZE, NCHAN> {
             shift,
             last_diff: old.last_diff,
             generator: data,
+            finished: false,
             synced_generators: old.synced_generators.clone(), // carry over synced gens ...
             ruffbox: sync::Arc::clone(ruffbox),
             session: sync::Arc::clone(session),
@@ -94,6 +96,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> SchedulerData<BUFSIZE, NCHAN> {
             shift,
             last_diff: 0.0,
             generator: data,
+            finished: false,
             synced_generators: Vec::new(),
             ruffbox: sync::Arc::clone(ruffbox),
             session: sync::Arc::clone(session),
@@ -132,6 +135,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> SchedulerData<BUFSIZE, NCHAN> {
             last_diff: 0.0,
             shift,
             generator: data,
+            finished: false,
             synced_generators: Vec::new(),
             ruffbox: sync::Arc::clone(ruffbox),
             session: sync::Arc::clone(session),
@@ -157,7 +161,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Scheduler<BUFSIZE, NCHAN> {
     pub fn start(
         &mut self,
         name: &str,
-        fun: fn(&mut SchedulerData<BUFSIZE, NCHAN>) -> (f64, bool),
+        fun: fn(&mut SchedulerData<BUFSIZE, NCHAN>) -> (f64, bool, bool),
         data: sync::Arc<Mutex<SchedulerData<BUFSIZE, NCHAN>>>,
     ) {
         self.running.store(true, Ordering::SeqCst);
@@ -178,6 +182,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Scheduler<BUFSIZE, NCHAN> {
                             // the sync flag and
                             let sched_result = (fun)(&mut sched_data);
                             let sync = sched_result.1;
+			    let end = sched_result.2;
                             if sync {
                                 let mut syncs = sched_data.synced_generators.clone();
                                 for (g, s) in syncs.drain(..) {
@@ -189,9 +194,13 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Scheduler<BUFSIZE, NCHAN> {
 					&sched_data.solo_tags,
                                     );
                                 }
-                                sched_data.synced_generators.clear();
+                                 sched_data.synced_generators.clear();
                             }
-
+			    if end {
+				sched_data.finished = true;
+				running.store(false, Ordering::SeqCst);
+				return;
+			    }
 			    cur = sched_data.start_time.elapsed().as_secs_f64();
                             sched_data.last_diff = cur - sched_data.logical_time;
                             next = sched_result.0;
@@ -208,6 +217,9 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Scheduler<BUFSIZE, NCHAN> {
                                     next,
                                     ldif
                                 );
+				sched_data.finished = true;
+				running.store(false, Ordering::SeqCst);
+				return;
                             }
                             sched_data.logical_time += next;
                             sched_data.stream_time += next;

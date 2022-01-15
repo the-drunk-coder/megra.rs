@@ -118,7 +118,7 @@ fn resolve_proxy(parts_store: &PartsStore, proxy: PartProxy, generators: &mut Ve
 // or better, the inside part of the time recursion
 fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
     data: &mut SchedulerData<BUFSIZE, NCHAN>,
-) -> (f64, bool) {
+) -> (f64, bool, bool) {
     // global tempo modifier, allows us to do weird stuff with the
     // global tempo ...
     let mut tmod: f64 = 1.0;
@@ -154,11 +154,12 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
     //if events.is_empty() {
     //    println!("really no events");
     //}
-
+    let end_state = data.generator.reached_end_state();
     // the sync flag will be returned alongside the
     // time to let the scheduler know that it should
     // trigger the synced generators
     let mut sync = false;
+
     // start the generators ready to be synced ...
     if data.sync_mode == SyncMode::All {
         //println!("sync all");
@@ -283,7 +284,7 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
         }
     }
 
-    (time, sync)
+    (time, sync, end_state)
 }
 // END INNER MAIN SCHEDULER FUNCTION ...
 
@@ -455,6 +456,8 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                         session,
                         ruffbox,
                         parts_store,
+                        global_parameters,
+                        output_mode,
                         ctx.shift as f64 * 0.001,
                         &ctx.block_tags,
                         &ctx.solo_tags,
@@ -532,38 +535,77 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
     }
 
     /// if a generater is already active, it'll be resumed by replacing its scheduler data
+    #[allow(clippy::too_many_arguments)]
     fn resume_generator(
         gen: Box<Generator>,
         session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
         ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>,
         parts_store: &sync::Arc<Mutex<PartsStore>>,
+        global_parameters: &sync::Arc<GlobalParameters>,
+        output_mode: OutputMode,
         shift: f64,
         block_tags: &BTreeSet<String>,
         solo_tags: &BTreeSet<String>,
     ) {
-        let mut sess = session.lock();
         let id_tags = gen.id_tags.clone();
-        // start scheduler if it exists ...
-        if let Some((_, data)) = sess.schedulers.get_mut(&id_tags) {
-            print!("resume generator \'");
-            for tag in id_tags.iter() {
-                print!("{} ", tag);
-            }
-            println!("\'");
 
-            // keep the scheduler running, just replace the data ...
-            let mut sched_data = data.lock();
-            *sched_data = SchedulerData::<BUFSIZE, NCHAN>::from_previous(
-                &sched_data,
-                shift,
+        let mut finished = false;
+
+        {
+            // lock release block
+            let mut sess = session.lock();
+            // start scheduler if it exists ...
+            if let Some((_, data)) = sess.schedulers.get_mut(&id_tags) {
+                print!("resume generator \'");
+                for tag in id_tags.iter() {
+                    print!("{} ", tag);
+                }
+                println!("\'");
+
+                // keep the scheduler running, just replace the data ...
+                let sched_data = data.lock();
+                finished = sched_data.finished;
+            }
+        }
+
+        if finished {
+            Session::stop_generator(session, &id_tags);
+            Session::start_generator_no_sync(
                 gen,
-                ruffbox,
                 session,
+                ruffbox,
                 parts_store,
+                global_parameters,
+                output_mode,
+                shift,
                 block_tags,
                 solo_tags,
             );
-            println!("replaced sched data");
+            println!("restarted finished gen");
+        } else {
+            let mut sess = session.lock();
+            // start scheduler if it exists ...
+            if let Some((_, data)) = sess.schedulers.get_mut(&id_tags) {
+                print!("resume generator \'");
+                for tag in id_tags.iter() {
+                    print!("{} ", tag);
+                }
+                println!("\'");
+
+                // keep the scheduler running, just replace the data ...
+                let mut sched_data = data.lock();
+                *sched_data = SchedulerData::<BUFSIZE, NCHAN>::from_previous(
+                    &sched_data,
+                    shift,
+                    gen,
+                    ruffbox,
+                    session,
+                    parts_store,
+                    block_tags,
+                    solo_tags,
+                );
+                println!("replaced sched data");
+            }
         }
     }
 
@@ -578,11 +620,11 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
         block_tags: &BTreeSet<String>,
         solo_tags: &BTreeSet<String>,
     ) {
-        let mut sess = session.lock();
         let id_tags = gen.id_tags.clone();
         // start scheduler if it exists ...
 
         // thanks, borrow checker, for this elegant construction ...
+        let mut sess = session.lock();
         let s_data = if let Some((_, sd)) = sess.schedulers.get(sync_tags) {
             Some(sd.clone())
         } else {
