@@ -573,7 +573,7 @@ fn livecode_events(
             Event::Cut => {
                 // clear selection
                 state.selection_toggle = false;
-
+                state.clear_paren_selection();
                 if !cursor_range.is_empty() {
                     copy_if_not_password(ui, selected_str(text, &cursor_range).to_owned());
                     Some(CCursorRange::one(delete_selected(text, &cursor_range)))
@@ -589,6 +589,7 @@ fn livecode_events(
                 if modifiers.ctrl {
                     // clear selection
                     state.selection_toggle = false;
+                    state.clear_paren_selection();
                     copy_if_not_password(ui, selected_str(text, &cursor_range).to_owned());
                     Some(CCursorRange::one(delete_selected(text, &cursor_range)))
                 } else {
@@ -598,6 +599,7 @@ fn livecode_events(
             Event::Text(text_to_insert) => {
                 // clear selection
                 state.selection_toggle = false;
+                state.clear_paren_selection();
 
                 // Newlines are handled by `Key::Enter`.
                 if !text_to_insert.is_empty() && text_to_insert != "\n" && text_to_insert != "\r" {
@@ -609,7 +611,6 @@ fn livecode_events(
                         let mut ccursor = delete_selected(text, &cursor_range);
                         insert_text(&mut ccursor, text, format!("({})", selection).as_str());
                         // clear selection
-                        state.selection_toggle = false;
                         // go to opening paren so the function name can be entered ...
                         ccursor.index -= selection_len + 1;
                         Some(CCursorRange::one(ccursor))
@@ -620,8 +621,6 @@ fn livecode_events(
                         let selection_len = selection.chars().count();
                         let mut ccursor = delete_selected(text, &cursor_range);
                         insert_text(&mut ccursor, text, format!("[{}]", selection).as_str());
-                        // clear selection
-                        state.selection_toggle = false;
                         // go to opening paren so the function name can be entered ...
                         ccursor.index -= selection_len + 1;
                         Some(CCursorRange::one(ccursor))
@@ -632,8 +631,6 @@ fn livecode_events(
                         let selection_len = selection.chars().count();
                         let mut ccursor = delete_selected(text, &cursor_range);
                         insert_text(&mut ccursor, text, format!("{{{}}}", selection).as_str());
-                        // clear selection
-                        state.selection_toggle = false;
                         // go to opening paren so the function name can be entered ...
                         ccursor.index -= selection_len + 1;
                         Some(CCursorRange::one(ccursor))
@@ -644,8 +641,6 @@ fn livecode_events(
                         let selection_len = selection.chars().count();
                         let mut ccursor = delete_selected(text, &cursor_range);
                         insert_text(&mut ccursor, text, format!("\"{}\"", selection).as_str());
-                        // clear selection
-                        state.selection_toggle = false;
                         // go to opening paren so the function name can be entered ...
                         ccursor.index -= selection_len + 1;
                         Some(CCursorRange::one(ccursor))
@@ -686,6 +681,8 @@ fn livecode_events(
             } => {
                 // clear selection
                 state.selection_toggle = false;
+                state.clear_paren_selection();
+
                 if modifiers.command {
                     if let Some(sexp_cursors) = find_toplevel_sexp(text.as_str(), &cursor_range) {
                         let cup = CursorRange {
@@ -759,6 +756,7 @@ fn livecode_events(
             } => {
                 // clear selection
                 state.selection_toggle = false;
+
                 cursor_range.secondary = cursor_range.primary;
                 //ui.memory().surrender_focus(id);
                 break;
@@ -768,10 +766,11 @@ fn livecode_events(
                 pressed: true,
                 modifiers,
             } => {
-                state.clear_paren_selection();
                 if modifiers.command {
                     //println!("toggle {}",state.selection_toggle);
                     state.selection_toggle = !state.selection_toggle;
+                } else {
+                    state.clear_paren_selection();
                 }
                 None
             }
@@ -1025,6 +1024,7 @@ fn on_key_press(
     state: &mut LivecodeTextEditState,
 ) -> Option<CCursorRange> {
     state.clear_paren_selection();
+
     match key {
         Key::Backspace => {
             // clear selection
