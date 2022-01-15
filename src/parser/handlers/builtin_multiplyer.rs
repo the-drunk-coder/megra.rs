@@ -153,6 +153,9 @@ pub fn handle(mul: &BuiltInMultiplyer, tail: &mut Vec<Expr>, out_mode: OutputMod
             Expr::Constant(Atom::GeneratorProcessorOrModifierList(gpl)) => {
                 gen_proc_list_list.push(gpl);
             }
+            Expr::Constant(Atom::GeneratorModifierList(gml)) => {
+                gen_proc_list_list.push(gml);
+            }
             Expr::Constant(Atom::GeneratorProcessorOrModifier(gp)) => {
                 let gpl = vec![gp];
                 gen_proc_list_list.push(gpl);
