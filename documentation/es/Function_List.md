@@ -16,6 +16,8 @@ Cree generadores de secuencia de eventos básicos.
 * [fully - Create Fully Connected Generator](#fully---create-fully-connected-generator)
 * [infer - Infer Generator from Rules](#infer---infer-generator-from-rules)
 * [learn - Learn Generator from Distribution](#learn---learn-generator-from-distribution)
+* [lin - Simple Linear Sequence](#lin---simple-linear-sequence)
+* [loop - Simple Loop Generator](#loop---simple-loop-generator)
 * [nuc - Nucleus Generator](#nuc---nucleus-generator)
 * [stages - Arrange an Event Sequence in Stages](#stages---stages-generator)
 
@@ -344,7 +346,7 @@ Parece simple, pero este es uno de los generadores más potentes de Mégra.
 ```
 
 ```lisp
-;; control cycles with other cycles
+;; ciclos de control con otros ciclos
 (sx 'control #t
 	(cyc 'ba 
 		:dur 1599 ;; switch just in time ... will run out of sync eventually
@@ -357,9 +359,9 @@ Parece simple, pero este es uno de los generadores más potentes de Mégra.
 
 ## `defpart` - Define Parts
 
-Define parts, which are basically lists of generators that you can name.
-Parts are not updated in the running sync contexts, that is, when you
-modify the part, you have to re-evaluate the sync context as well.
+Defina partes, que son básicamente listas de generadores que puede nombrar.
+Las partes no se actualizan en los contextos de sincronización en ejecución, es decir, cuando
+modificar la parte, también debe volver a evaluar el contexto de sincronización.
 
 ### Syntax
 `(defpart <part-id> <generator-list>)`
@@ -417,10 +419,9 @@ Las duraciones se basan en pasos, por lo que las duraciones absolutas dependen d
         (cyc 'beat "bd ~ hats ~ sn ~ hats ~")))
 ```
 
-## `every` - Count-Based Generator Manipulators
+## `every` - Count-Based Generator- and Event Stream Manipulator
 
-Every so-and-so steps, do something with the generator.
-Does not work as a sound modifier (so far).
+Cada uno de los pasos, haz algo con el generador o el flujo de eventos.
 
 ### Ejemplos
 
@@ -433,7 +434,7 @@ Does not work as a sound modifier (so far).
 
 ## `exh` - Event Stream Manipulator
 
-Exhibit event type, that is, mute all other events, with a certain probability.
+Exhibir tipo de evento, es decir, silenciar todos los demás eventos, con cierta probabilidad.
 
 ### Parámetros
 
@@ -518,7 +519,7 @@ Fade a parameter (sinusoidal).
 
 ## `friendship` - Create Friendship Generator
 
-This creates a directed version of a Friendship- or Windmill graph.
+Esto crea una versión dirigida de un grafo tipo *amistad* o *molina de viento*.
 
 ### Syntax
 
@@ -526,9 +527,9 @@ This creates a directed version of a Friendship- or Windmill graph.
 
 ### Parámetros
 
-* `name` - the generator name
-* `:center` - the center of the "social circle"
-* `:friends` - the "friends".
+* `name` - nombre
+* `:center` - el centro del "circulo social"
+* `:friends` - l@s "amig@s"
 * `:rep` - chance of repetition.
 * `:max-rep` - maximum number of repetitions
 * `:rnd` - generate random shortcuts
@@ -550,16 +551,16 @@ This creates a directed version of a Friendship- or Windmill graph.
 
 ## `flower` - Create Flower Generator
 
-Create ... well, look at the examples.
+Crear... bueno, mira los ejemplos.
 
 ### Syntax:
 `(flower <name> :pistil <event> :layers <layers> :petals <events>)`
 
 ### Parámetros:
 
-* `name` - generator name
-* `:layers` - number of layers
-* `:pistil` - pistil or central event
+* `name` - nombre
+* `:layers` - numero de capas
+* `:pistil` - pistilo o evento central
 * `:petals` - list of events (will be padded to appropriate lenght if necessary)
 
 ### Ejemplos
@@ -587,7 +588,7 @@ Flower with 2 layers:
 
 ## `fully` - Create Fully Connected Generator
 
-Each node follows each other node with equal probablity ... so basically a random generator.
+Cada nodo sigue a otro nodo con igual probabilidad... así que básicamente es un generador aleatorio.
 
 ### Syntax
 ```lisp
@@ -607,9 +608,9 @@ Each node follows each other node with equal probablity ... so basically a rando
 
 ## `grow` - Enlarge Generator
 
-The growth algorithm allows adding information to an already existing generator.
-It does so by picking an event the generator yielded in the past, shaking up the values
-a little, and adding it to the generator following certain principles.
+El algoritmo de crecimiento permite agregar información a un generador ya existente.
+Lo hace eligiendo un evento que el generador produjo en el pasado, sacudiendo los valores
+un poco, y agregándolo al generador siguiendo ciertos principios.
 
 ### Parámetros
 
@@ -750,7 +751,7 @@ we can change parameters without starting from scratch every time):
 
 ## `ls` - Create Generator List
 
-If you want to modifiy multiple generators, you can collect them in a list.
+Si desea modificar varios generadores, puede recopilarlos en una lista.
 
 ### Ejemplo
 
@@ -762,13 +763,13 @@ If you want to modifiy multiple generators, you can collect them in a list.
       (cyc 'bass "saw:'a1 ~ ~ ~"))))
 ```
 
-## `nuc` - Nucleus Generator
+## `nuc` - Generador Nucleo
 
-Generates a one-node repeating generator, i.e. as a starting point for growing.
+Genera un generador repetitivo de un nodo, es decir, como punto de partida para el crecimiento.
 
 ### Parámetros
 
-* name (symbol)
+* nombre (symbol)
 * event(s) (event or list of events) - events to be repeated
 * `:dur` - transition duration between events
 
@@ -793,13 +794,13 @@ Generates a one-node repeating generator, i.e. as a starting point for growing.
 
 ## `bounce` - Parameter Oscillator
 
-Define oscillation on any parameter. The oscillation curve is a bit bouncy, not really sinusoidal.
+Defina la oscilación en cualquier parámetro. La curva de oscilación es un poco hinchable, no realmente sinusoidal.
 
 ### Parámetros 
 
-* upper limit - upper limit for oscillation 
-* lower limit - lower limit for oscillation 
-* `:cycle` - oscillation cycle length in steps
+* upper limit - límite superior de oscilación
+* lower limit - límite inferior de oscilación
+* `:cycle` - duración del ciclo de oscilación en pasos
 
 ### Syntax
 
@@ -816,16 +817,16 @@ Define oscillation on any parameter. The oscillation curve is a bit bouncy, not 
 
 ## `infer` - Infer Generator from Rules
 
-Infer a generator from arbitrary rules. Make sure every event has
-at least one exit, otherwise the generator will stop.
+Inferir un generador a partir de reglas arbitrarias. Asegúrese de que cada evento tenga
+al menos una salida, de lo contrario el generador se detendrá.
 
-Also, exit probablities for each node should add up to 100.
+Además, las probabilidades de salida para cada nodo deben sumar 100.
 
 ### Parámetros
 
-* `name` - generator name
-* `:events` - labeled event mapping
-* `:rules` - transition rules - Format `(rule <source> <destination> <probability> <duration (optional)>)`
+* `name` - nombre del generador
+* `:events` - mapeo de eventos etiquetados
+* `:rules` - reglas de transición - Formato `(rule <source> <destination> <probability> <duration (optional)>)`
 
 ### Ejemplo
 
@@ -878,6 +879,42 @@ Learn a trap-like beat from a sample string.
              hoh"))
 ```
 <img src="./diagrams/learned-beat.svg" alt="A learned beat." width="1000" height="1000">
+
+## `lin` - Simple Linear Sequence
+
+Si solo necesita una secuencia lineal simple (sin repetición), este es el camino a seguir. Esto es
+excelente para escribir partituras, usando la secuencia lineal con eventos de control para anotar otros generadores.
+
+### Example
+
+```lisp
+;; default durations
+(sx 'conductor #t
+  (lin 'score 
+    (ctrl (sx 'part #t (cyc 'ga "bd ~ sn ~"))) 4000 ;; si no proporcionas un duracion, se usa la duracion defecta
+	(ctrl (sx 'part #t (cyc 'ga "bd hats sn hats"))) 4000
+	(ctrl (sx 'part #t (cyc 'ga "[bd cym] cym [sn cym] cym"))) 4000
+	(ctrl (clear))
+	))
+
+```
+
+## `loop` - Simple Loop Generator
+
+El generador `cyc` es un animal compleja, más o menos un lenguaje peque por sí mismo. El generador de bucles es un
+generador muy simple si desea un *loop* simple en una sintaxis lisp-y.
+
+### Example
+
+```lisp
+;; duraciones predeterminadas
+(sx 'around #t
+  (loop 'and-around (saw 100) (saw 200) (saw 300) (saw 400)))
+  
+;; duraciones individuales
+(sx 'around #t
+  (loop 'and-around (saw 100) 400 (saw 200) 100 (saw 300) 200 (saw 400)))
+```
 
 ## `pear` - Apply Event Modifiers
 
@@ -956,8 +993,9 @@ Skips ahead a specified number of steps.
 ```
 
 ## `solidify` - Solidify Generator
-Looks at a generator's history of emitted symbols and adds a higher-order connection to make
-the last sequence more likely to happen again.
+
+Mira el historial de símbolos emitidos de un generador y agrega una conexión de orden superior para hacer
+la última secuencia es más probable que vuelva a suceder.
 
 ### Ejemplo
 
@@ -978,16 +1016,17 @@ the last sequence more likely to happen again.
 ;; step 8 times
 (step-part 'ga)
 ```
-Initial generator:
+Generado inicial:
 
 ![before_solidification](./diagrams/before_solidification.svg)
 
-After solidification:
+Después de la solidificación:
 
 ![after_solidification](./diagrams/after_solidification.svg)
 
 ## `stages` - Stages Generator
-This generator arranges sound events in "stages". See for yourself.
+
+Este generador organiza los eventos de sonido en "etapas". Ver por ti mismo.
 
 ### Syntax
 
@@ -996,10 +1035,10 @@ This generator arranges sound events in "stages". See for yourself.
 ### Parámetros
 
 * `name` - nombre del generator
-* `:dur` - duration between events
-* `:pprev` - probability to return to previous stage
-* `:pnext` - probability to advance to next stage
-* `:cyc` - cyclical (last stage will advance to first stage)
+* `:dur` - duración entre eventos
+* `:pprev` - probabilidad de adelantar al proximo evento
+* `:pnext` - probabilidad de volver al evento previo
+* `:cyc` - cíclico (la última etapa avanzará a la primera etapa)
 
 ### Ejemplo
 ```lisp
@@ -1032,7 +1071,7 @@ Define a part and evaluate it step by step. This exists mostly for debugging pur
 
 ## `sx` - Event Sink
 
-Short for `SyncconteXt`.
+Corto para `SyncconteXt`.
 
 ### Ejemplo
 
@@ -1058,8 +1097,8 @@ Short for `SyncconteXt`.
 
 ## `xdup` - Multiply Generators with Modifiers
 
-If you want to juxtapose (obvious reference here) a generator with a modified copy of itself,
-without re-writing the whole generator. 
+Si desea yuxtaponer (referencia obvia aquí) un generador con una copia modificada de sí mismo,
+sin volver a escribir todo el generador.
 
 ### Ejemplo
 ```lisp
@@ -1074,9 +1113,9 @@ without re-writing the whole generator.
 
 ## `xspread` - Multiply Generators with Modifiers and spread over Channels.
 
-If you want to juxtapose (obvious reference here) a generator with a modified copy of itself,
-without re-writing the whole generator. As opposed to `xdup`, this one spreads the copies over
-the available loudspeakers/channels, or spatial spectrum (once binaural stereo or ambisonics are available).
+Si desea yuxtaponer (referencia obvia aquí) un generador con una copia modificada de sí mismo,
+sin volver a escribir todo el generador. A diferencia de `xdup`, este distribuye las copias entre
+los altavoces/canales disponibles, o el espectro espacial (una vez que esté disponible el estéreo binaural o los ambisónicos).
 
 ### Ejemplo
 ```lisp

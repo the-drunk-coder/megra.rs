@@ -421,8 +421,7 @@ Durations are step based, so the absolute durations depend on the speed your gen
 
 ## `every` - Count-Based Generator Manipulators
 
-Every so-and-so steps, do something with the generator.
-Does not work as a sound modifier (so far).
+Every so-and-so steps, do something with the generator or event stream.
 
 ### Examples
 
