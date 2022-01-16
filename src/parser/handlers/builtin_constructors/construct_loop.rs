@@ -70,7 +70,7 @@ pub fn construct_loop(tail: &mut Vec<Expr>) -> Atom {
                 symbol: next_char,
                 probability: 1.0,
             });
-            println!("add rule {:?}", rules.last().unwrap());
+            
             duration_mapping.insert((last_char, next_char), dur_ev);
 
             last_char = next_char;
@@ -93,8 +93,7 @@ pub fn construct_loop(tail: &mut Vec<Expr>) -> Atom {
         symbol: first_char,
         probability: 1.0,
     });
-    println!("add rule {:?}", rules.last().unwrap());
-
+    
     duration_mapping.insert((last_char, first_char), dur_ev);
 
     // don't remove orphans here because the first state is technically
