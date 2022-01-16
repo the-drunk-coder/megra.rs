@@ -12,6 +12,7 @@ mod construct_fully;
 mod construct_infer;
 mod construct_learn;
 mod construct_linear;
+mod construct_loop;
 mod construct_nucleus;
 mod construct_stages;
 
@@ -33,5 +34,6 @@ pub fn handle(
         BuiltInConstructor::Chop => construct_chop::construct_chop(tail),
         BuiltInConstructor::Stages => construct_stages::construct_stages(tail),
         BuiltInConstructor::Linear => construct_linear::construct_linear(tail),
+        BuiltInConstructor::Loop => construct_loop::construct_loop(tail),
     }
 }

@@ -163,6 +163,7 @@ fn is_function(word: &str) -> bool {
             | "xdup"
             | "life"
             | "lin"
+            | "loop"
             | "ls"
             | "every"
             | "defpart"

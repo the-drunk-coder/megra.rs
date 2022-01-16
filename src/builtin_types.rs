@@ -124,6 +124,7 @@ pub enum BuiltInConstructor {
     Chop,
     Stages,
     Linear,
+    Loop,
     // Pseq, ?
 }
 
