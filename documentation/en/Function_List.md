@@ -16,6 +16,8 @@ Create basic event sequence generators.
 * [fully - Create Fully Connected Generator](#fully---create-fully-connected-generator)
 * [infer - Infer Generator from Rules](#infer---infer-generator-from-rules)
 * [learn - Learn Generator from Distribution](#learn---learn-generator-from-distribution)
+* [lin - Simple Linear Sequence](#lin---simple-linear-sequence)
+* [loop - Simple Loop Generator](#loop---simple-loop-generator)
 * [nuc - Nucleus Generator](#nuc---nucleus-generator)
 * [stages - Arrange an Event Sequence in Stages](#stages---stages-generator)
 
@@ -878,6 +880,42 @@ Learn a trap-like beat from a sample string.
              hoh"))
 ```
 <img src="./diagrams/learned-beat.svg" alt="A learned beat." width="1000" height="1000">
+
+## `lin` - Simple Linear Sequence
+
+If you just need a simple, linear sequence (no repetition), this is the way to go. This is 
+great to write scores, using the linear sequence with control events to score other generators.
+
+### Example
+
+```lisp
+;; default durations
+(sx 'conductor #t
+  (lin 'score 
+    (ctrl (sx 'part #t (cyc 'ga "bd ~ sn ~"))) 4000
+	(ctrl (sx 'part #t (cyc 'ga "bd hats sn hats"))) 4000
+	(ctrl (sx 'part #t (cyc 'ga "[bd cym] cym [sn cym] cym"))) 4000
+	(ctrl (clear))
+	))
+
+```
+
+## `loop` - Simple Loop Generator
+
+The `cyc` generator is a complex beast, pretty much a tiny language on its own. The loop generator is a 
+very simple generator if you want a plain loop in a lisp-y syntax.
+
+### Example
+
+```lisp
+;; default durations
+(sx 'around #t
+  (loop 'and-around (saw 100) (saw 200) (saw 300) (saw 400)))
+  
+;; custom durations
+(sx 'around #t
+  (loop 'and-around (saw 100) 400 (saw 200) 100 (saw 300) 200 (saw 400)))
+```
 
 ## `pear` - Apply Event Modifiers
 
