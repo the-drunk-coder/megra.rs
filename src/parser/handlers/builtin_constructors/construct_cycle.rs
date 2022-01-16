@@ -17,6 +17,7 @@ pub fn construct_cycle(
     tail: &mut Vec<Expr>,
     sample_set: &sync::Arc<Mutex<SampleSet>>,
     out_mode: OutputMode,
+    global_parameters: &sync::Arc<GlobalParameters>,
 ) -> Atom {
     let mut tail_drain = tail.drain(..);
 
@@ -27,7 +28,16 @@ pub fn construct_cycle(
         "".to_string()
     };
 
-    let mut dur: Option<Parameter> = Some(Parameter::with_value(200.0));
+    let mut dur: Parameter = if let ConfigParameter::Numeric(d) = global_parameters
+        .entry(BuiltinGlobalParameters::DefaultDuration)
+        .or_insert(ConfigParameter::Numeric(200.0))
+        .value()
+    {
+        Parameter::with_value(*d)
+    } else {
+        unreachable!()
+    };
+
     let mut repetition_chance: f32 = 0.0;
     let mut randomize_chance: f32 = 0.0;
     let mut max_repetitions: f32 = 0.0;
@@ -93,10 +103,10 @@ pub fn construct_cycle(
             Atom::Keyword(k) => match k.as_str() {
                 "dur" => match tail_drain.next() {
                     Some(Expr::Constant(Atom::Float(n))) => {
-                        dur = Some(Parameter::with_value(n));
+                        dur = Parameter::with_value(n);
                     }
                     Some(Expr::Constant(Atom::Parameter(p))) => {
-                        dur = Some(p);
+                        dur = p;
                     }
                     _ => {}
                 },
@@ -138,6 +148,7 @@ pub fn construct_cycle(
         out_mode,
         &template_evs,
         &collected_mapping,
+        global_parameters,
     );
 
     if parsed_cycle.is_empty() {
@@ -153,7 +164,7 @@ pub fn construct_cycle(
             }
             _ => {
                 let mut pos_vec = Vec::new();
-                dur_vec.push(dur.clone().unwrap());
+                dur_vec.push(dur.clone());
 
                 for ev in cyc_evs.drain(..) {
                     match ev {
@@ -294,7 +305,7 @@ pub fn construct_cycle(
             duration_mapping,
             modified: false,
             symbol_ages: HashMap::new(),
-            default_duration: dur.unwrap().static_val as u64,
+            default_duration: dur.static_val as u64,
             last_transition: None,
             last_symbol: None,
         },

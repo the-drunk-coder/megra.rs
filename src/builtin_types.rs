@@ -31,6 +31,7 @@ pub enum BuiltinGlobalParameters {
     LifemodelGlobalResources,
     GlobalTimeModifier,
     GlobalLatency, // latency between language and dsp
+    DefaultDuration,
 }
 
 pub type GlobalParameters = DashMap<BuiltinGlobalParameters, ConfigParameter>;
@@ -132,6 +133,8 @@ pub enum BuiltInCommand {
     Clear,
     Tmod,
     Latency,
+    DefaultDuration,
+    Bpm,
     GlobRes,
     Delay,
     Reverb,
@@ -168,6 +171,8 @@ pub enum Command {
     Clear,                                             // clear the entire session
     Tmod(Parameter),                                   // set global time mod parameter
     Latency(Parameter),                                // set global latency parameter
+    Bpm(f32),                                          // set default tempo in bpm
+    DefaultDuration(f32),                              // set default duration in milliseconds
     GlobRes(f32),                                      // global resources for lifemodel algorithm
     GlobalRuffboxParams(HashMap<SynthParameter, f32>), // global ruffbox params
     LoadSample((String, Vec<String>, String)),         // set (events), keyword, path

@@ -156,6 +156,8 @@ fn is_function(word: &str) -> bool {
             | "pear"
             | "nuc"
             | "fully"
+            | "default-duration"
+            | "bpm"
             | "flower"
             | "sx"
             | "cyc"

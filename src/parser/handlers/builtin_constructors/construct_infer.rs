@@ -6,6 +6,7 @@ use crate::parameter::*;
 use crate::parser::parser_helpers::*;
 use ruffbox_synth::ruffbox::synth::SynthParameter;
 use std::collections::{BTreeSet, HashMap};
+use std::sync;
 use vom_rs::pfa;
 
 pub fn construct_rule(tail: &mut Vec<Expr>) -> Atom {
@@ -27,7 +28,10 @@ pub fn construct_rule(tail: &mut Vec<Expr>) -> Atom {
     })
 }
 
-pub fn construct_infer(tail: &mut Vec<Expr>) -> Atom {
+pub fn construct_infer(
+    tail: &mut Vec<Expr>,
+    global_parameters: &sync::Arc<GlobalParameters>,
+) -> Atom {
     let mut tail_drain = tail.drain(..);
 
     // name is the first symbol
@@ -43,7 +47,16 @@ pub fn construct_infer(tail: &mut Vec<Expr>) -> Atom {
 
     let mut collect_events = false;
     let mut collect_rules = false;
-    let mut dur: Option<Parameter> = Some(Parameter::with_value(200.0));
+
+    let mut dur: Parameter = if let ConfigParameter::Numeric(d) = global_parameters
+        .entry(BuiltinGlobalParameters::DefaultDuration)
+        .or_insert(ConfigParameter::Numeric(200.0))
+        .value()
+    {
+        Parameter::with_value(*d)
+    } else {
+        unreachable!()
+    };
 
     let mut ev_vec = Vec::new();
     let mut cur_key: String = "".to_string();
@@ -105,10 +118,10 @@ pub fn construct_infer(tail: &mut Vec<Expr>) -> Atom {
                 }
                 "dur" => match tail_drain.next() {
                     Some(Expr::Constant(Atom::Float(n))) => {
-                        dur = Some(Parameter::with_value(n));
+                        dur = Parameter::with_value(n);
                     }
                     Some(Expr::Constant(Atom::Parameter(p))) => {
-                        dur = Some(p);
+                        dur = p;
                     }
                     _ => {}
                 },
@@ -131,7 +144,7 @@ pub fn construct_infer(tail: &mut Vec<Expr>) -> Atom {
             duration_mapping,
             modified: false,
             symbol_ages: HashMap::new(),
-            default_duration: dur.unwrap().static_val as u64,
+            default_duration: dur.static_val as u64,
             last_transition: None,
             last_symbol: None,
         },

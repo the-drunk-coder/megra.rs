@@ -120,6 +120,12 @@ pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
                 Command::Latency(p) => {
                     commands::set_global_latency(global_parameters, p);
                 }
+                Command::DefaultDuration(d) => {
+                    commands::set_default_duration(global_parameters, d);
+                }
+                Command::Bpm(b) => {
+                    commands::set_default_duration(global_parameters, b);
+                }
                 Command::GlobRes(v) => {
                     commands::set_global_lifemodel_resources(global_parameters, v);
                 }

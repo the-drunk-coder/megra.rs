@@ -6,10 +6,14 @@ use crate::parameter::*;
 use crate::parser::parser_helpers::*;
 use ruffbox_synth::ruffbox::synth::SynthParameter;
 use std::collections::{BTreeSet, HashMap};
+use std::sync;
 use vom_rs::pfa::{Pfa, Rule};
 
 /// construct a simple linear sequence of events ... no tricks here
-pub fn construct_linear(tail: &mut Vec<Expr>) -> Atom {
+pub fn construct_linear(
+    tail: &mut Vec<Expr>,
+    global_parameters: &sync::Arc<GlobalParameters>,
+) -> Atom {
     let mut tail_drain = tail.drain(..);
 
     // name is the first symbol
@@ -23,16 +27,26 @@ pub fn construct_linear(tail: &mut Vec<Expr>) -> Atom {
     let mut ev_vecs = Vec::new();
     let mut dur_vec: Vec<Parameter> = Vec::new();
 
+    let dur: Parameter = if let ConfigParameter::Numeric(d) = global_parameters
+        .entry(BuiltinGlobalParameters::DefaultDuration)
+        .or_insert(ConfigParameter::Numeric(200.0))
+        .value()
+    {
+        Parameter::with_value(*d)
+    } else {
+        unreachable!()
+    };
+
     for c in tail_drain {
         match c {
             Expr::Constant(Atom::SoundEvent(e)) => {
                 ev_vecs.push(vec![SourceEvent::Sound(e)]);
-                dur_vec.push(Parameter::with_value(200.0));
+                dur_vec.push(dur.clone());
                 continue;
             }
             Expr::Constant(Atom::ControlEvent(e)) => {
                 ev_vecs.push(vec![SourceEvent::Control(e)]);
-                dur_vec.push(Parameter::with_value(200.0));
+                dur_vec.push(dur.clone());
                 continue;
             }
             Expr::Constant(Atom::Float(f)) => {

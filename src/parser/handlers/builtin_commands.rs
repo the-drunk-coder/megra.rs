@@ -122,6 +122,22 @@ fn handle_latency(tail: &mut Vec<Expr>) -> Atom {
     }))
 }
 
+fn handle_bpm(tail: &mut Vec<Expr>) -> Atom {
+    let mut tail_drain = tail.drain(..);
+    Atom::Command(Command::Bpm(match tail_drain.next() {
+        Some(Expr::Constant(Atom::Float(f))) => 60000.0 / f,
+        _ => 200.0,
+    }))
+}
+
+fn handle_default_duration(tail: &mut Vec<Expr>) -> Atom {
+    let mut tail_drain = tail.drain(..);
+    Atom::Command(Command::DefaultDuration(match tail_drain.next() {
+        Some(Expr::Constant(Atom::Float(f))) => f,
+        _ => 200.0,
+    }))
+}
+
 fn handle_globres(tail: &mut Vec<Expr>) -> Atom {
     let mut tail_drain = tail.drain(..);
     Atom::Command(Command::GlobRes(match tail_drain.next() {
@@ -283,5 +299,7 @@ pub fn handle(cmd: BuiltInCommand, tail: &mut Vec<Expr>) -> Atom {
         BuiltInCommand::ExportDot => handle_export_dot(tail),
         BuiltInCommand::Once => handle_once(tail),
         BuiltInCommand::FreezeBuffer => handle_freeze_buffer(tail),
+        BuiltInCommand::DefaultDuration => handle_default_duration(tail),
+        BuiltInCommand::Bpm => handle_bpm(tail),
     }
 }

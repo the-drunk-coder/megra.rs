@@ -21,19 +21,26 @@ pub fn handle(
     tail: &mut Vec<Expr>,
     sample_set: &sync::Arc<Mutex<SampleSet>>,
     out_mode: OutputMode,
+    global_parameters: &sync::Arc<GlobalParameters>,
 ) -> Atom {
     match constructor_type {
-        BuiltInConstructor::Infer => construct_infer::construct_infer(tail),
-        BuiltInConstructor::Learn => construct_learn::construct_learn(tail),
+        BuiltInConstructor::Infer => construct_infer::construct_infer(tail, global_parameters),
+        BuiltInConstructor::Learn => construct_learn::construct_learn(tail, global_parameters),
         BuiltInConstructor::Rule => construct_infer::construct_rule(tail),
-        BuiltInConstructor::Nucleus => construct_nucleus::construct_nucleus(tail),
-        BuiltInConstructor::Flower => construct_flower::construct_flower(tail),
-        BuiltInConstructor::Friendship => construct_friendship::construct_friendship(tail),
-        BuiltInConstructor::Fully => construct_fully::construct_fully(tail),
-        BuiltInConstructor::Cycle => construct_cycle::construct_cycle(tail, sample_set, out_mode),
-        BuiltInConstructor::Chop => construct_chop::construct_chop(tail),
-        BuiltInConstructor::Stages => construct_stages::construct_stages(tail),
-        BuiltInConstructor::Linear => construct_linear::construct_linear(tail),
-        BuiltInConstructor::Loop => construct_loop::construct_loop(tail),
+        BuiltInConstructor::Nucleus => {
+            construct_nucleus::construct_nucleus(tail, global_parameters)
+        }
+        BuiltInConstructor::Flower => construct_flower::construct_flower(tail, global_parameters),
+        BuiltInConstructor::Friendship => {
+            construct_friendship::construct_friendship(tail, global_parameters)
+        }
+        BuiltInConstructor::Fully => construct_fully::construct_fully(tail, global_parameters),
+        BuiltInConstructor::Cycle => {
+            construct_cycle::construct_cycle(tail, sample_set, out_mode, global_parameters)
+        }
+        BuiltInConstructor::Chop => construct_chop::construct_chop(tail, global_parameters),
+        BuiltInConstructor::Stages => construct_stages::construct_stages(tail, global_parameters),
+        BuiltInConstructor::Linear => construct_linear::construct_linear(tail, global_parameters),
+        BuiltInConstructor::Loop => construct_loop::construct_loop(tail, global_parameters),
     }
 }

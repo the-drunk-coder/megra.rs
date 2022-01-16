@@ -167,6 +167,7 @@ pub fn eval_cyc_from_str(
     out_mode: OutputMode,
     template_events: &[String],
     event_mappings: &HashMap<String, Vec<SourceEvent>>,
+    global_parameters: &sync::Arc<GlobalParameters>,
 ) -> Vec<Vec<CycleResult>> {
     let items = parse_cyc(src.trim()).map_err(|e: nom::Err<VerboseError<&str>>| {
         let ret = format!("{:#?}", e);
@@ -221,7 +222,12 @@ pub fn eval_cyc_from_str(
                             match parse_expr(name.trim()) {
                                 Ok((_, expr)) => {
                                     if let Some(Expr::Constant(Atom::SoundEvent(e))) =
-                                        eval_expression(expr, sample_set, out_mode)
+                                        eval_expression(
+                                            expr,
+                                            sample_set,
+                                            out_mode,
+                                            global_parameters,
+                                        )
                                     {
                                         //println!("ev {}", e.name);
                                         cycle_position.push(CycleResult::SoundEvent(e));
@@ -287,7 +293,7 @@ pub fn eval_cyc_from_str(
                         match parse_expr(ev_name.trim()) {
                             Ok((_, expr)) => {
                                 if let Some(Expr::Constant(Atom::SoundEvent(e))) =
-                                    eval_expression(expr, sample_set, out_mode)
+                                    eval_expression(expr, sample_set, out_mode, global_parameters)
                                 {
                                     cycle_position.push(CycleResult::SoundEvent(e));
                                 } else {

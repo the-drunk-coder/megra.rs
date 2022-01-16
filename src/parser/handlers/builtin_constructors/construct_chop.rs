@@ -6,9 +6,13 @@ use crate::parameter::*;
 use crate::parser::parser_helpers::*;
 use ruffbox_synth::ruffbox::synth::SynthParameter;
 use std::collections::{BTreeSet, HashMap};
+use std::sync;
 use vom_rs::pfa::{Pfa, Rule};
 
-pub fn construct_chop(tail: &mut Vec<Expr>) -> Atom {
+pub fn construct_chop(
+    tail: &mut Vec<Expr>,
+    global_parameters: &sync::Arc<GlobalParameters>,
+) -> Atom {
     let mut tail_drain = tail.drain(..);
 
     // name is the first symbol
@@ -25,7 +29,16 @@ pub fn construct_chop(tail: &mut Vec<Expr>) -> Atom {
         8
     };
 
-    let mut dur: Option<Parameter> = Some(Parameter::with_value(200.0));
+    let mut dur: Parameter = if let ConfigParameter::Numeric(d) = global_parameters
+        .entry(BuiltinGlobalParameters::DefaultDuration)
+        .or_insert(ConfigParameter::Numeric(200.0))
+        .value()
+    {
+        Parameter::with_value(*d)
+    } else {
+        unreachable!()
+    };
+
     let mut repetition_chance: f32 = 0.0;
     let mut randomize_chance: f32 = 0.0;
     let mut max_repetitions: f32 = 0.0;
@@ -40,10 +53,10 @@ pub fn construct_chop(tail: &mut Vec<Expr>) -> Atom {
             Atom::Keyword(k) => match k.as_str() {
                 "dur" => match tail_drain.next() {
                     Some(Expr::Constant(Atom::Float(n))) => {
-                        dur = Some(Parameter::with_value(n));
+                        dur = Parameter::with_value(n);
                     }
                     Some(Expr::Constant(Atom::Parameter(p))) => {
-                        dur = Some(p);
+                        dur = p;
                     }
                     _ => {}
                 },
@@ -83,7 +96,7 @@ pub fn construct_chop(tail: &mut Vec<Expr>) -> Atom {
             let sus = if let Some(old_sus) = slice_event.params.get(&SynthParameter::Sustain) {
                 old_sus.static_val / slices as f32
             } else {
-                dur.clone().unwrap().static_val
+                dur.clone().static_val
             };
 
             slice_event.params.insert(
@@ -114,7 +127,7 @@ pub fn construct_chop(tail: &mut Vec<Expr>) -> Atom {
         let mut dur_ev = Event::with_name("transition".to_string());
         dur_ev
             .params
-            .insert(SynthParameter::Duration, Box::new(dur.clone().unwrap()));
+            .insert(SynthParameter::Duration, Box::new(dur.clone()));
         duration_mapping.insert((last_char, next_char), dur_ev);
 
         if count < num_events - 1 {
@@ -167,7 +180,7 @@ pub fn construct_chop(tail: &mut Vec<Expr>) -> Atom {
         let mut dur_ev = Event::with_name("transition".to_string());
         dur_ev
             .params
-            .insert(SynthParameter::Duration, Box::new(dur.clone().unwrap()));
+            .insert(SynthParameter::Duration, Box::new(dur.clone()));
         duration_mapping.insert((last_char, first_char), dur_ev);
 
         rules.push(Rule {
@@ -199,7 +212,7 @@ pub fn construct_chop(tail: &mut Vec<Expr>) -> Atom {
             duration_mapping,
             modified: false,
             symbol_ages: HashMap::new(),
-            default_duration: dur.unwrap().static_val as u64,
+            default_duration: dur.static_val as u64,
             last_transition: None,
             last_symbol: None,
         },

@@ -34,7 +34,8 @@ pub fn start_repl<const BUFSIZE: usize, const NCHAN: usize>(
                     continue;
                 }
 
-                let pfa_in = parser::eval_from_str(line.as_str(), sample_set, mode);
+                let pfa_in =
+                    parser::eval_from_str(line.as_str(), sample_set, mode, global_parameters);
 
                 match pfa_in {
                     Err(e) => {
@@ -56,6 +57,7 @@ pub fn start_repl<const BUFSIZE: usize, const NCHAN: usize>(
                                             line_buffer.as_str(),
                                             sample_set,
                                             mode,
+                                            global_parameters,
                                         );
                                         match inner_pfa_in {
                                             Ok(pfa) => {

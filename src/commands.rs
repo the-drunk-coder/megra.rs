@@ -227,6 +227,13 @@ pub fn set_global_latency(global_parameters: &sync::Arc<GlobalParameters>, p: Pa
     ); // init on first attempt
 }
 
+pub fn set_default_duration(global_parameters: &sync::Arc<GlobalParameters>, n: f32) {
+    global_parameters.insert(
+        BuiltinGlobalParameters::DefaultDuration,
+        ConfigParameter::Numeric(n),
+    ); // init on first attempt
+}
+
 pub fn set_global_lifemodel_resources(global_parameters: &sync::Arc<GlobalParameters>, val: f32) {
     global_parameters.insert(
         BuiltinGlobalParameters::LifemodelGlobalResources,

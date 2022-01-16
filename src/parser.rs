@@ -53,6 +53,10 @@ fn parse_commands<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<&'a 
         map(tag("latency"), |_| {
             BuiltIn::Command(BuiltInCommand::Latency)
         }),
+        map(tag("default-duration"), |_| {
+            BuiltIn::Command(BuiltInCommand::DefaultDuration)
+        }),
+        map(tag("bpm"), |_| BuiltIn::Command(BuiltInCommand::Bpm)),
         map(tag("global-resources"), |_| {
             BuiltIn::Command(BuiltInCommand::GlobRes)
         }),
@@ -390,6 +394,7 @@ pub fn eval_expression(
     e: Expr,
     sample_set: &sync::Arc<Mutex<SampleSet>>,
     out_mode: OutputMode,
+    global_parameters: &sync::Arc<GlobalParameters>,
 ) -> Option<Expr> {
     match e {
         // Constants and quoted s-expressions are our base-case
@@ -397,11 +402,11 @@ pub fn eval_expression(
         Expr::Constant(_) => Some(e),
         Expr::Custom(_) => Some(e),
         Expr::Application(head, tail) => {
-            let reduced_head = eval_expression(*head, sample_set, out_mode)?;
+            let reduced_head = eval_expression(*head, sample_set, out_mode, global_parameters)?;
 
             let mut reduced_tail = tail
                 .into_iter()
-                .map(|expr| eval_expression(expr, sample_set, out_mode))
+                .map(|expr| eval_expression(expr, sample_set, out_mode, global_parameters))
                 .collect::<Option<Vec<Expr>>>()?;
 
             // filter out reduced comments ...
@@ -419,6 +424,7 @@ pub fn eval_expression(
                         &mut reduced_tail,
                         sample_set,
                         out_mode,
+                        global_parameters,
                     ),
                     BuiltIn::SyncContext => {
                         handlers::builtin_sync_context::handle(&mut reduced_tail)
@@ -466,10 +472,12 @@ pub fn eval_from_str(
     src: &str,
     sample_set: &sync::Arc<Mutex<SampleSet>>,
     out_mode: OutputMode,
+    global_parameters: &sync::Arc<GlobalParameters>,
 ) -> Result<Expr, String> {
     parse_expr(src)
         .map_err(|e: nom::Err<VerboseError<&str>>| format!("{:#?}", e))
         .and_then(|(_, exp)| {
-            eval_expression(exp, sample_set, out_mode).ok_or_else(|| "Eval failed".to_string())
+            eval_expression(exp, sample_set, out_mode, global_parameters)
+                .ok_or_else(|| "Eval failed".to_string())
         })
 }
