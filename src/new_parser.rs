@@ -15,6 +15,8 @@ use std::sync;
 use crate::GlobalParameters;
 use crate::generator::Generator;
 
+mod reduce_nuc;
+
 /// These are the basic building blocks of our casual lisp language.
 /// You might notice that there's no lists in this lisp ... not sure
 /// what to call it in that case ...
@@ -234,9 +236,30 @@ mod tests {
     use super::*;
 
     #[test]
+    fn test_parse_nuc() {
+	let snippet = "(nuc 'da (bd))";
+	let mut functions = FunctionMap::new();
+	
+	functions.insert("nuc".to_string(), reduce_nuc::reduce_nuc);
+	functions.insert("bd".to_string(), |_,_| Some(EvaluatedExpr::String("bd".to_string())));
+			 
+	let globals = sync::Arc::new(GlobalParameters::new());
+	
+	match eval_from_str2(snippet, &functions, &globals) {
+            Ok(res) => {
+                assert!(matches!(res, EvaluatedExpr::BuiltIn(BuiltIn2::Generator(_))));
+            }
+            Err(e) => {
+                println!("err {}", e);
+                assert!(false)
+            }
+        }
+    }
+    
+    #[test]
     fn test_parse_all() {
         let snippet = "(text 'tar :lvl 1.0 :global #t :relate #f :boost (bounce 0 400))";
-
+	
         let mut functions = FunctionMap::new();
 	let mut globals = sync::Arc::new(GlobalParameters::new());
 

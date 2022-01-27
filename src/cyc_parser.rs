@@ -6,7 +6,6 @@ use crate::session::OutputMode;
 
 use parking_lot::Mutex;
 use std::{collections::HashMap, sync};
-use dashmap::DashMap;
 
 use nom::{
     branch::alt,
@@ -322,7 +321,8 @@ mod tests {
     // Note this useful idiom: importing names from outer (for mod tests) scope.
     use super::*;
     use std::collections::HashSet;
-
+    use dashmap::DashMap;
+    
     #[test]
     fn test_basic_cyc2_float() {
         match parse_cyc_float("100 b") {
