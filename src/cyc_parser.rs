@@ -6,6 +6,7 @@ use crate::session::OutputMode;
 
 use parking_lot::Mutex;
 use std::{collections::HashMap, sync};
+use dashmap::DashMap;
 
 use nom::{
     branch::alt,
@@ -516,6 +517,7 @@ mod tests {
             OutputMode::Stereo,
             &template_events,
             &event_mappings,
+	    &sync::Arc::new(DashMap::new())
         );
         println!("return length: {}", o.len());
 

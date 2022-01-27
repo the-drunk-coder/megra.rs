@@ -393,9 +393,9 @@ mod tests {
             probability: 1.0,
         });
 
-        let mut pfa = Pfa::<char>::infer_from_rules(&mut rules);
+        let mut pfa = Pfa::<char>::infer_from_rules(&mut rules, true);
 
-        assert!(!grow_old(pfa).is_none());
+        assert!(!grow_old(&mut pfa).is_none());
     }
 
     #[test]
@@ -408,10 +408,10 @@ mod tests {
             probability: 1.0,
         });
 
-        let mut pfa = Pfa::<char>::infer_from_rules(&mut rules);
+        let mut pfa = Pfa::<char>::infer_from_rules(&mut rules, true);
 
         for _ in 0..1000 {
-            assert!(!pfa.grow_old().is_none());
+            assert!(!grow_old(&mut pfa).is_none());
         }
     }
 
@@ -425,9 +425,9 @@ mod tests {
             probability: 1.0,
         });
 
-        let mut pfa = Pfa::<char>::infer_from_rules(&mut rules);
+        let mut pfa = Pfa::<char>::infer_from_rules(&mut rules, true);
 
-        assert!(!pfa.grow_flower().is_none());
+        assert!(!grow_flower(&mut pfa).is_none());
     }
 
     #[test]
@@ -440,10 +440,10 @@ mod tests {
             probability: 1.0,
         });
 
-        let mut pfa = Pfa::<char>::infer_from_rules(&mut rules);
+        let mut pfa = Pfa::<char>::infer_from_rules(&mut rules, true);
 
         for _ in 0..1000 {
-            assert!(!pfa.grow_flower().is_none());
+            assert!(!grow_flower(&mut pfa).is_none());
         }
     }
 
@@ -457,9 +457,9 @@ mod tests {
             probability: 1.0,
         });
 
-        let mut pfa = Pfa::<char>::infer_from_rules(&mut rules);
+        let mut pfa = Pfa::<char>::infer_from_rules(&mut rules, true);
 
-        assert!(!pfa.grow_loop().is_none());
+        assert!(!grow_loop(&mut pfa).is_none());
     }
 
     #[test]
@@ -472,10 +472,10 @@ mod tests {
             probability: 1.0,
         });
 
-        let mut pfa = Pfa::<char>::infer_from_rules(&mut rules);
+        let mut pfa = Pfa::<char>::infer_from_rules(&mut rules, true);
 
         for _ in 0..1000 {
-            assert!(!pfa.grow_loop().is_none());
+            assert!(!grow_loop(&mut pfa).is_none());
         }
     }
 
@@ -489,9 +489,9 @@ mod tests {
             probability: 1.0,
         });
 
-        let mut pfa = Pfa::<char>::infer_from_rules(&mut rules);
+        let mut pfa = Pfa::<char>::infer_from_rules(&mut rules, true);
 
-        assert!(!pfa.grow_triloop().is_none());
+        assert!(!grow_triloop(&mut pfa).is_none());
     }
 
     #[test]
@@ -504,10 +504,10 @@ mod tests {
             probability: 1.0,
         });
 
-        let mut pfa = Pfa::<char>::infer_from_rules(&mut rules);
+        let mut pfa = Pfa::<char>::infer_from_rules(&mut rules, true);
 
         for _ in 0..1000 {
-            assert!(!pfa.grow_triloop().is_none());
+            assert!(!grow_triloop(&mut pfa).is_none());
         }
     }
 
@@ -521,9 +521,9 @@ mod tests {
             probability: 1.0,
         });
 
-        let mut pfa = Pfa::<char>::infer_from_rules(&mut rules);
+        let mut pfa = Pfa::<char>::infer_from_rules(&mut rules, true);
 
-        assert!(!pfa.grow_quadloop().is_none());
+        assert!(!grow_quadloop(&mut pfa).is_none());
     }
 
     #[test]
@@ -536,10 +536,14 @@ mod tests {
             probability: 1.0,
         });
 
-        let mut pfa = Pfa::<char>::infer_from_rules(&mut rules);
+        let mut pfa = Pfa::<char>::infer_from_rules(&mut rules, true);
 
+	for _ in 0..10 {
+	    pfa.next_transition();	    
+	}
+	
         for _ in 0..1000 {
-            assert!(!pfa.grow_quadloop().is_none());
+            assert!(!grow_quadloop(&mut pfa).is_none());
         }
     }
 
@@ -555,9 +559,9 @@ mod tests {
             probability: 1.0,
         });
 
-        let mut pfa = Pfa::<char>::infer_from_rules(&mut rules);
+        let mut pfa = Pfa::<char>::infer_from_rules(&mut rules, true);
 
-        pfa.grow_triloop();
+        grow_triloop(&mut pfa);
 
         assert!(!pfa.current_state.is_none());
         assert!(pfa.labels.contains_key(&pfa.current_state.unwrap()));
@@ -575,9 +579,9 @@ mod tests {
             probability: 1.0,
         });
 
-        let mut pfa = Pfa::<char>::infer_from_rules(&mut rules);
+        let mut pfa = Pfa::<char>::infer_from_rules(&mut rules, true);
 
-        pfa.grow_loop();
+        grow_loop(&mut pfa);
 
         assert!(!pfa.current_state.is_none());
         assert!(pfa.labels.contains_key(&pfa.current_state.unwrap()));
@@ -595,9 +599,9 @@ mod tests {
             probability: 1.0,
         });
 
-        let mut pfa = Pfa::<char>::infer_from_rules(&mut rules);
+        let mut pfa = Pfa::<char>::infer_from_rules(&mut rules, true);
 
-        pfa.grow_quadloop();
+        grow_quadloop(&mut pfa);
 
         assert!(!pfa.current_state.is_none());
         assert!(pfa.labels.contains_key(&pfa.current_state.unwrap()));
