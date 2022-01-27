@@ -10,14 +10,18 @@ use std::sync;
 use vom_rs::pfa::{Pfa, Rule};
 
 use crate::new_parser::{BuiltIn2, EvaluatedExpr};
+use crate::SampleSet;
 
-pub fn reduce_nuc(
+pub fn nuc(
     tail: &mut Vec<EvaluatedExpr>,
     global_parameters: &sync::Arc<GlobalParameters>,
+    _sample_set: &sync::Arc<sync::Mutex<SampleSet>>,
 ) -> Option<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..);
 
-    // name is the first symbol
+    // ignore function name in this case
+    tail_drain.next();
+    
     // name is the first symbol
     let name = if let Some(EvaluatedExpr::String(n)) = tail_drain.next() {
         n
@@ -41,17 +45,17 @@ pub fn reduce_nuc(
 
     let mut ev_vec = Vec::new();
 
-    /*
-    while let Some(EvaluatedExpr::Constant(c)) = tail_drain.next() {
+    
+    while let Some(c) = tail_drain.next() {
         match c {
-            Atom::SoundEvent(e) => ev_vec.push(SourceEvent::Sound(e)),
-            Atom::ControlEvent(c) => ev_vec.push(SourceEvent::Control(c)),
-            Atom::Keyword(k) => match k.as_str() {
+            EvaluatedExpr::BuiltIn(BuiltIn2::SoundEvent(e)) => ev_vec.push(SourceEvent::Sound(e)),
+            //Atom::ControlEvent(c) => ev_vec.push(SourceEvent::Control(c)),
+            EvaluatedExpr::Keyword(k) => match k.as_str() {
                 "dur" => match tail_drain.next() {
-                    Some(Expr::Constant(Atom::Float(n))) => {
+                    Some(EvaluatedExpr::Float(n)) => {
                         dur = Parameter::with_value(n);
                     }
-                    Some(Expr::Constant(Atom::Parameter(p))) => {
+                    Some(EvaluatedExpr::BuiltIn(BuiltIn2::Parameter(p))) => {
                         dur = p;
                     }
                     _ => {}
@@ -60,7 +64,7 @@ pub fn reduce_nuc(
             },
             _ => println! {"ignored"},
         }
-    }*/
+    }
 
     event_mapping.insert('a', ev_vec);
 
@@ -96,4 +100,33 @@ pub fn reduce_nuc(
         processors: Vec::new(),
         time_mods: Vec::new(),
     })))
+}
+
+#[cfg(test)]
+mod tests {
+    // Note this useful idiom: importing names from outer (for mod tests) scope.
+    use super::*;
+    use crate::new_parser::*;
+    
+    #[test]
+    fn test_eval_nuc() {
+	let snippet = "(nuc 'da (bd))";
+	let mut functions = FunctionMap::new();
+	let sample_set =  sync::Arc::new(sync::Mutex::new(SampleSet::new()));
+	
+	functions.insert("nuc".to_string(), eval::constructors::nuc::nuc);
+	functions.insert("bd".to_string(), |_,_,_| Some(EvaluatedExpr::String("bd".to_string())));
+			 
+	let globals = sync::Arc::new(GlobalParameters::new());
+	
+	match eval_from_str2(snippet, &functions, &globals, &sample_set) {
+            Ok(res) => {
+                assert!(matches!(res, EvaluatedExpr::BuiltIn(BuiltIn2::Generator(_))));
+            }
+            Err(e) => {
+                println!("err {}", e);
+                assert!(false)
+            }
+        }
+    }
 }
