@@ -27,7 +27,7 @@ pub mod eval;
 /// You might notice that there's no lists in this lisp ... not sure
 /// what to call it in that case ...
 #[derive(Debug)]
-enum Atom2 {
+pub enum Atom2 {
     Float(f32),
     String(String),
     Keyword(String),
@@ -38,7 +38,7 @@ enum Atom2 {
 
 /// Expression Type
 #[derive(Debug)]
-enum Expr2 {
+pub enum Expr2 {
     Comment,
     Constant(Atom2),
     Application(Box<Expr2>, Vec<Expr2>),
@@ -98,7 +98,7 @@ fn valid_string_char2(chr: char) -> bool {
 }
 
 /// valid chars for a function name, symbol or keyword
-fn valid_function_name_char2(chr: char) -> bool {
+pub fn valid_function_name_char2(chr: char) -> bool {
     chr == '_' || chr == '-' || is_alphanumeric(chr as u8)
 }
 
@@ -130,7 +130,7 @@ fn parse_keyword2(i: &str) -> IResult<&str, Atom2, VerboseError<&str>> {
 }
 
 /// keywords are language constructs that start with a single quote
-fn parse_symbol2(i: &str) -> IResult<&str, Atom2, VerboseError<&str>> {
+pub fn parse_symbol2(i: &str) -> IResult<&str, Atom2, VerboseError<&str>> {
     map(
         context(
             "symbol",
@@ -149,7 +149,7 @@ fn parse_function2(i: &str) -> IResult<&str, Atom2, VerboseError<&str>> {
 }
 
 /// floating point numbers ... all numbers currently are ...
-fn parse_float2(i: &str) -> IResult<&str, Atom2, VerboseError<&str>> {
+pub fn parse_float2(i: &str) -> IResult<&str, Atom2, VerboseError<&str>> {
     map_res(recognize(float), |digit_str: &str| {
         digit_str.parse::<f32>().map(Atom2::Float)
     })(i)
@@ -209,12 +209,12 @@ fn parse_comment2(i: &str) -> IResult<&str, Expr2, VerboseError<&str>> {
 
 /// We tie them all together again, making a top-level expression parser!
 /// This one generates the abstract syntax tree
-fn parse_expr2(i: &str) -> IResult<&str, Expr2, VerboseError<&str>> {
+pub fn parse_expr2(i: &str) -> IResult<&str, Expr2, VerboseError<&str>> {
     alt((parse_application2, parse_constant2, parse_comment2))(i)
 }
 
 /// This one reduces the abstract syntax tree ...
-fn eval_expression2(
+pub fn eval_expression2(
     e: &Expr2,
     functions: &FunctionMap,
     globals: &sync::Arc<GlobalParameters>,

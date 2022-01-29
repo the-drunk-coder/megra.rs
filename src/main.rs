@@ -17,7 +17,7 @@ pub mod markov_sequence_generator;
 pub mod music_theory;
 pub mod new_parser;
 pub mod parameter;
-pub mod parser;
+//pub mod parser;
 pub mod pfa_growth;
 pub mod pfa_reverse;
 pub mod repl;
