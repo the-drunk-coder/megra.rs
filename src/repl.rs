@@ -8,8 +8,8 @@ use rustyline::Editor;
 use crate::builtin_types::*;
 use crate::interpreter;
 //use crate::parser;
-use crate::new_parser;
-use crate::new_parser::FunctionMap;
+use crate::parser;
+use crate::parser::FunctionMap;
 use crate::sample_set::SampleSet;
 use crate::session::{OutputMode, Session};
 
@@ -37,7 +37,7 @@ pub fn start_repl<const BUFSIZE: usize, const NCHAN: usize>(
                     continue;
                 }
 
-                let pfa_in = new_parser::eval_from_str(
+                let pfa_in = parser::eval_from_str(
                     line.as_str(),
                     &function_map.lock(),
                     global_parameters,
@@ -61,7 +61,7 @@ pub fn start_repl<const BUFSIZE: usize, const NCHAN: usize>(
                                 match readline_inner {
                                     Ok(line) => {
                                         line_buffer.push_str(line.as_str());
-                                        let inner_pfa_in = new_parser::eval_from_str(
+                                        let inner_pfa_in = parser::eval_from_str(
                                             line_buffer.as_str(),
                                             &function_map.lock(),
                                             global_parameters,

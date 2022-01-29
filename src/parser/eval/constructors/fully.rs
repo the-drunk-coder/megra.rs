@@ -8,7 +8,7 @@ use std::collections::{BTreeSet, HashMap};
 use std::sync;
 use vom_rs::pfa::{Pfa, Rule};
 
-use crate::new_parser::{BuiltIn, EvaluatedExpr};
+use crate::parser::{BuiltIn, EvaluatedExpr};
 use crate::{OutputMode, SampleSet};
 use parking_lot::Mutex;
 

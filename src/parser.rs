@@ -1,14 +1,14 @@
-mod handlers;
-mod parse_parameter_events;
-mod parser_helpers;
-
-use parking_lot::Mutex;
-use std::sync;
-
+use crate::event::{ControlEvent, Event};
+use crate::generator::Generator;
+use crate::markov_sequence_generator::Rule;
+use crate::parameter::Parameter;
+use crate::session::SyncContext;
+use crate::{Command, GeneratorProcessorOrModifier, GlobalParameters, PartProxy};
+use crate::{OutputMode, SampleSet};
 use nom::{
     branch::alt,
     bytes::complete::{tag, take_while},
-    character::complete::{char, multispace0},
+    character::complete::{char, multispace0, multispace1},
     character::{is_alphanumeric, is_newline, is_space},
     combinator::{cut, map, map_res, recognize},
     error::{context, VerboseError},
@@ -17,295 +17,71 @@ use nom::{
     sequence::{delimited, preceded, tuple},
     IResult, Parser,
 };
+use parking_lot::Mutex;
+use std::collections::HashMap;
+use std::sync;
 
-use crate::builtin_types::*;
-use crate::event::*;
-use crate::sample_set::SampleSet;
-use crate::session::OutputMode;
+pub mod eval;
 
-use parse_parameter_events::*;
-
-fn parse_comment<'a>(i: &'a str) -> IResult<&'a str, Expr, VerboseError<&'a str>> {
-    map(preceded(tag(";"), take_while(|ch| ch != '\n')), |_| {
-        Expr::Comment
-    })(i)
+/// These are the basic building blocks of our casual lisp language.
+/// You might notice that there's no lists in this lisp ... not sure
+/// what to call it in that case ...
+#[derive(Debug)]
+pub enum Atom {
+    Float(f32),
+    String(String),
+    Keyword(String),
+    Symbol(String),
+    Boolean(bool),
+    Function(String),
 }
 
-fn parse_builtin<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<&'a str>> {
-    alt((
-        parse_constructors,
-        parse_commands,
-        map(tag("sx"), |_| BuiltIn::SyncContext),
-        map(tag("ctrl"), |_| BuiltIn::ControlEvent),
-        map(tag("ls"), |_| BuiltIn::GeneratorList),
-        parse_generator_modifier_functions, // needs to come before events so it can catch relax before rel(ease)
-        parse_events,
-        parse_dynamic_parameters,
-        parse_generator_processors,
-        parse_multiplyer,
-    ))(i)
+/// Expression Type
+#[derive(Debug)]
+pub enum Expr {
+    Comment,
+    Constant(Atom),
+    Application(Box<Expr>, Vec<Expr>),
 }
 
-fn parse_commands<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<&'a str>> {
-    alt((
-        map(tag("clear"), |_| BuiltIn::Command(BuiltInCommand::Clear)),
-        map(tag("tmod"), |_| BuiltIn::Command(BuiltInCommand::Tmod)),
-        map(tag("latency"), |_| {
-            BuiltIn::Command(BuiltInCommand::Latency)
-        }),
-        map(tag("default-duration"), |_| {
-            BuiltIn::Command(BuiltInCommand::DefaultDuration)
-        }),
-        map(tag("bpm"), |_| BuiltIn::Command(BuiltInCommand::Bpm)),
-        map(tag("global-resources"), |_| {
-            BuiltIn::Command(BuiltInCommand::GlobRes)
-        }),
-        map(tag("delay"), |_| BuiltIn::Command(BuiltInCommand::Delay)),
-        map(tag("reverb"), |_| BuiltIn::Command(BuiltInCommand::Reverb)),
-        map(tag("load-sets"), |_| {
-            BuiltIn::Command(BuiltInCommand::LoadSampleSets)
-        }),
-        map(tag("load-set"), |_| {
-            BuiltIn::Command(BuiltInCommand::LoadSampleSet)
-        }),
-        map(tag("load-sample"), |_| {
-            BuiltIn::Command(BuiltInCommand::LoadSample)
-        }),
-        map(tag("defpart"), |_| {
-            BuiltIn::Command(BuiltInCommand::LoadPart)
-        }),
-        map(tag("step-part"), |_| {
-            BuiltIn::Command(BuiltInCommand::StepPart)
-        }),
-        map(tag("export-dot"), |_| {
-            BuiltIn::Command(BuiltInCommand::ExportDot)
-        }),
-        map(tag("freeze"), |_| {
-            BuiltIn::Command(BuiltInCommand::FreezeBuffer)
-        }),
-        map(tag("once"), |_| BuiltIn::Command(BuiltInCommand::Once)),
-    ))(i)
+pub enum BuiltIn {
+    Rule(Rule),
+    Command(Command),
+    PartProxy(PartProxy),
+    ProxyList(Vec<PartProxy>),
+    Generator(Generator),
+    GeneratorList(Vec<Generator>),
+    GeneratorProcessorOrModifier(GeneratorProcessorOrModifier),
+    GeneratorProcessorOrModifierList(Vec<GeneratorProcessorOrModifier>),
+    GeneratorModifierList(Vec<GeneratorProcessorOrModifier>),
+    SoundEvent(Event),
+    Parameter(Parameter),
+    ControlEvent(ControlEvent),
+    SyncContext(SyncContext),
 }
 
-pub fn parse_dynamic_parameters<'a>(
-    i: &'a str,
-) -> IResult<&'a str, BuiltIn, VerboseError<&'a str>> {
-    alt((
-        map(tag("env"), |_| {
-            BuiltIn::Parameter(BuiltInDynamicParameter::Envelope)
-        }),
-        map(tag("fade"), |_| {
-            BuiltIn::Parameter(BuiltInDynamicParameter::Fade)
-        }),
-        map(tag("bounce"), |_| {
-            BuiltIn::Parameter(BuiltInDynamicParameter::Bounce)
-        }),
-        map(tag("brownian"), |_| {
-            BuiltIn::Parameter(BuiltInDynamicParameter::Brownian)
-        }),
-        map(tag("randr"), |_| {
-            BuiltIn::Parameter(BuiltInDynamicParameter::RandRange)
-        }),
-    ))(i)
+pub enum EvaluatedExpr {
+    Float(f32),
+    Symbol(String),
+    Keyword(String),
+    String(String),
+    Boolean(bool),
+    FunctionName(String),
+    BuiltIn(BuiltIn),
 }
 
-fn parse_multiplyer<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<&'a str>> {
-    alt((
-        map(tag("xdup"), |_| {
-            BuiltIn::Multiplyer(BuiltInMultiplyer::XDup)
-        }),
-        map(tag("xspread"), |_| {
-            BuiltIn::Multiplyer(BuiltInMultiplyer::XSpread)
-        }),
-    ))(i)
-}
-
-fn parse_constructors<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<&'a str>> {
-    alt((
-        map(tag("learn"), |_| {
-            BuiltIn::Constructor(BuiltInConstructor::Learn)
-        }),
-        map(tag("infer"), |_| {
-            BuiltIn::Constructor(BuiltInConstructor::Infer)
-        }),
-        map(tag("rule"), |_| {
-            BuiltIn::Constructor(BuiltInConstructor::Rule)
-        }),
-        map(tag("nuc"), |_| {
-            BuiltIn::Constructor(BuiltInConstructor::Nucleus)
-        }),
-        map(tag("cyc"), |_| {
-            BuiltIn::Constructor(BuiltInConstructor::Cycle)
-        }),
-        map(tag("lin"), |_| {
-            BuiltIn::Constructor(BuiltInConstructor::Linear)
-        }),
-        map(tag("loop"), |_| {
-            BuiltIn::Constructor(BuiltInConstructor::Loop)
-        }),
-        map(tag("fully"), |_| {
-            BuiltIn::Constructor(BuiltInConstructor::Fully)
-        }),
-        map(tag("flower"), |_| {
-            BuiltIn::Constructor(BuiltInConstructor::Flower)
-        }),
-        map(tag("friendship"), |_| {
-            BuiltIn::Constructor(BuiltInConstructor::Friendship)
-        }),
-        map(tag("chop"), |_| {
-            BuiltIn::Constructor(BuiltInConstructor::Chop)
-        }),
-        map(tag("stages"), |_| {
-            BuiltIn::Constructor(BuiltInConstructor::Stages)
-        }),
-    ))(i)
-}
-
-fn parse_generator_processors<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<&'a str>> {
-    alt((
-        map(tag("pear"), |_| BuiltIn::GenProc(BuiltInGenProc::Pear)),
-        map(tag("inh"), |_| BuiltIn::GenProc(BuiltInGenProc::Inhibit)),
-        map(tag("exh"), |_| BuiltIn::GenProc(BuiltInGenProc::Exhibit)),
-        map(tag("inexh"), |_| {
-            BuiltIn::GenProc(BuiltInGenProc::InExhibit)
-        }),
-        map(tag("apple"), |_| BuiltIn::GenProc(BuiltInGenProc::Apple)),
-        map(tag("every"), |_| BuiltIn::GenProc(BuiltInGenProc::Every)),
-        map(tag("life"), |_| BuiltIn::GenProc(BuiltInGenProc::Lifemodel)),
-        map(tag("cmp"), |_| BuiltIn::Compose), // putting this here for now
-    ))(i)
-}
-
-fn parse_generator_modifier_functions<'a>(
-    i: &'a str,
-) -> IResult<&'a str, BuiltIn, VerboseError<&'a str>> {
-    alt((
-        map(tag("haste"), |_| {
-            BuiltIn::GenModFun(BuiltInGenModFun::Haste)
-        }),
-        map(tag("relax"), |_| {
-            BuiltIn::GenModFun(BuiltInGenModFun::Relax)
-        }),
-        map(tag("reverse"), |_| {
-            BuiltIn::GenModFun(BuiltInGenModFun::Reverse)
-        }),
-        map(tag("grow"), |_| BuiltIn::GenModFun(BuiltInGenModFun::Grow)),
-        map(tag("shrink"), |_| {
-            BuiltIn::GenModFun(BuiltInGenModFun::Shrink)
-        }),
-        map(tag("blur"), |_| BuiltIn::GenModFun(BuiltInGenModFun::Blur)),
-        map(tag("sharpen"), |_| {
-            BuiltIn::GenModFun(BuiltInGenModFun::Sharpen)
-        }),
-        map(tag("solidify"), |_| {
-            BuiltIn::GenModFun(BuiltInGenModFun::Solidify)
-        }),
-        map(tag("shake"), |_| {
-            BuiltIn::GenModFun(BuiltInGenModFun::Shake)
-        }),
-        map(tag("skip"), |_| BuiltIn::GenModFun(BuiltInGenModFun::Skip)),
-        map(tag("rewind"), |_| {
-            BuiltIn::GenModFun(BuiltInGenModFun::Rewind)
-        }),
-        map(tag("rnd"), |_| BuiltIn::GenModFun(BuiltInGenModFun::Rnd)),
-        map(tag("rep"), |_| BuiltIn::GenModFun(BuiltInGenModFun::Rep)),
-    ))(i)
-}
-
-fn parse_synth_event<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<&'a str>> {
-    alt((
-        map(tag("sine"), |_| {
-            BuiltIn::SoundEvent(BuiltInSoundEvent::Sine(EventOperation::Replace))
-        }),
-        map(tag("tri"), |_| {
-            BuiltIn::SoundEvent(BuiltInSoundEvent::Tri(EventOperation::Replace))
-        }),
-        map(tag("cub"), |_| {
-            BuiltIn::SoundEvent(BuiltInSoundEvent::Cub(EventOperation::Replace))
-        }),
-        map(tag("saw"), |_| {
-            BuiltIn::SoundEvent(BuiltInSoundEvent::Saw(EventOperation::Replace))
-        }),
-        map(tag("risset"), |_| {
-            BuiltIn::SoundEvent(BuiltInSoundEvent::RissetBell(EventOperation::Replace))
-        }),
-        map(tag("sqr"), |_| {
-            BuiltIn::SoundEvent(BuiltInSoundEvent::Square(EventOperation::Replace))
-        }),
-        map(tag("silence"), |_| BuiltIn::Silence),
-        map(tag("~"), |_| BuiltIn::Silence),
-    ))(i)
-}
-
-pub fn parse_events<'a>(i: &'a str) -> IResult<&'a str, BuiltIn, VerboseError<&'a str>> {
-    alt((
-        parse_pitch_frequency_event,
-        parse_level_event,
-        parse_synth_event,
-        parse_reverb_event,
-        parse_duration_event,
-        parse_attack_event,
-        parse_release_event,
-        parse_sustain_event,
-        parse_channel_position_event,
-        parse_delay_event,
-        parse_lp_freq_event,
-        parse_lp_q_event,
-        parse_lp_dist_event,
-        parse_hp_freq_event,
-        parse_hp_q_event,
-        parse_pf_freq_event,
-        parse_pf_q_event,
-        parse_pf_gain_event,
-        parse_pw_event,
-        parse_playback_start_event,
-        parse_playback_rate_event,
-    ))(i)
-}
-
-pub fn parse_custom<'a>(i: &'a str) -> IResult<&'a str, Expr, VerboseError<&'a str>> {
-    map(
-        context("custom_fun", cut(take_while(valid_fun_name_char))),
-        |fun_str: &str| Expr::Custom(fun_str.to_string()),
-    )(i)
-}
-
-/// Our boolean values are also constant, so we can do it the same way
-pub fn parse_bool<'a>(i: &'a str) -> IResult<&'a str, Atom, VerboseError<&'a str>> {
-    alt((
-        map(tag("#t"), |_| Atom::Boolean(true)),
-        map(tag("#f"), |_| Atom::Boolean(false)),
-    ))(i)
-}
-
-fn parse_keyword<'a>(i: &'a str) -> IResult<&'a str, Atom, VerboseError<&'a str>> {
-    map(
-        context(
-            "keyword",
-            preceded(tag(":"), take_while(valid_fun_name_char)),
-        ),
-        |sym_str: &str| Atom::Keyword(sym_str.to_string()),
-    )(i)
-}
-
-pub fn parse_symbol<'a>(i: &'a str) -> IResult<&'a str, Atom, VerboseError<&'a str>> {
-    map(
-        context(
-            "symbol",
-            preceded(tag("'"), take_while(valid_fun_name_char)),
-        ),
-        |sym_str: &str| Atom::Symbol(sym_str.to_string()),
-    )(i)
-}
-
-pub fn parse_float<'a>(i: &'a str) -> IResult<&'a str, Atom, VerboseError<&'a str>> {
-    map_res(recognize(float), |digit_str: &str| {
-        digit_str.parse::<f32>().map(Atom::Float)
-    })(i)
-}
+pub type FunctionMap = HashMap<
+    String,
+    fn(
+        &mut Vec<EvaluatedExpr>,
+        &sync::Arc<GlobalParameters>,
+        &sync::Arc<Mutex<SampleSet>>,
+        OutputMode,
+    ) -> Option<EvaluatedExpr>,
+>;
 
 /// valid chars for a string
-pub fn valid_char(chr: char) -> bool {
+fn valid_string_char(chr: char) -> bool {
     chr == '~'
         || chr == '.'
         || chr == '\''
@@ -321,31 +97,77 @@ pub fn valid_char(chr: char) -> bool {
         || is_newline(chr as u8)
 }
 
-/// valid chars for a function name
-pub fn valid_fun_name_char(chr: char) -> bool {
+/// valid chars for a function name, symbol or keyword
+pub fn valid_function_name_char(chr: char) -> bool {
     chr == '_' || chr == '-' || is_alphanumeric(chr as u8)
 }
 
-fn parse_string<'a>(i: &'a str) -> IResult<&'a str, Atom, VerboseError<&'a str>> {
+/// parse a string, which is enclosed in double quotes
+fn parse_string(i: &str) -> IResult<&str, Atom, VerboseError<&str>> {
     map(
-        delimited(tag("\""), take_while(valid_char), tag("\"")),
-        |desc_str: &str| Atom::Description(desc_str.to_string()),
+        delimited(tag("\""), take_while(valid_string_char), tag("\"")),
+        |desc_str: &str| Atom::String(desc_str.to_string()),
     )(i)
 }
 
-fn parse_atom<'a>(i: &'a str) -> IResult<&'a str, Atom, VerboseError<&'a str>> {
+/// booleans have a # prefix
+fn parse_boolean(i: &str) -> IResult<&str, Atom, VerboseError<&str>> {
     alt((
-        parse_bool,
-        map(parse_builtin, Atom::BuiltIn),
-        parse_float, // parse after builtin, otherwise the beginning of "infer" would be parsed as "inf" (the float val)
-        parse_keyword,
-        parse_symbol,
-        parse_string,
+        map(tag("#t"), |_| Atom::Boolean(true)),
+        map(tag("#f"), |_| Atom::Boolean(false)),
     ))(i)
 }
 
-fn parse_constant<'a>(i: &'a str) -> IResult<&'a str, Expr, VerboseError<&'a str>> {
-    map(parse_atom, Expr::Constant)(i)
+/// keywords are language constructs that start with a ':'
+fn parse_keyword(i: &str) -> IResult<&str, Atom, VerboseError<&str>> {
+    map(
+        context(
+            "keyword",
+            preceded(tag(":"), take_while(valid_function_name_char)),
+        ),
+        |sym_str: &str| Atom::Keyword(sym_str.to_string()),
+    )(i)
+}
+
+/// keywords are language constructs that start with a single quote
+pub fn parse_symbol(i: &str) -> IResult<&str, Atom, VerboseError<&str>> {
+    map(
+        context(
+            "symbol",
+            preceded(tag("'"), take_while(valid_function_name_char)),
+        ),
+        |sym_str: &str| Atom::Symbol(sym_str.to_string()),
+    )(i)
+}
+
+/// keywords are language constructs that start with a single quote
+fn parse_function(i: &str) -> IResult<&str, Atom, VerboseError<&str>> {
+    map(
+        context("function", take_while(valid_function_name_char)),
+        |sym_str: &str| Atom::Function(sym_str.to_string()),
+    )(i)
+}
+
+/// floating point numbers ... all numbers currently are ...
+pub fn parse_float(i: &str) -> IResult<&str, Atom, VerboseError<&str>> {
+    map_res(recognize(float), |digit_str: &str| {
+        digit_str.parse::<f32>().map(Atom::Float)
+    })(i)
+}
+
+/// parse all the atoms
+fn parse_constant(i: &str) -> IResult<&str, Expr, VerboseError<&str>> {
+    map(
+        alt((
+            parse_boolean,
+            parse_float,
+            parse_keyword,
+            parse_symbol,
+            parse_string,
+            parse_function,
+        )),
+        Expr::Constant,
+    )(i)
 }
 
 /// Unlike the previous functions, this function doesn't take or consume input, instead it
@@ -370,114 +192,372 @@ where
 ///
 /// `tuple` is used to sequence parsers together, so we can translate this directly
 /// and then map over it to transform the output into an `Expr::Application`
-fn parse_application<'a>(i: &'a str) -> IResult<&'a str, Expr, VerboseError<&'a str>> {
+fn parse_application(i: &str) -> IResult<&str, Expr, VerboseError<&str>> {
     let application_inner = map(
-        tuple((alt((parse_expr, parse_custom)), many0(parse_expr))),
+        tuple((parse_expr, many0(preceded(multispace1, parse_expr)))),
         |(head, tail)| Expr::Application(Box::new(head), tail),
     );
     // finally, we wrap it in an s-expression
     s_exp(application_inner)(i)
 }
 
-/// We tie them all together again, making a top-level expression parser!
-pub fn parse_expr<'a>(i: &'a str) -> IResult<&'a str, Expr, VerboseError<&'a str>> {
-    preceded(
-        multispace0,
-        alt((parse_comment, parse_constant, parse_application)),
-    )(i)
+fn parse_comment(i: &str) -> IResult<&str, Expr, VerboseError<&str>> {
+    map(preceded(tag(";"), take_while(|ch| ch != '\n')), |_| {
+        Expr::Comment
+    })(i)
 }
 
-/// This function tries to reduce the AST.
-/// This has to return an Expression rather than an Atom because quoted s_expressions
-/// can't be reduced
+/// We tie them all together again, making a top-level expression parser!
+/// This one generates the abstract syntax tree
+pub fn parse_expr(i: &str) -> IResult<&str, Expr, VerboseError<&str>> {
+    alt((parse_application, parse_constant, parse_comment))(i)
+}
+
+/// This one reduces the abstract syntax tree ...
 pub fn eval_expression(
-    e: Expr,
+    e: &Expr,
+    functions: &FunctionMap,
+    globals: &sync::Arc<GlobalParameters>,
     sample_set: &sync::Arc<Mutex<SampleSet>>,
     out_mode: OutputMode,
-    global_parameters: &sync::Arc<GlobalParameters>,
-) -> Option<Expr> {
+) -> Option<EvaluatedExpr> {
     match e {
-        // Constants and quoted s-expressions are our base-case
-        Expr::Comment => Some(e),
-        Expr::Constant(_) => Some(e),
-        Expr::Custom(_) => Some(e),
+        Expr::Comment => None, // ignore comments
+        Expr::Constant(c) => Some(match c {
+            Atom::Float(f) => EvaluatedExpr::Float(*f),
+            Atom::Symbol(s) => EvaluatedExpr::Symbol(s.to_string()),
+            Atom::Keyword(k) => EvaluatedExpr::Keyword(k.to_string()),
+            Atom::String(s) => EvaluatedExpr::String(s.to_string()),
+            Atom::Boolean(b) => EvaluatedExpr::Boolean(*b),
+            Atom::Function(f) => EvaluatedExpr::FunctionName(f.to_string()),
+        }),
         Expr::Application(head, tail) => {
-            let reduced_head = eval_expression(*head, sample_set, out_mode, global_parameters)?;
-
-            let mut reduced_tail = tail
-                .into_iter()
-                .map(|expr| eval_expression(expr, sample_set, out_mode, global_parameters))
-                .collect::<Option<Vec<Expr>>>()?;
-
-            // filter out reduced comments ...
-            reduced_tail.retain(|x| !matches!(x, Expr::Comment));
-
-            match reduced_head {
-                Expr::Constant(Atom::BuiltIn(bi)) => Some(Expr::Constant(match bi {
-                    BuiltIn::Command(cmd) => {
-                        handlers::builtin_commands::handle(cmd, &mut reduced_tail)
-                    }
-                    BuiltIn::Compose => handlers::builtin_compose::handle(&mut reduced_tail),
-                    BuiltIn::Silence => Atom::SoundEvent(Event::with_name("silence".to_string())),
-                    BuiltIn::Constructor(con) => handlers::builtin_constructors::handle(
-                        &con,
-                        &mut reduced_tail,
-                        sample_set,
-                        out_mode,
-                        global_parameters,
-                    ),
-                    BuiltIn::SyncContext => {
-                        handlers::builtin_sync_context::handle(&mut reduced_tail)
-                    }
-                    BuiltIn::Parameter(par) => {
-                        handlers::builtin_dynamic_parameter::handle(&par, &mut reduced_tail)
-                    }
-                    BuiltIn::SoundEvent(ev) => {
-                        handlers::builtin_sound_event::handle(&ev, &mut reduced_tail)
-                    }
-                    BuiltIn::ControlEvent => {
-                        handlers::builtin_control_event::handle(&mut reduced_tail)
-                    }
-                    BuiltIn::ParameterEvent(ev) => {
-                        handlers::builtin_parameter_event::handle(&ev, &mut reduced_tail)
-                    }
-                    BuiltIn::GenProc(g) => {
-                        handlers::builtin_generator_processor::handle(&g, &mut reduced_tail)
-                    }
-                    BuiltIn::GenModFun(g) => {
-                        handlers::builtin_generator_modifier_function::handle(&g, &mut reduced_tail)
-                    }
-                    BuiltIn::Multiplyer(m) => {
-                        handlers::builtin_multiplyer::handle(&m, &mut reduced_tail, out_mode)
-                    }
-                    BuiltIn::GeneratorList => {
-                        handlers::builtin_generator_list::handle(&mut reduced_tail)
-                    }
-                })),
-                Expr::Custom(s) => {
-                    handlers::custom_sample_event::handle(&mut reduced_tail, s, sample_set)
-                }
-                _ => {
-                    println!("something else");
+            if let Some(EvaluatedExpr::FunctionName(f)) =
+                eval_expression(&*head, functions, globals, sample_set, out_mode)
+            {
+                // check if we have this function ...
+                if functions.contains_key(&f) {
+                    let mut reduced_tail = tail
+                        .iter()
+                        .map(|expr| {
+                            eval_expression(expr, functions, globals, sample_set, out_mode)
+                        })
+                        .collect::<Option<Vec<EvaluatedExpr>>>()?;
+                    // push function name
+                    reduced_tail.insert(0, EvaluatedExpr::FunctionName(f.clone()));
+                    functions[&f](&mut reduced_tail, globals, sample_set, out_mode)
+                } else {
                     None
                 }
+            } else {
+                None
             }
         }
     }
 }
 
-/// And we add one more top-level function to tie everything together, letting
-/// us call eval on a string directly
 pub fn eval_from_str(
     src: &str,
+    functions: &FunctionMap,
+    globals: &sync::Arc<GlobalParameters>,
     sample_set: &sync::Arc<Mutex<SampleSet>>,
     out_mode: OutputMode,
-    global_parameters: &sync::Arc<GlobalParameters>,
-) -> Result<Expr, String> {
+) -> Result<EvaluatedExpr, String> {
     parse_expr(src)
         .map_err(|e: nom::Err<VerboseError<&str>>| format!("{:#?}", e))
         .and_then(|(_, exp)| {
-            eval_expression(exp, sample_set, out_mode, global_parameters)
-                .ok_or_else(|| "Eval failed".to_string())
+            eval_expression(&exp, functions, globals, sample_set, out_mode)
+                .ok_or_else(|| "eval failed".to_string())
         })
+}
+
+#[cfg(test)]
+mod tests {
+    // Note this useful idiom: importing names from outer (for mod tests) scope.
+    use super::*;
+
+    #[test]
+    fn test_parse_eval() {
+        let snippet = "(text 'tar :lvl 1.0 :global #t :relate #f :boost (bounce 0 400))";
+
+        let mut functions = FunctionMap::new();
+        let globals = sync::Arc::new(GlobalParameters::new());
+        let sample_set = sync::Arc::new(Mutex::new(SampleSet::new()));
+
+        functions.insert("text".to_string(), |tail, _, _| {
+            // SYMBOLS
+            if let EvaluatedExpr::Symbol(s) = &tail[0] {
+                assert!(s == "tar");
+            } else {
+                assert!(false);
+            }
+
+            // KEYWORDS
+            if let EvaluatedExpr::Keyword(k) = &tail[1] {
+                assert!(k == "lvl");
+            } else {
+                assert!(false);
+            }
+
+            if let EvaluatedExpr::Keyword(k) = &tail[3] {
+                assert!(k == "global");
+            } else {
+                assert!(false);
+            }
+
+            if let EvaluatedExpr::Keyword(k) = &tail[5] {
+                assert!(k == "relate");
+            } else {
+                assert!(false);
+            }
+
+            if let EvaluatedExpr::Keyword(k) = &tail[7] {
+                assert!(k == "boost");
+            } else {
+                assert!(false);
+            }
+
+            // BOOLEANS
+            if let EvaluatedExpr::Boolean(b) = &tail[4] {
+                assert!(b);
+            } else {
+                assert!(false);
+            }
+
+            if let EvaluatedExpr::Boolean(b) = &tail[6] {
+                assert!(!b);
+            } else {
+                assert!(false);
+            }
+
+            // FLOAT
+            if let EvaluatedExpr::Float(f) = &tail[2] {
+                assert!(*f == 1.0);
+            } else {
+                assert!(false);
+            }
+
+            Some(EvaluatedExpr::Boolean(true))
+        });
+
+        functions.insert("bounce".to_string(), |tail, _, _| {
+            if let EvaluatedExpr::Float(f) = &tail[0] {
+                assert!(*f == 0.0);
+            } else {
+                assert!(false);
+            }
+            if let EvaluatedExpr::Float(f) = &tail[1] {
+                assert!(*f == 400.0);
+            } else {
+                assert!(false);
+            }
+
+            Some(EvaluatedExpr::Boolean(true))
+        });
+
+        match eval_from_str(snippet, &functions, &globals, &sample_set) {
+            Ok(res) => {
+                assert!(matches!(res, EvaluatedExpr::Boolean(true)))
+            }
+            Err(e) => {
+                println!("err {}", e);
+                assert!(false)
+            }
+        }
+    }
+
+    #[test]
+    fn test_parse_float() {
+        assert!(matches!(parse_float("0.0"), Ok(("", Atom::Float(_)))));
+        assert!(matches!(parse_float("1.0"), Ok(("", Atom::Float(_)))));
+        assert!(matches!(parse_float("-1.0"), Ok(("", Atom::Float(_)))));
+    }
+
+    #[test]
+    fn test_parse_symbol() {
+        assert!(matches!(parse_symbol("'test"), Ok(("", Atom::Symbol(_)))));
+        assert!(!matches!(
+            parse_symbol(":test"),
+            Ok(("", Atom::Symbol(_)))
+        ));
+    }
+
+    #[test]
+    fn test_parse_keyword() {
+        assert!(matches!(
+            parse_keyword(":test"),
+            Ok(("", Atom::Keyword(_)))
+        ));
+    }
+
+    #[test]
+    fn test_parse_string() {
+        assert!(matches!(
+            parse_string("\"test\""),
+            Ok(("", Atom::String(_)))
+        ));
+    }
+
+    #[test]
+    fn test_parse_boolean() {
+        assert!(matches!(
+            parse_boolean("#t"),
+            Ok(("", Atom::Boolean(true)))
+        ));
+        assert!(matches!(
+            parse_boolean("#f"),
+            Ok(("", Atom::Boolean(false)))
+        ));
+    }
+
+    #[test]
+    fn test_parse_atom_constant() {
+        assert!(matches!(
+            parse_constant("#t"),
+            Ok(("", Expr::Constant(Atom::Boolean(true))))
+        ));
+        assert!(matches!(
+            parse_constant("#f"),
+            Ok(("", Expr::Constant(Atom::Boolean(false))))
+        ));
+        assert!(matches!(
+            parse_constant("'test"),
+            Ok(("", Expr::Constant(Atom::Symbol(_))))
+        ));
+        assert!(matches!(
+            parse_constant(":test"),
+            Ok(("", Expr::Constant(Atom::Keyword(_))))
+        ));
+        assert!(matches!(
+            parse_constant("\"test\""),
+            Ok(("", Expr::Constant(Atom::String(_))))
+        ));
+    }
+
+    #[test]
+    fn test_parse_expr() {
+        assert!(matches!(
+            parse_expr("#t"),
+            Ok(("", Expr::Constant(Atom::Boolean(true))))
+        ));
+        assert!(matches!(
+            parse_expr("#f"),
+            Ok(("", Expr::Constant(Atom::Boolean(false))))
+        ));
+        assert!(matches!(
+            parse_expr("'test"),
+            Ok(("", Expr::Constant(Atom::Symbol(_))))
+        ));
+        assert!(matches!(
+            parse_expr(":test"),
+            Ok(("", Expr::Constant(Atom::Keyword(_))))
+        ));
+        assert!(matches!(
+            parse_expr("\"test\""),
+            Ok(("", Expr::Constant(Atom::String(_))))
+        ));
+        assert!(matches!(
+            parse_expr("(#t)"),
+            Ok(("", Expr::Application(_, _)))
+        ));
+        assert!(matches!(
+            parse_expr("('test)"),
+            Ok(("", Expr::Application(_, _)))
+        ));
+        assert!(matches!(
+            parse_expr("(:test)"),
+            Ok(("", Expr::Application(_, _)))
+        ));
+        assert!(matches!(
+            parse_expr("(\"test\")"),
+            Ok(("", Expr::Application(_, _)))
+        ));
+
+        if let Ok(("", Expr::Application(head, tail))) =
+            parse_expr("(text 'tar :lvl 1.0 :global #t :relate #f :boost (bounce 0 400))")
+        {
+            if let Expr::Constant(Atom::Function(function_name)) = *head {
+                assert!(function_name == "text");
+            } else {
+                assert!(false)
+            }
+
+            // SYMBOLS
+            if let Expr::Constant(Atom::Symbol(s)) = &tail[0] {
+                assert!(s == "tar");
+            } else {
+                assert!(false);
+            }
+
+            // KEYWORDS
+            if let Expr::Constant(Atom::Keyword(k)) = &tail[1] {
+                assert!(k == "lvl");
+            } else {
+                assert!(false);
+            }
+
+            if let Expr::Constant(Atom::Keyword(k)) = &tail[3] {
+                assert!(k == "global");
+            } else {
+                assert!(false);
+            }
+
+            if let Expr::Constant(Atom::Keyword(k)) = &tail[5] {
+                assert!(k == "relate");
+            } else {
+                assert!(false);
+            }
+
+            if let Expr::Constant(Atom::Keyword(k)) = &tail[7] {
+                assert!(k == "boost");
+            } else {
+                assert!(false);
+            }
+
+            // BOOLEANS
+            if let Expr::Constant(Atom::Boolean(b)) = &tail[4] {
+                assert!(b);
+            } else {
+                assert!(false);
+            }
+
+            if let Expr::Constant(Atom::Boolean(b)) = &tail[6] {
+                assert!(!b);
+            } else {
+                assert!(false);
+            }
+
+            // FLOAT
+            if let Expr::Constant(Atom::Float(f)) = &tail[2] {
+                assert!(*f == 1.0);
+            } else {
+                assert!(false);
+            }
+
+            // APPLICATION
+            if let Expr::Application(head2, tail2) = &tail[8] {
+                if let Expr::Constant(Atom::Function(function_name2)) = &**head2 {
+                    assert!(function_name2 == "bounce")
+                } else {
+                    assert!(false)
+                }
+                // FLOAT
+                if let Expr::Constant(Atom::Float(f)) = &tail2[0] {
+                    assert!(*f == 0.0);
+                } else {
+                    assert!(false);
+                }
+                // FLOAT
+                if let Expr::Constant(Atom::Float(f)) = &tail2[1] {
+                    assert!(*f == 400.0);
+                } else {
+                    assert!(false);
+                }
+            } else {
+                assert!(false);
+            }
+        } else {
+            assert!(false);
+        }
+    }
 }

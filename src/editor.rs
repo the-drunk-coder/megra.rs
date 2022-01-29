@@ -11,8 +11,8 @@ use megra_editor::{EditorFont, MegraEditor};
 
 use crate::builtin_types::*;
 use crate::interpreter;
-use crate::new_parser;
-use crate::new_parser::FunctionMap;
+use crate::parser;
+use crate::parser::FunctionMap;
 use crate::sample_set::SampleSet;
 use crate::session::{OutputMode, Session};
 
@@ -51,7 +51,7 @@ pub fn run_editor<const BUFSIZE: usize, const NCHAN: usize>(
 
     let callback_ref: sync::Arc<Mutex<dyn FnMut(&String)>> =
         sync::Arc::new(Mutex::new(move |text: &String| {
-            let pfa_in = new_parser::eval_from_str(
+            let pfa_in = parser::eval_from_str(
                 text,
                 &function_map2.lock(),
                 &global_parameters2,

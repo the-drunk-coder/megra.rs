@@ -6,7 +6,7 @@ use ruffbox_synth::ruffbox::Ruffbox;
 
 use crate::builtin_types::*;
 use crate::commands;
-use crate::new_parser::{BuiltIn, EvaluatedExpr, FunctionMap};
+use crate::parser::{BuiltIn, EvaluatedExpr, FunctionMap};
 use crate::sample_set::SampleSet;
 use crate::session::{OutputMode, Session};
 

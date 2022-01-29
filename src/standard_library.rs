@@ -1,4 +1,4 @@
-use crate::new_parser::{eval, FunctionMap};
+use crate::parser::{eval, FunctionMap};
 
 pub fn define_standard_library() -> FunctionMap {
     let mut standard_library = FunctionMap::new();

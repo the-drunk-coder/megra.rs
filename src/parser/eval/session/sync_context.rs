@@ -1,6 +1,6 @@
 use crate::builtin_types::*;
 use crate::generator::Generator;
-use crate::new_parser::{BuiltIn, EvaluatedExpr};
+use crate::parser::{BuiltIn, EvaluatedExpr};
 use crate::session::SyncContext;
 use crate::{OutputMode, SampleSet};
 use parking_lot::Mutex;
@@ -138,7 +138,7 @@ pub fn sync_context(
 mod tests {
     // Note this useful idiom: importing names from outer (for mod tests) scope.
     use super::*;
-    use crate::new_parser::*;
+    use crate::parser::*;
 
     #[test]
     fn test_eval_sx() {

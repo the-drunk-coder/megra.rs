@@ -1,6 +1,6 @@
 use crate::builtin_types::*;
 use crate::event::*;
-use crate::new_parser::*;
+use crate::parser::*;
 use crate::sample_set::SampleSet;
 use crate::session::OutputMode;
 
