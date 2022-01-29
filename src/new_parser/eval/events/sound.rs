@@ -7,6 +7,14 @@ use crate::new_parser::{BuiltIn2, EvaluatedExpr};
 use crate::{SampleSet, GlobalParameters};
 use crate::music_theory;
 
+fn get_pitch_param() {
+    // tbd
+}
+
+fn get_keywords() {
+    // tbd
+}
+
 pub fn sound(tail: &mut Vec<EvaluatedExpr>,
 	     _global_parameters: &sync::Arc<GlobalParameters>,
 	     _sample_set: &sync::Arc<sync::Mutex<SampleSet>>) -> Option<EvaluatedExpr> {

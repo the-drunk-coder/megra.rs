@@ -12,10 +12,13 @@ use nom::{
 };
 use std::collections::HashMap;
 use std::sync;
-use crate::GlobalParameters;
-use crate::generator::Generator;
+use crate::{PartProxy, Command, GeneratorProcessorOrModifier, GlobalParameters};
+use crate::generator::{GenModFun, Generator};
 use crate::event::{ControlEvent, Event};
+use crate::generator_processor::GeneratorProcessor;
+use crate::markov_sequence_generator::Rule;
 use crate::parameter::Parameter;
+use crate::session::SyncContext;
 use crate::SampleSet;
 
 mod eval;
@@ -41,11 +44,20 @@ enum Expr2 {
     Application(Box<Expr2>, Vec<Expr2>),
 }
 
-pub enum BuiltIn2 {    
+pub enum BuiltIn2 {
+    Rule(Rule),
+    Command(Command),
+    PartProxy(PartProxy),
+    ProxyList(Vec<PartProxy>),
     Generator(Generator),
+    GeneratorList(Vec<Generator>),
+    GeneratorProcessorOrModifier(GeneratorProcessorOrModifier),
+    GeneratorProcessorOrModifierList(Vec<GeneratorProcessorOrModifier>),
+    GeneratorModifierList(Vec<GeneratorProcessorOrModifier>),
     SoundEvent(Event),
     Parameter(Parameter),
     ControlEvent(ControlEvent),
+    SyncContext(SyncContext),
 }
 
 pub enum EvaluatedExpr {
