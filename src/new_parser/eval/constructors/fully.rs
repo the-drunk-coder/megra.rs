@@ -3,20 +3,28 @@ use crate::event::*;
 use crate::generator::Generator;
 use crate::markov_sequence_generator::MarkovSequenceGenerator;
 use crate::parameter::*;
-use crate::parser::parser_helpers::*;
 use ruffbox_synth::ruffbox::synth::SynthParameter;
 use std::collections::{BTreeSet, HashMap};
 use std::sync;
 use vom_rs::pfa::{Pfa, Rule};
 
-pub fn construct_fully(
-    tail: &mut Vec<Expr>,
+use crate::new_parser::{BuiltIn2, EvaluatedExpr};
+use crate::{OutputMode, SampleSet};
+use parking_lot::Mutex;
+
+pub fn fully(
+    tail: &mut Vec<EvaluatedExpr>,
     global_parameters: &sync::Arc<GlobalParameters>,
-) -> Atom {
+    _: &sync::Arc<Mutex<SampleSet>>,
+    _: OutputMode,
+) -> Option<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..);
 
+    // ignore function name in this case
+    tail_drain.next();
+
     // name is the first symbol
-    let name = if let Some(n) = get_string_from_expr(&tail_drain.next().unwrap()) {
+    let name = if let Some(EvaluatedExpr::Symbol(n)) = tail_drain.next() {
         n
     } else {
         "".to_string()
@@ -43,10 +51,10 @@ pub fn construct_fully(
         unreachable!()
     };
 
-    while let Some(Expr::Constant(c)) = tail_drain.next() {
+    while let Some(c) = tail_drain.next() {
         if collect_labeled {
             match c {
-                Atom::Symbol(ref s) => {
+                EvaluatedExpr::Symbol(ref s) => {
                     if !cur_key.is_empty() && !collected_evs.is_empty() {
                         //println!("found event {}", cur_key);
                         collected_mapping
@@ -56,11 +64,11 @@ pub fn construct_fully(
                     cur_key = s.clone();
                     continue;
                 }
-                Atom::SoundEvent(e) => {
+                EvaluatedExpr::BuiltIn(BuiltIn2::SoundEvent(e)) => {
                     collected_evs.push(SourceEvent::Sound(e));
                     continue;
                 }
-                Atom::ControlEvent(e) => {
+                EvaluatedExpr::BuiltIn(BuiltIn2::ControlEvent(e)) => {
                     collected_evs.push(SourceEvent::Control(e));
                     continue;
                 }
@@ -82,16 +90,16 @@ pub fn construct_fully(
             let mut final_vec = Vec::new();
 
             match c {
-                Atom::Symbol(ref s) => {
+                EvaluatedExpr::Symbol(ref s) => {
                     let label = s.chars().next().unwrap();
                     if collected_mapping.contains_key(&label) {
                         final_vec.append(&mut collected_mapping.get(&label).unwrap().clone());
                     }
                 }
-                Atom::SoundEvent(e) => {
+                EvaluatedExpr::BuiltIn(BuiltIn2::SoundEvent(e) )=> {
                     final_vec.push(SourceEvent::Sound(e));
                 }
-                Atom::ControlEvent(e) => {
+                EvaluatedExpr::BuiltIn(BuiltIn2::ControlEvent(e)) => {
                     final_vec.push(SourceEvent::Control(e));
                 }
                 _ => {}
@@ -101,13 +109,13 @@ pub fn construct_fully(
             continue;
         }
 
-        if let Atom::Keyword(k) = c {
+        if let EvaluatedExpr::Keyword(k) = c {
             match k.as_str() {
                 "dur" => match tail_drain.next() {
-                    Some(Expr::Constant(Atom::Float(n))) => {
+                    Some(EvaluatedExpr::Float(n)) => {
                         dur = Parameter::with_value(n);
                     }
-                    Some(Expr::Constant(Atom::Parameter(p))) => {
+                    Some(EvaluatedExpr::BuiltIn(BuiltIn2::Parameter(p))) => {
                         dur = p;
                     }
                     _ => {}
@@ -150,7 +158,7 @@ pub fn construct_fully(
     let mut id_tags = BTreeSet::new();
     id_tags.insert(name.clone());
 
-    Atom::Generator(Generator {
+    Some(EvaluatedExpr::BuiltIn(BuiltIn2::Generator(Generator {
         id_tags,
         root_generator: MarkovSequenceGenerator {
             name,
@@ -165,5 +173,5 @@ pub fn construct_fully(
         },
         processors: Vec::new(),
         time_mods: Vec::new(),
-    })
+    })))
 }

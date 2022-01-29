@@ -7,6 +7,7 @@ pub fn define_standard_library() -> FunctionMap {
 
     // constructors
     standard_library.insert("nuc".to_string(), eval::constructors::nuc::nuc);
+    standard_library.insert("fully".to_string(), eval::constructors::fully::fully);
 
     // sound events
     standard_library.insert("risset".to_string(), eval::events::sound::sound);
