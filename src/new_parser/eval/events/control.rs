@@ -1,6 +1,6 @@
 use crate::event::*;
 use crate::new_parser::{BuiltIn2, EvaluatedExpr};
-use crate::{GlobalParameters, SampleSet};
+use crate::{GlobalParameters, SampleSet, OutputMode};
 use parking_lot::Mutex;
 use std::collections::BTreeSet;
 use std::sync;
@@ -9,6 +9,7 @@ pub fn control(
     tail: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<GlobalParameters>,
     _: &sync::Arc<Mutex<SampleSet>>,
+    _: OutputMode,
 ) -> Option<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..);
     let mut sync_contexts = Vec::new();

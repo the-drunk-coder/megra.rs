@@ -4,7 +4,7 @@ use crate::generator_processor::GeneratorProcessor;
 use crate::markov_sequence_generator::Rule;
 use crate::parameter::Parameter;
 use crate::session::SyncContext;
-use crate::SampleSet;
+use crate::{OutputMode, SampleSet};
 use crate::{Command, GeneratorProcessorOrModifier, GlobalParameters, PartProxy};
 use nom::{
     branch::alt,
@@ -22,7 +22,7 @@ use parking_lot::Mutex;
 use std::collections::HashMap;
 use std::sync;
 
-mod eval;
+pub mod eval;
 
 /// These are the basic building blocks of our casual lisp language.
 /// You might notice that there's no lists in this lisp ... not sure
@@ -77,6 +77,7 @@ pub type FunctionMap = HashMap<
         &mut Vec<EvaluatedExpr>,
         &sync::Arc<GlobalParameters>,
         &sync::Arc<Mutex<SampleSet>>,
+	OutputMode,
     ) -> Option<EvaluatedExpr>,
 >;
 
@@ -219,6 +220,7 @@ fn eval_expression2(
     functions: &FunctionMap,
     globals: &sync::Arc<GlobalParameters>,
     sample_set: &sync::Arc<Mutex<SampleSet>>,
+    out_mode: OutputMode,
 ) -> Option<EvaluatedExpr> {
     match e {
         Expr2::Comment => None, // ignore comments
@@ -232,17 +234,17 @@ fn eval_expression2(
         }),
         Expr2::Application(head, tail) => {
             if let Some(EvaluatedExpr::FunctionName(f)) =
-                eval_expression2(&*head, functions, globals, sample_set)
+                eval_expression2(&*head, functions, globals, sample_set, out_mode)
             {
                 // check if we have this function ...
                 if functions.contains_key(&f) {
                     let mut reduced_tail = tail
                         .iter()
-                        .map(|expr| eval_expression2(expr, functions, globals, sample_set))
+                        .map(|expr| eval_expression2(expr, functions, globals, sample_set, out_mode))
                         .collect::<Option<Vec<EvaluatedExpr>>>()?;
                     // push function name
                     reduced_tail.insert(0, EvaluatedExpr::FunctionName(f.clone()));
-                    functions[&f](&mut reduced_tail, globals, sample_set)
+                    functions[&f](&mut reduced_tail, globals, sample_set, out_mode)
                 } else {
                     None
                 }
@@ -258,11 +260,12 @@ pub fn eval_from_str2(
     functions: &FunctionMap,
     globals: &sync::Arc<GlobalParameters>,
     sample_set: &sync::Arc<Mutex<SampleSet>>,
+    out_mode: OutputMode,
 ) -> Result<EvaluatedExpr, String> {
     parse_expr2(src)
         .map_err(|e: nom::Err<VerboseError<&str>>| format!("{:#?}", e))
         .and_then(|(_, exp)| {
-            eval_expression2(&exp, functions, globals, sample_set)
+            eval_expression2(&exp, functions, globals, sample_set, out_mode)
                 .ok_or_else(|| "eval failed".to_string())
         })
 }

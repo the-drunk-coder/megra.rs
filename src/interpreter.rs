@@ -5,12 +5,13 @@ use std::thread;
 use ruffbox_synth::ruffbox::Ruffbox;
 
 use crate::builtin_types::*;
+use crate::new_parser::{EvaluatedExpr, BuiltIn2, FunctionMap};
 use crate::commands;
 use crate::sample_set::SampleSet;
 use crate::session::{OutputMode, Session};
 
 pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
-    parsed_in: Expr,
+    parsed_in: EvaluatedExpr,
     session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
     ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>,
     global_parameters: &sync::Arc<GlobalParameters>,
@@ -18,37 +19,34 @@ pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
     parts_store: &sync::Arc<Mutex<PartsStore>>,
     output_mode: OutputMode,
 ) {
-    match parsed_in {
-        Expr::Comment => {
-            println!("a comment")
-        }
-        Expr::Constant(Atom::Generator(g)) => {
+    match parsed_in {       
+        EvaluatedExpr::BuiltIn(BuiltIn2::Generator(g)) => {
             print!("a generator called \'");
             for tag in g.id_tags.iter() {
                 print!("{} ", tag);
             }
             println!("\'");
         }
-        Expr::Constant(Atom::Parameter(_)) => {
+        EvaluatedExpr::BuiltIn(BuiltIn2::Parameter(_)) => {
             println!("a parameter");
         }
-        Expr::Constant(Atom::SoundEvent(_)) => {
+        EvaluatedExpr::BuiltIn(BuiltIn2::SoundEvent(_)) => {
             println!("a sound event");
         }
-        Expr::Constant(Atom::ControlEvent(_)) => {
+        EvaluatedExpr::BuiltIn(BuiltIn2::ControlEvent(_)) => {
             println!("a control event");
         }
-        Expr::Constant(Atom::GeneratorProcessorOrModifier(
+        EvaluatedExpr::BuiltIn(BuiltIn2::GeneratorProcessorOrModifier(
             GeneratorProcessorOrModifier::GeneratorModifierFunction(_),
         )) => {
             println!("a gen mod fun");
         }
-        Expr::Constant(Atom::GeneratorProcessorOrModifier(
+        EvaluatedExpr::BuiltIn(BuiltIn2::GeneratorProcessorOrModifier(
             GeneratorProcessorOrModifier::GeneratorProcessor(_),
         )) => {
             println!("a gen proc");
         }
-        Expr::Constant(Atom::GeneratorList(gl)) => {
+        EvaluatedExpr::BuiltIn(BuiltIn2::GeneratorList(gl)) => {
             println!("a gen list");
             for gen in gl.iter() {
                 print!("--- a generator called \'");
@@ -58,7 +56,7 @@ pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
                 println!("\'");
             }
         }
-        Expr::Constant(Atom::SyncContext(mut s)) => {
+        EvaluatedExpr::BuiltIn(BuiltIn2::SyncContext(mut s)) => {
             println!(
                 "\n\n############### a context called \'{}\' ###############",
                 s.name
@@ -72,7 +70,7 @@ pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
                 output_mode,
             );
         }
-        Expr::Constant(Atom::Command(c)) => {
+        EvaluatedExpr::BuiltIn(BuiltIn2::Command(c)) => {
             match c {
                 Command::Clear => {
                     let session2 = sync::Arc::clone(session);
@@ -164,8 +162,20 @@ pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
                 }
             };
         }
-        Expr::Constant(Atom::Float(f)) => {
+        EvaluatedExpr::Float(f) => {
             println!("a number: {}", f)
+        }
+	EvaluatedExpr::Symbol(s) => {
+            println!("a symbol: {}", s)
+        }
+	EvaluatedExpr::String(s) => {
+            println!("a string: {}", s)
+        }
+	EvaluatedExpr::Keyword(k) => {
+            println!("a keyword: {}", k)
+        }
+	EvaluatedExpr::Boolean(b) => {
+            println!("a boolean: {}", b)
         }
         _ => println!("unknown"),
     }

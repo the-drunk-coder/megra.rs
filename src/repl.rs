@@ -7,11 +7,14 @@ use rustyline::Editor;
 
 use crate::builtin_types::*;
 use crate::interpreter;
-use crate::parser;
+//use crate::parser;
+use crate::new_parser;
 use crate::sample_set::SampleSet;
 use crate::session::{OutputMode, Session};
+use crate::new_parser::FunctionMap;
 
 pub fn start_repl<const BUFSIZE: usize, const NCHAN: usize>(
+    function_map: &sync::Arc<Mutex<FunctionMap>>,
     session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
     ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>,
     global_parameters: &sync::Arc<GlobalParameters>,
@@ -35,7 +38,7 @@ pub fn start_repl<const BUFSIZE: usize, const NCHAN: usize>(
                 }
 
                 let pfa_in =
-                    parser::eval_from_str(line.as_str(), sample_set, mode, global_parameters);
+                    new_parser::eval_from_str2(line.as_str(), &function_map.lock(), global_parameters, sample_set, mode);
 
                 match pfa_in {
                     Err(e) => {
@@ -53,11 +56,12 @@ pub fn start_repl<const BUFSIZE: usize, const NCHAN: usize>(
                                 match readline_inner {
                                     Ok(line) => {
                                         line_buffer.push_str(line.as_str());
-                                        let inner_pfa_in = parser::eval_from_str(
+                                        let inner_pfa_in = new_parser::eval_from_str2(
                                             line_buffer.as_str(),
-                                            sample_set,
-                                            mode,
-                                            global_parameters,
+					    &function_map.lock(),
+					    global_parameters,
+					    sample_set,
+					    mode
                                         );
                                         match inner_pfa_in {
                                             Ok(pfa) => {

@@ -3,7 +3,7 @@ use crate::event_helpers::map_parameter;
 use crate::music_theory;
 use crate::new_parser::{BuiltIn2, EvaluatedExpr};
 use crate::parameter::Parameter;
-use crate::{GlobalParameters, SampleSet};
+use crate::{GlobalParameters, SampleSet, OutputMode};
 use parking_lot::Mutex;
 use ruffbox_synth::ruffbox::synth::SynthParameter;
 use std::collections::HashSet;
@@ -80,6 +80,7 @@ pub fn sound(
     tail: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<GlobalParameters>,
     sample_set_sync: &sync::Arc<Mutex<SampleSet>>,
+    _: OutputMode,
 ) -> Option<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..).peekable();
 

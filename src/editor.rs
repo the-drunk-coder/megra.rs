@@ -11,11 +11,13 @@ use megra_editor::{EditorFont, MegraEditor};
 
 use crate::builtin_types::*;
 use crate::interpreter;
-use crate::parser;
+use crate::new_parser;
 use crate::sample_set::SampleSet;
 use crate::session::{OutputMode, Session};
+use crate::new_parser::FunctionMap;
 
 pub fn run_editor<const BUFSIZE: usize, const NCHAN: usize>(
+    function_map: &sync::Arc<Mutex<FunctionMap>>,
     session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
     ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>,
     global_parameters: &sync::Arc<GlobalParameters>,
@@ -40,6 +42,7 @@ pub fn run_editor<const BUFSIZE: usize, const NCHAN: usize>(
     }
 
     let session2 = sync::Arc::clone(session);
+    let function_map2 = sync::Arc::clone(function_map);
     let ruffbox2 = sync::Arc::clone(ruffbox);
     let sample_set2 = sync::Arc::clone(sample_set);
     let global_parameters2 = sync::Arc::clone(global_parameters);
@@ -47,7 +50,7 @@ pub fn run_editor<const BUFSIZE: usize, const NCHAN: usize>(
 
     let callback_ref: sync::Arc<Mutex<dyn FnMut(&String)>> =
         sync::Arc::new(Mutex::new(move |text: &String| {
-            let pfa_in = parser::eval_from_str(text, &sample_set2, mode, &global_parameters2);
+            let pfa_in = new_parser::eval_from_str2(text, &function_map2.lock(), &global_parameters2, &sample_set2, mode);
             match pfa_in {
                 Ok(pfa) => {
                     interpreter::interpret(

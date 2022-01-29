@@ -2,15 +2,16 @@ use crate::builtin_types::*;
 use crate::generator::Generator;
 use crate::new_parser::{BuiltIn2, EvaluatedExpr};
 use crate::session::SyncContext;
-use crate::SampleSet;
+use crate::{OutputMode, SampleSet};
 use parking_lot::Mutex;
 use std::collections::BTreeSet;
 use std::sync;
 
 pub fn sync_context(
     tail: &mut Vec<EvaluatedExpr>,
-    _global_parameters: &sync::Arc<GlobalParameters>,
-    _sample_set: &sync::Arc<Mutex<SampleSet>>,
+    _: &sync::Arc<GlobalParameters>,
+    _: &sync::Arc<Mutex<SampleSet>>,
+    _: OutputMode,
 ) -> Option<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..);
     // ignore function name

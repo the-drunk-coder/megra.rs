@@ -11,12 +11,13 @@ use std::sync;
 use vom_rs::pfa::{Pfa, Rule};
 
 use crate::new_parser::{BuiltIn2, EvaluatedExpr};
-use crate::SampleSet;
+use crate::{OutputMode, SampleSet};
 
 pub fn nuc(
     tail: &mut Vec<EvaluatedExpr>,
     global_parameters: &sync::Arc<GlobalParameters>,
-    _sample_set: &sync::Arc<Mutex<SampleSet>>,
+    _: &sync::Arc<Mutex<SampleSet>>,
+    _: OutputMode,
 ) -> Option<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..);
 

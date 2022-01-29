@@ -34,6 +34,7 @@ use getopts::Options;
 use parking_lot::Mutex;
 use ruffbox_synth::ruffbox::{ReverbMode, Ruffbox};
 use std::{env, sync, thread};
+use crate::new_parser::{eval, FunctionMap};
 
 fn print_help(program: &str, opts: Options) {
     let description = format!(
@@ -567,8 +568,17 @@ where
         }
     }
 
+    // define the "standard library"
+    let mut standard_library = FunctionMap::new();
+    standard_library.insert("sx".to_string(), eval::session::sync_context::sync_context);
+    standard_library.insert("nuc".to_string(), eval::constructors::nuc::nuc);
+    standard_library.insert("risset".to_string(), eval::events::sound::sound);
+
+    let stdlib = sync::Arc::new(Mutex::new(standard_library));
+    
     if editor {
         editor::run_editor(
+	    &stdlib,
             &session,
             &ruffbox,
             &global_parameters,
@@ -579,8 +589,9 @@ where
         );
         Ok(())
     } else {
-        // star1t the megra repl
+        // start the megra repl
         repl::start_repl(
+	    &stdlib,
             &session,
             &ruffbox,
             &global_parameters,
