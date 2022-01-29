@@ -1,7 +1,7 @@
 use crate::event::*;
 use crate::generator::{GenModFun, Generator};
 use crate::generator_processor::GeneratorProcessor;
-use crate::markov_sequence_generator::{MarkovSequenceGenerator, Rule};
+use crate::markov_sequence_generator::Rule;
 use crate::parameter::*;
 use crate::session::SyncContext;
 use dashmap::DashMap;
@@ -213,7 +213,7 @@ pub enum Atom {
     Symbol(String),
     Boolean(bool),
     BuiltIn(BuiltIn),
-    MarkovSequenceGenerator(MarkovSequenceGenerator),
+    //MarkovSequenceGenerator(MarkovSequenceGenerator),
     SoundEvent(Event),
     ControlEvent(ControlEvent),
     Rule(Rule),

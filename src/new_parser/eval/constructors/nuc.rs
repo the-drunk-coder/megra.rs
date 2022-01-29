@@ -23,7 +23,7 @@ pub fn nuc(
     tail_drain.next();
     
     // name is the first symbol
-    let name = if let Some(EvaluatedExpr::String(n)) = tail_drain.next() {
+    let name = if let Some(EvaluatedExpr::Symbol(n)) = tail_drain.next() {
         n
     } else {
         "".to_string()
