@@ -52,7 +52,10 @@ fn parse_cyc_named_parameter<'a>(i: &'a str) -> IResult<&'a str, CycleItem, Verb
     map(
         separated_pair(
             map(
-                context("custom_cycle_fun", cut(take_while(valid_function_name_char2))),
+                context(
+                    "custom_cycle_fun",
+                    cut(take_while(valid_function_name_char2)),
+                ),
                 |fun_str: &str| fun_str.to_string(),
             ),
             tag("="),
@@ -108,7 +111,10 @@ fn parse_cyc_application<'a>(i: &'a str) -> IResult<&'a str, CycleItem, VerboseE
         map(
             separated_pair(
                 map(
-                    context("custom_cycle_fun", cut(take_while(valid_function_name_char2))),
+                    context(
+                        "custom_cycle_fun",
+                        cut(take_while(valid_function_name_char2)),
+                    ),
                     |fun_str: &str| fun_str.to_string(),
                 ),
                 tag(":"),
@@ -225,10 +231,10 @@ pub fn eval_cyc_from_str(
                                     if let Some(EvaluatedExpr::BuiltIn(BuiltIn2::SoundEvent(e))) =
                                         eval_expression2(
                                             &expr,
-					    &functions.lock(),
-					    global_parameters,
-					    sample_set,
-                                            out_mode,                                            
+                                            &functions.lock(),
+                                            global_parameters,
+                                            sample_set,
+                                            out_mode,
                                         )
                                     {
                                         //println!("ev {}", e.name);
@@ -295,7 +301,13 @@ pub fn eval_cyc_from_str(
                         match parse_expr2(ev_name.trim()) {
                             Ok((_, expr)) => {
                                 if let Some(EvaluatedExpr::BuiltIn(BuiltIn2::SoundEvent(e))) =
-                                    eval_expression2(&expr, &functions.lock(), global_parameters, sample_set, out_mode)
+                                    eval_expression2(
+                                        &expr,
+                                        &functions.lock(),
+                                        global_parameters,
+                                        sample_set,
+                                        out_mode,
+                                    )
                                 {
                                     cycle_position.push(CycleResult::SoundEvent(e));
                                 } else {
