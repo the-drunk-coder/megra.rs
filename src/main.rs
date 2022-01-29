@@ -25,6 +25,8 @@ pub mod sample_set;
 pub mod scheduler;
 pub mod session;
 
+mod standard_library;
+
 use crate::builtin_types::*;
 use crate::sample_set::SampleSet;
 use crate::session::{OutputMode, Session};
@@ -33,8 +35,8 @@ use directories_next::ProjectDirs;
 use getopts::Options;
 use parking_lot::Mutex;
 use ruffbox_synth::ruffbox::{ReverbMode, Ruffbox};
+use standard_library::define_standard_library;
 use std::{env, sync, thread};
-use crate::new_parser::{eval, FunctionMap};
 
 fn print_help(program: &str, opts: Options) {
     let description = format!(
@@ -534,6 +536,8 @@ where
     let global_parameters = sync::Arc::new(GlobalParameters::with_capacity(1));
     let sample_set = sync::Arc::new(Mutex::new(SampleSet::new()));
     let parts_store = sync::Arc::new(Mutex::new(PartsStore::new()));
+    // define the "standard library"
+    let stdlib = sync::Arc::new(Mutex::new(define_standard_library()));
 
     // load the default sample set ...
     if load_samples {
@@ -561,24 +565,17 @@ where
             println!("load samples from path: {:?}", samples_path);
             let ruffbox2 = sync::Arc::clone(&ruffbox);
             let sample_set2 = sync::Arc::clone(&sample_set);
+            let stdlib2 = sync::Arc::clone(&stdlib);
             thread::spawn(move || {
-                commands::load_sample_sets_path(&ruffbox2, &sample_set2, &samples_path);
+                commands::load_sample_sets_path(&stdlib2, &ruffbox2, &sample_set2, &samples_path);
                 println!("a command (load default sample sets)");
             });
         }
     }
 
-    // define the "standard library"
-    let mut standard_library = FunctionMap::new();
-    standard_library.insert("sx".to_string(), eval::session::sync_context::sync_context);
-    standard_library.insert("nuc".to_string(), eval::constructors::nuc::nuc);
-    standard_library.insert("risset".to_string(), eval::events::sound::sound);
-
-    let stdlib = sync::Arc::new(Mutex::new(standard_library));
-    
     if editor {
         editor::run_editor(
-	    &stdlib,
+            &stdlib,
             &session,
             &ruffbox,
             &global_parameters,
@@ -591,7 +588,7 @@ where
     } else {
         // start the megra repl
         repl::start_repl(
-	    &stdlib,
+            &stdlib,
             &session,
             &ruffbox,
             &global_parameters,

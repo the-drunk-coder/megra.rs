@@ -3,7 +3,7 @@ use crate::event_helpers::map_parameter;
 use crate::music_theory;
 use crate::new_parser::{BuiltIn2, EvaluatedExpr};
 use crate::parameter::Parameter;
-use crate::{GlobalParameters, SampleSet, OutputMode};
+use crate::{GlobalParameters, OutputMode, SampleSet};
 use parking_lot::Mutex;
 use ruffbox_synth::ruffbox::synth::SynthParameter;
 use std::collections::HashSet;

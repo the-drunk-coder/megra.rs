@@ -13,6 +13,8 @@ use crate::builtin_types::*;
 use crate::event::*;
 use crate::event_helpers::*;
 use crate::generator::*;
+use crate::new_parser::eval;
+use crate::new_parser::FunctionMap;
 use crate::parameter::*;
 use crate::sample_set::SampleSet;
 use crate::session::*;
@@ -26,6 +28,7 @@ pub fn freeze_buffer<const BUFSIZE: usize, const NCHAN: usize>(
 }
 
 pub fn load_sample<const BUFSIZE: usize, const NCHAN: usize>(
+    function_map: &sync::Arc<Mutex<FunctionMap>>,
     ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>,
     sample_set: &sync::Arc<Mutex<SampleSet>>,
     set: String,
@@ -96,10 +99,14 @@ pub fn load_sample<const BUFSIZE: usize, const NCHAN: usize>(
         reader.streaminfo().sample_rate != ruff.samplerate as u32
     );
 
-    sample_set.lock().insert(set, keyword_set, bufnum, duration);
+    sample_set
+        .lock()
+        .insert(set.clone(), keyword_set, bufnum, duration);
+    function_map.lock().insert(set, eval::events::sound::sound);
 }
 
 pub fn load_sample_set<const BUFSIZE: usize, const NCHAN: usize>(
+    function_map: &sync::Arc<Mutex<FunctionMap>>,
     ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>,
     sample_set: &sync::Arc<Mutex<SampleSet>>,
     samples_path: &Path,
@@ -123,6 +130,7 @@ pub fn load_sample_set<const BUFSIZE: usize, const NCHAN: usize>(
                 if let Some(ext) = path.extension() {
                     if ext == "flac" {
                         load_sample(
+                            function_map,
                             ruffbox,
                             sample_set,
                             set_name.clone(),
@@ -136,24 +144,27 @@ pub fn load_sample_set<const BUFSIZE: usize, const NCHAN: usize>(
     }
 }
 pub fn load_sample_set_string<const BUFSIZE: usize, const NCHAN: usize>(
+    function_map: &sync::Arc<Mutex<FunctionMap>>,
     ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>,
     sample_set: &sync::Arc<Mutex<SampleSet>>,
     samples_path: String,
 ) {
     let path = Path::new(&samples_path);
-    load_sample_set(ruffbox, sample_set, path);
+    load_sample_set(function_map, ruffbox, sample_set, path);
 }
 
 pub fn load_sample_sets<const BUFSIZE: usize, const NCHAN: usize>(
+    function_map: &sync::Arc<Mutex<FunctionMap>>,
     ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>,
     sample_set: &sync::Arc<Mutex<SampleSet>>,
     folder_path: String,
 ) {
     let root_path = Path::new(&folder_path);
-    load_sample_sets_path(ruffbox, sample_set, root_path);
+    load_sample_sets_path(function_map, ruffbox, sample_set, root_path);
 }
 
 pub fn load_sample_sets_path<const BUFSIZE: usize, const NCHAN: usize>(
+    function_map: &sync::Arc<Mutex<FunctionMap>>,
     ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>,
     sample_set: &sync::Arc<Mutex<SampleSet>>,
     root_path: &Path,
@@ -162,7 +173,7 @@ pub fn load_sample_sets_path<const BUFSIZE: usize, const NCHAN: usize>(
         for entry in entries.flatten() {
             let path = entry.path();
             if path.is_dir() {
-                load_sample_set(ruffbox, sample_set, &path);
+                load_sample_set(function_map, ruffbox, sample_set, &path);
             }
         }
     }

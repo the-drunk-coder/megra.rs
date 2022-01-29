@@ -1,11 +1,10 @@
 use crate::event::{ControlEvent, Event};
-use crate::generator::{GenModFun, Generator};
-use crate::generator_processor::GeneratorProcessor;
+use crate::generator::Generator;
 use crate::markov_sequence_generator::Rule;
 use crate::parameter::Parameter;
 use crate::session::SyncContext;
-use crate::{OutputMode, SampleSet};
 use crate::{Command, GeneratorProcessorOrModifier, GlobalParameters, PartProxy};
+use crate::{OutputMode, SampleSet};
 use nom::{
     branch::alt,
     bytes::complete::{tag, take_while},
@@ -77,7 +76,7 @@ pub type FunctionMap = HashMap<
         &mut Vec<EvaluatedExpr>,
         &sync::Arc<GlobalParameters>,
         &sync::Arc<Mutex<SampleSet>>,
-	OutputMode,
+        OutputMode,
     ) -> Option<EvaluatedExpr>,
 >;
 
@@ -240,7 +239,9 @@ fn eval_expression2(
                 if functions.contains_key(&f) {
                     let mut reduced_tail = tail
                         .iter()
-                        .map(|expr| eval_expression2(expr, functions, globals, sample_set, out_mode))
+                        .map(|expr| {
+                            eval_expression2(expr, functions, globals, sample_set, out_mode)
+                        })
                         .collect::<Option<Vec<EvaluatedExpr>>>()?;
                     // push function name
                     reduced_tail.insert(0, EvaluatedExpr::FunctionName(f.clone()));

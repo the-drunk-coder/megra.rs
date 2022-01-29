@@ -9,9 +9,9 @@ use crate::builtin_types::*;
 use crate::interpreter;
 //use crate::parser;
 use crate::new_parser;
+use crate::new_parser::FunctionMap;
 use crate::sample_set::SampleSet;
 use crate::session::{OutputMode, Session};
-use crate::new_parser::FunctionMap;
 
 pub fn start_repl<const BUFSIZE: usize, const NCHAN: usize>(
     function_map: &sync::Arc<Mutex<FunctionMap>>,
@@ -37,8 +37,13 @@ pub fn start_repl<const BUFSIZE: usize, const NCHAN: usize>(
                     continue;
                 }
 
-                let pfa_in =
-                    new_parser::eval_from_str2(line.as_str(), &function_map.lock(), global_parameters, sample_set, mode);
+                let pfa_in = new_parser::eval_from_str2(
+                    line.as_str(),
+                    &function_map.lock(),
+                    global_parameters,
+                    sample_set,
+                    mode,
+                );
 
                 match pfa_in {
                     Err(e) => {
@@ -58,15 +63,16 @@ pub fn start_repl<const BUFSIZE: usize, const NCHAN: usize>(
                                         line_buffer.push_str(line.as_str());
                                         let inner_pfa_in = new_parser::eval_from_str2(
                                             line_buffer.as_str(),
-					    &function_map.lock(),
-					    global_parameters,
-					    sample_set,
-					    mode
+                                            &function_map.lock(),
+                                            global_parameters,
+                                            sample_set,
+                                            mode,
                                         );
                                         match inner_pfa_in {
                                             Ok(pfa) => {
                                                 interpreter::interpret(
                                                     pfa,
+                                                    function_map,
                                                     session,
                                                     ruffbox,
                                                     global_parameters,
@@ -95,6 +101,7 @@ pub fn start_repl<const BUFSIZE: usize, const NCHAN: usize>(
                     Ok(pfa) => {
                         interpreter::interpret(
                             pfa,
+                            function_map,
                             session,
                             ruffbox,
                             global_parameters,

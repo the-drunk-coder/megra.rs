@@ -12,10 +12,11 @@ use megra_editor::{EditorFont, MegraEditor};
 use crate::builtin_types::*;
 use crate::interpreter;
 use crate::new_parser;
+use crate::new_parser::FunctionMap;
 use crate::sample_set::SampleSet;
 use crate::session::{OutputMode, Session};
-use crate::new_parser::FunctionMap;
 
+#[allow(clippy::too_many_arguments)]
 pub fn run_editor<const BUFSIZE: usize, const NCHAN: usize>(
     function_map: &sync::Arc<Mutex<FunctionMap>>,
     session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
@@ -50,11 +51,18 @@ pub fn run_editor<const BUFSIZE: usize, const NCHAN: usize>(
 
     let callback_ref: sync::Arc<Mutex<dyn FnMut(&String)>> =
         sync::Arc::new(Mutex::new(move |text: &String| {
-            let pfa_in = new_parser::eval_from_str2(text, &function_map2.lock(), &global_parameters2, &sample_set2, mode);
+            let pfa_in = new_parser::eval_from_str2(
+                text,
+                &function_map2.lock(),
+                &global_parameters2,
+                &sample_set2,
+                mode,
+            );
             match pfa_in {
                 Ok(pfa) => {
                     interpreter::interpret(
                         pfa,
+                        &function_map2,
                         &session2,
                         &ruffbox2,
                         &global_parameters2,

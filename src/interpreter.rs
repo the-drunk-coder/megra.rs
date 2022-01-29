@@ -5,13 +5,15 @@ use std::thread;
 use ruffbox_synth::ruffbox::Ruffbox;
 
 use crate::builtin_types::*;
-use crate::new_parser::{EvaluatedExpr, BuiltIn2, FunctionMap};
 use crate::commands;
+use crate::new_parser::{BuiltIn2, EvaluatedExpr, FunctionMap};
 use crate::sample_set::SampleSet;
 use crate::session::{OutputMode, Session};
 
+#[allow(clippy::too_many_arguments)]
 pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
     parsed_in: EvaluatedExpr,
+    function_map: &sync::Arc<Mutex<FunctionMap>>,
     session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
     ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>,
     global_parameters: &sync::Arc<GlobalParameters>,
@@ -19,7 +21,7 @@ pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
     parts_store: &sync::Arc<Mutex<PartsStore>>,
     output_mode: OutputMode,
 ) {
-    match parsed_in {       
+    match parsed_in {
         EvaluatedExpr::BuiltIn(BuiltIn2::Generator(g)) => {
             print!("a generator called \'");
             for tag in g.id_tags.iter() {
@@ -82,25 +84,35 @@ pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
                 }
                 Command::LoadSample((set, mut keywords, path)) => {
                     let ruffbox2 = sync::Arc::clone(ruffbox);
+                    let fmap2 = sync::Arc::clone(function_map);
                     let sample_set2 = sync::Arc::clone(sample_set);
                     thread::spawn(move || {
-                        commands::load_sample(&ruffbox2, &sample_set2, set, &mut keywords, path);
+                        commands::load_sample(
+                            &fmap2,
+                            &ruffbox2,
+                            &sample_set2,
+                            set,
+                            &mut keywords,
+                            path,
+                        );
                         println!("a command (load sample)");
                     });
                 }
                 Command::LoadSampleSets(path) => {
                     let ruffbox2 = sync::Arc::clone(ruffbox);
+                    let fmap2 = sync::Arc::clone(function_map);
                     let sample_set2 = sync::Arc::clone(sample_set);
                     thread::spawn(move || {
-                        commands::load_sample_sets(&ruffbox2, &sample_set2, path);
+                        commands::load_sample_sets(&fmap2, &ruffbox2, &sample_set2, path);
                         println!("a command (load sample sets)");
                     });
                 }
                 Command::LoadSampleSet(path) => {
                     let ruffbox2 = sync::Arc::clone(ruffbox);
+                    let fmap2 = sync::Arc::clone(function_map);
                     let sample_set2 = sync::Arc::clone(sample_set);
                     thread::spawn(move || {
-                        commands::load_sample_set_string(&ruffbox2, &sample_set2, path);
+                        commands::load_sample_set_string(&fmap2, &ruffbox2, &sample_set2, path);
                         println!("a command (load sample sets)");
                     });
                 }
@@ -165,16 +177,16 @@ pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
         EvaluatedExpr::Float(f) => {
             println!("a number: {}", f)
         }
-	EvaluatedExpr::Symbol(s) => {
+        EvaluatedExpr::Symbol(s) => {
             println!("a symbol: {}", s)
         }
-	EvaluatedExpr::String(s) => {
+        EvaluatedExpr::String(s) => {
             println!("a string: {}", s)
         }
-	EvaluatedExpr::Keyword(k) => {
+        EvaluatedExpr::Keyword(k) => {
             println!("a keyword: {}", k)
         }
-	EvaluatedExpr::Boolean(b) => {
+        EvaluatedExpr::Boolean(b) => {
             println!("a boolean: {}", b)
         }
         _ => println!("unknown"),
