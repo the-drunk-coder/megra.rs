@@ -1,19 +1,19 @@
 use crate::builtin_types::*;
 use crate::generator::Generator;
+use crate::new_parser::{BuiltIn2, EvaluatedExpr};
 use crate::session::SyncContext;
-use std::collections::BTreeSet;
-use crate::new_parser::{EvaluatedExpr, BuiltIn2};
 use crate::SampleSet;
+use parking_lot::Mutex;
+use std::collections::BTreeSet;
 use std::sync;
 
 pub fn sync_context(
     tail: &mut Vec<EvaluatedExpr>,
     _global_parameters: &sync::Arc<GlobalParameters>,
-    _sample_set: &sync::Arc<sync::Mutex<SampleSet>>,
+    _sample_set: &sync::Arc<Mutex<SampleSet>>,
 ) -> Option<EvaluatedExpr> {
-
     let mut tail_drain = tail.drain(..);
-    // ignore function name 
+    // ignore function name
     tail_drain.next();
     // name is the first symbol
     // name is the first symbol
@@ -26,11 +26,11 @@ pub fn sync_context(
     let active = if let Some(EvaluatedExpr::Boolean(b)) = tail_drain.next() {
         b
     } else {
-	false
+        false
     };
 
     if !active {
-        return Some(EvaluatedExpr::BuiltIn(BuiltIn2::SyncContext(SyncContext{
+        return Some(EvaluatedExpr::BuiltIn(BuiltIn2::SyncContext(SyncContext {
             name,
             generators: Vec::new(),
             part_proxies: Vec::new(),
@@ -38,10 +38,10 @@ pub fn sync_context(
             active: false,
             shift: 0,
             block_tags: BTreeSet::new(),
-            solo_tags: BTreeSet::new(),            
-	})));
+            solo_tags: BTreeSet::new(),
+        })));
     }
-		    
+
     let mut gens: Vec<Generator> = Vec::new();
     let mut proxies: Vec<PartProxy> = Vec::new();
     let mut sync_to = None;
@@ -121,7 +121,7 @@ pub fn sync_context(
         }
     }
 
-    Some(EvaluatedExpr::BuiltIn(BuiltIn2::SyncContext(SyncContext{
+    Some(EvaluatedExpr::BuiltIn(BuiltIn2::SyncContext(SyncContext {
         name,
         generators: gens,
         part_proxies: proxies,
@@ -133,28 +133,32 @@ pub fn sync_context(
     })))
 }
 
-
 #[cfg(test)]
 mod tests {
     // Note this useful idiom: importing names from outer (for mod tests) scope.
     use super::*;
     use crate::new_parser::*;
-    
+
     #[test]
     fn test_eval_sx() {
-	let snippet = "(sx 'ga #t (nuc 'da (bd)))";
-	let mut functions = FunctionMap::new();
-	let sample_set =  sync::Arc::new(sync::Mutex::new(SampleSet::new()));
+        let snippet = "(sx 'ga #t (nuc 'da (bd)))";
+        let mut functions = FunctionMap::new();
+        let sample_set = sync::Arc::new(Mutex::new(SampleSet::new()));
 
-	functions.insert("sx".to_string(), eval::session::sync_context::sync_context);
-	functions.insert("nuc".to_string(), eval::constructors::nuc::nuc);
-	functions.insert("bd".to_string(), |_,_,_| Some(EvaluatedExpr::String("bd".to_string())));
-			 
-	let globals = sync::Arc::new(GlobalParameters::new());
-	
-	match eval_from_str2(snippet, &functions, &globals, &sample_set) {
+        functions.insert("sx".to_string(), eval::session::sync_context::sync_context);
+        functions.insert("nuc".to_string(), eval::constructors::nuc::nuc);
+        functions.insert("bd".to_string(), |_, _, _| {
+            Some(EvaluatedExpr::String("bd".to_string()))
+        });
+
+        let globals = sync::Arc::new(GlobalParameters::new());
+
+        match eval_from_str2(snippet, &functions, &globals, &sample_set) {
             Ok(res) => {
-                assert!(matches!(res, EvaluatedExpr::BuiltIn(BuiltIn2::SyncContext(_))));
+                assert!(matches!(
+                    res,
+                    EvaluatedExpr::BuiltIn(BuiltIn2::SyncContext(_))
+                ));
             }
             Err(e) => {
                 println!("err {}", e);
@@ -163,4 +167,3 @@ mod tests {
         }
     }
 }
-

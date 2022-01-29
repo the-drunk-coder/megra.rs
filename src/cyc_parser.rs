@@ -320,9 +320,9 @@ pub fn eval_cyc_from_str(
 mod tests {
     // Note this useful idiom: importing names from outer (for mod tests) scope.
     use super::*;
-    use std::collections::HashSet;
     use dashmap::DashMap;
-    
+    use std::collections::HashSet;
+
     #[test]
     fn test_basic_cyc2_float() {
         match parse_cyc_float("100 b") {
@@ -517,7 +517,7 @@ mod tests {
             OutputMode::Stereo,
             &template_events,
             &event_mappings,
-	    &sync::Arc::new(DashMap::new())
+            &sync::Arc::new(DashMap::new()),
         );
         println!("return length: {}", o.len());
 

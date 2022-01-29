@@ -4,6 +4,7 @@ use crate::generator::Generator;
 use crate::markov_sequence_generator::MarkovSequenceGenerator;
 use crate::parameter::*;
 
+use parking_lot::Mutex;
 use ruffbox_synth::ruffbox::synth::SynthParameter;
 use std::collections::{BTreeSet, HashMap};
 use std::sync;
@@ -15,13 +16,13 @@ use crate::SampleSet;
 pub fn nuc(
     tail: &mut Vec<EvaluatedExpr>,
     global_parameters: &sync::Arc<GlobalParameters>,
-    _sample_set: &sync::Arc<sync::Mutex<SampleSet>>,
+    _sample_set: &sync::Arc<Mutex<SampleSet>>,
 ) -> Option<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..);
 
     // ignore function name in this case
     tail_drain.next();
-    
+
     // name is the first symbol
     let name = if let Some(EvaluatedExpr::Symbol(n)) = tail_drain.next() {
         n
@@ -45,11 +46,12 @@ pub fn nuc(
 
     let mut ev_vec = Vec::new();
 
-    
     while let Some(c) = tail_drain.next() {
         match c {
             EvaluatedExpr::BuiltIn(BuiltIn2::SoundEvent(e)) => ev_vec.push(SourceEvent::Sound(e)),
-            //Atom::ControlEvent(c) => ev_vec.push(SourceEvent::Control(c)),
+            EvaluatedExpr::BuiltIn(BuiltIn2::ControlEvent(c)) => {
+                ev_vec.push(SourceEvent::Control(c))
+            }
             EvaluatedExpr::Keyword(k) => match k.as_str() {
                 "dur" => match tail_drain.next() {
                     Some(EvaluatedExpr::Float(n)) => {
@@ -107,21 +109,26 @@ mod tests {
     // Note this useful idiom: importing names from outer (for mod tests) scope.
     use super::*;
     use crate::new_parser::*;
-    
+
     #[test]
     fn test_eval_nuc() {
-	let snippet = "(nuc 'da (bd))";
-	let mut functions = FunctionMap::new();
-	let sample_set =  sync::Arc::new(sync::Mutex::new(SampleSet::new()));
-	
-	functions.insert("nuc".to_string(), eval::constructors::nuc::nuc);
-	functions.insert("bd".to_string(), |_,_,_| Some(EvaluatedExpr::String("bd".to_string())));
-			 
-	let globals = sync::Arc::new(GlobalParameters::new());
-	
-	match eval_from_str2(snippet, &functions, &globals, &sample_set) {
+        let snippet = "(nuc 'da (bd))";
+        let mut functions = FunctionMap::new();
+        let sample_set = sync::Arc::new(Mutex::new(SampleSet::new()));
+
+        functions.insert("nuc".to_string(), eval::constructors::nuc::nuc);
+        functions.insert("bd".to_string(), |_, _, _| {
+            Some(EvaluatedExpr::String("bd".to_string()))
+        });
+
+        let globals = sync::Arc::new(GlobalParameters::new());
+
+        match eval_from_str2(snippet, &functions, &globals, &sample_set) {
             Ok(res) => {
-                assert!(matches!(res, EvaluatedExpr::BuiltIn(BuiltIn2::Generator(_))));
+                assert!(matches!(
+                    res,
+                    EvaluatedExpr::BuiltIn(BuiltIn2::Generator(_))
+                ));
             }
             Err(e) => {
                 println!("err {}", e);

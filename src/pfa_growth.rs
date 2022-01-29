@@ -538,10 +538,10 @@ mod tests {
 
         let mut pfa = Pfa::<char>::infer_from_rules(&mut rules, true);
 
-	for _ in 0..10 {
-	    pfa.next_transition();	    
-	}
-	
+        for _ in 0..10 {
+            pfa.next_transition();
+        }
+
         for _ in 0..1000 {
             assert!(!grow_quadloop(&mut pfa).is_none());
         }

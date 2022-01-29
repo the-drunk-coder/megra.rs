@@ -1,3 +1,11 @@
+use crate::event::{ControlEvent, Event};
+use crate::generator::{GenModFun, Generator};
+use crate::generator_processor::GeneratorProcessor;
+use crate::markov_sequence_generator::Rule;
+use crate::parameter::Parameter;
+use crate::session::SyncContext;
+use crate::SampleSet;
+use crate::{Command, GeneratorProcessorOrModifier, GlobalParameters, PartProxy};
 use nom::{
     branch::alt,
     bytes::complete::{tag, take_while},
@@ -10,16 +18,9 @@ use nom::{
     sequence::{delimited, preceded, tuple},
     IResult, Parser,
 };
+use parking_lot::Mutex;
 use std::collections::HashMap;
 use std::sync;
-use crate::{PartProxy, Command, GeneratorProcessorOrModifier, GlobalParameters};
-use crate::generator::{GenModFun, Generator};
-use crate::event::{ControlEvent, Event};
-use crate::generator_processor::GeneratorProcessor;
-use crate::markov_sequence_generator::Rule;
-use crate::parameter::Parameter;
-use crate::session::SyncContext;
-use crate::SampleSet;
 
 mod eval;
 
@@ -67,10 +68,17 @@ pub enum EvaluatedExpr {
     String(String),
     Boolean(bool),
     FunctionName(String),
-    BuiltIn(BuiltIn2)
+    BuiltIn(BuiltIn2),
 }
 
-pub type FunctionMap = HashMap<String, fn(&mut Vec<EvaluatedExpr>, &sync::Arc<GlobalParameters>, &sync::Arc<sync::Mutex<SampleSet>>) -> Option<EvaluatedExpr>>;
+pub type FunctionMap = HashMap<
+    String,
+    fn(
+        &mut Vec<EvaluatedExpr>,
+        &sync::Arc<GlobalParameters>,
+        &sync::Arc<Mutex<SampleSet>>,
+    ) -> Option<EvaluatedExpr>,
+>;
 
 /// valid chars for a string
 fn valid_string_char2(chr: char) -> bool {
@@ -206,10 +214,12 @@ fn parse_expr2(i: &str) -> IResult<&str, Expr2, VerboseError<&str>> {
 }
 
 /// This one reduces the abstract syntax tree ...
-fn eval_expression2(e: &Expr2,
-		    functions: &FunctionMap,
-		    globals: &sync::Arc<GlobalParameters>,
-		    sample_set: &sync::Arc<sync::Mutex<SampleSet>>) -> Option<EvaluatedExpr> {
+fn eval_expression2(
+    e: &Expr2,
+    functions: &FunctionMap,
+    globals: &sync::Arc<GlobalParameters>,
+    sample_set: &sync::Arc<Mutex<SampleSet>>,
+) -> Option<EvaluatedExpr> {
     match e {
         Expr2::Comment => None, // ignore comments
         Expr2::Constant(c) => Some(match c {
@@ -221,15 +231,17 @@ fn eval_expression2(e: &Expr2,
             Atom2::Function(f) => EvaluatedExpr::FunctionName(f.to_string()),
         }),
         Expr2::Application(head, tail) => {
-            if let Some(EvaluatedExpr::FunctionName(f)) = eval_expression2(&*head, functions, globals, sample_set) {
+            if let Some(EvaluatedExpr::FunctionName(f)) =
+                eval_expression2(&*head, functions, globals, sample_set)
+            {
                 // check if we have this function ...
                 if functions.contains_key(&f) {
                     let mut reduced_tail = tail
                         .iter()
                         .map(|expr| eval_expression2(expr, functions, globals, sample_set))
                         .collect::<Option<Vec<EvaluatedExpr>>>()?;
-		    // push function name
-		    reduced_tail.insert(0, EvaluatedExpr::FunctionName(f.clone()));
+                    // push function name
+                    reduced_tail.insert(0, EvaluatedExpr::FunctionName(f.clone()));
                     functions[&f](&mut reduced_tail, globals, sample_set)
                 } else {
                     None
@@ -241,14 +253,17 @@ fn eval_expression2(e: &Expr2,
     }
 }
 
-pub fn eval_from_str2(src: &str,
-		      functions: &FunctionMap,
-		      globals: &sync::Arc<GlobalParameters>,
-		      sample_set: &sync::Arc<sync::Mutex<SampleSet>>) -> Result<EvaluatedExpr, String> {
+pub fn eval_from_str2(
+    src: &str,
+    functions: &FunctionMap,
+    globals: &sync::Arc<GlobalParameters>,
+    sample_set: &sync::Arc<Mutex<SampleSet>>,
+) -> Result<EvaluatedExpr, String> {
     parse_expr2(src)
         .map_err(|e: nom::Err<VerboseError<&str>>| format!("{:#?}", e))
         .and_then(|(_, exp)| {
-            eval_expression2(&exp, functions, globals, sample_set).ok_or_else(|| "eval failed".to_string())
+            eval_expression2(&exp, functions, globals, sample_set)
+                .ok_or_else(|| "eval failed".to_string())
         })
 }
 
@@ -256,14 +271,14 @@ pub fn eval_from_str2(src: &str,
 mod tests {
     // Note this useful idiom: importing names from outer (for mod tests) scope.
     use super::*;
-    
+
     #[test]
     fn test_parse_eval() {
         let snippet = "(text 'tar :lvl 1.0 :global #t :relate #f :boost (bounce 0 400))";
-	
+
         let mut functions = FunctionMap::new();
-	let globals = sync::Arc::new(GlobalParameters::new());
-	let sample_set =  sync::Arc::new(sync::Mutex::new(SampleSet::new()));
+        let globals = sync::Arc::new(GlobalParameters::new());
+        let sample_set = sync::Arc::new(Mutex::new(SampleSet::new()));
 
         functions.insert("text".to_string(), |tail, _, _| {
             // SYMBOLS
@@ -357,12 +372,18 @@ mod tests {
     #[test]
     fn test_parse_symbol() {
         assert!(matches!(parse_symbol2("'test"), Ok(("", Atom2::Symbol(_)))));
-        assert!(!matches!(parse_symbol2(":test"), Ok(("", Atom2::Symbol(_)))));
+        assert!(!matches!(
+            parse_symbol2(":test"),
+            Ok(("", Atom2::Symbol(_)))
+        ));
     }
 
     #[test]
     fn test_parse_keyword() {
-        assert!(matches!(parse_keyword2(":test"), Ok(("", Atom2::Keyword(_)))));
+        assert!(matches!(
+            parse_keyword2(":test"),
+            Ok(("", Atom2::Keyword(_)))
+        ));
     }
 
     #[test]
@@ -375,7 +396,10 @@ mod tests {
 
     #[test]
     fn test_parse_boolean() {
-        assert!(matches!(parse_boolean2("#t"), Ok(("", Atom2::Boolean(true)))));
+        assert!(matches!(
+            parse_boolean2("#t"),
+            Ok(("", Atom2::Boolean(true)))
+        ));
         assert!(matches!(
             parse_boolean2("#f"),
             Ok(("", Atom2::Boolean(false)))
