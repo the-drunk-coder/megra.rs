@@ -10,7 +10,7 @@ use std::collections::{BTreeSet, HashMap};
 use std::sync;
 use vom_rs::pfa::{Pfa, Rule};
 
-use crate::new_parser::{BuiltIn2, EvaluatedExpr};
+use crate::new_parser::{BuiltIn, EvaluatedExpr};
 use crate::{OutputMode, SampleSet};
 
 pub fn nuc(
@@ -49,8 +49,8 @@ pub fn nuc(
 
     while let Some(c) = tail_drain.next() {
         match c {
-            EvaluatedExpr::BuiltIn(BuiltIn2::SoundEvent(e)) => ev_vec.push(SourceEvent::Sound(e)),
-            EvaluatedExpr::BuiltIn(BuiltIn2::ControlEvent(c)) => {
+            EvaluatedExpr::BuiltIn(BuiltIn::SoundEvent(e)) => ev_vec.push(SourceEvent::Sound(e)),
+            EvaluatedExpr::BuiltIn(BuiltIn::ControlEvent(c)) => {
                 ev_vec.push(SourceEvent::Control(c))
             }
             EvaluatedExpr::Keyword(k) => match k.as_str() {
@@ -58,7 +58,7 @@ pub fn nuc(
                     Some(EvaluatedExpr::Float(n)) => {
                         dur = Parameter::with_value(n);
                     }
-                    Some(EvaluatedExpr::BuiltIn(BuiltIn2::Parameter(p))) => {
+                    Some(EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p))) => {
                         dur = p;
                     }
                     _ => {}
@@ -87,7 +87,7 @@ pub fn nuc(
     let mut id_tags = BTreeSet::new();
     id_tags.insert(name.clone());
 
-    Some(EvaluatedExpr::BuiltIn(BuiltIn2::Generator(Generator {
+    Some(EvaluatedExpr::BuiltIn(BuiltIn::Generator(Generator {
         id_tags,
         root_generator: MarkovSequenceGenerator {
             name,
@@ -124,11 +124,11 @@ mod tests {
 
         let globals = sync::Arc::new(GlobalParameters::new());
 
-        match eval_from_str2(snippet, &functions, &globals, &sample_set) {
+        match eval_from_str(snippet, &functions, &globals, &sample_set) {
             Ok(res) => {
                 assert!(matches!(
                     res,
-                    EvaluatedExpr::BuiltIn(BuiltIn2::Generator(_))
+                    EvaluatedExpr::BuiltIn(BuiltIn::Generator(_))
                 ));
             }
             Err(e) => {

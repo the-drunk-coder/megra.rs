@@ -54,7 +54,7 @@ fn parse_cyc_named_parameter<'a>(i: &'a str) -> IResult<&'a str, CycleItem, Verb
             map(
                 context(
                     "custom_cycle_fun",
-                    cut(take_while(valid_function_name_char2)),
+                    cut(take_while(valid_function_name_char)),
                 ),
                 |fun_str: &str| fun_str.to_string(),
             ),
@@ -72,7 +72,7 @@ fn parse_cyc_named_parameter<'a>(i: &'a str) -> IResult<&'a str, CycleItem, Verb
 }
 
 fn parse_cyc_symbol<'a>(i: &'a str) -> IResult<&'a str, CycleItem, VerboseError<&'a str>> {
-    map(parse_symbol2, |s| {
+    map(parse_symbol, |s| {
         if let Atom2::Symbol(val) = s {
             CycleItem::Parameter(CycleParameter::Symbol(val))
         } else {
@@ -82,7 +82,7 @@ fn parse_cyc_symbol<'a>(i: &'a str) -> IResult<&'a str, CycleItem, VerboseError<
 }
 
 fn parse_cyc_float<'a>(i: &'a str) -> IResult<&'a str, CycleItem, VerboseError<&'a str>> {
-    map(parse_float2, |f| {
+    map(parse_float, |f| {
         if let Atom2::Float(val) = f {
             CycleItem::Parameter(CycleParameter::Number(val))
         } else {
@@ -92,7 +92,7 @@ fn parse_cyc_float<'a>(i: &'a str) -> IResult<&'a str, CycleItem, VerboseError<&
 }
 
 fn parse_cyc_duration<'a>(i: &'a str) -> IResult<&'a str, CycleItem, VerboseError<&'a str>> {
-    map(preceded(tag("/"), parse_float2), |f| {
+    map(preceded(tag("/"), parse_float), |f| {
         if let Atom2::Float(dur) = f {
             CycleItem::Duration(dur)
         } else {
@@ -113,7 +113,7 @@ fn parse_cyc_application<'a>(i: &'a str) -> IResult<&'a str, CycleItem, VerboseE
                 map(
                     context(
                         "custom_cycle_fun",
-                        cut(take_while(valid_function_name_char2)),
+                        cut(take_while(valid_function_name_char)),
                     ),
                     |fun_str: &str| fun_str.to_string(),
                 ),
@@ -226,10 +226,10 @@ pub fn eval_cyc_from_str(
                             // in brackets so it's recognized as a "function"
                             name = format!("({})", name);
                             //println!("{}", name);
-                            match parse_expr2(name.trim()) {
+                            match parse_expr(name.trim()) {
                                 Ok((_, expr)) => {
-                                    if let Some(EvaluatedExpr::BuiltIn(BuiltIn2::SoundEvent(e))) =
-                                        eval_expression2(
+                                    if let Some(EvaluatedExpr::BuiltIn(BuiltIn::SoundEvent(e))) =
+                                        eval_expression(
                                             &expr,
                                             &functions.lock(),
                                             global_parameters,
@@ -298,10 +298,10 @@ pub fn eval_cyc_from_str(
                         }
                         // brackets so it's recognized as a "function"
                         ev_name = format!("({})", ev_name);
-                        match parse_expr2(ev_name.trim()) {
+                        match parse_expr(ev_name.trim()) {
                             Ok((_, expr)) => {
-                                if let Some(EvaluatedExpr::BuiltIn(BuiltIn2::SoundEvent(e))) =
-                                    eval_expression2(
+                                if let Some(EvaluatedExpr::BuiltIn(BuiltIn::SoundEvent(e))) =
+                                    eval_expression(
                                         &expr,
                                         &functions.lock(),
                                         global_parameters,

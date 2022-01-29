@@ -1,6 +1,6 @@
 use crate::builtin_types::*;
 use crate::generator::Generator;
-use crate::new_parser::{BuiltIn2, EvaluatedExpr};
+use crate::new_parser::{BuiltIn, EvaluatedExpr};
 use crate::session::SyncContext;
 use crate::{OutputMode, SampleSet};
 use parking_lot::Mutex;
@@ -31,7 +31,7 @@ pub fn sync_context(
     };
 
     if !active {
-        return Some(EvaluatedExpr::BuiltIn(BuiltIn2::SyncContext(SyncContext {
+        return Some(EvaluatedExpr::BuiltIn(BuiltIn::SyncContext(SyncContext {
             name,
             generators: Vec::new(),
             part_proxies: Vec::new(),
@@ -92,25 +92,25 @@ pub fn sync_context(
                     proxies.push(PartProxy::Proxy(s, Vec::new()));
                 }
             }
-            EvaluatedExpr::BuiltIn(BuiltIn2::PartProxy(p)) => {
+            EvaluatedExpr::BuiltIn(BuiltIn::PartProxy(p)) => {
                 collect_solo_tags = false;
                 collect_block_tags = false;
                 // part proxy without additional modifiers
                 proxies.push(p);
             }
-            EvaluatedExpr::BuiltIn(BuiltIn2::ProxyList(mut l)) => {
+            EvaluatedExpr::BuiltIn(BuiltIn::ProxyList(mut l)) => {
                 collect_solo_tags = false;
                 collect_block_tags = false;
                 // part proxy without additional modifiers
                 proxies.append(&mut l);
             }
-            EvaluatedExpr::BuiltIn(BuiltIn2::Generator(mut k)) => {
+            EvaluatedExpr::BuiltIn(BuiltIn::Generator(mut k)) => {
                 collect_solo_tags = false;
                 collect_block_tags = false;
                 k.id_tags.insert(name.clone());
                 gens.push(k);
             }
-            EvaluatedExpr::BuiltIn(BuiltIn2::GeneratorList(mut kl)) => {
+            EvaluatedExpr::BuiltIn(BuiltIn::GeneratorList(mut kl)) => {
                 collect_solo_tags = false;
                 collect_block_tags = false;
                 for k in kl.iter_mut() {
@@ -122,7 +122,7 @@ pub fn sync_context(
         }
     }
 
-    Some(EvaluatedExpr::BuiltIn(BuiltIn2::SyncContext(SyncContext {
+    Some(EvaluatedExpr::BuiltIn(BuiltIn::SyncContext(SyncContext {
         name,
         generators: gens,
         part_proxies: proxies,
@@ -154,11 +154,11 @@ mod tests {
 
         let globals = sync::Arc::new(GlobalParameters::new());
 
-        match eval_from_str2(snippet, &functions, &globals, &sample_set) {
+        match eval_from_str(snippet, &functions, &globals, &sample_set) {
             Ok(res) => {
                 assert!(matches!(
                     res,
-                    EvaluatedExpr::BuiltIn(BuiltIn2::SyncContext(_))
+                    EvaluatedExpr::BuiltIn(BuiltIn::SyncContext(_))
                 ));
             }
             Err(e) => {

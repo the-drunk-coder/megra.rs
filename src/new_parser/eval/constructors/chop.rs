@@ -7,7 +7,7 @@ use ruffbox_synth::ruffbox::synth::SynthParameter;
 use std::collections::{BTreeSet, HashMap};
 use std::sync;
 use vom_rs::pfa::{Pfa, Rule};
-use crate::new_parser::{BuiltIn2, EvaluatedExpr};
+use crate::new_parser::{BuiltIn, EvaluatedExpr};
 use crate::{OutputMode, SampleSet};
 use parking_lot::Mutex;
 
@@ -54,7 +54,7 @@ pub fn chop(
 
     while let Some(c) = tail_drain.next() {
         match c {
-            EvaluatedExpr::BuiltIn(BuiltIn2::SoundEvent(e)) => {
+            EvaluatedExpr::BuiltIn(BuiltIn::SoundEvent(e)) => {
                 events.push(e);
             }
             EvaluatedExpr::Keyword(k) => match k.as_str() {
@@ -62,7 +62,7 @@ pub fn chop(
                     Some(EvaluatedExpr::Float(n)) => {
                         dur = Parameter::with_value(n);
                     }
-                    Some(EvaluatedExpr::BuiltIn(BuiltIn2::Parameter(p))) => {
+                    Some(EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p))) => {
                         dur = p;
                     }
                     _ => {}
@@ -210,7 +210,7 @@ pub fn chop(
     let mut id_tags = BTreeSet::new();
     id_tags.insert(name.clone());
 
-    Some(EvaluatedExpr::BuiltIn(BuiltIn2::Generator(Generator {
+    Some(EvaluatedExpr::BuiltIn(BuiltIn::Generator(Generator {
         id_tags,
         root_generator: MarkovSequenceGenerator {
             name,

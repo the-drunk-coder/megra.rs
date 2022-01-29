@@ -8,7 +8,7 @@ use std::collections::{BTreeSet, HashMap};
 use std::sync;
 use vom_rs::pfa::{Pfa, Rule};
 
-use crate::new_parser::{BuiltIn2, EvaluatedExpr};
+use crate::new_parser::{BuiltIn, EvaluatedExpr};
 use crate::{OutputMode, SampleSet};
 use parking_lot::Mutex;
 
@@ -64,11 +64,11 @@ pub fn fully(
                     cur_key = s.clone();
                     continue;
                 }
-                EvaluatedExpr::BuiltIn(BuiltIn2::SoundEvent(e)) => {
+                EvaluatedExpr::BuiltIn(BuiltIn::SoundEvent(e)) => {
                     collected_evs.push(SourceEvent::Sound(e));
                     continue;
                 }
-                EvaluatedExpr::BuiltIn(BuiltIn2::ControlEvent(e)) => {
+                EvaluatedExpr::BuiltIn(BuiltIn::ControlEvent(e)) => {
                     collected_evs.push(SourceEvent::Control(e));
                     continue;
                 }
@@ -96,10 +96,10 @@ pub fn fully(
                         final_vec.append(&mut collected_mapping.get(&label).unwrap().clone());
                     }
                 }
-                EvaluatedExpr::BuiltIn(BuiltIn2::SoundEvent(e) )=> {
+                EvaluatedExpr::BuiltIn(BuiltIn::SoundEvent(e) )=> {
                     final_vec.push(SourceEvent::Sound(e));
                 }
-                EvaluatedExpr::BuiltIn(BuiltIn2::ControlEvent(e)) => {
+                EvaluatedExpr::BuiltIn(BuiltIn::ControlEvent(e)) => {
                     final_vec.push(SourceEvent::Control(e));
                 }
                 _ => {}
@@ -115,7 +115,7 @@ pub fn fully(
                     Some(EvaluatedExpr::Float(n)) => {
                         dur = Parameter::with_value(n);
                     }
-                    Some(EvaluatedExpr::BuiltIn(BuiltIn2::Parameter(p))) => {
+                    Some(EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p))) => {
                         dur = p;
                     }
                     _ => {}
@@ -158,7 +158,7 @@ pub fn fully(
     let mut id_tags = BTreeSet::new();
     id_tags.insert(name.clone());
 
-    Some(EvaluatedExpr::BuiltIn(BuiltIn2::Generator(Generator {
+    Some(EvaluatedExpr::BuiltIn(BuiltIn::Generator(Generator {
         id_tags,
         root_generator: MarkovSequenceGenerator {
             name,

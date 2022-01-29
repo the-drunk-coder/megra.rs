@@ -1,7 +1,7 @@
 use crate::event::{Event, EventOperation};
 use crate::event_helpers::map_parameter;
 use crate::music_theory;
-use crate::new_parser::{BuiltIn2, EvaluatedExpr};
+use crate::new_parser::{BuiltIn, EvaluatedExpr};
 use crate::parameter::Parameter;
 use crate::{GlobalParameters, OutputMode, SampleSet};
 use parking_lot::Mutex;
@@ -192,14 +192,14 @@ pub fn sound(
                 map_parameter(&k),
                 Box::new(match tail_drain.next() {
                     Some(EvaluatedExpr::Float(n)) => Parameter::with_value(n),
-                    Some(EvaluatedExpr::BuiltIn(BuiltIn2::Parameter(pl))) => pl,
+                    Some(EvaluatedExpr::BuiltIn(BuiltIn::Parameter(pl))) => pl,
                     _ => Parameter::with_value(0.0),
                 }),
             );
         }
     }
 
-    Some(EvaluatedExpr::BuiltIn(BuiltIn2::SoundEvent(ev)))
+    Some(EvaluatedExpr::BuiltIn(BuiltIn::SoundEvent(ev)))
 }
 
 #[cfg(test)]
@@ -218,11 +218,11 @@ mod tests {
 
         let globals = sync::Arc::new(GlobalParameters::new());
 
-        match eval_from_str2(snippet, &functions, &globals, &sample_set) {
+        match eval_from_str(snippet, &functions, &globals, &sample_set) {
             Ok(res) => {
                 assert!(matches!(
                     res,
-                    EvaluatedExpr::BuiltIn(BuiltIn2::SoundEvent(_))
+                    EvaluatedExpr::BuiltIn(BuiltIn::SoundEvent(_))
                 ));
             }
             Err(e) => {

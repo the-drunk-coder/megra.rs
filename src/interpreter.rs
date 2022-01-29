@@ -6,7 +6,7 @@ use ruffbox_synth::ruffbox::Ruffbox;
 
 use crate::builtin_types::*;
 use crate::commands;
-use crate::new_parser::{BuiltIn2, EvaluatedExpr, FunctionMap};
+use crate::new_parser::{BuiltIn, EvaluatedExpr, FunctionMap};
 use crate::sample_set::SampleSet;
 use crate::session::{OutputMode, Session};
 
@@ -22,33 +22,33 @@ pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
     output_mode: OutputMode,
 ) {
     match parsed_in {
-        EvaluatedExpr::BuiltIn(BuiltIn2::Generator(g)) => {
+        EvaluatedExpr::BuiltIn(BuiltIn::Generator(g)) => {
             print!("a generator called \'");
             for tag in g.id_tags.iter() {
                 print!("{} ", tag);
             }
             println!("\'");
         }
-        EvaluatedExpr::BuiltIn(BuiltIn2::Parameter(_)) => {
+        EvaluatedExpr::BuiltIn(BuiltIn::Parameter(_)) => {
             println!("a parameter");
         }
-        EvaluatedExpr::BuiltIn(BuiltIn2::SoundEvent(_)) => {
+        EvaluatedExpr::BuiltIn(BuiltIn::SoundEvent(_)) => {
             println!("a sound event");
         }
-        EvaluatedExpr::BuiltIn(BuiltIn2::ControlEvent(_)) => {
+        EvaluatedExpr::BuiltIn(BuiltIn::ControlEvent(_)) => {
             println!("a control event");
         }
-        EvaluatedExpr::BuiltIn(BuiltIn2::GeneratorProcessorOrModifier(
+        EvaluatedExpr::BuiltIn(BuiltIn::GeneratorProcessorOrModifier(
             GeneratorProcessorOrModifier::GeneratorModifierFunction(_),
         )) => {
             println!("a gen mod fun");
         }
-        EvaluatedExpr::BuiltIn(BuiltIn2::GeneratorProcessorOrModifier(
+        EvaluatedExpr::BuiltIn(BuiltIn::GeneratorProcessorOrModifier(
             GeneratorProcessorOrModifier::GeneratorProcessor(_),
         )) => {
             println!("a gen proc");
         }
-        EvaluatedExpr::BuiltIn(BuiltIn2::GeneratorList(gl)) => {
+        EvaluatedExpr::BuiltIn(BuiltIn::GeneratorList(gl)) => {
             println!("a gen list");
             for gen in gl.iter() {
                 print!("--- a generator called \'");
@@ -58,7 +58,7 @@ pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
                 println!("\'");
             }
         }
-        EvaluatedExpr::BuiltIn(BuiltIn2::SyncContext(mut s)) => {
+        EvaluatedExpr::BuiltIn(BuiltIn::SyncContext(mut s)) => {
             println!(
                 "\n\n############### a context called \'{}\' ###############",
                 s.name
@@ -72,7 +72,7 @@ pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
                 output_mode,
             );
         }
-        EvaluatedExpr::BuiltIn(BuiltIn2::Command(c)) => {
+        EvaluatedExpr::BuiltIn(BuiltIn::Command(c)) => {
             match c {
                 Command::Clear => {
                     let session2 = sync::Arc::clone(session);

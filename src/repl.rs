@@ -37,7 +37,7 @@ pub fn start_repl<const BUFSIZE: usize, const NCHAN: usize>(
                     continue;
                 }
 
-                let pfa_in = new_parser::eval_from_str2(
+                let pfa_in = new_parser::eval_from_str(
                     line.as_str(),
                     &function_map.lock(),
                     global_parameters,
@@ -61,7 +61,7 @@ pub fn start_repl<const BUFSIZE: usize, const NCHAN: usize>(
                                 match readline_inner {
                                     Ok(line) => {
                                         line_buffer.push_str(line.as_str());
-                                        let inner_pfa_in = new_parser::eval_from_str2(
+                                        let inner_pfa_in = new_parser::eval_from_str(
                                             line_buffer.as_str(),
                                             &function_map.lock(),
                                             global_parameters,

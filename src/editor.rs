@@ -51,7 +51,7 @@ pub fn run_editor<const BUFSIZE: usize, const NCHAN: usize>(
 
     let callback_ref: sync::Arc<Mutex<dyn FnMut(&String)>> =
         sync::Arc::new(Mutex::new(move |text: &String| {
-            let pfa_in = new_parser::eval_from_str2(
+            let pfa_in = new_parser::eval_from_str(
                 text,
                 &function_map2.lock(),
                 &global_parameters2,

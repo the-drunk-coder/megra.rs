@@ -1,5 +1,5 @@
 use crate::event::*;
-use crate::new_parser::{BuiltIn2, EvaluatedExpr};
+use crate::new_parser::{BuiltIn, EvaluatedExpr};
 use crate::{GlobalParameters, OutputMode, SampleSet};
 use parking_lot::Mutex;
 use std::collections::BTreeSet;
@@ -16,17 +16,17 @@ pub fn control(
 
     for c in tail.drain(..) {
         match c {
-            EvaluatedExpr::BuiltIn(BuiltIn2::SyncContext(s)) => {
+            EvaluatedExpr::BuiltIn(BuiltIn::SyncContext(s)) => {
                 sync_contexts.push(s);
             }
-            EvaluatedExpr::BuiltIn(BuiltIn2::Command(c)) => {
+            EvaluatedExpr::BuiltIn(BuiltIn::Command(c)) => {
                 commands.push(c);
             }
             _ => {} // not controllable
         }
     }
 
-    Some(EvaluatedExpr::BuiltIn(BuiltIn2::ControlEvent(
+    Some(EvaluatedExpr::BuiltIn(BuiltIn::ControlEvent(
         ControlEvent {
             tags: BTreeSet::new(),
             ctx: if sync_contexts.is_empty() {
@@ -62,11 +62,11 @@ mod tests {
 
         let globals = sync::Arc::new(GlobalParameters::new());
 
-        match eval_from_str2(snippet, &functions, &globals, &sample_set) {
+        match eval_from_str(snippet, &functions, &globals, &sample_set) {
             Ok(res) => {
                 assert!(matches!(
                     res,
-                    EvaluatedExpr::BuiltIn(BuiltIn2::ControlEvent(_))
+                    EvaluatedExpr::BuiltIn(BuiltIn::ControlEvent(_))
                 ));
             }
             Err(e) => {

@@ -38,13 +38,13 @@ pub enum Atom2 {
 
 /// Expression Type
 #[derive(Debug)]
-pub enum Expr2 {
+pub enum Expr {
     Comment,
     Constant(Atom2),
-    Application(Box<Expr2>, Vec<Expr2>),
+    Application(Box<Expr>, Vec<Expr>),
 }
 
-pub enum BuiltIn2 {
+pub enum BuiltIn {
     Rule(Rule),
     Command(Command),
     PartProxy(PartProxy),
@@ -67,7 +67,7 @@ pub enum EvaluatedExpr {
     String(String),
     Boolean(bool),
     FunctionName(String),
-    BuiltIn(BuiltIn2),
+    BuiltIn(BuiltIn),
 }
 
 pub type FunctionMap = HashMap<
@@ -81,7 +81,7 @@ pub type FunctionMap = HashMap<
 >;
 
 /// valid chars for a string
-fn valid_string_char2(chr: char) -> bool {
+fn valid_string_char(chr: char) -> bool {
     chr == '~'
         || chr == '.'
         || chr == '\''
@@ -98,20 +98,20 @@ fn valid_string_char2(chr: char) -> bool {
 }
 
 /// valid chars for a function name, symbol or keyword
-pub fn valid_function_name_char2(chr: char) -> bool {
+pub fn valid_function_name_char(chr: char) -> bool {
     chr == '_' || chr == '-' || is_alphanumeric(chr as u8)
 }
 
 /// parse a string, which is enclosed in double quotes
-fn parse_string2(i: &str) -> IResult<&str, Atom2, VerboseError<&str>> {
+fn parse_string(i: &str) -> IResult<&str, Atom2, VerboseError<&str>> {
     map(
-        delimited(tag("\""), take_while(valid_string_char2), tag("\"")),
+        delimited(tag("\""), take_while(valid_string_char), tag("\"")),
         |desc_str: &str| Atom2::String(desc_str.to_string()),
     )(i)
 }
 
 /// booleans have a # prefix
-fn parse_boolean2(i: &str) -> IResult<&str, Atom2, VerboseError<&str>> {
+fn parse_boolean(i: &str) -> IResult<&str, Atom2, VerboseError<&str>> {
     alt((
         map(tag("#t"), |_| Atom2::Boolean(true)),
         map(tag("#f"), |_| Atom2::Boolean(false)),
@@ -119,54 +119,54 @@ fn parse_boolean2(i: &str) -> IResult<&str, Atom2, VerboseError<&str>> {
 }
 
 /// keywords are language constructs that start with a ':'
-fn parse_keyword2(i: &str) -> IResult<&str, Atom2, VerboseError<&str>> {
+fn parse_keyword(i: &str) -> IResult<&str, Atom2, VerboseError<&str>> {
     map(
         context(
             "keyword",
-            preceded(tag(":"), take_while(valid_function_name_char2)),
+            preceded(tag(":"), take_while(valid_function_name_char)),
         ),
         |sym_str: &str| Atom2::Keyword(sym_str.to_string()),
     )(i)
 }
 
 /// keywords are language constructs that start with a single quote
-pub fn parse_symbol2(i: &str) -> IResult<&str, Atom2, VerboseError<&str>> {
+pub fn parse_symbol(i: &str) -> IResult<&str, Atom2, VerboseError<&str>> {
     map(
         context(
             "symbol",
-            preceded(tag("'"), take_while(valid_function_name_char2)),
+            preceded(tag("'"), take_while(valid_function_name_char)),
         ),
         |sym_str: &str| Atom2::Symbol(sym_str.to_string()),
     )(i)
 }
 
 /// keywords are language constructs that start with a single quote
-fn parse_function2(i: &str) -> IResult<&str, Atom2, VerboseError<&str>> {
+fn parse_function(i: &str) -> IResult<&str, Atom2, VerboseError<&str>> {
     map(
-        context("function", take_while(valid_function_name_char2)),
+        context("function", take_while(valid_function_name_char)),
         |sym_str: &str| Atom2::Function(sym_str.to_string()),
     )(i)
 }
 
 /// floating point numbers ... all numbers currently are ...
-pub fn parse_float2(i: &str) -> IResult<&str, Atom2, VerboseError<&str>> {
+pub fn parse_float(i: &str) -> IResult<&str, Atom2, VerboseError<&str>> {
     map_res(recognize(float), |digit_str: &str| {
         digit_str.parse::<f32>().map(Atom2::Float)
     })(i)
 }
 
 /// parse all the atoms
-fn parse_constant2(i: &str) -> IResult<&str, Expr2, VerboseError<&str>> {
+fn parse_constant(i: &str) -> IResult<&str, Expr, VerboseError<&str>> {
     map(
         alt((
-            parse_boolean2,
-            parse_float2,
-            parse_keyword2,
-            parse_symbol2,
-            parse_string2,
-            parse_function2,
+            parse_boolean,
+            parse_float,
+            parse_keyword,
+            parse_symbol,
+            parse_string,
+            parse_function,
         )),
-        Expr2::Constant,
+        Expr::Constant,
     )(i)
 }
 
@@ -192,38 +192,38 @@ where
 ///
 /// `tuple` is used to sequence parsers together, so we can translate this directly
 /// and then map over it to transform the output into an `Expr::Application`
-fn parse_application2(i: &str) -> IResult<&str, Expr2, VerboseError<&str>> {
+fn parse_application(i: &str) -> IResult<&str, Expr, VerboseError<&str>> {
     let application_inner = map(
-        tuple((parse_expr2, many0(preceded(multispace1, parse_expr2)))),
-        |(head, tail)| Expr2::Application(Box::new(head), tail),
+        tuple((parse_expr, many0(preceded(multispace1, parse_expr)))),
+        |(head, tail)| Expr::Application(Box::new(head), tail),
     );
     // finally, we wrap it in an s-expression
     s_exp(application_inner)(i)
 }
 
-fn parse_comment2(i: &str) -> IResult<&str, Expr2, VerboseError<&str>> {
+fn parse_comment(i: &str) -> IResult<&str, Expr, VerboseError<&str>> {
     map(preceded(tag(";"), take_while(|ch| ch != '\n')), |_| {
-        Expr2::Comment
+        Expr::Comment
     })(i)
 }
 
 /// We tie them all together again, making a top-level expression parser!
 /// This one generates the abstract syntax tree
-pub fn parse_expr2(i: &str) -> IResult<&str, Expr2, VerboseError<&str>> {
-    alt((parse_application2, parse_constant2, parse_comment2))(i)
+pub fn parse_expr(i: &str) -> IResult<&str, Expr, VerboseError<&str>> {
+    alt((parse_application, parse_constant, parse_comment))(i)
 }
 
 /// This one reduces the abstract syntax tree ...
-pub fn eval_expression2(
-    e: &Expr2,
+pub fn eval_expression(
+    e: &Expr,
     functions: &FunctionMap,
     globals: &sync::Arc<GlobalParameters>,
     sample_set: &sync::Arc<Mutex<SampleSet>>,
     out_mode: OutputMode,
 ) -> Option<EvaluatedExpr> {
     match e {
-        Expr2::Comment => None, // ignore comments
-        Expr2::Constant(c) => Some(match c {
+        Expr::Comment => None, // ignore comments
+        Expr::Constant(c) => Some(match c {
             Atom2::Float(f) => EvaluatedExpr::Float(*f),
             Atom2::Symbol(s) => EvaluatedExpr::Symbol(s.to_string()),
             Atom2::Keyword(k) => EvaluatedExpr::Keyword(k.to_string()),
@@ -231,16 +231,16 @@ pub fn eval_expression2(
             Atom2::Boolean(b) => EvaluatedExpr::Boolean(*b),
             Atom2::Function(f) => EvaluatedExpr::FunctionName(f.to_string()),
         }),
-        Expr2::Application(head, tail) => {
+        Expr::Application(head, tail) => {
             if let Some(EvaluatedExpr::FunctionName(f)) =
-                eval_expression2(&*head, functions, globals, sample_set, out_mode)
+                eval_expression(&*head, functions, globals, sample_set, out_mode)
             {
                 // check if we have this function ...
                 if functions.contains_key(&f) {
                     let mut reduced_tail = tail
                         .iter()
                         .map(|expr| {
-                            eval_expression2(expr, functions, globals, sample_set, out_mode)
+                            eval_expression(expr, functions, globals, sample_set, out_mode)
                         })
                         .collect::<Option<Vec<EvaluatedExpr>>>()?;
                     // push function name
@@ -256,17 +256,17 @@ pub fn eval_expression2(
     }
 }
 
-pub fn eval_from_str2(
+pub fn eval_from_str(
     src: &str,
     functions: &FunctionMap,
     globals: &sync::Arc<GlobalParameters>,
     sample_set: &sync::Arc<Mutex<SampleSet>>,
     out_mode: OutputMode,
 ) -> Result<EvaluatedExpr, String> {
-    parse_expr2(src)
+    parse_expr(src)
         .map_err(|e: nom::Err<VerboseError<&str>>| format!("{:#?}", e))
         .and_then(|(_, exp)| {
-            eval_expression2(&exp, functions, globals, sample_set, out_mode)
+            eval_expression(&exp, functions, globals, sample_set, out_mode)
                 .ok_or_else(|| "eval failed".to_string())
         })
 }
@@ -355,7 +355,7 @@ mod tests {
             Some(EvaluatedExpr::Boolean(true))
         });
 
-        match eval_from_str2(snippet, &functions, &globals, &sample_set) {
+        match eval_from_str(snippet, &functions, &globals, &sample_set) {
             Ok(res) => {
                 assert!(matches!(res, EvaluatedExpr::Boolean(true)))
             }
@@ -368,16 +368,16 @@ mod tests {
 
     #[test]
     fn test_parse_float() {
-        assert!(matches!(parse_float2("0.0"), Ok(("", Atom2::Float(_)))));
-        assert!(matches!(parse_float2("1.0"), Ok(("", Atom2::Float(_)))));
-        assert!(matches!(parse_float2("-1.0"), Ok(("", Atom2::Float(_)))));
+        assert!(matches!(parse_float("0.0"), Ok(("", Atom2::Float(_)))));
+        assert!(matches!(parse_float("1.0"), Ok(("", Atom2::Float(_)))));
+        assert!(matches!(parse_float("-1.0"), Ok(("", Atom2::Float(_)))));
     }
 
     #[test]
     fn test_parse_symbol() {
-        assert!(matches!(parse_symbol2("'test"), Ok(("", Atom2::Symbol(_)))));
+        assert!(matches!(parse_symbol("'test"), Ok(("", Atom2::Symbol(_)))));
         assert!(!matches!(
-            parse_symbol2(":test"),
+            parse_symbol(":test"),
             Ok(("", Atom2::Symbol(_)))
         ));
     }
@@ -385,7 +385,7 @@ mod tests {
     #[test]
     fn test_parse_keyword() {
         assert!(matches!(
-            parse_keyword2(":test"),
+            parse_keyword(":test"),
             Ok(("", Atom2::Keyword(_)))
         ));
     }
@@ -393,7 +393,7 @@ mod tests {
     #[test]
     fn test_parse_string() {
         assert!(matches!(
-            parse_string2("\"test\""),
+            parse_string("\"test\""),
             Ok(("", Atom2::String(_)))
         ));
     }
@@ -401,11 +401,11 @@ mod tests {
     #[test]
     fn test_parse_boolean() {
         assert!(matches!(
-            parse_boolean2("#t"),
+            parse_boolean("#t"),
             Ok(("", Atom2::Boolean(true)))
         ));
         assert!(matches!(
-            parse_boolean2("#f"),
+            parse_boolean("#f"),
             Ok(("", Atom2::Boolean(false)))
         ));
     }
@@ -413,142 +413,142 @@ mod tests {
     #[test]
     fn test_parse_atom_constant() {
         assert!(matches!(
-            parse_constant2("#t"),
-            Ok(("", Expr2::Constant(Atom2::Boolean(true))))
+            parse_constant("#t"),
+            Ok(("", Expr::Constant(Atom2::Boolean(true))))
         ));
         assert!(matches!(
-            parse_constant2("#f"),
-            Ok(("", Expr2::Constant(Atom2::Boolean(false))))
+            parse_constant("#f"),
+            Ok(("", Expr::Constant(Atom2::Boolean(false))))
         ));
         assert!(matches!(
-            parse_constant2("'test"),
-            Ok(("", Expr2::Constant(Atom2::Symbol(_))))
+            parse_constant("'test"),
+            Ok(("", Expr::Constant(Atom2::Symbol(_))))
         ));
         assert!(matches!(
-            parse_constant2(":test"),
-            Ok(("", Expr2::Constant(Atom2::Keyword(_))))
+            parse_constant(":test"),
+            Ok(("", Expr::Constant(Atom2::Keyword(_))))
         ));
         assert!(matches!(
-            parse_constant2("\"test\""),
-            Ok(("", Expr2::Constant(Atom2::String(_))))
+            parse_constant("\"test\""),
+            Ok(("", Expr::Constant(Atom2::String(_))))
         ));
     }
 
     #[test]
     fn test_parse_expr() {
         assert!(matches!(
-            parse_expr2("#t"),
-            Ok(("", Expr2::Constant(Atom2::Boolean(true))))
+            parse_expr("#t"),
+            Ok(("", Expr::Constant(Atom2::Boolean(true))))
         ));
         assert!(matches!(
-            parse_expr2("#f"),
-            Ok(("", Expr2::Constant(Atom2::Boolean(false))))
+            parse_expr("#f"),
+            Ok(("", Expr::Constant(Atom2::Boolean(false))))
         ));
         assert!(matches!(
-            parse_expr2("'test"),
-            Ok(("", Expr2::Constant(Atom2::Symbol(_))))
+            parse_expr("'test"),
+            Ok(("", Expr::Constant(Atom2::Symbol(_))))
         ));
         assert!(matches!(
-            parse_expr2(":test"),
-            Ok(("", Expr2::Constant(Atom2::Keyword(_))))
+            parse_expr(":test"),
+            Ok(("", Expr::Constant(Atom2::Keyword(_))))
         ));
         assert!(matches!(
-            parse_expr2("\"test\""),
-            Ok(("", Expr2::Constant(Atom2::String(_))))
+            parse_expr("\"test\""),
+            Ok(("", Expr::Constant(Atom2::String(_))))
         ));
         assert!(matches!(
-            parse_expr2("(#t)"),
-            Ok(("", Expr2::Application(_, _)))
+            parse_expr("(#t)"),
+            Ok(("", Expr::Application(_, _)))
         ));
         assert!(matches!(
-            parse_expr2("('test)"),
-            Ok(("", Expr2::Application(_, _)))
+            parse_expr("('test)"),
+            Ok(("", Expr::Application(_, _)))
         ));
         assert!(matches!(
-            parse_expr2("(:test)"),
-            Ok(("", Expr2::Application(_, _)))
+            parse_expr("(:test)"),
+            Ok(("", Expr::Application(_, _)))
         ));
         assert!(matches!(
-            parse_expr2("(\"test\")"),
-            Ok(("", Expr2::Application(_, _)))
+            parse_expr("(\"test\")"),
+            Ok(("", Expr::Application(_, _)))
         ));
 
-        if let Ok(("", Expr2::Application(head, tail))) =
-            parse_expr2("(text 'tar :lvl 1.0 :global #t :relate #f :boost (bounce 0 400))")
+        if let Ok(("", Expr::Application(head, tail))) =
+            parse_expr("(text 'tar :lvl 1.0 :global #t :relate #f :boost (bounce 0 400))")
         {
-            if let Expr2::Constant(Atom2::Function(function_name)) = *head {
+            if let Expr::Constant(Atom2::Function(function_name)) = *head {
                 assert!(function_name == "text");
             } else {
                 assert!(false)
             }
 
             // SYMBOLS
-            if let Expr2::Constant(Atom2::Symbol(s)) = &tail[0] {
+            if let Expr::Constant(Atom2::Symbol(s)) = &tail[0] {
                 assert!(s == "tar");
             } else {
                 assert!(false);
             }
 
             // KEYWORDS
-            if let Expr2::Constant(Atom2::Keyword(k)) = &tail[1] {
+            if let Expr::Constant(Atom2::Keyword(k)) = &tail[1] {
                 assert!(k == "lvl");
             } else {
                 assert!(false);
             }
 
-            if let Expr2::Constant(Atom2::Keyword(k)) = &tail[3] {
+            if let Expr::Constant(Atom2::Keyword(k)) = &tail[3] {
                 assert!(k == "global");
             } else {
                 assert!(false);
             }
 
-            if let Expr2::Constant(Atom2::Keyword(k)) = &tail[5] {
+            if let Expr::Constant(Atom2::Keyword(k)) = &tail[5] {
                 assert!(k == "relate");
             } else {
                 assert!(false);
             }
 
-            if let Expr2::Constant(Atom2::Keyword(k)) = &tail[7] {
+            if let Expr::Constant(Atom2::Keyword(k)) = &tail[7] {
                 assert!(k == "boost");
             } else {
                 assert!(false);
             }
 
             // BOOLEANS
-            if let Expr2::Constant(Atom2::Boolean(b)) = &tail[4] {
+            if let Expr::Constant(Atom2::Boolean(b)) = &tail[4] {
                 assert!(b);
             } else {
                 assert!(false);
             }
 
-            if let Expr2::Constant(Atom2::Boolean(b)) = &tail[6] {
+            if let Expr::Constant(Atom2::Boolean(b)) = &tail[6] {
                 assert!(!b);
             } else {
                 assert!(false);
             }
 
             // FLOAT
-            if let Expr2::Constant(Atom2::Float(f)) = &tail[2] {
+            if let Expr::Constant(Atom2::Float(f)) = &tail[2] {
                 assert!(*f == 1.0);
             } else {
                 assert!(false);
             }
 
             // APPLICATION
-            if let Expr2::Application(head2, tail2) = &tail[8] {
-                if let Expr2::Constant(Atom2::Function(function_name2)) = &**head2 {
+            if let Expr::Application(head2, tail2) = &tail[8] {
+                if let Expr::Constant(Atom2::Function(function_name2)) = &**head2 {
                     assert!(function_name2 == "bounce")
                 } else {
                     assert!(false)
                 }
                 // FLOAT
-                if let Expr2::Constant(Atom2::Float(f)) = &tail2[0] {
+                if let Expr::Constant(Atom2::Float(f)) = &tail2[0] {
                     assert!(*f == 0.0);
                 } else {
                     assert!(false);
                 }
                 // FLOAT
-                if let Expr2::Constant(Atom2::Float(f)) = &tail2[1] {
+                if let Expr::Constant(Atom2::Float(f)) = &tail2[1] {
                     assert!(*f == 400.0);
                 } else {
                     assert!(false);
