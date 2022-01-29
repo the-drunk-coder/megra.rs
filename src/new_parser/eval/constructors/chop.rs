@@ -3,30 +3,37 @@ use crate::event::*;
 use crate::generator::Generator;
 use crate::markov_sequence_generator::MarkovSequenceGenerator;
 use crate::parameter::*;
-use crate::parser::parser_helpers::*;
 use ruffbox_synth::ruffbox::synth::SynthParameter;
 use std::collections::{BTreeSet, HashMap};
 use std::sync;
 use vom_rs::pfa::{Pfa, Rule};
+use crate::new_parser::{BuiltIn2, EvaluatedExpr};
+use crate::{OutputMode, SampleSet};
+use parking_lot::Mutex;
 
-pub fn construct_chop(
-    tail: &mut Vec<Expr>,
+pub fn chop(
+    tail: &mut Vec<EvaluatedExpr>,
     global_parameters: &sync::Arc<GlobalParameters>,
-) -> Atom {
+    _: &sync::Arc<Mutex<SampleSet>>,
+    _: OutputMode,
+) -> Option<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..);
 
+    // ignore function name in this case
+    tail_drain.next();
+    
     // name is the first symbol
-    let name = if let Some(n) = get_string_from_expr(&tail_drain.next().unwrap()) {
+    let name = if let Some(EvaluatedExpr::Symbol(n)) = tail_drain.next() {
         n
     } else {
         "".to_string()
     };
 
     // name is the first symbol
-    let slices: usize = if let Some(n) = get_float_from_expr(&tail_drain.next().unwrap()) {
+    let slices: usize = if let Some(EvaluatedExpr::Float(n)) = tail_drain.next() {
         n as usize
     } else {
-        8
+	8
     };
 
     let mut dur: Parameter = if let ConfigParameter::Numeric(d) = global_parameters
@@ -45,33 +52,33 @@ pub fn construct_chop(
 
     let mut events = Vec::new();
 
-    while let Some(Expr::Constant(c)) = tail_drain.next() {
+    while let Some(c) = tail_drain.next() {
         match c {
-            Atom::SoundEvent(e) => {
+            EvaluatedExpr::BuiltIn(BuiltIn2::SoundEvent(e)) => {
                 events.push(e);
             }
-            Atom::Keyword(k) => match k.as_str() {
+            EvaluatedExpr::Keyword(k) => match k.as_str() {
                 "dur" => match tail_drain.next() {
-                    Some(Expr::Constant(Atom::Float(n))) => {
+                    Some(EvaluatedExpr::Float(n)) => {
                         dur = Parameter::with_value(n);
                     }
-                    Some(Expr::Constant(Atom::Parameter(p))) => {
+                    Some(EvaluatedExpr::BuiltIn(BuiltIn2::Parameter(p))) => {
                         dur = p;
                     }
                     _ => {}
                 },
                 "rep" => {
-                    if let Expr::Constant(Atom::Float(n)) = tail_drain.next().unwrap() {
+                    if let EvaluatedExpr::Float(n) = tail_drain.next().unwrap() {
                         repetition_chance = n;
                     }
                 }
                 "rnd" => {
-                    if let Expr::Constant(Atom::Float(n)) = tail_drain.next().unwrap() {
+                    if let EvaluatedExpr::Float(n) = tail_drain.next().unwrap() {
                         randomize_chance = n;
                     }
                 }
                 "max-rep" => {
-                    if let Expr::Constant(Atom::Float(n)) = tail_drain.next().unwrap() {
+                    if let EvaluatedExpr::Float(n) = tail_drain.next().unwrap() {
                         max_repetitions = n;
                     }
                 }
@@ -203,7 +210,7 @@ pub fn construct_chop(
     let mut id_tags = BTreeSet::new();
     id_tags.insert(name.clone());
 
-    Atom::Generator(Generator {
+    Some(EvaluatedExpr::BuiltIn(BuiltIn2::Generator(Generator {
         id_tags,
         root_generator: MarkovSequenceGenerator {
             name,
@@ -218,5 +225,5 @@ pub fn construct_chop(
         },
         processors: Vec::new(),
         time_mods: Vec::new(),
-    })
+    })))
 }
