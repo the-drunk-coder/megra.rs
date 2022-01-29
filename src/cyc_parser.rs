@@ -73,7 +73,7 @@ fn parse_cyc_named_parameter<'a>(i: &'a str) -> IResult<&'a str, CycleItem, Verb
 
 fn parse_cyc_symbol<'a>(i: &'a str) -> IResult<&'a str, CycleItem, VerboseError<&'a str>> {
     map(parse_symbol, |s| {
-        if let Atom2::Symbol(val) = s {
+        if let Atom::Symbol(val) = s {
             CycleItem::Parameter(CycleParameter::Symbol(val))
         } else {
             CycleItem::Nothing
@@ -83,7 +83,7 @@ fn parse_cyc_symbol<'a>(i: &'a str) -> IResult<&'a str, CycleItem, VerboseError<
 
 fn parse_cyc_float<'a>(i: &'a str) -> IResult<&'a str, CycleItem, VerboseError<&'a str>> {
     map(parse_float, |f| {
-        if let Atom2::Float(val) = f {
+        if let Atom::Float(val) = f {
             CycleItem::Parameter(CycleParameter::Number(val))
         } else {
             CycleItem::Nothing
@@ -93,7 +93,7 @@ fn parse_cyc_float<'a>(i: &'a str) -> IResult<&'a str, CycleItem, VerboseError<&
 
 fn parse_cyc_duration<'a>(i: &'a str) -> IResult<&'a str, CycleItem, VerboseError<&'a str>> {
     map(preceded(tag("/"), parse_float), |f| {
-        if let Atom2::Float(dur) = f {
+        if let Atom::Float(dur) = f {
             CycleItem::Duration(dur)
         } else {
             CycleItem::Nothing
