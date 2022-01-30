@@ -4,7 +4,6 @@ use crate::generator::Generator;
 use crate::markov_sequence_generator::MarkovSequenceGenerator;
 use crate::parameter::*;
 
-use parking_lot::Mutex;
 use ruffbox_synth::ruffbox::synth::SynthParameter;
 use std::collections::{BTreeSet, HashMap};
 use std::sync;
@@ -12,6 +11,7 @@ use vom_rs::pfa::{Pfa, Rule};
 
 use crate::parser::{BuiltIn, EvaluatedExpr};
 use crate::{OutputMode, SampleSet};
+use parking_lot::Mutex;
 
 pub fn nuc(
     tail: &mut Vec<EvaluatedExpr>,

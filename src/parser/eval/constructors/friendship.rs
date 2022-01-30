@@ -3,20 +3,29 @@ use crate::event::*;
 use crate::generator::Generator;
 use crate::markov_sequence_generator::MarkovSequenceGenerator;
 use crate::parameter::*;
-use crate::parser::parser_helpers::*;
+
 use ruffbox_synth::ruffbox::synth::SynthParameter;
 use std::collections::{BTreeSet, HashMap};
 use std::sync;
 use vom_rs::pfa::{Pfa, Rule};
 
-pub fn construct_friendship(
-    tail: &mut Vec<Expr>,
+use crate::parser::{BuiltIn, EvaluatedExpr};
+use crate::{OutputMode, SampleSet};
+use parking_lot::Mutex;
+
+pub fn friendship(
+    tail: &mut Vec<EvaluatedExpr>,
     global_parameters: &sync::Arc<GlobalParameters>,
-) -> Atom {
+    _: &sync::Arc<Mutex<SampleSet>>,
+    _: OutputMode,
+) -> Option<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..);
 
+    // ignore function name in this case
+    tail_drain.next();
+
     // name is the first symbol
-    let name = if let Some(n) = get_string_from_expr(&tail_drain.next().unwrap()) {
+    let name = if let Some(EvaluatedExpr::Symbol(n)) = tail_drain.next() {
         n
     } else {
         "".to_string()
@@ -48,10 +57,10 @@ pub fn construct_friendship(
     let mut randomize_chance: f32 = 0.0;
     let mut max_repetitions: f32 = 0.0;
 
-    while let Some(Expr::Constant(c)) = tail_drain.next() {
+    while let Some(c) = tail_drain.next() {
         if collect_labeled {
             match c {
-                Atom::Symbol(ref s) => {
+                EvaluatedExpr::Symbol(ref s) => {
                     if !cur_key.is_empty() && !collected_evs.is_empty() {
                         collected_mapping
                             .insert(cur_key.chars().next().unwrap(), collected_evs.clone());
@@ -60,11 +69,11 @@ pub fn construct_friendship(
                     cur_key = s.clone();
                     continue;
                 }
-                Atom::SoundEvent(e) => {
+                EvaluatedExpr::BuiltIn(BuiltIn::SoundEvent(e)) => {
                     collected_evs.push(SourceEvent::Sound(e));
                     continue;
                 }
-                Atom::ControlEvent(e) => {
+                EvaluatedExpr::BuiltIn(BuiltIn::ControlEvent(e)) => {
                     collected_evs.push(SourceEvent::Control(e));
                     continue;
                 }
@@ -85,16 +94,16 @@ pub fn construct_friendship(
             let mut final_vec = Vec::new();
 
             match c {
-                Atom::Symbol(ref s) => {
+                EvaluatedExpr::Symbol(ref s) => {
                     let label = s.chars().next().unwrap();
                     if collected_mapping.contains_key(&label) {
                         final_vec.append(&mut collected_mapping.get(&label).unwrap().clone());
                     }
                 }
-                Atom::SoundEvent(e) => {
+                EvaluatedExpr::BuiltIn(BuiltIn::SoundEvent(e)) => {
                     final_vec.push(SourceEvent::Sound(e));
                 }
-                Atom::ControlEvent(e) => {
+                EvaluatedExpr::BuiltIn(BuiltIn::ControlEvent(e)) => {
                     final_vec.push(SourceEvent::Control(e));
                 }
                 _ => {}
@@ -104,13 +113,13 @@ pub fn construct_friendship(
             continue;
         }
 
-        if let Atom::Keyword(k) = c {
+        if let EvaluatedExpr::Keyword(k) = c {
             match k.as_str() {
                 "dur" => match tail_drain.next() {
-                    Some(Expr::Constant(Atom::Float(n))) => {
+                    Some(EvaluatedExpr::Float(n)) => {
                         dur = Parameter::with_value(n);
                     }
-                    Some(Expr::Constant(Atom::Parameter(p))) => {
+                    Some(EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p))) => {
                         dur = p;
                     }
                     _ => {}
@@ -120,29 +129,29 @@ pub fn construct_friendship(
                     continue;
                 }
                 "rep" => {
-                    if let Expr::Constant(Atom::Float(n)) = tail_drain.next().unwrap() {
+                    if let EvaluatedExpr::Float(n) = tail_drain.next().unwrap() {
                         repetition_chance = n;
                     }
                 }
                 "rnd" => {
-                    if let Expr::Constant(Atom::Float(n)) = tail_drain.next().unwrap() {
+                    if let EvaluatedExpr::Float(n) = tail_drain.next().unwrap() {
                         randomize_chance = n;
                     }
                 }
                 "max-rep" => {
-                    if let Expr::Constant(Atom::Float(n)) = tail_drain.next().unwrap() {
+                    if let EvaluatedExpr::Float(n) = tail_drain.next().unwrap() {
                         max_repetitions = n;
                     }
                 }
                 "center" => {
-                    if let Some(Expr::Constant(c)) = tail_drain.next() {
+                    if let Some(c) = tail_drain.next() {
                         //let next_char: char = std::char::from_u32(last_char as u32 + 1).unwrap();
                         //last_char = next_char;
                         //center_label = next_char;
                         let mut final_vec = Vec::new();
 
                         match c {
-                            Atom::Symbol(ref s) => {
+                            EvaluatedExpr::Symbol(ref s) => {
                                 let label = s.chars().next().unwrap();
                                 if collected_mapping.contains_key(&label) {
                                     final_vec.append(
@@ -150,10 +159,10 @@ pub fn construct_friendship(
                                     );
                                 }
                             }
-                            Atom::SoundEvent(e) => {
+                            EvaluatedExpr::BuiltIn(BuiltIn::SoundEvent(e)) => {
                                 final_vec.push(SourceEvent::Sound(e));
                             }
-                            Atom::ControlEvent(e) => {
+                            EvaluatedExpr::BuiltIn(BuiltIn::ControlEvent(e)) => {
                                 final_vec.push(SourceEvent::Control(e));
                             }
                             _ => {}
@@ -315,7 +324,7 @@ pub fn construct_friendship(
     let mut id_tags = BTreeSet::new();
     id_tags.insert(name.clone());
 
-    Atom::Generator(Generator {
+    Some(EvaluatedExpr::BuiltIn(BuiltIn::Generator(Generator {
         id_tags,
         root_generator: MarkovSequenceGenerator {
             name,
@@ -330,5 +339,5 @@ pub fn construct_friendship(
         },
         processors: Vec::new(),
         time_mods: Vec::new(),
-    })
+    })))
 }

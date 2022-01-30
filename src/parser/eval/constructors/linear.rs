@@ -3,21 +3,29 @@ use crate::event::*;
 use crate::generator::Generator;
 use crate::markov_sequence_generator::MarkovSequenceGenerator;
 use crate::parameter::*;
-use crate::parser::parser_helpers::*;
+
 use ruffbox_synth::ruffbox::synth::SynthParameter;
 use std::collections::{BTreeSet, HashMap};
 use std::sync;
 use vom_rs::pfa::{Pfa, Rule};
 
-/// construct a simple linear sequence of events ... no tricks here
-pub fn construct_linear(
-    tail: &mut Vec<Expr>,
+use crate::parser::{BuiltIn, EvaluatedExpr};
+use crate::{OutputMode, SampleSet};
+use parking_lot::Mutex;
+
+pub fn linear(
+    tail: &mut Vec<EvaluatedExpr>,
     global_parameters: &sync::Arc<GlobalParameters>,
-) -> Atom {
+    _: &sync::Arc<Mutex<SampleSet>>,
+    _: OutputMode,
+) -> Option<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..);
 
+    // ignore function name in this case
+    tail_drain.next();
+
     // name is the first symbol
-    let name = if let Some(n) = get_string_from_expr(&tail_drain.next().unwrap()) {
+    let name = if let Some(EvaluatedExpr::Symbol(n)) = tail_drain.next() {
         n
     } else {
         "".to_string()
@@ -39,17 +47,17 @@ pub fn construct_linear(
 
     for c in tail_drain {
         match c {
-            Expr::Constant(Atom::SoundEvent(e)) => {
+            EvaluatedExpr::BuiltIn(BuiltIn::SoundEvent(e)) => {
                 ev_vecs.push(vec![SourceEvent::Sound(e)]);
                 dur_vec.push(dur.clone());
                 continue;
             }
-            Expr::Constant(Atom::ControlEvent(e)) => {
+            EvaluatedExpr::BuiltIn(BuiltIn::ControlEvent(e)) => {
                 ev_vecs.push(vec![SourceEvent::Control(e)]);
                 dur_vec.push(dur.clone());
                 continue;
             }
-            Expr::Constant(Atom::Float(f)) => {
+            EvaluatedExpr::Float(f) => {
                 *dur_vec.last_mut().unwrap() = Parameter::with_value(f);
             }
             _ => println! {"ignored"},
@@ -95,7 +103,7 @@ pub fn construct_linear(
     let mut id_tags = BTreeSet::new();
     id_tags.insert(name.clone());
 
-    Atom::Generator(Generator {
+    Some(EvaluatedExpr::BuiltIn(BuiltIn::Generator(Generator {
         id_tags,
         root_generator: MarkovSequenceGenerator {
             name,
@@ -110,5 +118,5 @@ pub fn construct_linear(
         },
         processors: Vec::new(),
         time_mods: Vec::new(),
-    })
+    })))
 }
