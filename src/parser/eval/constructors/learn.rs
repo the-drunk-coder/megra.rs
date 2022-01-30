@@ -79,6 +79,7 @@ pub fn learn(
                         event_mapping.insert(cur_key.chars().next().unwrap(), ev_vec.clone());
                     }
                     collect_events = false;
+                    // move on below
                 }
             }
         }
@@ -126,7 +127,7 @@ pub fn learn(
                 }
                 _ => println!("{}", k),
             },
-            _ => println! {"ignored"},
+            _ => println! {"ignored {:?}", c},
         }
     }
 

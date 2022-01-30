@@ -139,7 +139,8 @@ pub fn eval_multiplyer(
 
     let mut gen_proc_list_list = Vec::new();
 
-    for c in tail.drain(..) {
+    for c in tail.drain(..).skip(1) {
+        // ignore function name
         match c {
             EvaluatedExpr::BuiltIn(BuiltIn::GeneratorProcessorOrModifierList(gpl)) => {
                 gen_proc_list_list.push(gpl);
@@ -152,7 +153,7 @@ pub fn eval_multiplyer(
                 gen_proc_list_list.push(gpl);
             }
             _ => {
-                println!("can't multiply this ...");
+                println!("can't multiply {:?}", c);
             }
         }
     }

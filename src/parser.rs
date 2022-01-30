@@ -19,6 +19,7 @@ use nom::{
 };
 use parking_lot::Mutex;
 use std::collections::HashMap;
+use std::fmt;
 use std::sync;
 
 pub mod eval;
@@ -69,6 +70,21 @@ pub enum EvaluatedExpr {
     FunctionName(String),
     BuiltIn(BuiltIn),
     Comment,
+}
+
+impl fmt::Debug for EvaluatedExpr {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            EvaluatedExpr::Float(fl) => write!(f, "EvaluatedExpr::Float({})", fl),
+            EvaluatedExpr::Symbol(s) => write!(f, "EvaluatedExpr::Symbol({})", s),
+            EvaluatedExpr::Keyword(k) => write!(f, "EvaluatedExpr::Keyword({})", k),
+            EvaluatedExpr::String(s) => write!(f, "EvaluatedExpr::String({})", s),
+            EvaluatedExpr::Boolean(b) => write!(f, "EvaluatedExpr::Boolean({})", b),
+            EvaluatedExpr::FunctionName(fna) => write!(f, "EvaluatedExpr::FunctionName({})", fna),
+            EvaluatedExpr::BuiltIn(_) => write!(f, "EvaluatedExpr::BuiltIn(..)"),
+            EvaluatedExpr::Comment => write!(f, "EvaluatedExpr::Comment"),
+        }
+    }
 }
 
 pub struct FunctionMap {
