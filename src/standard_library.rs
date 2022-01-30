@@ -46,6 +46,133 @@ pub fn define_standard_library() -> FunctionMap {
     standard_library.fmap.insert("tri".to_string(), eval::events::sound::sound);
     standard_library.fmap.insert("sine".to_string(), eval::events::sound::sound);
 
+    // parameter events
+    standard_library.fmap.insert("pitch".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("pitch-add".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("pitch-mul".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("pitch-sub".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("pitch-div".to_string(), eval::events::parameters::parameter);
+
+    standard_library.fmap.insert("freq".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("freq-add".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("freq-mul".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("freq-sub".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("freq-div".to_string(), eval::events::parameters::parameter);
+
+    standard_library.fmap.insert("lvl".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("lvl-add".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("lvl-mul".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("lvl-sub".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("lvl-div".to_string(), eval::events::parameters::parameter);
+
+    standard_library.fmap.insert("lpf".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("lpf-add".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("lpf-mul".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("lpf-sub".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("lpf-div".to_string(), eval::events::parameters::parameter);
+    
+    standard_library.fmap.insert("lpd".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("lpd-add".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("lpd-mul".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("lpd-sub".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("lpd-div".to_string(), eval::events::parameters::parameter);
+
+    standard_library.fmap.insert("lpq".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("lpq-add".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("lpq-mul".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("lpq-sub".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("lpq-div".to_string(), eval::events::parameters::parameter);
+    
+    standard_library.fmap.insert("pff".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("pff-add".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("pff-mul".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("pff-sub".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("pff-div".to_string(), eval::events::parameters::parameter);
+
+    standard_library.fmap.insert("pfq".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("pfq-add".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("pfq-mul".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("pfq-sub".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("pfq-div".to_string(), eval::events::parameters::parameter);
+
+    standard_library.fmap.insert("pfg".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("pfg-add".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("pfg-mul".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("pfg-sub".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("pfg-div".to_string(), eval::events::parameters::parameter);
+
+    standard_library.fmap.insert("hpf".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("hpf-add".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("hpf-mul".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("hpf-sub".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("hpf-div".to_string(), eval::events::parameters::parameter);
+
+    standard_library.fmap.insert("hpq".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("hpq-add".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("hpq-mul".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("hpq-sub".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("hpq-div".to_string(), eval::events::parameters::parameter);
+
+    standard_library.fmap.insert("atk".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("atk-add".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("atk-mul".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("atk-sub".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("atk-div".to_string(), eval::events::parameters::parameter);
+
+    standard_library.fmap.insert("sus".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("sus-add".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("sus-mul".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("sus-sub".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("sus-div".to_string(), eval::events::parameters::parameter);
+
+    standard_library.fmap.insert("rel".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("rel-add".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("rel-mul".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("rel-sub".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("rel-div".to_string(), eval::events::parameters::parameter);
+
+    standard_library.fmap.insert("pos".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("pos-add".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("pos-mul".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("pos-sub".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("pos-div".to_string(), eval::events::parameters::parameter);
+
+    standard_library.fmap.insert("dur".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("dur-add".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("dur-mul".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("dur-sub".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("dur-div".to_string(), eval::events::parameters::parameter);
+
+    standard_library.fmap.insert("del".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("del-add".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("del-mul".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("del-sub".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("del-div".to_string(), eval::events::parameters::parameter);
+
+    standard_library.fmap.insert("rev".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("rev-add".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("rev-mul".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("rev-sub".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("rev-div".to_string(), eval::events::parameters::parameter);
+
+    standard_library.fmap.insert("pw".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("pw-add".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("pw-mul".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("pw-sub".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("pw-div".to_string(), eval::events::parameters::parameter);
+
+    standard_library.fmap.insert("start".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("start-add".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("start-mul".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("start-sub".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("start-div".to_string(), eval::events::parameters::parameter);
+
+    standard_library.fmap.insert("rate".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("rate-add".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("rate-mul".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("rate-sub".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("rate-div".to_string(), eval::events::parameters::parameter);
+    
     // control event
     standard_library.fmap.insert("ctrl".to_string(), eval::events::control::control);
 

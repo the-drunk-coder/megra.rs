@@ -17,7 +17,6 @@ pub mod markov_sequence_generator;
 pub mod music_theory;
 pub mod parameter;
 pub mod parser;
-//pub mod parser;
 pub mod pfa_growth;
 pub mod pfa_reverse;
 pub mod repl;
@@ -25,6 +24,7 @@ pub mod sample_set;
 pub mod scheduler;
 pub mod session;
 
+#[rustfmt::skip]
 mod standard_library;
 
 use crate::builtin_types::*;
