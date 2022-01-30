@@ -317,78 +317,88 @@ mod tests {
         let globals = sync::Arc::new(GlobalParameters::new());
         let sample_set = sync::Arc::new(Mutex::new(SampleSet::new()));
 
-        functions.insert("text".to_string(), |tail, _, _| {
-            // SYMBOLS
-            if let EvaluatedExpr::Symbol(s) = &tail[0] {
-                assert!(s == "tar");
-            } else {
-                assert!(false);
-            }
+        functions
+            .fmap
+            .insert("text".to_string(), |_, tail, _, _, _| {
+                // SYMBOLS
+                if let EvaluatedExpr::Symbol(s) = &tail[0] {
+                    assert!(s == "tar");
+                } else {
+                    assert!(false);
+                }
 
-            // KEYWORDS
-            if let EvaluatedExpr::Keyword(k) = &tail[1] {
-                assert!(k == "lvl");
-            } else {
-                assert!(false);
-            }
+                // KEYWORDS
+                if let EvaluatedExpr::Keyword(k) = &tail[1] {
+                    assert!(k == "lvl");
+                } else {
+                    assert!(false);
+                }
 
-            if let EvaluatedExpr::Keyword(k) = &tail[3] {
-                assert!(k == "global");
-            } else {
-                assert!(false);
-            }
+                if let EvaluatedExpr::Keyword(k) = &tail[3] {
+                    assert!(k == "global");
+                } else {
+                    assert!(false);
+                }
 
-            if let EvaluatedExpr::Keyword(k) = &tail[5] {
-                assert!(k == "relate");
-            } else {
-                assert!(false);
-            }
+                if let EvaluatedExpr::Keyword(k) = &tail[5] {
+                    assert!(k == "relate");
+                } else {
+                    assert!(false);
+                }
 
-            if let EvaluatedExpr::Keyword(k) = &tail[7] {
-                assert!(k == "boost");
-            } else {
-                assert!(false);
-            }
+                if let EvaluatedExpr::Keyword(k) = &tail[7] {
+                    assert!(k == "boost");
+                } else {
+                    assert!(false);
+                }
 
-            // BOOLEANS
-            if let EvaluatedExpr::Boolean(b) = &tail[4] {
-                assert!(b);
-            } else {
-                assert!(false);
-            }
+                // BOOLEANS
+                if let EvaluatedExpr::Boolean(b) = &tail[4] {
+                    assert!(b);
+                } else {
+                    assert!(false);
+                }
 
-            if let EvaluatedExpr::Boolean(b) = &tail[6] {
-                assert!(!b);
-            } else {
-                assert!(false);
-            }
+                if let EvaluatedExpr::Boolean(b) = &tail[6] {
+                    assert!(!b);
+                } else {
+                    assert!(false);
+                }
 
-            // FLOAT
-            if let EvaluatedExpr::Float(f) = &tail[2] {
-                assert!(*f == 1.0);
-            } else {
-                assert!(false);
-            }
+                // FLOAT
+                if let EvaluatedExpr::Float(f) = &tail[2] {
+                    assert!(*f == 1.0);
+                } else {
+                    assert!(false);
+                }
 
-            Some(EvaluatedExpr::Boolean(true))
-        });
+                Some(EvaluatedExpr::Boolean(true))
+            });
 
-        functions.insert("bounce".to_string(), |tail, _, _| {
-            if let EvaluatedExpr::Float(f) = &tail[0] {
-                assert!(*f == 0.0);
-            } else {
-                assert!(false);
-            }
-            if let EvaluatedExpr::Float(f) = &tail[1] {
-                assert!(*f == 400.0);
-            } else {
-                assert!(false);
-            }
+        functions
+            .fmap
+            .insert("bounce".to_string(), |_, tail, _, _, _| {
+                if let EvaluatedExpr::Float(f) = &tail[0] {
+                    assert!(*f == 0.0);
+                } else {
+                    assert!(false);
+                }
+                if let EvaluatedExpr::Float(f) = &tail[1] {
+                    assert!(*f == 400.0);
+                } else {
+                    assert!(false);
+                }
 
-            Some(EvaluatedExpr::Boolean(true))
-        });
+                Some(EvaluatedExpr::Boolean(true))
+            });
 
-        match eval_from_str(snippet, &functions, &globals, &sample_set) {
+        match eval_from_str(
+            snippet,
+            &functions,
+            &globals,
+            &sample_set,
+            OutputMode::Stereo,
+        ) {
             Ok(res) => {
                 assert!(matches!(res, EvaluatedExpr::Boolean(true)))
             }

@@ -525,8 +525,17 @@ mod tests {
         let template_events = Vec::new();
         let event_mappings = HashMap::new();
 
+        let mut fmap: FunctionMap = FunctionMap::new();
+        fmap.fmap.insert(
+            "piano".to_string(),
+            crate::parser::eval::events::sound::sound,
+        );
+        fmap.fmap
+            .insert("saw".to_string(), crate::parser::eval::events::sound::sound);
+
         let o = eval_cyc_from_str(
             "saw /100 saw:400 ~ ~ [saw:100 saw:500] ~ piano:'a3 piano:'a3:lpf=100",
+            &fmap,
             &sample_set,
             OutputMode::Stereo,
             &template_events,

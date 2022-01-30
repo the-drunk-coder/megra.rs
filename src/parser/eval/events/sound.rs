@@ -217,11 +217,19 @@ mod tests {
         let mut functions = FunctionMap::new();
         let sample_set = sync::Arc::new(Mutex::new(SampleSet::new()));
 
-        functions.insert("risset".to_string(), eval::events::sound::sound);
+        functions
+            .fmap
+            .insert("risset".to_string(), eval::events::sound::sound);
 
         let globals = sync::Arc::new(GlobalParameters::new());
 
-        match eval_from_str(snippet, &functions, &globals, &sample_set) {
+        match eval_from_str(
+            snippet,
+            &functions,
+            &globals,
+            &sample_set,
+            OutputMode::Stereo,
+        ) {
             Ok(res) => {
                 assert!(matches!(
                     res,

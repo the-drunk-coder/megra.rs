@@ -56,14 +56,28 @@ mod tests {
         let mut functions = FunctionMap::new();
         let sample_set = sync::Arc::new(Mutex::new(SampleSet::new()));
 
-        functions.insert("saw".to_string(), eval::events::sound::sound);
-        functions.insert("ctrl".to_string(), eval::events::control::control);
-        functions.insert("sx".to_string(), eval::session::sync_context::sync_context);
-        functions.insert("nuc".to_string(), eval::constructors::nuc::nuc);
+        functions
+            .fmap
+            .insert("saw".to_string(), eval::events::sound::sound);
+        functions
+            .fmap
+            .insert("ctrl".to_string(), eval::events::control::control);
+        functions
+            .fmap
+            .insert("sx".to_string(), eval::session::sync_context::sync_context);
+        functions
+            .fmap
+            .insert("nuc".to_string(), eval::constructors::nuc::nuc);
 
         let globals = sync::Arc::new(GlobalParameters::new());
 
-        match eval_from_str(snippet, &functions, &globals, &sample_set) {
+        match eval_from_str(
+            snippet,
+            &functions,
+            &globals,
+            &sample_set,
+            OutputMode::Stereo,
+        ) {
             Ok(res) => {
                 assert!(matches!(
                     res,

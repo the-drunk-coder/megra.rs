@@ -118,14 +118,22 @@ mod tests {
         let mut functions = FunctionMap::new();
         let sample_set = sync::Arc::new(Mutex::new(SampleSet::new()));
 
-        functions.insert("nuc".to_string(), eval::constructors::nuc::nuc);
-        functions.insert("bd".to_string(), |_, _, _| {
+        functions
+            .fmap
+            .insert("nuc".to_string(), eval::constructors::nuc::nuc);
+        functions.fmap.insert("bd".to_string(), |_, _, _, _, _| {
             Some(EvaluatedExpr::String("bd".to_string()))
         });
 
         let globals = sync::Arc::new(GlobalParameters::new());
 
-        match eval_from_str(snippet, &functions, &globals, &sample_set) {
+        match eval_from_str(
+            snippet,
+            &functions,
+            &globals,
+            &sample_set,
+            OutputMode::Stereo,
+        ) {
             Ok(res) => {
                 assert!(matches!(res, EvaluatedExpr::BuiltIn(BuiltIn::Generator(_))));
             }
