@@ -68,6 +68,7 @@ pub enum EvaluatedExpr {
     Boolean(bool),
     FunctionName(String),
     BuiltIn(BuiltIn),
+    Comment,
 }
 
 pub struct FunctionMap {
@@ -221,7 +222,7 @@ fn parse_comment(i: &str) -> IResult<&str, Expr, VerboseError<&str>> {
 /// We tie them all together again, making a top-level expression parser!
 /// This one generates the abstract syntax tree
 pub fn parse_expr(i: &str) -> IResult<&str, Expr, VerboseError<&str>> {
-    alt((parse_application, parse_constant, parse_comment))(i)
+    alt((parse_comment, parse_application, parse_constant))(i)
 }
 
 /// This one reduces the abstract syntax tree ...
@@ -233,7 +234,7 @@ pub fn eval_expression(
     out_mode: OutputMode,
 ) -> Option<EvaluatedExpr> {
     match e {
-        Expr::Comment => None, // ignore comments
+        Expr::Comment => Some(EvaluatedExpr::Comment),
         Expr::Constant(c) => Some(match c {
             Atom::Float(f) => EvaluatedExpr::Float(*f),
             Atom::Symbol(s) => EvaluatedExpr::Symbol(s.to_string()),

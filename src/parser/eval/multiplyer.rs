@@ -1,6 +1,6 @@
+use ruffbox_synth::ruffbox::synth::SynthParameter;
 use std::collections::{BTreeSet, HashMap};
 use std::sync;
-use ruffbox_synth::ruffbox::synth::SynthParameter;
 
 use crate::builtin_types::*;
 use crate::event::{Event, EventOperation};
