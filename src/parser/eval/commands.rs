@@ -29,7 +29,7 @@ pub fn load_part(
         return None;
     };
 
-    while let Some(c) = tail_drain.next() {
+    for c in tail_drain {
         match c {
             EvaluatedExpr::BuiltIn(BuiltIn::Generator(g)) => gens.push(g),
             EvaluatedExpr::BuiltIn(BuiltIn::GeneratorList(mut gl)) => gens.append(&mut gl),
@@ -380,11 +380,11 @@ pub fn once(
     _: &sync::Arc<Mutex<SampleSet>>,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
-    let mut tail_drain = tail.drain(..).skip(1);
+    let tail_drain = tail.drain(..).skip(1);
     let mut sound_events = Vec::new();
     let mut control_events = Vec::new();
 
-    while let Some(c) = tail_drain.next() {
+    for c in tail_drain {
         match c {
             EvaluatedExpr::BuiltIn(BuiltIn::SoundEvent(mut e)) => sound_events.push(e.get_static()),
             EvaluatedExpr::BuiltIn(BuiltIn::ControlEvent(c)) => control_events.push(c),

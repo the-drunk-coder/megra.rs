@@ -87,8 +87,7 @@ pub fn collect_inhibit(tail: &mut Vec<EvaluatedExpr>) -> Box<dyn GeneratorProces
         last_filters.push("".to_string());
     }
     filtered_events.insert(last_filters.clone(), (true, evs.clone()));
-    proc.events_to_be_applied
-        .push((cur_prob.clone(), filtered_events));
+    proc.events_to_be_applied.push((cur_prob, filtered_events));
 
     Box::new(proc)
 }

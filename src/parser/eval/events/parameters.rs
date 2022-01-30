@@ -18,7 +18,7 @@ pub fn parameter(
 
     // get function name, check which parameter we're dealing with
     if let Some(EvaluatedExpr::FunctionName(f)) = tail_drain.next() {
-        let parts: Vec<&str> = f.split("-").collect();
+        let parts: Vec<&str> = f.split('-').collect();
         if parts.len() == 1 || parts.len() == 2 {
             // operatron
             let op = if parts.len() == 2 {

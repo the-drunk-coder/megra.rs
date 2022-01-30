@@ -231,7 +231,7 @@ pub fn eval_cyc_from_str(
                                     if let Some(EvaluatedExpr::BuiltIn(BuiltIn::SoundEvent(e))) =
                                         eval_expression(
                                             &expr,
-                                            &functions,
+                                            functions,
                                             global_parameters,
                                             sample_set,
                                             out_mode,
@@ -303,7 +303,7 @@ pub fn eval_cyc_from_str(
                                 if let Some(EvaluatedExpr::BuiltIn(BuiltIn::SoundEvent(e))) =
                                     eval_expression(
                                         &expr,
-                                        &functions,
+                                        functions,
                                         global_parameters,
                                         sample_set,
                                         out_mode,
