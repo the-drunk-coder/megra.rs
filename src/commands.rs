@@ -13,9 +13,9 @@ use crate::builtin_types::*;
 use crate::event::*;
 use crate::event_helpers::*;
 use crate::generator::*;
+use crate::parameter::*;
 use crate::parser::eval;
 use crate::parser::FunctionMap;
-use crate::parameter::*;
 use crate::sample_set::SampleSet;
 use crate::session::*;
 
@@ -102,7 +102,10 @@ pub fn load_sample<const BUFSIZE: usize, const NCHAN: usize>(
     sample_set
         .lock()
         .insert(set.clone(), keyword_set, bufnum, duration);
-    function_map.lock().fmap.insert(set, eval::events::sound::sound);
+    function_map
+        .lock()
+        .fmap
+        .insert(set, eval::events::sound::sound);
 }
 
 pub fn load_sample_set<const BUFSIZE: usize, const NCHAN: usize>(

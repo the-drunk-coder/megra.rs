@@ -1,8 +1,8 @@
 use crate::event::{Event, EventOperation};
 use crate::event_helpers::map_parameter;
 use crate::music_theory;
-use crate::parser::{BuiltIn, EvaluatedExpr, FunctionMap};
 use crate::parameter::Parameter;
+use crate::parser::{BuiltIn, EvaluatedExpr, FunctionMap};
 use crate::{GlobalParameters, OutputMode, SampleSet};
 use parking_lot::Mutex;
 use ruffbox_synth::ruffbox::synth::SynthParameter;
@@ -18,7 +18,7 @@ fn get_pitch_param(
         SynthParameter::PitchFrequency,
         Box::new(match tail_drain.next() {
             Some(EvaluatedExpr::Float(n)) => Parameter::with_value(n),
-            //Some(Expr::Constant(Atom::Parameter(pl))) => pl,
+            Some(EvaluatedExpr::BuiltIn(BuiltIn::Parameter(pl))) => pl,
             Some(EvaluatedExpr::Symbol(s)) => Parameter::with_value(music_theory::to_freq(
                 music_theory::from_string(&s),
                 music_theory::Tuning::EqualTemperament,

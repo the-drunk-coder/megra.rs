@@ -23,7 +23,7 @@ pub fn cyc(
     out_mode: OutputMode,
 ) -> Option<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..);
-    
+
     // ignore function name in this case
     tail_drain.next();
 
@@ -150,7 +150,7 @@ pub fn cyc(
 
     let mut parsed_cycle = cyc_parser::eval_cyc_from_str(
         &cycle_string,
-	functions,
+        functions,
         sample_set,
         out_mode,
         &template_evs,

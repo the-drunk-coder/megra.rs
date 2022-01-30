@@ -24,7 +24,7 @@ pub fn chop(
 
     // ignore function name in this case
     tail_drain.next();
-    
+
     // name is the first symbol
     let name = if let Some(EvaluatedExpr::Symbol(n)) = tail_drain.next() {
         n
@@ -36,7 +36,7 @@ pub fn chop(
     let slices: usize = if let Some(EvaluatedExpr::Float(n)) = tail_drain.next() {
         n as usize
     } else {
-	8
+        8
     };
 
     let mut dur: Parameter = if let ConfigParameter::Numeric(d) = global_parameters

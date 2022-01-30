@@ -72,22 +72,22 @@ pub enum EvaluatedExpr {
 
 pub struct FunctionMap {
     pub fmap: HashMap<
-    String,
-    fn(
-	&FunctionMap,
-	&mut Vec<EvaluatedExpr>,
-        &sync::Arc<GlobalParameters>,
-        &sync::Arc<Mutex<SampleSet>>,
-        OutputMode,
-    ) -> Option<EvaluatedExpr>,
-	>
+        String,
+        fn(
+            &FunctionMap,
+            &mut Vec<EvaluatedExpr>,
+            &sync::Arc<GlobalParameters>,
+            &sync::Arc<Mutex<SampleSet>>,
+            OutputMode,
+        ) -> Option<EvaluatedExpr>,
+    >,
 }
 
 impl FunctionMap {
     pub fn new() -> Self {
-	FunctionMap {
-	    fmap: HashMap::new()
-	}
+        FunctionMap {
+            fmap: HashMap::new(),
+        }
     }
 }
 
@@ -250,9 +250,7 @@ pub fn eval_expression(
                 if functions.fmap.contains_key(&f) {
                     let mut reduced_tail = tail
                         .iter()
-                        .map(|expr| {
-                            eval_expression(expr, functions, globals, sample_set, out_mode)
-                        })
+                        .map(|expr| eval_expression(expr, functions, globals, sample_set, out_mode))
                         .collect::<Option<Vec<EvaluatedExpr>>>()?;
                     // push function name
                     reduced_tail.insert(0, EvaluatedExpr::FunctionName(f.clone()));
@@ -387,18 +385,12 @@ mod tests {
     #[test]
     fn test_parse_symbol() {
         assert!(matches!(parse_symbol("'test"), Ok(("", Atom::Symbol(_)))));
-        assert!(!matches!(
-            parse_symbol(":test"),
-            Ok(("", Atom::Symbol(_)))
-        ));
+        assert!(!matches!(parse_symbol(":test"), Ok(("", Atom::Symbol(_)))));
     }
 
     #[test]
     fn test_parse_keyword() {
-        assert!(matches!(
-            parse_keyword(":test"),
-            Ok(("", Atom::Keyword(_)))
-        ));
+        assert!(matches!(parse_keyword(":test"), Ok(("", Atom::Keyword(_)))));
     }
 
     #[test]
@@ -411,10 +403,7 @@ mod tests {
 
     #[test]
     fn test_parse_boolean() {
-        assert!(matches!(
-            parse_boolean("#t"),
-            Ok(("", Atom::Boolean(true)))
-        ));
+        assert!(matches!(parse_boolean("#t"), Ok(("", Atom::Boolean(true)))));
         assert!(matches!(
             parse_boolean("#f"),
             Ok(("", Atom::Boolean(false)))

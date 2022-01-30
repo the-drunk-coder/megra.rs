@@ -97,7 +97,7 @@ pub fn fully(
                         final_vec.append(&mut collected_mapping.get(&label).unwrap().clone());
                     }
                 }
-                EvaluatedExpr::BuiltIn(BuiltIn::SoundEvent(e) )=> {
+                EvaluatedExpr::BuiltIn(BuiltIn::SoundEvent(e)) => {
                     final_vec.push(SourceEvent::Sound(e));
                 }
                 EvaluatedExpr::BuiltIn(BuiltIn::ControlEvent(e)) => {

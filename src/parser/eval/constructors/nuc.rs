@@ -127,10 +127,7 @@ mod tests {
 
         match eval_from_str(snippet, &functions, &globals, &sample_set) {
             Ok(res) => {
-                assert!(matches!(
-                    res,
-                    EvaluatedExpr::BuiltIn(BuiltIn::Generator(_))
-                ));
+                assert!(matches!(res, EvaluatedExpr::BuiltIn(BuiltIn::Generator(_))));
             }
             Err(e) => {
                 println!("err {}", e);

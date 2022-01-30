@@ -25,13 +25,13 @@ pub fn rule(
     let source_vec: Vec<char> = if let Some(EvaluatedExpr::Symbol(s)) = tail_drain.next() {
         s.chars().collect()
     } else {
-	return None;
+        return None;
     };
-    
+
     let sym_vec: Vec<char> = if let Some(EvaluatedExpr::Symbol(s)) = tail_drain.next() {
         s.chars().collect()
     } else {
-	return None;
+        return None;
     };
 
     let def_dur: f32 = if let ConfigParameter::Numeric(d) = global_parameters
@@ -45,17 +45,17 @@ pub fn rule(
     };
 
     let probability = if let Some(EvaluatedExpr::Float(p)) = tail_drain.next() {
-	p / 100.0
+        p / 100.0
     } else {
-	1.0
+        1.0
     };
-    
+
     let duration = if let Some(EvaluatedExpr::Float(f)) = tail_drain.next() {
-	f as u64
+        f as u64
     } else {
-	def_dur as u64
+        def_dur as u64
     };
-	
+
     Some(EvaluatedExpr::BuiltIn(BuiltIn::Rule(Rule {
         source: source_vec,
         symbol: sym_vec[0],
@@ -176,7 +176,6 @@ pub fn infer(
     let pfa = pfa::Pfa::<char>::infer_from_rules(&mut rules, true);
     let mut id_tags = BTreeSet::new();
     id_tags.insert(name.clone());
-
 
     Some(EvaluatedExpr::BuiltIn(BuiltIn::Generator(Generator {
         id_tags,

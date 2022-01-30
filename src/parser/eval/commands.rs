@@ -7,8 +7,8 @@ use std::collections::BTreeSet;
 
 use ruffbox_synth::ruffbox::synth::SynthParameter;
 
-use crate::{SampleSet, OutputMode};
-use crate::parser::{FunctionMap, EvaluatedExpr, BuiltIn};
+use crate::parser::{BuiltIn, EvaluatedExpr, FunctionMap};
+use crate::{OutputMode, SampleSet};
 use parking_lot::Mutex;
 use std::sync;
 
@@ -24,9 +24,9 @@ pub fn load_part(
     let mut proxies = Vec::new();
 
     let name: String = if let Some(EvaluatedExpr::String(s)) = tail_drain.next() {
-	s
+        s
     } else {
-	return None;
+        return None;
     };
 
     while let Some(c) = tail_drain.next() {
@@ -39,7 +39,9 @@ pub fn load_part(
         }
     }
 
-    Some(EvaluatedExpr::BuiltIn(BuiltIn::Command(Command::LoadPart((name, Part::Combined(gens, proxies))))))
+    Some(EvaluatedExpr::BuiltIn(BuiltIn::Command(Command::LoadPart(
+        (name, Part::Combined(gens, proxies)),
+    ))))
 }
 
 pub fn freeze_buffer(
@@ -57,7 +59,9 @@ pub fn freeze_buffer(
         1
     };
 
-    Some(EvaluatedExpr::BuiltIn(BuiltIn::Command(Command::FreezeBuffer(freeze_buffer))))
+    Some(EvaluatedExpr::BuiltIn(BuiltIn::Command(
+        Command::FreezeBuffer(freeze_buffer),
+    )))
 }
 
 pub fn load_sample(
@@ -106,7 +110,9 @@ pub fn load_sample(
         }
     }
 
-    Some(EvaluatedExpr::BuiltIn(BuiltIn::Command(Command::LoadSample((set, keywords, path)))))
+    Some(EvaluatedExpr::BuiltIn(BuiltIn::Command(
+        Command::LoadSample((set, keywords, path)),
+    )))
 }
 
 pub fn load_sample_sets(
@@ -123,7 +129,9 @@ pub fn load_sample_sets(
         "".to_string()
     };
 
-    Some(EvaluatedExpr::BuiltIn(BuiltIn::Command(Command::LoadSampleSets(path))))
+    Some(EvaluatedExpr::BuiltIn(BuiltIn::Command(
+        Command::LoadSampleSets(path),
+    )))
 }
 
 pub fn load_sample_set(
@@ -140,7 +148,9 @@ pub fn load_sample_set(
         "".to_string()
     };
 
-    Some(EvaluatedExpr::BuiltIn(BuiltIn::Command(Command::LoadSampleSet(path))))
+    Some(EvaluatedExpr::BuiltIn(BuiltIn::Command(
+        Command::LoadSampleSet(path),
+    )))
 }
 
 pub fn tmod(
@@ -151,11 +161,13 @@ pub fn tmod(
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..).skip(1);
-    Some(EvaluatedExpr::BuiltIn(BuiltIn::Command(Command::Tmod(match tail_drain.next() {
-        Some(EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p))) => p,
-        Some(EvaluatedExpr::Float(f)) => Parameter::with_value(f),
-        _ => Parameter::with_value(1.0),
-    }))))
+    Some(EvaluatedExpr::BuiltIn(BuiltIn::Command(Command::Tmod(
+        match tail_drain.next() {
+            Some(EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p))) => p,
+            Some(EvaluatedExpr::Float(f)) => Parameter::with_value(f),
+            _ => Parameter::with_value(1.0),
+        },
+    ))))
 }
 
 pub fn latency(
@@ -166,11 +178,13 @@ pub fn latency(
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..).skip(1);
-    Some(EvaluatedExpr::BuiltIn(BuiltIn::Command(Command::Latency(match tail_drain.next() {
-        Some(EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p))) => p,
-        Some(EvaluatedExpr::Float(f)) => Parameter::with_value(f),
-        _ => Parameter::with_value(0.05),
-    }))))
+    Some(EvaluatedExpr::BuiltIn(BuiltIn::Command(Command::Latency(
+        match tail_drain.next() {
+            Some(EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p))) => p,
+            Some(EvaluatedExpr::Float(f)) => Parameter::with_value(f),
+            _ => Parameter::with_value(0.05),
+        },
+    ))))
 }
 
 pub fn bpm(
@@ -181,10 +195,12 @@ pub fn bpm(
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..).skip(1);
-    Some(EvaluatedExpr::BuiltIn(BuiltIn::Command(Command::Bpm(match tail_drain.next() {
-        Some(EvaluatedExpr::Float(f)) => 60000.0 / f,
-        _ => 200.0,
-    }))))
+    Some(EvaluatedExpr::BuiltIn(BuiltIn::Command(Command::Bpm(
+        match tail_drain.next() {
+            Some(EvaluatedExpr::Float(f)) => 60000.0 / f,
+            _ => 200.0,
+        },
+    ))))
 }
 
 pub fn default_duration(
@@ -195,10 +211,12 @@ pub fn default_duration(
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..).skip(1);
-    Some(EvaluatedExpr::BuiltIn(BuiltIn::Command(Command::DefaultDuration(match tail_drain.next() {
-        Some(EvaluatedExpr::Float(f)) => f,
-        _ => 200.0,
-    }))))
+    Some(EvaluatedExpr::BuiltIn(BuiltIn::Command(
+        Command::DefaultDuration(match tail_drain.next() {
+            Some(EvaluatedExpr::Float(f)) => f,
+            _ => 200.0,
+        }),
+    )))
 }
 
 pub fn globres(
@@ -209,10 +227,12 @@ pub fn globres(
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..).skip(1);
-    Some(EvaluatedExpr::BuiltIn(BuiltIn::Command(Command::GlobRes(match tail_drain.next() {
-        Some(EvaluatedExpr::Float(f)) => f,
-        _ => 400000.0,
-    }))))
+    Some(EvaluatedExpr::BuiltIn(BuiltIn::Command(Command::GlobRes(
+        match tail_drain.next() {
+            Some(EvaluatedExpr::Float(f)) => f,
+            _ => 400000.0,
+        },
+    ))))
 }
 
 pub fn reverb(
@@ -250,7 +270,9 @@ pub fn reverb(
         }
     }
 
-    Some(EvaluatedExpr::BuiltIn(BuiltIn::Command(Command::GlobalRuffboxParams(param_map))))
+    Some(EvaluatedExpr::BuiltIn(BuiltIn::Command(
+        Command::GlobalRuffboxParams(param_map),
+    )))
 }
 
 pub fn delay(
@@ -296,7 +318,9 @@ pub fn delay(
         }
     }
 
-    Some(EvaluatedExpr::BuiltIn(BuiltIn::Command(Command::GlobalRuffboxParams(param_map))))
+    Some(EvaluatedExpr::BuiltIn(BuiltIn::Command(
+        Command::GlobalRuffboxParams(param_map),
+    )))
 }
 
 pub fn export_dot(
@@ -316,15 +340,17 @@ pub fn export_dot(
     };
 
     match tail_drain.next() {
-        Some(EvaluatedExpr::BuiltIn(BuiltIn::Generator(g))) => {
-            Some(EvaluatedExpr::BuiltIn(BuiltIn::Command(Command::ExportDotStatic((filename, g)))))
-        }
+        Some(EvaluatedExpr::BuiltIn(BuiltIn::Generator(g))) => Some(EvaluatedExpr::BuiltIn(
+            BuiltIn::Command(Command::ExportDotStatic((filename, g))),
+        )),
         Some(EvaluatedExpr::Keyword(k)) => {
             match k.as_str() {
                 "part" => {
                     if let Some(EvaluatedExpr::Symbol(part_name)) = tail_drain.next() {
                         // collect next symbols
-                        Some(EvaluatedExpr::BuiltIn(BuiltIn::Command(Command::ExportDotPart((filename, part_name)))))
+                        Some(EvaluatedExpr::BuiltIn(BuiltIn::Command(
+                            Command::ExportDotPart((filename, part_name)),
+                        )))
                     } else {
                         None
                     }
@@ -336,7 +362,9 @@ pub fn export_dot(
                         id_tags.insert(si);
                     }
                     // collect next symbols
-                    Some(EvaluatedExpr::BuiltIn(BuiltIn::Command(Command::ExportDotRunning((filename, id_tags)))))
+                    Some(EvaluatedExpr::BuiltIn(BuiltIn::Command(
+                        Command::ExportDotRunning((filename, id_tags)),
+                    )))
                 }
                 _ => None,
             }
@@ -364,7 +392,10 @@ pub fn once(
         }
     }
 
-    Some(EvaluatedExpr::BuiltIn(BuiltIn::Command(Command::Once((sound_events, control_events)))))
+    Some(EvaluatedExpr::BuiltIn(BuiltIn::Command(Command::Once((
+        sound_events,
+        control_events,
+    )))))
 }
 
 pub fn step_part(
@@ -376,7 +407,9 @@ pub fn step_part(
 ) -> Option<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..).skip(1);
     if let Some(EvaluatedExpr::Symbol(s)) = tail_drain.next() {
-        Some(EvaluatedExpr::BuiltIn(BuiltIn::Command(Command::StepPart(s))))
+        Some(EvaluatedExpr::BuiltIn(BuiltIn::Command(Command::StepPart(
+            s,
+        ))))
     } else {
         None
     }
@@ -388,6 +421,6 @@ pub fn clear(
     _: &sync::Arc<GlobalParameters>,
     _: &sync::Arc<Mutex<SampleSet>>,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {    
-    Some(EvaluatedExpr::BuiltIn(BuiltIn::Command(Command::Clear)))    
+) -> Option<EvaluatedExpr> {
+    Some(EvaluatedExpr::BuiltIn(BuiltIn::Command(Command::Clear)))
 }

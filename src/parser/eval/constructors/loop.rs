@@ -60,10 +60,10 @@ pub fn a_loop(
                 continue;
             }
             EvaluatedExpr::Float(f) => {
-		*dur_vec.last_mut().unwrap() = Parameter::with_value(f);
+                *dur_vec.last_mut().unwrap() = Parameter::with_value(f);
             }
             _ => println! {"ignored"},
-	}
+        }
     }
 
     // generated ids
@@ -78,43 +78,43 @@ pub fn a_loop(
     let len = ev_vecs.len() - 1;
 
     for (count, ev) in ev_vecs.drain(..).enumerate() {
-	event_mapping.insert(last_char, ev);
+        event_mapping.insert(last_char, ev);
 
-	if count < len {
+        if count < len {
             let next_char: char = std::char::from_u32(last_char as u32 + 1).unwrap();
 
             let mut dur_ev = Event::with_name("transition".to_string());
             dur_ev
-		.params
-		.insert(SynthParameter::Duration, Box::new(dur_vec[count].clone()));
+                .params
+                .insert(SynthParameter::Duration, Box::new(dur_vec[count].clone()));
 
             rules.push(Rule {
-		source: vec![last_char],
-		symbol: next_char,
-		probability: 1.0,
+                source: vec![last_char],
+                symbol: next_char,
+                probability: 1.0,
             });
 
             duration_mapping.insert((last_char, next_char), dur_ev);
 
             last_char = next_char;
-	}
+        }
     }
 
     let mut dur_ev = Event::with_name("transition".to_string());
     dur_ev.params.insert(
-	SynthParameter::Duration,
-	Box::new(if let Some(ldur) = dur_vec.last() {
+        SynthParameter::Duration,
+        Box::new(if let Some(ldur) = dur_vec.last() {
             ldur.clone()
-	} else {
+        } else {
             dur.clone()
-	}),
+        }),
     );
 
     // close the loop
     rules.push(Rule {
-	source: vec![last_char],
-	symbol: first_char,
-	probability: 1.0,
+        source: vec![last_char],
+        symbol: first_char,
+        probability: 1.0,
     });
 
     duration_mapping.insert((last_char, first_char), dur_ev);
@@ -127,8 +127,8 @@ pub fn a_loop(
     id_tags.insert(name.clone());
 
     Some(EvaluatedExpr::BuiltIn(BuiltIn::Generator(Generator {
-	id_tags,
-	root_generator: MarkovSequenceGenerator {
+        id_tags,
+        root_generator: MarkovSequenceGenerator {
             name,
             generator: pfa,
             event_mapping,
@@ -138,9 +138,8 @@ pub fn a_loop(
             default_duration: dur.static_val as u64,
             last_transition: None,
             last_symbol: None,
-	},
-	processors: Vec::new(),
-	time_mods: Vec::new(),
-	
+        },
+        processors: Vec::new(),
+        time_mods: Vec::new(),
     })))
 }
