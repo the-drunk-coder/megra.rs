@@ -188,6 +188,11 @@ pub fn define_standard_library() -> FunctionMap {
     standard_library.fmap.insert("inhibit".to_string(), eval::generator_processor::eval_inhibit);
     standard_library.fmap.insert("exhibit".to_string(), eval::generator_processor::eval_exhibit);
 
+    // composition
+    standard_library.fmap.insert("cmp".to_string(), eval::compose::compose);
+    standard_library.fmap.insert("compose".to_string(), eval::compose::compose);
+    
+    
     // generator modifiers
     standard_library.fmap.insert("haste".to_string(), eval::generator_modifier::eval_haste);
     standard_library.fmap.insert("relax".to_string(), eval::generator_modifier::eval_relax);

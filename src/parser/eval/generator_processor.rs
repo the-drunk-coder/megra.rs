@@ -131,7 +131,6 @@ fn eval_generator_processor(
             for gen in gl.iter_mut() {
                 gen.processors.push(gp.clone());
             }
-
             EvaluatedExpr::BuiltIn(BuiltIn::GeneratorList(gl))
         }
         Some(EvaluatedExpr::BuiltIn(BuiltIn::GeneratorProcessorOrModifier(gp))) => {

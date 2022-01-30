@@ -1,4 +1,5 @@
 pub mod commands;
+pub mod compose;
 pub mod constructors;
 pub mod dynpar;
 pub mod events;

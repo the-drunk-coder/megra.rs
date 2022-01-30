@@ -1,20 +1,27 @@
 use crate::builtin_types::*;
 use crate::generator_processor::GeneratorWrapperProcessor;
 
-fn collect_compose(tail: &mut Vec<Expr>) -> Vec<GeneratorProcessorOrModifier> {
+use crate::parser::{BuiltIn, EvaluatedExpr, FunctionMap};
+use crate::{OutputMode, SampleSet};
+use parking_lot::Mutex;
+use std::sync;
+
+fn collect_compose(tail: &mut Vec<EvaluatedExpr>) -> Vec<GeneratorProcessorOrModifier> {
     let mut gen_procs = Vec::new();
     let mut tail_drain = tail.drain(..);
-    while let Some(Expr::Constant(c)) = tail_drain.next() {
+    tail_drain.next(); // skip function name
+
+    for c in tail_drain {
         match c {
-            Atom::GeneratorProcessorOrModifier(gp) => {
+            EvaluatedExpr::BuiltIn(BuiltIn::GeneratorProcessorOrModifier(gp)) => {
                 gen_procs.push(gp);
             }
-            Atom::Generator(g) => {
+            EvaluatedExpr::BuiltIn(BuiltIn::Generator(g)) => {
                 gen_procs.push(GeneratorProcessorOrModifier::GeneratorProcessor(Box::new(
                     GeneratorWrapperProcessor::with_generator(g),
                 )));
             }
-            Atom::GeneratorProcessorOrModifierList(mut gpl) => {
+            EvaluatedExpr::BuiltIn(BuiltIn::GeneratorProcessorOrModifierList(mut gpl)) => {
                 gen_procs.append(&mut gpl);
             }
             _ => {}
@@ -23,17 +30,23 @@ fn collect_compose(tail: &mut Vec<Expr>) -> Vec<GeneratorProcessorOrModifier> {
     gen_procs
 }
 
-pub fn handle(tail: &mut Vec<Expr>) -> Atom {
+pub fn compose(
+    _: &FunctionMap,
+    tail: &mut Vec<EvaluatedExpr>,
+    _: &sync::Arc<GlobalParameters>,
+    _: &sync::Arc<Mutex<SampleSet>>,
+    _: OutputMode,
+) -> Option<EvaluatedExpr> {
     let last = tail.pop();
-    match last {
-        Some(Expr::Constant(Atom::Symbol(s))) => {
-            Atom::PartProxy(PartProxy::Proxy(s, collect_compose(tail)))
-        }
-        Some(Expr::Constant(Atom::PartProxy(PartProxy::Proxy(s, mut proxy_mods)))) => {
+    Some(match last {
+        Some(EvaluatedExpr::Symbol(s)) => EvaluatedExpr::BuiltIn(BuiltIn::PartProxy(
+            PartProxy::Proxy(s, collect_compose(tail)),
+        )),
+        Some(EvaluatedExpr::BuiltIn(BuiltIn::PartProxy(PartProxy::Proxy(s, mut proxy_mods)))) => {
             proxy_mods.append(&mut collect_compose(tail));
-            Atom::PartProxy(PartProxy::Proxy(s, proxy_mods))
+            EvaluatedExpr::BuiltIn(BuiltIn::PartProxy(PartProxy::Proxy(s, proxy_mods)))
         }
-        Some(Expr::Constant(Atom::ProxyList(mut l))) => {
+        Some(EvaluatedExpr::BuiltIn(BuiltIn::ProxyList(mut l))) => {
             let gp = collect_compose(tail);
             let mut pdrain = l.drain(..);
             let mut new_list = Vec::new();
@@ -41,9 +54,9 @@ pub fn handle(tail: &mut Vec<Expr>) -> Atom {
                 proxy_mods.append(&mut gp.clone());
                 new_list.push(PartProxy::Proxy(s, proxy_mods));
             }
-            Atom::ProxyList(new_list)
+            EvaluatedExpr::BuiltIn(BuiltIn::ProxyList(new_list))
         }
-        Some(Expr::Constant(Atom::Generator(mut g))) => {
+        Some(EvaluatedExpr::BuiltIn(BuiltIn::Generator(mut g))) => {
             let mut proc_or_mods = collect_compose(tail);
             let mut procs = Vec::new();
 
@@ -57,9 +70,9 @@ pub fn handle(tail: &mut Vec<Expr>) -> Atom {
             }
 
             g.processors.append(&mut procs);
-            Atom::Generator(g)
+            EvaluatedExpr::BuiltIn(BuiltIn::Generator(g))
         }
-        Some(Expr::Constant(Atom::GeneratorList(mut gl))) => {
+        Some(EvaluatedExpr::BuiltIn(BuiltIn::GeneratorList(mut gl))) => {
             let gp = collect_compose(tail);
             for gen in gl.iter_mut() {
                 for gpom in gp.iter() {
@@ -75,12 +88,14 @@ pub fn handle(tail: &mut Vec<Expr>) -> Atom {
                     }
                 }
             }
-            Atom::GeneratorList(gl)
+            EvaluatedExpr::BuiltIn(BuiltIn::GeneratorList(gl))
         }
         Some(l) => {
             tail.push(l);
-            Atom::GeneratorProcessorOrModifierList(collect_compose(tail))
+            EvaluatedExpr::BuiltIn(BuiltIn::GeneratorProcessorOrModifierList(collect_compose(
+                tail,
+            )))
         }
-        _ => Atom::Nothing,
-    }
+        _ => return None,
+    })
 }
