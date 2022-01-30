@@ -172,6 +172,13 @@ pub fn define_standard_library() -> FunctionMap {
     standard_library.fmap.insert("rate-mul".to_string(), eval::events::parameters::parameter);
     standard_library.fmap.insert("rate-sub".to_string(), eval::events::parameters::parameter);
     standard_library.fmap.insert("rate-div".to_string(), eval::events::parameters::parameter);
+
+    // dynpars
+    standard_library.fmap.insert("bounce".to_string(), eval::dynpar::bounce);
+    standard_library.fmap.insert("brownian".to_string(), eval::dynpar::brownian);
+    standard_library.fmap.insert("randr".to_string(), eval::dynpar::randrange);
+    standard_library.fmap.insert("env".to_string(), eval::dynpar::env);
+    standard_library.fmap.insert("fade".to_string(), eval::dynpar::fade);
     
     // control event
     standard_library.fmap.insert("ctrl".to_string(), eval::events::control::control);
