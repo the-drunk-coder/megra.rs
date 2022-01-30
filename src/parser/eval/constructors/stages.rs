@@ -3,20 +3,30 @@ use crate::event::*;
 use crate::generator::Generator;
 use crate::markov_sequence_generator::MarkovSequenceGenerator;
 use crate::parameter::*;
-use crate::parser::parser_helpers::*;
+
 use ruffbox_synth::ruffbox::synth::SynthParameter;
 use std::collections::{BTreeSet, HashMap};
 use std::sync;
 use vom_rs::pfa::{Pfa, Rule};
 
-pub fn construct_stages(
-    tail: &mut Vec<Expr>,
+use crate::parser::{BuiltIn, EvaluatedExpr, FunctionMap};
+use crate::{OutputMode, SampleSet};
+use parking_lot::Mutex;
+
+pub fn nuc(
+    _: &FunctionMap,
+    tail: &mut Vec<EvaluatedExpr>,
     global_parameters: &sync::Arc<GlobalParameters>,
-) -> Atom {
+    _: &sync::Arc<Mutex<SampleSet>>,
+    _: OutputMode,
+) -> Option<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..);
 
+    // ignore function name in this case
+    tail_drain.next();
+
     // name is the first symbol
-    let name = if let Some(n) = get_string_from_expr(&tail_drain.next().unwrap()) {
+    let name = if let Some(EvaluatedExpr::Symbol(n)) = tail_drain.next() {
         n
     } else {
         "".to_string()
@@ -43,7 +53,7 @@ pub fn construct_stages(
         match c {
             EvaluatedExpr::Keyword(k) => match k.as_str() {
                 "cyc" => {
-                    if let Some(b) = get_bool_from_expr_opt(&tail_drain.next()) {
+                    if let Some(EvaluatedExpr::Boolean(b)) = tail_drain.next() {
                         cyclical = b;
                     }
                 }
@@ -77,7 +87,7 @@ pub fn construct_stages(
                 collected_evs.push(SourceEvent::Sound(e));
                 continue;
             }
-            Expr::BuiltIn(BuiltIn::ControlEvent(e)) => {
+            EvaluatedExpr::BuiltIn(BuiltIn::ControlEvent(e)) => {
                 collected_evs.push(SourceEvent::Control(e));
                 continue;
             }
@@ -236,7 +246,7 @@ pub fn construct_stages(
     let mut id_tags = BTreeSet::new();
     id_tags.insert(name.clone());
 
-    Atom::Generator(Generator {
+    Some(EvaluatedExpr::BuiltIn(BuiltIn::Generator(Generator {
         id_tags,
         root_generator: MarkovSequenceGenerator {
             name,
@@ -251,5 +261,5 @@ pub fn construct_stages(
         },
         processors: Vec::new(),
         time_mods: Vec::new(),
-    })
+    })))
 }
