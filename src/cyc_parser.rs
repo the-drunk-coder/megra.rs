@@ -532,6 +532,8 @@ mod tests {
         );
         fmap.fmap
             .insert("saw".to_string(), crate::parser::eval::events::sound::sound);
+        fmap.fmap
+            .insert("~".to_string(), crate::parser::eval::events::sound::sound);
 
         let o = eval_cyc_from_str(
             "saw /100 saw:400 ~ ~ [saw:100 saw:500] ~ piano:'a3 piano:'a3:lpf=100",

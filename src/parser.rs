@@ -321,52 +321,52 @@ mod tests {
             .fmap
             .insert("text".to_string(), |_, tail, _, _, _| {
                 // SYMBOLS
-                if let EvaluatedExpr::Symbol(s) = &tail[0] {
+                if let EvaluatedExpr::Symbol(s) = &tail[1] {
                     assert!(s == "tar");
                 } else {
                     assert!(false);
                 }
 
                 // KEYWORDS
-                if let EvaluatedExpr::Keyword(k) = &tail[1] {
+                if let EvaluatedExpr::Keyword(k) = &tail[2] {
                     assert!(k == "lvl");
                 } else {
                     assert!(false);
                 }
 
-                if let EvaluatedExpr::Keyword(k) = &tail[3] {
+                if let EvaluatedExpr::Keyword(k) = &tail[4] {
                     assert!(k == "global");
                 } else {
                     assert!(false);
                 }
 
-                if let EvaluatedExpr::Keyword(k) = &tail[5] {
+                if let EvaluatedExpr::Keyword(k) = &tail[6] {
                     assert!(k == "relate");
                 } else {
                     assert!(false);
                 }
 
-                if let EvaluatedExpr::Keyword(k) = &tail[7] {
+                if let EvaluatedExpr::Keyword(k) = &tail[8] {
                     assert!(k == "boost");
                 } else {
                     assert!(false);
                 }
 
                 // BOOLEANS
-                if let EvaluatedExpr::Boolean(b) = &tail[4] {
+                if let EvaluatedExpr::Boolean(b) = &tail[5] {
                     assert!(b);
                 } else {
                     assert!(false);
                 }
 
-                if let EvaluatedExpr::Boolean(b) = &tail[6] {
+                if let EvaluatedExpr::Boolean(b) = &tail[7] {
                     assert!(!b);
                 } else {
                     assert!(false);
                 }
 
                 // FLOAT
-                if let EvaluatedExpr::Float(f) = &tail[2] {
+                if let EvaluatedExpr::Float(f) = &tail[3] {
                     assert!(*f == 1.0);
                 } else {
                     assert!(false);
@@ -378,12 +378,12 @@ mod tests {
         functions
             .fmap
             .insert("bounce".to_string(), |_, tail, _, _, _| {
-                if let EvaluatedExpr::Float(f) = &tail[0] {
+                if let EvaluatedExpr::Float(f) = &tail[1] {
                     assert!(*f == 0.0);
                 } else {
                     assert!(false);
                 }
-                if let EvaluatedExpr::Float(f) = &tail[1] {
+                if let EvaluatedExpr::Float(f) = &tail[2] {
                     assert!(*f == 400.0);
                 } else {
                     assert!(false);
