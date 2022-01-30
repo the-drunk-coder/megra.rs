@@ -180,6 +180,14 @@ pub fn define_standard_library() -> FunctionMap {
     standard_library.fmap.insert("env".to_string(), eval::dynpar::env);
     standard_library.fmap.insert("fade".to_string(), eval::dynpar::fade);
 
+    // generator processors
+    standard_library.fmap.insert("pear".to_string(), eval::generator_processor::eval_pear);
+    standard_library.fmap.insert("apple".to_string(), eval::generator_processor::eval_apple);
+    standard_library.fmap.insert("every".to_string(), eval::generator_processor::eval_every);
+    standard_library.fmap.insert("life".to_string(), eval::generator_processor::eval_lifemodel);
+    standard_library.fmap.insert("inhibit".to_string(), eval::generator_processor::eval_inhibit);
+    standard_library.fmap.insert("exhibit".to_string(), eval::generator_processor::eval_exhibit);
+
     // generator modifiers
     standard_library.fmap.insert("haste".to_string(), eval::generator_modifier::eval_haste);
     standard_library.fmap.insert("relax".to_string(), eval::generator_modifier::eval_relax);
