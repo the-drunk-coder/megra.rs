@@ -111,7 +111,7 @@ fn valid_string_char(chr: char) -> bool {
 
 /// valid chars for a function name, symbol or keyword
 pub fn valid_function_name_char(chr: char) -> bool {
-    chr == '_' || chr == '-' || is_alphanumeric(chr as u8)
+    chr == '_' || chr == '~' || chr == '-' || is_alphanumeric(chr as u8)
 }
 
 /// parse a string, which is enclosed in double quotes

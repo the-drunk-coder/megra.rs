@@ -42,7 +42,7 @@ pub fn parameter(
                 "pos" => SynthParameter::ChannelPosition,
                 "lvl" => SynthParameter::Level,
                 "dur" => SynthParameter::Duration,
-                "rev " => SynthParameter::ReverbMix,
+                "rev" => SynthParameter::ReverbMix,
                 "del" => SynthParameter::DelayMix,
                 "lpf" => SynthParameter::LowpassCutoffFrequency,
                 "lpq" => SynthParameter::LowpassQFactor,
@@ -79,7 +79,7 @@ pub fn parameter(
                         _ => Parameter::with_value(0.5), // should be save ...
                     }),
                 );
-		println!("{:?}", ev);
+		//println!("{:?}", ev);
                 Some(EvaluatedExpr::BuiltIn(BuiltIn::SoundEvent(ev)))
             } else {
                 None
