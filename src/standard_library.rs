@@ -191,6 +191,8 @@ pub fn define_standard_library() -> FunctionMap {
     // composition
     standard_library.fmap.insert("cmp".to_string(), eval::compose::compose);
     standard_library.fmap.insert("compose".to_string(), eval::compose::compose);
+    standard_library.fmap.insert("ls".to_string(), eval::generator_list::generator_list);
+    standard_library.fmap.insert("list".to_string(), eval::generator_list::generator_list);
     
     
     // generator modifiers
