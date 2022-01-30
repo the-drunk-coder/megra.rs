@@ -3,12 +3,14 @@ use crate::event::*;
 use crate::generator::Generator;
 use crate::markov_sequence_generator::MarkovSequenceGenerator;
 use crate::parameter::*;
+use crate::parser::{BuiltIn, EvaluatedExpr};
+use crate::{OutputMode, SampleSet};
+
 use ruffbox_synth::ruffbox::synth::SynthParameter;
 use std::collections::{BTreeSet, HashMap};
 use std::sync;
 use vom_rs::pfa::{Pfa, Rule};
-use crate::parser::{BuiltIn, EvaluatedExpr};
-use crate::{OutputMode, SampleSet};
+
 use parking_lot::Mutex;
 
 pub fn chop(

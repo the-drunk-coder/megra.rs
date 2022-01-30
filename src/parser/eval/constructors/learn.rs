@@ -3,19 +3,28 @@ use crate::event::*;
 use crate::generator::Generator;
 use crate::markov_sequence_generator::MarkovSequenceGenerator;
 use crate::parameter::*;
-use crate::parser::parser_helpers::*;
+
 use std::collections::{BTreeSet, HashMap};
 use std::sync;
 use vom_rs::pfa::Pfa;
 
-pub fn construct_learn(
-    tail: &mut Vec<Expr>,
+use crate::parser::{BuiltIn, EvaluatedExpr};
+use crate::{OutputMode, SampleSet};
+use parking_lot::Mutex;
+
+pub fn learn(
+    tail: &mut Vec<EvaluatedExpr>,
     global_parameters: &sync::Arc<GlobalParameters>,
-) -> Atom {
+    _: &sync::Arc<Mutex<SampleSet>>,
+    _: OutputMode,
+) -> Option<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..);
 
+    // ignore function name in this case
+    tail_drain.next();
+
     // name is the first symbol
-    let name = if let Some(n) = get_string_from_expr(&tail_drain.next().unwrap()) {
+    let name = if let Some(EvaluatedExpr::Symbol(n)) = tail_drain.next() {
         n
     } else {
         "".to_string()
@@ -43,10 +52,10 @@ pub fn construct_learn(
 
     let mut autosilence = true;
 
-    while let Some(Expr::Constant(c)) = tail_drain.next() {
+    while let Some(c) = tail_drain.next() {
         if collect_events {
             match c {
-                Atom::Symbol(ref s) => {
+                EvaluatedExpr::Symbol(ref s) => {
                     if !cur_key.is_empty() && !ev_vec.is_empty() {
                         //println!("found event {}", cur_key);
                         event_mapping.insert(cur_key.chars().next().unwrap(), ev_vec.clone());
@@ -55,11 +64,11 @@ pub fn construct_learn(
                     cur_key = s.clone();
                     continue;
                 }
-                Atom::SoundEvent(e) => {
+                EvaluatedExpr::BuiltIn(BuiltIn::SoundEvent(e)) => {
                     ev_vec.push(SourceEvent::Sound(e));
                     continue;
                 }
-                Atom::ControlEvent(e) => {
+                EvaluatedExpr::BuiltIn(BuiltIn::ControlEvent(e)) => {
                     ev_vec.push(SourceEvent::Control(e));
                     continue;
                 }
@@ -74,9 +83,9 @@ pub fn construct_learn(
         }
 
         match c {
-            Atom::Keyword(k) => match k.as_str() {
+            EvaluatedExpr::Keyword(k) => match k.as_str() {
                 "sample" => {
-                    if let Expr::Constant(Atom::Description(desc)) = tail_drain.next().unwrap() {
+                    if let EvaluatedExpr::String(desc) = tail_drain.next().unwrap() {
                         sample = desc.to_string();
                         sample.retain(|c| !c.is_whitespace());
                     }
@@ -86,31 +95,31 @@ pub fn construct_learn(
                     continue;
                 }
                 "dur" => match tail_drain.next() {
-                    Some(Expr::Constant(Atom::Float(n))) => {
+                    Some(EvaluatedExpr::Float(n)) => {
                         dur = Parameter::with_value(n);
                     }
-                    Some(Expr::Constant(Atom::Parameter(p))) => {
+                    Some(EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p))) => {
                         dur = p;
                     }
                     _ => {}
                 },
                 "bound" => {
-                    if let Expr::Constant(Atom::Float(n)) = tail_drain.next().unwrap() {
+                    if let EvaluatedExpr::Float(n) = tail_drain.next().unwrap() {
                         bound = n as usize;
                     }
                 }
                 "epsilon" => {
-                    if let Expr::Constant(Atom::Float(n)) = tail_drain.next().unwrap() {
+                    if let EvaluatedExpr::Float(n) = tail_drain.next().unwrap() {
                         epsilon = n;
                     }
                 }
                 "size" => {
-                    if let Expr::Constant(Atom::Float(n)) = tail_drain.next().unwrap() {
+                    if let EvaluatedExpr::Float(n) = tail_drain.next().unwrap() {
                         pfa_size = n as usize;
                     }
                 }
                 "autosilence" => {
-                    if let Expr::Constant(Atom::Boolean(b)) = tail_drain.next().unwrap() {
+                    if let EvaluatedExpr::Boolean(b) = tail_drain.next().unwrap() {
                         autosilence = b;
                     }
                 }
@@ -132,7 +141,7 @@ pub fn construct_learn(
     let mut id_tags = BTreeSet::new();
     id_tags.insert(name.clone());
 
-    Atom::Generator(Generator {
+    Some(EvaluatedExpr::BuiltIn(BuiltIn::Generator(Generator {
         id_tags,
         root_generator: MarkovSequenceGenerator {
             name,
@@ -147,5 +156,5 @@ pub fn construct_learn(
         },
         processors: Vec::new(),
         time_mods: Vec::new(),
-    })
+    })))
 }

@@ -14,6 +14,7 @@ pub fn define_standard_library() -> FunctionMap {
     standard_library.insert("chop".to_string(), eval::constructors::chop::chop);
     standard_library.insert("infer".to_string(), eval::constructors::infer::infer);
     standard_library.insert("rule".to_string(), eval::constructors::infer::rule);
+    standard_library.insert("learn".to_string(), eval::constructors::learn::learn);
     
     // sound events (sample events are added as needed)
     standard_library.insert("risset".to_string(), eval::events::sound::sound);
