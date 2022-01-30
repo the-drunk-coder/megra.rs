@@ -193,7 +193,10 @@ pub fn define_standard_library() -> FunctionMap {
     standard_library.fmap.insert("compose".to_string(), eval::compose::compose);
     standard_library.fmap.insert("ls".to_string(), eval::generator_list::generator_list);
     standard_library.fmap.insert("list".to_string(), eval::generator_list::generator_list);
-    
+
+    // multiplyer
+    standard_library.fmap.insert("xspread".to_string(), eval::multiplyer::eval_xspread);
+    standard_library.fmap.insert("xdup".to_string(), eval::multiplyer::eval_xdup);
     
     // generator modifiers
     standard_library.fmap.insert("haste".to_string(), eval::generator_modifier::eval_haste);

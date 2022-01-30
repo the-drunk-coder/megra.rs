@@ -6,4 +6,5 @@ pub mod events;
 pub mod generator_list;
 pub mod generator_modifier;
 pub mod generator_processor;
+pub mod multiplyer;
 pub mod session;

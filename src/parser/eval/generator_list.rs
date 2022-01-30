@@ -1,5 +1,5 @@
-use std::sync;
 use crate::builtin_types::*;
+use std::sync;
 
 use crate::parser::{BuiltIn, EvaluatedExpr, FunctionMap};
 use crate::{OutputMode, SampleSet};
