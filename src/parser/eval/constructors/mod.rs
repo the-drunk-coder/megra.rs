@@ -8,5 +8,6 @@ pub mod cyc;
 pub mod learn;
 pub mod infer;
 pub mod stages;
+pub mod flower;
 
 

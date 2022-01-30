@@ -3,20 +3,30 @@ use crate::event::*;
 use crate::generator::Generator;
 use crate::markov_sequence_generator::MarkovSequenceGenerator;
 use crate::parameter::*;
-use crate::parser::parser_helpers::*;
+
 use ruffbox_synth::ruffbox::synth::SynthParameter;
 use std::collections::{BTreeSet, HashMap};
 use std::sync;
 use vom_rs::pfa::{Pfa, Rule};
 
-pub fn construct_flower(
-    tail: &mut Vec<Expr>,
+use crate::parser::{BuiltIn, EvaluatedExpr, FunctionMap};
+use crate::{OutputMode, SampleSet};
+use parking_lot::Mutex;
+
+pub fn flower(
+    _: &FunctionMap,
+    tail: &mut Vec<EvaluatedExpr>,
     global_parameters: &sync::Arc<GlobalParameters>,
-) -> Atom {
+    _: &sync::Arc<Mutex<SampleSet>>,
+    _: OutputMode,
+) -> Option<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..);
 
+    // ignore function name in this case
+    tail_drain.next();
+
     // name is the first symbol
-    let name = if let Some(n) = get_string_from_expr(&tail_drain.next().unwrap()) {
+    let name = if let Some(EvaluatedExpr::Symbol(n)) = tail_drain.next() {
         n
     } else {
         "".to_string()
@@ -65,7 +75,7 @@ pub fn construct_flower(
                     collected_evs.push(SourceEvent::Sound(e));
                     continue;
                 }
-                Expr::BuiltIn(BuiltIn::ControlEvent(e)) => {
+                EvaluatedExpr::BuiltIn(BuiltIn::ControlEvent(e)) => {
                     collected_evs.push(SourceEvent::Control(e));
                     continue;
                 }
@@ -95,7 +105,7 @@ pub fn construct_flower(
                 EvaluatedExpr::BuiltIn(BuiltIn::SoundEvent(e)) => {
                     final_vec.push(SourceEvent::Sound(e));
                 }
-                Expr::BuiltIn(BuiltIn::ControlEvent(e)) => {
+                EvaluatedExpr::BuiltIn(BuiltIn::ControlEvent(e)) => {
                     final_vec.push(SourceEvent::Control(e));
                 }
                 _ => {}
@@ -141,7 +151,7 @@ pub fn construct_flower(
                             EvaluatedExpr::BuiltIn(BuiltIn::SoundEvent(e)) => {
                                 final_vec.push(SourceEvent::Sound(e));
                             }
-                            Expr::BuiltIn(BuiltIn::ControlEvent(e)) => {
+                            EvaluatedExpr::BuiltIn(BuiltIn::ControlEvent(e)) => {
                                 final_vec.push(SourceEvent::Control(e));
                             }
                             _ => {}
@@ -323,7 +333,7 @@ pub fn construct_flower(
     let mut id_tags = BTreeSet::new();
     id_tags.insert(name.clone());
 
-    Atom::Generator(Generator {
+    Some(EvaluatedExpr::BuiltIn(BuiltIn::Generator(Generator {
         id_tags,
         root_generator: MarkovSequenceGenerator {
             name,
@@ -338,5 +348,5 @@ pub fn construct_flower(
         },
         processors: Vec::new(),
         time_mods: Vec::new(),
-    })
+    })))
 }
