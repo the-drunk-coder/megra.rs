@@ -131,12 +131,8 @@ pub fn sound(
             synth_defaults(&mut ev);
             ev
         }
-	"silence" => {            
-            Event::with_name_and_operation("silence".to_string(), EventOperation::Replace)
-        }
-	"~" => {
-	    Event::with_name_and_operation("silence".to_string(), EventOperation::Replace)           
-        }
+        "silence" => Event::with_name_and_operation("silence".to_string(), EventOperation::Replace),
+        "~" => Event::with_name_and_operation("silence".to_string(), EventOperation::Replace),
         _ => {
             // check if it's a sample event
             let sample_set = sample_set_sync.lock();

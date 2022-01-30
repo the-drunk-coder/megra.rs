@@ -206,7 +206,14 @@ where
 /// and then map over it to transform the output into an `Expr::Application`
 fn parse_application(i: &str) -> IResult<&str, Expr, VerboseError<&str>> {
     let application_inner = map(
-        tuple((parse_expr, many0(preceded(multispace1, parse_expr)))),
+        tuple((
+            parse_expr,
+            many0(alt((
+                preceded(multispace0, parse_application), // applications can follow one another without whitespace
+                preceded(multispace1, parse_constant), // constants are delimited by at least one whitespace
+                preceded(multispace0, parse_comment),  // comments can follow without whitespace
+            ))),
+        )),
         |(head, tail)| Expr::Application(Box::new(head), tail),
     );
     // finally, we wrap it in an s-expression

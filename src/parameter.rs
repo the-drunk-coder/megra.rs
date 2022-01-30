@@ -2,8 +2,8 @@ pub mod modifier;
 use modifier::*;
 
 use rand::Rng;
-use std::fmt::*;
 use std::boxed::Box;
+use std::fmt::*;
 
 #[derive(Clone)]
 pub struct Parameter {
@@ -14,10 +14,10 @@ pub struct Parameter {
 
 impl Debug for Parameter {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
-	f.debug_struct("Parameter")
+        f.debug_struct("Parameter")
             .field("current", &self.val)
             .field("static", &self.static_val)
-	    .finish()
+            .finish()
     }
 }
 

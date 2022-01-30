@@ -1,7 +1,7 @@
 use ruffbox_synth::ruffbox::synth::SynthParameter;
 use std::boxed::Box;
-use std::fmt::*;
 use std::collections::{BTreeSet, HashMap, HashSet};
+use std::fmt::*;
 
 use crate::builtin_types::Command;
 use crate::parameter::Parameter;
@@ -28,10 +28,10 @@ pub struct Event {
 
 impl Debug for Event {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
-	f.debug_struct("Event")
+        f.debug_struct("Event")
             .field("name", &self.name)
-	    .field("op", &self.op)            
-	    .finish()
+            .field("op", &self.op)
+            .finish()
     }
 }
 
