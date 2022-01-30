@@ -16,6 +16,7 @@ pub fn parameter(
 ) -> Option<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..);
 
+    // get function name, check which parameter we're dealing with
     if let Some(EvaluatedExpr::FunctionName(f)) = tail_drain.next() {
         let parts: Vec<&str> = f.split("-").collect();
         if parts.len() == 1 || parts.len() == 2 {
