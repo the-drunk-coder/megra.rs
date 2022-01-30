@@ -179,6 +179,21 @@ pub fn define_standard_library() -> FunctionMap {
     standard_library.fmap.insert("randr".to_string(), eval::dynpar::randrange);
     standard_library.fmap.insert("env".to_string(), eval::dynpar::env);
     standard_library.fmap.insert("fade".to_string(), eval::dynpar::fade);
+
+    // generator modifiers
+    standard_library.fmap.insert("haste".to_string(), eval::generator_modifier::eval_haste);
+    standard_library.fmap.insert("relax".to_string(), eval::generator_modifier::eval_relax);
+    standard_library.fmap.insert("grow".to_string(), eval::generator_modifier::eval_grow);
+    standard_library.fmap.insert("shrink".to_string(), eval::generator_modifier::eval_shrink);
+    standard_library.fmap.insert("solidify".to_string(), eval::generator_modifier::eval_solidify);
+    standard_library.fmap.insert("blur".to_string(), eval::generator_modifier::eval_blur);
+    standard_library.fmap.insert("sharpen".to_string(), eval::generator_modifier::eval_sharpen);
+    standard_library.fmap.insert("shake".to_string(), eval::generator_modifier::eval_shake);
+    standard_library.fmap.insert("skip".to_string(), eval::generator_modifier::eval_skip);
+    standard_library.fmap.insert("rewind".to_string(), eval::generator_modifier::eval_rewind);
+    standard_library.fmap.insert("rnd".to_string(), eval::generator_modifier::eval_rnd);
+    standard_library.fmap.insert("rep".to_string(), eval::generator_modifier::eval_rep);
+    standard_library.fmap.insert("reverse".to_string(), eval::generator_modifier::eval_reverse);
     
     // control event
     standard_library.fmap.insert("ctrl".to_string(), eval::events::control::control);
