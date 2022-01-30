@@ -11,10 +11,11 @@ pub fn define_standard_library() -> FunctionMap {
     standard_library.insert("friendship".to_string(), eval::constructors::friendship::friendship);
     standard_library.insert("linear".to_string(), eval::constructors::linear::linear);
     standard_library.insert("loop".to_string(), eval::constructors::r#loop::a_loop);
+    standard_library.insert("chop".to_string(), eval::constructors::chop::chop);
+    standard_library.insert("infer".to_string(), eval::constructors::infer::infer);
+    standard_library.insert("rule".to_string(), eval::constructors::infer::rule);
     
-
-  
-    // sound events
+    // sound events (sample events are added as needed)
     standard_library.insert("risset".to_string(), eval::events::sound::sound);
     standard_library.insert("saw".to_string(), eval::events::sound::sound);
     standard_library.insert("sqr".to_string(), eval::events::sound::sound);
