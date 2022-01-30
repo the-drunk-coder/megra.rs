@@ -1,5 +1,6 @@
 use ruffbox_synth::ruffbox::synth::SynthParameter;
 use std::boxed::Box;
+use std::fmt::*;
 use std::collections::{BTreeSet, HashMap, HashSet};
 
 use crate::builtin_types::Command;
@@ -7,7 +8,7 @@ use crate::parameter::Parameter;
 use crate::session::SyncContext;
 
 /// Events can represent arithmetic operations.
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub enum EventOperation {
     Replace,
     Add,
@@ -23,6 +24,15 @@ pub struct Event {
     pub params: HashMap<SynthParameter, Box<Parameter>>,
     pub tags: BTreeSet<String>,
     pub op: EventOperation,
+}
+
+impl Debug for Event {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+	f.debug_struct("Event")
+            .field("name", &self.name)
+	    .field("op", &self.op)            
+	    .finish()
+    }
 }
 
 /// This is the final sound or operation event. An event can also represent an operation,

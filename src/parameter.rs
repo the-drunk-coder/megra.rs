@@ -2,6 +2,7 @@ pub mod modifier;
 use modifier::*;
 
 use rand::Rng;
+use std::fmt::*;
 use std::boxed::Box;
 
 #[derive(Clone)]
@@ -9,6 +10,15 @@ pub struct Parameter {
     pub val: f32,
     pub static_val: f32,
     pub modifier: Option<Box<dyn Modifier + Send + Sync>>,
+}
+
+impl Debug for Parameter {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+	f.debug_struct("Parameter")
+            .field("current", &self.val)
+            .field("static", &self.static_val)
+	    .finish()
+    }
 }
 
 impl Parameter {

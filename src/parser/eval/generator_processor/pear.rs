@@ -94,5 +94,6 @@ pub fn collect_pear(tail: &mut Vec<EvaluatedExpr>) -> Box<dyn GeneratorProcessor
         filtered_events.insert(last_filters, (true, evs));
         proc.events_to_be_applied.push((cur_prob, filtered_events));
     }
+
     Box::new(proc)
 }
