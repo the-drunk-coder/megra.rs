@@ -4,25 +4,31 @@ use crate::event::*;
 use crate::generator::Generator;
 use crate::markov_sequence_generator::MarkovSequenceGenerator;
 use crate::parameter::*;
-use crate::parser::parser_helpers::*;
 use crate::sample_set::SampleSet;
 use crate::session::OutputMode;
-use parking_lot::Mutex;
 use ruffbox_synth::ruffbox::synth::SynthParameter;
 use std::collections::{BTreeSet, HashMap};
 use std::sync;
 use vom_rs::pfa::{Pfa, Rule};
 
-pub fn construct_cycle(
-    tail: &mut Vec<Expr>,
+use crate::parser::{BuiltIn, EvaluatedExpr, FunctionMap};
+
+use parking_lot::Mutex;
+
+pub fn cyc(
+    functions: &FunctionMap,
+    tail: &mut Vec<EvaluatedExpr>,
+    global_parameters: &sync::Arc<GlobalParameters>,
     sample_set: &sync::Arc<Mutex<SampleSet>>,
     out_mode: OutputMode,
-    global_parameters: &sync::Arc<GlobalParameters>,
-) -> Atom {
+) -> Option<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..);
+    
+    // ignore function name in this case
+    tail_drain.next();
 
     // name is the first symbol
-    let name = if let Some(n) = get_string_from_expr(&tail_drain.next().unwrap()) {
+    let name = if let Some(EvaluatedExpr::Symbol(n)) = tail_drain.next() {
         n
     } else {
         "".to_string()
@@ -57,10 +63,10 @@ pub fn construct_cycle(
     let mut ev_vecs = Vec::new();
     let mut cycle_string: String = "".to_string();
 
-    while let Some(Expr::Constant(c)) = tail_drain.next() {
+    while let Some(c) = tail_drain.next() {
         if collect_template {
             match c {
-                Atom::Symbol(s) => {
+                EvaluatedExpr::Symbol(s) => {
                     template_evs.push(s);
                     continue;
                 }
@@ -72,7 +78,7 @@ pub fn construct_cycle(
 
         if collect_events {
             match c {
-                Atom::Symbol(ref s) => {
+                EvaluatedExpr::Symbol(ref s) => {
                     if !cur_key.is_empty() && !collected_evs.is_empty() {
                         //println!("found event {}", cur_key);
                         collected_mapping.insert(cur_key.clone(), collected_evs.clone());
@@ -81,11 +87,11 @@ pub fn construct_cycle(
                     cur_key = s.clone();
                     continue;
                 }
-                Atom::SoundEvent(e) => {
+                EvaluatedExpr::BuiltIn(BuiltIn::SoundEvent(e)) => {
                     collected_evs.push(SourceEvent::Sound(e));
                     continue;
                 }
-                Atom::ControlEvent(e) => {
+                EvaluatedExpr::BuiltIn(BuiltIn::ControlEvent(e)) => {
                     collected_evs.push(SourceEvent::Control(e));
                     continue;
                 }
@@ -100,28 +106,28 @@ pub fn construct_cycle(
         }
 
         match c {
-            Atom::Keyword(k) => match k.as_str() {
+            EvaluatedExpr::Keyword(k) => match k.as_str() {
                 "dur" => match tail_drain.next() {
-                    Some(Expr::Constant(Atom::Float(n))) => {
+                    Some(EvaluatedExpr::Float(n)) => {
                         dur = Parameter::with_value(n);
                     }
-                    Some(Expr::Constant(Atom::Parameter(p))) => {
+                    Some(EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p))) => {
                         dur = p;
                     }
                     _ => {}
                 },
                 "rep" => {
-                    if let Expr::Constant(Atom::Float(n)) = tail_drain.next().unwrap() {
+                    if let EvaluatedExpr::Float(n) = tail_drain.next().unwrap() {
                         repetition_chance = n;
                     }
                 }
                 "rnd" => {
-                    if let Expr::Constant(Atom::Float(n)) = tail_drain.next().unwrap() {
+                    if let EvaluatedExpr::Float(n) = tail_drain.next().unwrap() {
                         randomize_chance = n;
                     }
                 }
                 "max-rep" => {
-                    if let Expr::Constant(Atom::Float(n)) = tail_drain.next().unwrap() {
+                    if let EvaluatedExpr::Float(n) = tail_drain.next().unwrap() {
                         max_repetitions = n;
                     }
                 }
@@ -135,7 +141,7 @@ pub fn construct_cycle(
                 }
                 _ => println!("{}", k),
             },
-            Atom::Description(d) => {
+            EvaluatedExpr::String(d) => {
                 cycle_string = d.clone();
             }
             _ => println! {"ignored"},
@@ -144,6 +150,7 @@ pub fn construct_cycle(
 
     let mut parsed_cycle = cyc_parser::eval_cyc_from_str(
         &cycle_string,
+	functions,
         sample_set,
         out_mode,
         &template_evs,
@@ -296,7 +303,7 @@ pub fn construct_cycle(
     let mut id_tags = BTreeSet::new();
     id_tags.insert(name.clone());
 
-    Atom::Generator(Generator {
+    Some(EvaluatedExpr::BuiltIn(BuiltIn::Generator(Generator {
         id_tags,
         root_generator: MarkovSequenceGenerator {
             name,
@@ -311,5 +318,5 @@ pub fn construct_cycle(
         },
         processors: Vec::new(),
         time_mods: Vec::new(),
-    })
+    })))
 }

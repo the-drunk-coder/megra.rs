@@ -9,11 +9,12 @@ use std::collections::{BTreeSet, HashMap};
 use std::sync;
 use vom_rs::pfa;
 
-use crate::parser::{BuiltIn, EvaluatedExpr};
+use crate::parser::{BuiltIn, EvaluatedExpr, FunctionMap};
 use crate::{OutputMode, SampleSet};
 use parking_lot::Mutex;
 
 pub fn rule(
+    _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     global_parameters: &sync::Arc<GlobalParameters>,
     _: &sync::Arc<Mutex<SampleSet>>,
@@ -64,6 +65,7 @@ pub fn rule(
 }
 
 pub fn infer(
+    _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     global_parameters: &sync::Arc<GlobalParameters>,
     _: &sync::Arc<Mutex<SampleSet>>,

@@ -49,10 +49,10 @@ pub fn construct_flower(
     let mut randomize_chance: f32 = 0.0;
     let mut max_repetitions: f32 = 0.0;
 
-    while let Some(Expr::Constant(c)) = tail_drain.next() {
+    while let Some(c) = tail_drain.next() {
         if collect_labeled {
             match c {
-                Atom::Symbol(ref s) => {
+                EvaluatedExpr::Symbol(ref s) => {
                     if !cur_key.is_empty() && !collected_evs.is_empty() {
                         collected_mapping
                             .insert(cur_key.chars().next().unwrap(), collected_evs.clone());
@@ -61,11 +61,11 @@ pub fn construct_flower(
                     cur_key = s.clone();
                     continue;
                 }
-                Atom::SoundEvent(e) => {
+                EvaluatedExpr::BuiltIn(BuiltIn::SoundEvent(e)) => {
                     collected_evs.push(SourceEvent::Sound(e));
                     continue;
                 }
-                Atom::ControlEvent(e) => {
+                Expr::BuiltIn(BuiltIn::ControlEvent(e)) => {
                     collected_evs.push(SourceEvent::Control(e));
                     continue;
                 }
@@ -86,16 +86,16 @@ pub fn construct_flower(
             let mut final_vec = Vec::new();
 
             match c {
-                Atom::Symbol(ref s) => {
+                EvaluatedExpr::Symbol(ref s) => {
                     let label = s.chars().next().unwrap();
                     if collected_mapping.contains_key(&label) {
                         final_vec.append(&mut collected_mapping.get(&label).unwrap().clone());
                     }
                 }
-                Atom::SoundEvent(e) => {
+                EvaluatedExpr::BuiltIn(BuiltIn::SoundEvent(e)) => {
                     final_vec.push(SourceEvent::Sound(e));
                 }
-                Atom::ControlEvent(e) => {
+                Expr::BuiltIn(BuiltIn::ControlEvent(e)) => {
                     final_vec.push(SourceEvent::Control(e));
                 }
                 _ => {}
@@ -105,13 +105,13 @@ pub fn construct_flower(
             continue;
         }
 
-        if let Atom::Keyword(k) = c {
+        if let EvaluatedExpr::Keyword(k) = c {
             match k.as_str() {
                 "dur" => match tail_drain.next() {
-                    Some(Expr::Constant(Atom::Float(n))) => {
+                    Some(EvaluatedExpr::Float(n)) => {
                         dur = Parameter::with_value(n);
                     }
-                    Some(Expr::Constant(Atom::Parameter(p))) => {
+                    Some(EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p))) => {
                         dur = p;
                     }
                     _ => {}
@@ -121,16 +121,16 @@ pub fn construct_flower(
                     continue;
                 }
                 "layers" => {
-                    if let Some(Expr::Constant(Atom::Float(n))) = tail_drain.next() {
+                    if let Some(EvaluatedExpr::Float(n)) = tail_drain.next() {
                         num_layers = n as usize;
                     }
                 }
                 "pistil" => {
-                    if let Some(Expr::Constant(c)) = tail_drain.next() {
+                    if let Some(c) = tail_drain.next() {
                         let mut final_vec = Vec::new();
 
                         match c {
-                            Atom::Symbol(ref s) => {
+                            EvaluatedExpr::Symbol(ref s) => {
                                 let label = s.chars().next().unwrap();
                                 if collected_mapping.contains_key(&label) {
                                     final_vec.append(
@@ -138,10 +138,10 @@ pub fn construct_flower(
                                     );
                                 }
                             }
-                            Atom::SoundEvent(e) => {
+                            EvaluatedExpr::BuiltIn(BuiltIn::SoundEvent(e)) => {
                                 final_vec.push(SourceEvent::Sound(e));
                             }
-                            Atom::ControlEvent(e) => {
+                            Expr::BuiltIn(BuiltIn::ControlEvent(e)) => {
                                 final_vec.push(SourceEvent::Control(e));
                             }
                             _ => {}
@@ -156,17 +156,17 @@ pub fn construct_flower(
                     continue;
                 }
                 "rep" => {
-                    if let Expr::Constant(Atom::Float(n)) = tail_drain.next().unwrap() {
+                    if let EvaluatedExpr::Float(n) = tail_drain.next().unwrap() {
                         repetition_chance = n;
                     }
                 }
                 "rnd" => {
-                    if let Expr::Constant(Atom::Float(n)) = tail_drain.next().unwrap() {
+                    if let EvaluatedExpr::Float(n) = tail_drain.next().unwrap() {
                         randomize_chance = n;
                     }
                 }
                 "max-rep" => {
-                    if let Expr::Constant(Atom::Float(n)) = tail_drain.next().unwrap() {
+                    if let EvaluatedExpr::Float(n) = tail_drain.next().unwrap() {
                         max_repetitions = n;
                     }
                 }

@@ -3,7 +3,7 @@ use crate::event::*;
 use crate::generator::Generator;
 use crate::markov_sequence_generator::MarkovSequenceGenerator;
 use crate::parameter::*;
-use crate::parser::{BuiltIn, EvaluatedExpr};
+use crate::parser::{BuiltIn, EvaluatedExpr, FunctionMap};
 use crate::{OutputMode, SampleSet};
 
 use ruffbox_synth::ruffbox::synth::SynthParameter;
@@ -14,6 +14,7 @@ use vom_rs::pfa::{Pfa, Rule};
 use parking_lot::Mutex;
 
 pub fn chop(
+    _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     global_parameters: &sync::Arc<GlobalParameters>,
     _: &sync::Arc<Mutex<SampleSet>>,

@@ -169,7 +169,7 @@ fn parse_cyc<'a>(i: &'a str) -> IResult<&'a str, Vec<Vec<CycleItem>>, VerboseErr
 /// adapt items to results ...
 pub fn eval_cyc_from_str(
     src: &str,
-    functions: &sync::Arc<Mutex<FunctionMap>>,
+    functions: &FunctionMap,
     sample_set: &sync::Arc<Mutex<SampleSet>>,
     out_mode: OutputMode,
     template_events: &[String],
@@ -231,7 +231,7 @@ pub fn eval_cyc_from_str(
                                     if let Some(EvaluatedExpr::BuiltIn(BuiltIn::SoundEvent(e))) =
                                         eval_expression(
                                             &expr,
-                                            &functions.lock(),
+                                            &functions,
                                             global_parameters,
                                             sample_set,
                                             out_mode,
@@ -303,7 +303,7 @@ pub fn eval_cyc_from_str(
                                 if let Some(EvaluatedExpr::BuiltIn(BuiltIn::SoundEvent(e))) =
                                     eval_expression(
                                         &expr,
-                                        &functions.lock(),
+                                        &functions,
                                         global_parameters,
                                         sample_set,
                                         out_mode,

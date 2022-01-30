@@ -39,45 +39,45 @@ pub fn construct_stages(
     let mut pprev: f32 = 0.0;
     let mut cyclical = false;
 
-    while let Some(Expr::Constant(c)) = tail_drain.next() {
+    while let Some(c) = tail_drain.next() {
         match c {
-            Atom::Keyword(k) => match k.as_str() {
+            EvaluatedExpr::Keyword(k) => match k.as_str() {
                 "cyc" => {
                     if let Some(b) = get_bool_from_expr_opt(&tail_drain.next()) {
                         cyclical = b;
                     }
                 }
                 "dur" => match tail_drain.next() {
-                    Some(Expr::Constant(Atom::Float(n))) => {
+                    Some(EvaluatedExpr::Float(n)) => {
                         dur = Parameter::with_value(n);
                     }
-                    Some(Expr::Constant(Atom::Parameter(p))) => {
+                    Some(EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p))) => {
                         dur = p;
                     }
                     _ => {}
                 },
                 "pnext" => {
-                    if let Some(Expr::Constant(Atom::Float(n))) = tail_drain.next() {
+                    if let Some(EvaluatedExpr::Float(n)) = tail_drain.next() {
                         pnext = n / 100.0;
                     }
                 }
                 "pprev" => {
-                    if let Some(Expr::Constant(Atom::Float(n))) = tail_drain.next() {
+                    if let Some(EvaluatedExpr::Float(n)) = tail_drain.next() {
                         pprev = n / 100.0;
                     }
                 }
                 "rnd" => {
-                    if let Expr::Constant(Atom::Float(n)) = tail_drain.next().unwrap() {
+                    if let EvaluatedExpr::Float(n) = tail_drain.next().unwrap() {
                         randomize_chance = n;
                     }
                 }
                 _ => println!("{}", k),
             },
-            Atom::SoundEvent(e) => {
+            EvaluatedExpr::BuiltIn(BuiltIn::SoundEvent(e)) => {
                 collected_evs.push(SourceEvent::Sound(e));
                 continue;
             }
-            Atom::ControlEvent(e) => {
+            Expr::BuiltIn(BuiltIn::ControlEvent(e)) => {
                 collected_evs.push(SourceEvent::Control(e));
                 continue;
             }

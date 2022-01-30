@@ -9,12 +9,13 @@ use std::collections::{BTreeSet, HashMap};
 use std::sync;
 use vom_rs::pfa::{Pfa, Rule};
 
-use crate::parser::{BuiltIn, EvaluatedExpr};
+use crate::parser::{BuiltIn, EvaluatedExpr, FunctionMap};
 use crate::{OutputMode, SampleSet};
 use parking_lot::Mutex;
 
 /// construct a simple loop of events ... no tricks here
 pub fn a_loop(
+    _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     global_parameters: &sync::Arc<GlobalParameters>,
     _: &sync::Arc<Mutex<SampleSet>>,

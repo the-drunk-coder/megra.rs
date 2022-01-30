@@ -70,15 +70,26 @@ pub enum EvaluatedExpr {
     BuiltIn(BuiltIn),
 }
 
-pub type FunctionMap = HashMap<
+pub struct FunctionMap {
+    pub fmap: HashMap<
     String,
     fn(
-        &mut Vec<EvaluatedExpr>,
+	&FunctionMap,
+	&mut Vec<EvaluatedExpr>,
         &sync::Arc<GlobalParameters>,
         &sync::Arc<Mutex<SampleSet>>,
         OutputMode,
     ) -> Option<EvaluatedExpr>,
->;
+	>
+}
+
+impl FunctionMap {
+    pub fn new() -> Self {
+	FunctionMap {
+	    fmap: HashMap::new()
+	}
+    }
+}
 
 /// valid chars for a string
 fn valid_string_char(chr: char) -> bool {
@@ -236,7 +247,7 @@ pub fn eval_expression(
                 eval_expression(&*head, functions, globals, sample_set, out_mode)
             {
                 // check if we have this function ...
-                if functions.contains_key(&f) {
+                if functions.fmap.contains_key(&f) {
                     let mut reduced_tail = tail
                         .iter()
                         .map(|expr| {
@@ -245,7 +256,7 @@ pub fn eval_expression(
                         .collect::<Option<Vec<EvaluatedExpr>>>()?;
                     // push function name
                     reduced_tail.insert(0, EvaluatedExpr::FunctionName(f.clone()));
-                    functions[&f](&mut reduced_tail, globals, sample_set, out_mode)
+                    functions.fmap[&f](functions, &mut reduced_tail, globals, sample_set, out_mode)
                 } else {
                     None
                 }

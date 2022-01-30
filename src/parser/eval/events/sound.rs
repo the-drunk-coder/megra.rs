@@ -1,7 +1,7 @@
 use crate::event::{Event, EventOperation};
 use crate::event_helpers::map_parameter;
 use crate::music_theory;
-use crate::parser::{BuiltIn, EvaluatedExpr};
+use crate::parser::{BuiltIn, EvaluatedExpr, FunctionMap};
 use crate::parameter::Parameter;
 use crate::{GlobalParameters, OutputMode, SampleSet};
 use parking_lot::Mutex;
@@ -77,6 +77,7 @@ fn sample_defaults(ev: &mut Event) {
 }
 
 pub fn sound(
+    _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<GlobalParameters>,
     sample_set_sync: &sync::Arc<Mutex<SampleSet>>,

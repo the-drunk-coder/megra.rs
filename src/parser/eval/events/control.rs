@@ -1,11 +1,12 @@
 use crate::event::*;
-use crate::parser::{BuiltIn, EvaluatedExpr};
+use crate::parser::{BuiltIn, EvaluatedExpr, FunctionMap};
 use crate::{GlobalParameters, OutputMode, SampleSet};
 use parking_lot::Mutex;
 use std::collections::BTreeSet;
 use std::sync;
 
 pub fn control(
+    _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<GlobalParameters>,
     _: &sync::Arc<Mutex<SampleSet>>,

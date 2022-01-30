@@ -102,7 +102,7 @@ pub fn load_sample<const BUFSIZE: usize, const NCHAN: usize>(
     sample_set
         .lock()
         .insert(set.clone(), keyword_set, bufnum, duration);
-    function_map.lock().insert(set, eval::events::sound::sound);
+    function_map.lock().fmap.insert(set, eval::events::sound::sound);
 }
 
 pub fn load_sample_set<const BUFSIZE: usize, const NCHAN: usize>(
