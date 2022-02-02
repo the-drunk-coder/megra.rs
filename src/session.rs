@@ -1,6 +1,6 @@
 use parking_lot::Mutex;
 use std::collections::{BTreeSet, HashMap};
-use std::{sync, thread, net};
+use std::{sync, thread};
 
 use ruffbox_synth::ruffbox::synth::SynthParameter;
 use ruffbox_synth::ruffbox::Ruffbox;

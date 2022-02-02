@@ -1,5 +1,7 @@
 use crate::generator::Generator;
-use crate::session::Session;
+
+use rosc::encoder;
+use rosc::{OscMessage, OscPacket, OscType};
 
 use std::net;
 use std::str::FromStr;
@@ -21,8 +23,14 @@ impl VisualizerClient {
 	}	
     }
 
-    pub fn create_or_update(g: &Generator) {
-	
+    pub fn create_or_update(&self, g: &Generator) {
+	// switch view
+	let msg_buf_add = encoder::encode(&OscPacket::Message(OscMessage {
+            addr: "/graph/add".to_string(),
+            args: vec![OscType::String(g.root_generator.name.clone())],
+	})).unwrap();
+
+	self.socket.send_to(&msg_buf_add, self.to_addr).unwrap();
     }
 
     pub fn update_active_node(g: &Generator) {
