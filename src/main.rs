@@ -27,6 +27,8 @@ pub mod session;
 #[rustfmt::skip]
 mod standard_library;
 
+mod visualizer_client;
+
 use crate::builtin_types::*;
 use crate::sample_set::SampleSet;
 use crate::session::{OutputMode, Session};

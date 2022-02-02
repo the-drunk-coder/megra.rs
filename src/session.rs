@@ -1,6 +1,6 @@
 use parking_lot::Mutex;
 use std::collections::{BTreeSet, HashMap};
-use std::{sync, thread};
+use std::{sync, thread, net};
 
 use ruffbox_synth::ruffbox::synth::SynthParameter;
 use ruffbox_synth::ruffbox::Ruffbox;
@@ -15,6 +15,7 @@ use crate::event_helpers::*;
 use crate::generator::Generator;
 use crate::parameter::*;
 use crate::scheduler::{Scheduler, SchedulerData};
+use crate::visualizer_client::VisualizerClient;
 
 #[derive(Clone, Copy, PartialEq)]
 pub enum OutputMode {
@@ -57,6 +58,7 @@ pub struct Session<const BUFSIZE: usize, const NCHAN: usize> {
         ),
     >,
     contexts: HashMap<String, BTreeSet<BTreeSet<String>>>,
+    pub visualizer_client: Option<VisualizerClient>,
 }
 
 // basically a bfs on a dag !
@@ -301,6 +303,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
         Session {
             schedulers: HashMap::new(),
             contexts: HashMap::new(),
+	    visualizer_client: None,
         }
     }
 
