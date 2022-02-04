@@ -29,16 +29,64 @@ impl VisualizerClient {
             addr: "/graph/add".to_string(),
             args: vec![OscType::String(g.root_generator.name.clone())],
 	})).unwrap();
-
 	self.socket.send_to(&msg_buf_add, self.to_addr).unwrap();
+
+	// nodes
+	for (key, label) in g.root_generator.generator.labels.iter() {
+	    let msg_buf_node = encoder::encode(&OscPacket::Message(OscMessage {
+		addr: "/node/add".to_string(),
+		args: vec![
+		    OscType::String(g.root_generator.name.clone()),
+		    OscType::Long(*key as i64),
+		    OscType::String(label.iter().collect()),
+		],
+	    })).unwrap();
+	    self.socket.send_to(&msg_buf_node, self.to_addr).unwrap();
+	}
+	// edges
+	for (src, children) in g.root_generator.generator.children.iter() {
+	    for ch in children.iter() {
+		let msg_buf_edge = encoder::encode(&OscPacket::Message(OscMessage {
+		addr: "/egde/add".to_string(),
+		args: vec![
+		    OscType::String(g.root_generator.name.clone()),
+		    OscType::Long(*src as i64),
+		    OscType::Long(ch.child_hash as i64),
+		    OscType::String(ch.child.last().unwrap().to_string()),
+		    OscType::Int((ch.prob * 100.0) as i32),
+		],
+		})).unwrap();
+		self.socket.send_to(&msg_buf_edge, self.to_addr).unwrap();
+	    }
+	}
+
+	// send render command ...
+	let msg_buf_render = encoder::encode(&OscPacket::Message(OscMessage {
+		addr: "/render".to_string(),
+		args: vec![
+		    OscType::String(g.root_generator.name.clone()),		    
+		    OscType::String("cose".to_string()), // layout type 
+		],
+	    })).unwrap();		
+	self.socket.send_to(&msg_buf_render, self.to_addr).unwrap();
     }
 
-    pub fn update_active_node(g: &Generator) {
-	
+    pub fn update_active_node(&self, g: &Generator) {
+	if let Some(h) = g.root_generator.generator.current_state {
+	    let msg_buf_active_node = encoder::encode(&OscPacket::Message(OscMessage {
+		addr: "/node/active".to_string(),
+		args: vec![OscType::String(g.root_generator.name.clone()), OscType::Long(h as i64)],
+	    })).unwrap();
+	self.socket.send_to(&msg_buf_active_node, self.to_addr).unwrap();
+	}	
     }
     
-    pub fn clear(g: &Generator) {
-	
+    pub fn clear(&self, g: &Generator) {
+	let msg_buf_clear = encoder::encode(&OscPacket::Message(OscMessage {
+            addr: "/clear".to_string(),
+            args: vec![OscType::String(g.root_generator.name.clone())],
+	})).unwrap();
+	self.socket.send_to(&msg_buf_clear, self.to_addr).unwrap();
     }
 }
 

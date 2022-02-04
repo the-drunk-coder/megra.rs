@@ -1,5 +1,9 @@
 use crate::parser::{eval, FunctionMap};
 
+/**
+ * This is where all the "frontend" functions (that is, the DSL functions)
+ * are defined and bound to their Rust equivalents ...  
+ */
 pub fn define_standard_library() -> FunctionMap {
     let mut standard_library = FunctionMap::new();
     // session
@@ -37,6 +41,10 @@ pub fn define_standard_library() -> FunctionMap {
     standard_library.fmap.insert("once".to_string(), eval::commands::once);
     standard_library.fmap.insert("step-part".to_string(), eval::commands::step_part);
     standard_library.fmap.insert("clear".to_string(), eval::commands::clear);
+    standard_library.fmap.insert("connect-visualizer".to_string(), eval::commands::connect_visualizer);
+
+    // control event
+    standard_library.fmap.insert("ctrl".to_string(), eval::events::control::control);
     
     // sound events (sample events are added as needed)
     standard_library.fmap.insert("risset".to_string(), eval::events::sound::sound);
@@ -214,9 +222,6 @@ pub fn define_standard_library() -> FunctionMap {
     standard_library.fmap.insert("rnd".to_string(), eval::generator_modifier::eval_rnd);
     standard_library.fmap.insert("rep".to_string(), eval::generator_modifier::eval_rep);
     standard_library.fmap.insert("reverse".to_string(), eval::generator_modifier::eval_reverse);
-    
-    // control event
-    standard_library.fmap.insert("ctrl".to_string(), eval::events::control::control);
-
+        
     standard_library
 }

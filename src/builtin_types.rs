@@ -53,6 +53,7 @@ pub enum Command {
     ExportDotRunning((String, BTreeSet<String>)), // filename, generator id
     ExportDotPart((String, String)),              // filename, part name
     Once((Vec<StaticEvent>, Vec<ControlEvent>)),
+    ConnectVisualizer
 }
 
 #[derive(Clone)]

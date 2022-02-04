@@ -424,3 +424,13 @@ pub fn clear(
 ) -> Option<EvaluatedExpr> {
     Some(EvaluatedExpr::BuiltIn(BuiltIn::Command(Command::Clear)))
 }
+
+pub fn connect_visualizer(
+    _: &FunctionMap,
+    _: &mut Vec<EvaluatedExpr>,
+    _: &sync::Arc<GlobalParameters>,
+    _: &sync::Arc<Mutex<SampleSet>>,
+    _: OutputMode,
+) -> Option<EvaluatedExpr> {
+    Some(EvaluatedExpr::BuiltIn(BuiltIn::Command(Command::ConnectVisualizer)))
+}

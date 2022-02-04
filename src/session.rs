@@ -363,14 +363,14 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
             println!("newcomers {:?}", newcomers);
             println!("remainders {:?}", remainders);
             println!("quitters {:?}", quitters);
-
+	    
             // HANDLE QUITTERS (generators to be stopped ...)
             // stop asynchronously to keep main thread reactive
             let session2 = sync::Arc::clone(session);
             thread::spawn(move || {
                 Session::stop_generators(&session2, &quitters);
             });
-
+	    
             // EXTERNAL SYNC
             // are we supposed to sync to some other context ??
             // get external sync ...
@@ -804,7 +804,12 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
         {
             let mut sess = session.lock();
             sched_prox = sess.schedulers.remove(&id_tags);
-            sess.schedulers.insert(id_tags.clone(), (sched, sched_data));
+	    // handle visualization if necessary
+	    if let Some(c) = &sess.visualizer_client {
+		let sd = sched_data.lock();
+		c.create_or_update(&sd.generator);
+	    }
+	    sess.schedulers.insert(id_tags.clone(), (sched, sched_data));
         }
 
         // prepare for replacement

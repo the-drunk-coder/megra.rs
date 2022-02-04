@@ -9,6 +9,7 @@ use crate::commands;
 use crate::parser::{BuiltIn, EvaluatedExpr, FunctionMap};
 use crate::sample_set::SampleSet;
 use crate::session::{OutputMode, Session};
+use crate::visualizer_client::VisualizerClient;
 
 #[allow(clippy::too_many_arguments)]
 pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
@@ -81,6 +82,10 @@ pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
                         Session::clear_session(&session2, &parts_store2);
                         println!("a command (stop session)");
                     });
+                }
+		Command::ConnectVisualizer => {
+                    let mut session = session.lock();
+		    session.visualizer_client = Some(VisualizerClient::start());                    
                 }
                 Command::LoadSample((set, mut keywords, path)) => {
                     let ruffbox2 = sync::Arc::clone(ruffbox);
