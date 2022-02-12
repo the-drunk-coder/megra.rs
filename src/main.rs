@@ -405,6 +405,15 @@ where
     let in_stream = input_device.build_input_stream(
         in_config,
         move |data: &[f32], _: &cpal::InputCallbackInfo| {
+            // these are the only two locks that are left.
+            // Maybe, in the future, I could get around them using
+            // some interior mutability pattern in the ruffbox playhead,
+            // but given that the only other point where the lock \
+            // is called is the output callback, and they have to be called in
+            // sequence anyway (or at least in a deterministic fashion, i hope),
+            // the lock here shouldn't hurt much (in fact it worked nicely even before
+            // it was possible to call the controls without a lock).
+            // Unless I run into trouble, this might just stay the way it is for now.
             let mut ruff = playhead_in.lock();
 
             // there might be a faster way to de-interleave here ...
@@ -424,6 +433,7 @@ where
     let out_stream = output_device.build_output_stream(
         out_config,
         move |data: &mut [f32], _: &cpal::OutputCallbackInfo| {
+            // about this lock, see note in the input stream ...
             let mut ruff = playhead_out.lock();
 
             // as the jack timing from cpal can't be trusted right now, the
@@ -458,6 +468,7 @@ where
     let out_stream = output_device.build_output_stream(
         out_config,
         move |data: &mut [f32], _: &cpal::OutputCallbackInfo| {
+            // about this lock, see note in the input stream ...
             let mut ruff = playhead_out.lock();
 
             let samples_available = if write_idx < read_idx {

@@ -121,7 +121,7 @@ pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
                     println!("a command (load part)");
                 }
                 Command::FreezeBuffer(freezbuf) => {
-                    commands::freeze_buffer(&ruffbox, freezbuf);
+                    commands::freeze_buffer(ruffbox, freezbuf);
                     println!("freeze buffer");
                 }
                 Command::Tmod(p) => {

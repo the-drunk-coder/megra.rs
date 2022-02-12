@@ -253,7 +253,7 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
                                 println!("a command (load part)");
                             }
                             Command::FreezeBuffer(freezbuf) => {
-                                commands::freeze_buffer(&mut data.ruffbox, freezbuf);
+                                commands::freeze_buffer(&data.ruffbox, freezbuf);
                                 println!("freeze buffer");
                             }
                             Command::Tmod(p) => {
