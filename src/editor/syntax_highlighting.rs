@@ -107,8 +107,8 @@ impl Highlighter {
                 job.append(&text[..end], 0.0, theme.formats[TokenType::Keyword]);
                 text = &text[end..];
             } else if text.starts_with('#') {
-		// avoid crash by checking text length
-		let end = if text.len() > 1 {2} else {1};
+                // avoid crash by checking text length
+                let end = if text.len() > 1 { 2 } else { 1 };
                 job.append(&text[..end], 0.0, theme.formats[TokenType::Boolean]);
                 text = &text[end..];
             } else if text.starts_with(|c: char| c.is_ascii_alphanumeric()) {

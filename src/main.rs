@@ -34,7 +34,7 @@ use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use directories_next::ProjectDirs;
 use getopts::Options;
 use parking_lot::Mutex;
-use ruffbox_synth::ruffbox::{ReverbMode, init_ruffbox};
+use ruffbox_synth::ruffbox::{init_ruffbox, ReverbMode};
 use standard_library::define_standard_library;
 use std::{env, sync, thread};
 
@@ -380,13 +380,13 @@ where
     let err_fn = |err| eprintln!("an error occurred on stream: {}", err);
 
     #[cfg(feature = "ringbuffer")]
-    let (controls, playhead) =  init_ruffbox::<128, NCHAN>(
+    let (controls, playhead) = init_ruffbox::<128, NCHAN>(
         true,
         live_buffer_time.into(),
         reverb_mode,
         sample_rate.into(),
-	3000,
-	10
+        3000,
+        10,
     );
 
     #[cfg(not(feature = "ringbuffer"))]
@@ -395,15 +395,13 @@ where
         live_buffer_time.into(),
         reverb_mode,
         sample_rate.into(),
-	3000,
-	10
+        3000,
+        10,
     );
-
-    
 
     let playhead_out = sync::Arc::new(Mutex::new(playhead)); // the one for the audio thread (out stream)...
     let playhead_in = sync::Arc::clone(&playhead_out); // the one for the audio thread (in stream)...
-    
+
     let in_stream = input_device.build_input_stream(
         in_config,
         move |data: &[f32], _: &cpal::InputCallbackInfo| {
@@ -544,7 +542,7 @@ where
     let parts_store = sync::Arc::new(Mutex::new(PartsStore::new()));
     // define the "standard library"
     let stdlib = sync::Arc::new(Mutex::new(define_standard_library()));
-    let controls_arc = sync::Arc::new(Mutex::new(controls));
+    let controls_arc = sync::Arc::new(controls);
 
     // load the default sample set ...
     if load_samples {
@@ -574,7 +572,12 @@ where
             let sample_set2 = sync::Arc::clone(&sample_set);
             let stdlib2 = sync::Arc::clone(&stdlib);
             thread::spawn(move || {
-                commands::load_sample_sets_path(&stdlib2, &controls_arc2, &sample_set2, &samples_path);
+                commands::load_sample_sets_path(
+                    &stdlib2,
+                    &controls_arc2,
+                    &sample_set2,
+                    &samples_path,
+                );
                 println!("a command (load default sample sets)");
             });
         }
@@ -597,7 +600,7 @@ where
         repl::start_repl(
             &stdlib,
             &session,
-	    &controls_arc,
+            &controls_arc,
             &global_parameters,
             &sample_set,
             &parts_store,

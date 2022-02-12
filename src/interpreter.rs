@@ -15,7 +15,7 @@ pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
     parsed_in: EvaluatedExpr,
     function_map: &sync::Arc<Mutex<FunctionMap>>,
     session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
-    ruffbox: &sync::Arc<Mutex<RuffboxControls<BUFSIZE, NCHAN>>>,
+    ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
     global_parameters: &sync::Arc<GlobalParameters>,
     sample_set: &sync::Arc<Mutex<SampleSet>>,
     parts_store: &sync::Arc<Mutex<PartsStore>>,
@@ -121,7 +121,7 @@ pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
                     println!("a command (load part)");
                 }
                 Command::FreezeBuffer(freezbuf) => {
-                    commands::freeze_buffer(ruffbox, freezbuf);
+                    commands::freeze_buffer(&ruffbox, freezbuf);
                     println!("freeze buffer");
                 }
                 Command::Tmod(p) => {

@@ -30,7 +30,7 @@ pub struct SchedulerData<const BUFSIZE: usize, const NCHAN: usize> {
     pub generator: Box<Generator>,
     pub finished: bool,
     pub synced_generators: Vec<(Box<Generator>, f64)>,
-    pub ruffbox: sync::Arc<Mutex<RuffboxControls<BUFSIZE, NCHAN>>>,
+    pub ruffbox: sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
     pub session: sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
     pub parts_store: sync::Arc<Mutex<PartsStore>>,
     pub global_parameters: sync::Arc<GlobalParameters>,
@@ -46,7 +46,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> SchedulerData<BUFSIZE, NCHAN> {
         old: &SchedulerData<BUFSIZE, NCHAN>,
         shift: f64,
         mut data: Box<Generator>,
-        ruffbox: &sync::Arc<Mutex<RuffboxControls<BUFSIZE, NCHAN>>>,
+        ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
         session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
         parts_store: &sync::Arc<Mutex<PartsStore>>,
         block_tags: &BTreeSet<String>,
@@ -80,7 +80,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> SchedulerData<BUFSIZE, NCHAN> {
         old: &SchedulerData<BUFSIZE, NCHAN>,
         shift: f64,
         data: Box<Generator>,
-        ruffbox: &sync::Arc<Mutex<RuffboxControls<BUFSIZE, NCHAN>>>,
+        ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
         session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
         parts_store: &sync::Arc<Mutex<PartsStore>>,
         block_tags: &BTreeSet<String>,
@@ -114,7 +114,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> SchedulerData<BUFSIZE, NCHAN> {
         data: Box<Generator>,
         shift: f64,
         session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
-        ruffbox: &sync::Arc<Mutex<RuffboxControls<BUFSIZE, NCHAN>>>,
+        ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
         parts_store: &sync::Arc<Mutex<PartsStore>>,
         global_parameters: &sync::Arc<GlobalParameters>,
         output_mode: OutputMode,
@@ -123,11 +123,8 @@ impl<const BUFSIZE: usize, const NCHAN: usize> SchedulerData<BUFSIZE, NCHAN> {
         solo_tags: &BTreeSet<String>,
     ) -> Self {
         // get logical time since start from ruffbox
-        let stream_time;
-        {
-            let ruff = ruffbox.lock();
-            stream_time = ruff.get_now();
-        }
+        let stream_time = ruffbox.get_now();
+
         SchedulerData {
             start_time: Instant::now(),
             stream_time: stream_time + shift,

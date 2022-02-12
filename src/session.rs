@@ -203,11 +203,11 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
                     bufnum = *b as usize;
                 }
 
-                let mut ruff = data.ruffbox.lock();
-
-                // latency 0.05, should be made configurable later ...
-                let inst =
-                    ruff.prepare_instance(map_name(&s.name), data.stream_time + latency, bufnum);
+                let mut inst = data.ruffbox.prepare_instance(
+                    map_name(&s.name),
+                    data.stream_time + latency,
+                    bufnum,
+                );
                 // set parameters and trigger instance
                 for (k, v) in s.params.iter() {
                     // special handling for stereo param
@@ -215,26 +215,20 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
                         SynthParameter::ChannelPosition => {
                             if data.output_mode == OutputMode::Stereo {
                                 let pos = (*v + 1.0) * 0.5;
-                                ruff.set_instance_parameter(inst, *k, pos);
+                                inst.set_instance_parameter(*k, pos);
                             } else {
-                                ruff.set_instance_parameter(inst, *k, *v);
+                                inst.set_instance_parameter(*k, *v);
                             }
                         }
                         // convert milliseconds to seconds
-                        SynthParameter::Duration => {
-                            ruff.set_instance_parameter(inst, *k, *v * 0.001)
-                        }
-                        SynthParameter::Attack => ruff.set_instance_parameter(inst, *k, *v * 0.001),
-                        SynthParameter::Sustain => {
-                            ruff.set_instance_parameter(inst, *k, *v * 0.001)
-                        }
-                        SynthParameter::Release => {
-                            ruff.set_instance_parameter(inst, *k, *v * 0.001)
-                        }
-                        _ => ruff.set_instance_parameter(inst, *k, *v),
+                        SynthParameter::Duration => inst.set_instance_parameter(*k, *v * 0.001),
+                        SynthParameter::Attack => inst.set_instance_parameter(*k, *v * 0.001),
+                        SynthParameter::Sustain => inst.set_instance_parameter(*k, *v * 0.001),
+                        SynthParameter::Release => inst.set_instance_parameter(*k, *v * 0.001),
+                        _ => inst.set_instance_parameter(*k, *v),
                     }
                 }
-                ruff.trigger(inst);
+                data.ruffbox.trigger(inst);
             }
             InterpretableEvent::Control(c) => {
                 if let Some(mut contexts) = c.ctx.clone() {
@@ -259,7 +253,7 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
                                 println!("a command (load part)");
                             }
                             Command::FreezeBuffer(freezbuf) => {
-                                commands::freeze_buffer(&data.ruffbox, freezbuf);
+                                commands::freeze_buffer(&mut data.ruffbox, freezbuf);
                                 println!("freeze buffer");
                             }
                             Command::Tmod(p) => {
@@ -307,7 +301,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
     pub fn handle_context(
         ctx: &mut SyncContext,
         session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
-        ruffbox: &sync::Arc<Mutex<RuffboxControls<BUFSIZE, NCHAN>>>,
+        ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
         parts_store: &sync::Arc<Mutex<PartsStore>>,
         global_parameters: &sync::Arc<GlobalParameters>,
         output_mode: OutputMode,
@@ -547,7 +541,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
     fn resume_generator(
         gen: Box<Generator>,
         session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
-        ruffbox: &sync::Arc<Mutex<RuffboxControls<BUFSIZE, NCHAN>>>,
+        ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
         parts_store: &sync::Arc<Mutex<PartsStore>>,
         global_parameters: &sync::Arc<GlobalParameters>,
         output_mode: OutputMode,
@@ -621,7 +615,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
     fn resume_generator_sync(
         gen: Box<Generator>,
         session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
-        ruffbox: &sync::Arc<Mutex<RuffboxControls<BUFSIZE, NCHAN>>>,
+        ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
         parts_store: &sync::Arc<Mutex<PartsStore>>,
         sync_tags: &BTreeSet<String>,
         shift: f64,
@@ -745,7 +739,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
     pub fn start_generator_no_sync(
         gen: Box<Generator>,
         session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
-        ruffbox: &sync::Arc<Mutex<RuffboxControls<BUFSIZE, NCHAN>>>,
+        ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
         parts_store: &sync::Arc<Mutex<PartsStore>>,
         global_parameters: &sync::Arc<GlobalParameters>,
         output_mode: OutputMode,

@@ -20,16 +20,15 @@ use crate::sample_set::SampleSet;
 use crate::session::*;
 
 pub fn freeze_buffer<const BUFSIZE: usize, const NCHAN: usize>(
-    ruffbox: &sync::Arc<Mutex<RuffboxControls<BUFSIZE, NCHAN>>>,
+    ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
     freezbuf: usize,
 ) {
-    let mut ruff = ruffbox.lock();
-    ruff.freeze_buffer(freezbuf);
+    ruffbox.freeze_buffer(freezbuf);
 }
 
 pub fn load_sample<const BUFSIZE: usize, const NCHAN: usize>(
     function_map: &sync::Arc<Mutex<FunctionMap>>,
-    ruffbox: &sync::Arc<Mutex<RuffboxControls<BUFSIZE, NCHAN>>>,
+    ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
     sample_set: &sync::Arc<Mutex<SampleSet>>,
     set: String,
     keywords: &mut Vec<String>,
@@ -59,10 +58,8 @@ pub fn load_sample<const BUFSIZE: usize, const NCHAN: usize>(
         sample_buffer.push(s);
     }
 
-    let mut ruff = ruffbox.lock();
-
     // adds interpolation samples to sample buffer, don't use afterwards
-    let bufnum = ruff.load_sample(
+    let bufnum = ruffbox.load_sample(
         &mut sample_buffer,
         true,
         reader.streaminfo().sample_rate as f32,
@@ -83,10 +80,10 @@ pub fn load_sample<const BUFSIZE: usize, const NCHAN: usize>(
         }
     }
 
-    if reader.streaminfo().sample_rate != ruff.samplerate as u32 {
+    if reader.streaminfo().sample_rate != ruffbox.samplerate as u32 {
         println!("adapt duration");
-        duration =
-            (duration as f32 * (reader.streaminfo().sample_rate as f32 / ruff.samplerate)) as usize;
+        duration = (duration as f32 * (reader.streaminfo().sample_rate as f32 / ruffbox.samplerate))
+            as usize;
     }
 
     println!(
@@ -95,8 +92,8 @@ pub fn load_sample<const BUFSIZE: usize, const NCHAN: usize>(
         reader.streaminfo().channels,
         duration,
         reader.streaminfo().sample_rate,
-        ruff.samplerate,
-        reader.streaminfo().sample_rate != ruff.samplerate as u32
+        ruffbox.samplerate,
+        reader.streaminfo().sample_rate != ruffbox.samplerate as u32
     );
 
     sample_set
@@ -110,7 +107,7 @@ pub fn load_sample<const BUFSIZE: usize, const NCHAN: usize>(
 
 pub fn load_sample_set<const BUFSIZE: usize, const NCHAN: usize>(
     function_map: &sync::Arc<Mutex<FunctionMap>>,
-    ruffbox: &sync::Arc<Mutex<RuffboxControls<BUFSIZE, NCHAN>>>,
+    ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
     sample_set: &sync::Arc<Mutex<SampleSet>>,
     samples_path: &Path,
 ) {
@@ -148,7 +145,7 @@ pub fn load_sample_set<const BUFSIZE: usize, const NCHAN: usize>(
 }
 pub fn load_sample_set_string<const BUFSIZE: usize, const NCHAN: usize>(
     function_map: &sync::Arc<Mutex<FunctionMap>>,
-    ruffbox: &sync::Arc<Mutex<RuffboxControls<BUFSIZE, NCHAN>>>,
+    ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
     sample_set: &sync::Arc<Mutex<SampleSet>>,
     samples_path: String,
 ) {
@@ -158,7 +155,7 @@ pub fn load_sample_set_string<const BUFSIZE: usize, const NCHAN: usize>(
 
 pub fn load_sample_sets<const BUFSIZE: usize, const NCHAN: usize>(
     function_map: &sync::Arc<Mutex<FunctionMap>>,
-    ruffbox: &sync::Arc<Mutex<RuffboxControls<BUFSIZE, NCHAN>>>,
+    ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
     sample_set: &sync::Arc<Mutex<SampleSet>>,
     folder_path: String,
 ) {
@@ -168,7 +165,7 @@ pub fn load_sample_sets<const BUFSIZE: usize, const NCHAN: usize>(
 
 pub fn load_sample_sets_path<const BUFSIZE: usize, const NCHAN: usize>(
     function_map: &sync::Arc<Mutex<FunctionMap>>,
-    ruffbox: &sync::Arc<Mutex<RuffboxControls<BUFSIZE, NCHAN>>>,
+    ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
     sample_set: &sync::Arc<Mutex<SampleSet>>,
     root_path: &Path,
 ) {
@@ -189,7 +186,7 @@ pub fn load_part(parts_store: &sync::Arc<Mutex<PartsStore>>, name: String, part:
 
 /// execute a pre-defined part step by step
 pub fn step_part<const BUFSIZE: usize, const NCHAN: usize>(
-    ruffbox: &sync::Arc<Mutex<RuffboxControls<BUFSIZE, NCHAN>>>,
+    ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
     parts_store: &sync::Arc<Mutex<PartsStore>>,
     global_parameters: &sync::Arc<GlobalParameters>,
     session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
@@ -256,12 +253,11 @@ pub fn set_global_lifemodel_resources(global_parameters: &sync::Arc<GlobalParame
 }
 
 pub fn set_global_ruffbox_parameters<const BUFSIZE: usize, const NCHAN: usize>(
-    ruffbox: &sync::Arc<Mutex<RuffboxControls<BUFSIZE, NCHAN>>>,
+    ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
     params: &HashMap<SynthParameter, f32>,
 ) {
-    let mut rb = ruffbox.lock();
     for (k, v) in params.iter() {
-        rb.set_master_parameter(*k, *v);
+        ruffbox.set_master_parameter(*k, *v);
     }
 }
 
@@ -334,7 +330,7 @@ pub fn export_dot_running<const BUFSIZE: usize, const NCHAN: usize>(
 }
 
 pub fn once<const BUFSIZE: usize, const NCHAN: usize>(
-    ruffbox: &sync::Arc<Mutex<RuffboxControls<BUFSIZE, NCHAN>>>,
+    ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
     parts_store: &sync::Arc<Mutex<PartsStore>>,
     global_parameters: &sync::Arc<GlobalParameters>,
     session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
@@ -368,9 +364,8 @@ pub fn once<const BUFSIZE: usize, const NCHAN: usize>(
             bufnum = *b as usize;
         }
 
-        let mut ruff = ruffbox.lock();
         // latency 0.05, should be made configurable later ...
-        let inst = ruff.prepare_instance(map_name(&s.name), 0.0, bufnum);
+        let mut inst = ruffbox.prepare_instance(map_name(&s.name), 0.0, bufnum);
         // set parameters and trigger instance
         for (k, v) in s.params.iter() {
             // special handling for stereo param
@@ -378,19 +373,19 @@ pub fn once<const BUFSIZE: usize, const NCHAN: usize>(
                 SynthParameter::ChannelPosition => {
                     if output_mode == OutputMode::Stereo {
                         let pos = (*v + 1.0) * 0.5;
-                        ruff.set_instance_parameter(inst, *k, pos);
+                        inst.set_instance_parameter(*k, pos);
                     } else {
-                        ruff.set_instance_parameter(inst, *k, *v);
+                        inst.set_instance_parameter(*k, *v);
                     }
                 }
                 // convert milliseconds to seconds
-                SynthParameter::Duration => ruff.set_instance_parameter(inst, *k, *v * 0.001),
-                SynthParameter::Attack => ruff.set_instance_parameter(inst, *k, *v * 0.001),
-                SynthParameter::Sustain => ruff.set_instance_parameter(inst, *k, *v * 0.001),
-                SynthParameter::Release => ruff.set_instance_parameter(inst, *k, *v * 0.001),
-                _ => ruff.set_instance_parameter(inst, *k, *v),
+                SynthParameter::Duration => inst.set_instance_parameter(*k, *v * 0.001),
+                SynthParameter::Attack => inst.set_instance_parameter(*k, *v * 0.001),
+                SynthParameter::Sustain => inst.set_instance_parameter(*k, *v * 0.001),
+                SynthParameter::Release => inst.set_instance_parameter(*k, *v * 0.001),
+                _ => inst.set_instance_parameter(*k, *v),
             }
         }
-        ruff.trigger(inst);
+        ruffbox.trigger(inst);
     }
 }

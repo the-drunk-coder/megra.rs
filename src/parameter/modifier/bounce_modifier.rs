@@ -10,7 +10,7 @@ pub struct BounceModifier {
 }
 
 impl Modifier for BounceModifier {
-    fn evaluate(&mut self, _: f32) -> f32 {        
+    fn evaluate(&mut self, _: f32) -> f32 {
         let steps_raw: f32 = self.steps.evaluate();
         let dec_inc: f32 = 360.0 / steps_raw;
         let min_raw: f32 = self.min.evaluate();
