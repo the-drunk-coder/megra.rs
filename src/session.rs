@@ -3,7 +3,7 @@ use std::collections::{BTreeSet, HashMap};
 use std::{sync, thread};
 
 use ruffbox_synth::ruffbox::synth::SynthParameter;
-use ruffbox_synth::ruffbox::Ruffbox;
+use ruffbox_synth::ruffbox::RuffboxControls;
 
 use crate::builtin_types::{
     BuiltinGlobalParameters, Command, ConfigParameter, GeneratorProcessorOrModifier,
@@ -307,7 +307,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
     pub fn handle_context(
         ctx: &mut SyncContext,
         session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
-        ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>,
+        ruffbox: &sync::Arc<Mutex<RuffboxControls<BUFSIZE, NCHAN>>>,
         parts_store: &sync::Arc<Mutex<PartsStore>>,
         global_parameters: &sync::Arc<GlobalParameters>,
         output_mode: OutputMode,
@@ -547,7 +547,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
     fn resume_generator(
         gen: Box<Generator>,
         session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
-        ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>,
+        ruffbox: &sync::Arc<Mutex<RuffboxControls<BUFSIZE, NCHAN>>>,
         parts_store: &sync::Arc<Mutex<PartsStore>>,
         global_parameters: &sync::Arc<GlobalParameters>,
         output_mode: OutputMode,
@@ -621,7 +621,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
     fn resume_generator_sync(
         gen: Box<Generator>,
         session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
-        ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>,
+        ruffbox: &sync::Arc<Mutex<RuffboxControls<BUFSIZE, NCHAN>>>,
         parts_store: &sync::Arc<Mutex<PartsStore>>,
         sync_tags: &BTreeSet<String>,
         shift: f64,
@@ -745,7 +745,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
     pub fn start_generator_no_sync(
         gen: Box<Generator>,
         session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
-        ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>,
+        ruffbox: &sync::Arc<Mutex<RuffboxControls<BUFSIZE, NCHAN>>>,
         parts_store: &sync::Arc<Mutex<PartsStore>>,
         global_parameters: &sync::Arc<GlobalParameters>,
         output_mode: OutputMode,

@@ -3,7 +3,7 @@ mod livecode_text_edit;
 mod syntax_highlighting;
 
 use parking_lot::Mutex;
-use ruffbox_synth::ruffbox::Ruffbox;
+use ruffbox_synth::ruffbox::RuffboxControls;
 use std::sync;
 
 mod megra_editor;
@@ -20,7 +20,7 @@ use crate::session::{OutputMode, Session};
 pub fn run_editor<const BUFSIZE: usize, const NCHAN: usize>(
     function_map: &sync::Arc<Mutex<FunctionMap>>,
     session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
-    ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>,
+    ruffbox: &sync::Arc<Mutex<RuffboxControls<BUFSIZE, NCHAN>>>,
     global_parameters: &sync::Arc<GlobalParameters>,
     sample_set: &sync::Arc<Mutex<SampleSet>>,
     parts_store: &sync::Arc<Mutex<PartsStore>>,

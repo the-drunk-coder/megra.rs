@@ -1,7 +1,7 @@
 use parking_lot::Mutex;
 use std::sync;
 
-use ruffbox_synth::ruffbox::Ruffbox;
+use ruffbox_synth::ruffbox::RuffboxControls;
 use rustyline::error::ReadlineError;
 use rustyline::Editor;
 
@@ -16,7 +16,7 @@ use crate::session::{OutputMode, Session};
 pub fn start_repl<const BUFSIZE: usize, const NCHAN: usize>(
     function_map: &sync::Arc<Mutex<FunctionMap>>,
     session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
-    ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>,
+    ruffbox: &sync::Arc<Mutex<RuffboxControls<BUFSIZE, NCHAN>>>,
     global_parameters: &sync::Arc<GlobalParameters>,
     sample_set: &sync::Arc<Mutex<SampleSet>>,
     parts_store: &sync::Arc<Mutex<PartsStore>>,

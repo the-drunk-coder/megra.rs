@@ -7,7 +7,7 @@ use std::{
 };
 use vom_rs::pfa;
 
-use ruffbox_synth::ruffbox::{synth::SynthParameter, Ruffbox};
+use ruffbox_synth::ruffbox::{synth::SynthParameter, RuffboxControls};
 
 use crate::builtin_types::*;
 use crate::event::*;
@@ -20,7 +20,7 @@ use crate::sample_set::SampleSet;
 use crate::session::*;
 
 pub fn freeze_buffer<const BUFSIZE: usize, const NCHAN: usize>(
-    ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>,
+    ruffbox: &sync::Arc<Mutex<RuffboxControls<BUFSIZE, NCHAN>>>,
     freezbuf: usize,
 ) {
     let mut ruff = ruffbox.lock();
@@ -29,7 +29,7 @@ pub fn freeze_buffer<const BUFSIZE: usize, const NCHAN: usize>(
 
 pub fn load_sample<const BUFSIZE: usize, const NCHAN: usize>(
     function_map: &sync::Arc<Mutex<FunctionMap>>,
-    ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>,
+    ruffbox: &sync::Arc<Mutex<RuffboxControls<BUFSIZE, NCHAN>>>,
     sample_set: &sync::Arc<Mutex<SampleSet>>,
     set: String,
     keywords: &mut Vec<String>,
@@ -110,7 +110,7 @@ pub fn load_sample<const BUFSIZE: usize, const NCHAN: usize>(
 
 pub fn load_sample_set<const BUFSIZE: usize, const NCHAN: usize>(
     function_map: &sync::Arc<Mutex<FunctionMap>>,
-    ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>,
+    ruffbox: &sync::Arc<Mutex<RuffboxControls<BUFSIZE, NCHAN>>>,
     sample_set: &sync::Arc<Mutex<SampleSet>>,
     samples_path: &Path,
 ) {
@@ -148,7 +148,7 @@ pub fn load_sample_set<const BUFSIZE: usize, const NCHAN: usize>(
 }
 pub fn load_sample_set_string<const BUFSIZE: usize, const NCHAN: usize>(
     function_map: &sync::Arc<Mutex<FunctionMap>>,
-    ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>,
+    ruffbox: &sync::Arc<Mutex<RuffboxControls<BUFSIZE, NCHAN>>>,
     sample_set: &sync::Arc<Mutex<SampleSet>>,
     samples_path: String,
 ) {
@@ -158,7 +158,7 @@ pub fn load_sample_set_string<const BUFSIZE: usize, const NCHAN: usize>(
 
 pub fn load_sample_sets<const BUFSIZE: usize, const NCHAN: usize>(
     function_map: &sync::Arc<Mutex<FunctionMap>>,
-    ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>,
+    ruffbox: &sync::Arc<Mutex<RuffboxControls<BUFSIZE, NCHAN>>>,
     sample_set: &sync::Arc<Mutex<SampleSet>>,
     folder_path: String,
 ) {
@@ -168,7 +168,7 @@ pub fn load_sample_sets<const BUFSIZE: usize, const NCHAN: usize>(
 
 pub fn load_sample_sets_path<const BUFSIZE: usize, const NCHAN: usize>(
     function_map: &sync::Arc<Mutex<FunctionMap>>,
-    ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>,
+    ruffbox: &sync::Arc<Mutex<RuffboxControls<BUFSIZE, NCHAN>>>,
     sample_set: &sync::Arc<Mutex<SampleSet>>,
     root_path: &Path,
 ) {
@@ -189,7 +189,7 @@ pub fn load_part(parts_store: &sync::Arc<Mutex<PartsStore>>, name: String, part:
 
 /// execute a pre-defined part step by step
 pub fn step_part<const BUFSIZE: usize, const NCHAN: usize>(
-    ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>,
+    ruffbox: &sync::Arc<Mutex<RuffboxControls<BUFSIZE, NCHAN>>>,
     parts_store: &sync::Arc<Mutex<PartsStore>>,
     global_parameters: &sync::Arc<GlobalParameters>,
     session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
@@ -256,7 +256,7 @@ pub fn set_global_lifemodel_resources(global_parameters: &sync::Arc<GlobalParame
 }
 
 pub fn set_global_ruffbox_parameters<const BUFSIZE: usize, const NCHAN: usize>(
-    ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>,
+    ruffbox: &sync::Arc<Mutex<RuffboxControls<BUFSIZE, NCHAN>>>,
     params: &HashMap<SynthParameter, f32>,
 ) {
     let mut rb = ruffbox.lock();
@@ -334,7 +334,7 @@ pub fn export_dot_running<const BUFSIZE: usize, const NCHAN: usize>(
 }
 
 pub fn once<const BUFSIZE: usize, const NCHAN: usize>(
-    ruffbox: &sync::Arc<Mutex<Ruffbox<BUFSIZE, NCHAN>>>,
+    ruffbox: &sync::Arc<Mutex<RuffboxControls<BUFSIZE, NCHAN>>>,
     parts_store: &sync::Arc<Mutex<PartsStore>>,
     global_parameters: &sync::Arc<GlobalParameters>,
     session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
