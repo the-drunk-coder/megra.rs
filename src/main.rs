@@ -36,7 +36,7 @@ use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use directories_next::ProjectDirs;
 use getopts::Options;
 use parking_lot::Mutex;
-use ruffbox_synth::ruffbox::{ReverbMode, Ruffbox};
+use ruffbox_synth::ruffbox::{init_ruffbox, ReverbMode};
 use standard_library::define_standard_library;
 use std::{env, sync, thread};
 
@@ -382,28 +382,41 @@ where
     let err_fn = |err| eprintln!("an error occurred on stream: {}", err);
 
     #[cfg(feature = "ringbuffer")]
-    let ruffbox = sync::Arc::new(Mutex::new(Ruffbox::<128, NCHAN>::new(
+    let (controls, playhead) = init_ruffbox::<128, NCHAN>(
         true,
         live_buffer_time.into(),
         reverb_mode,
         sample_rate.into(),
-    )));
+        3000,
+        10,
+    );
 
     #[cfg(not(feature = "ringbuffer"))]
-    let ruffbox = sync::Arc::new(Mutex::new(Ruffbox::<512, NCHAN>::new(
+    let (controls, playhead) = init_ruffbox::<512, NCHAN>(
         true,
         live_buffer_time.into(),
         reverb_mode,
         sample_rate.into(),
-    )));
+        3000,
+        10,
+    );
 
-    let ruffbox2 = sync::Arc::clone(&ruffbox); // the one for the audio thread (out stream)...
-    let ruffbox3 = sync::Arc::clone(&ruffbox); // the one for the audio thread (in stream)...
+    let playhead_out = sync::Arc::new(Mutex::new(playhead)); // the one for the audio thread (out stream)...
+    let playhead_in = sync::Arc::clone(&playhead_out); // the one for the audio thread (in stream)...
 
     let in_stream = input_device.build_input_stream(
         in_config,
         move |data: &[f32], _: &cpal::InputCallbackInfo| {
-            let mut ruff = ruffbox3.lock();
+            // these are the only two locks that are left.
+            // Maybe, in the future, I could get around them using
+            // some interior mutability pattern in the ruffbox playhead,
+            // but given that the only other point where the lock \
+            // is called is the output callback, and they have to be called in
+            // sequence anyway (or at least in a deterministic fashion, i hope),
+            // the lock here shouldn't hurt much (in fact it worked nicely even before
+            // it was possible to call the controls without a lock).
+            // Unless I run into trouble, this might just stay the way it is for now.
+            let mut ruff = playhead_in.lock();
 
             // there might be a faster way to de-interleave here ...
             // only use first input channel
@@ -422,7 +435,8 @@ where
     let out_stream = output_device.build_output_stream(
         out_config,
         move |data: &mut [f32], _: &cpal::OutputCallbackInfo| {
-            let mut ruff = ruffbox2.lock();
+            // about this lock, see note in the input stream ...
+            let mut ruff = playhead_out.lock();
 
             // as the jack timing from cpal can't be trusted right now, the
             // ruffbox handles it's own logical time ...
@@ -456,7 +470,8 @@ where
     let out_stream = output_device.build_output_stream(
         out_config,
         move |data: &mut [f32], _: &cpal::OutputCallbackInfo| {
-            let mut ruff = ruffbox2.lock();
+            // about this lock, see note in the input stream ...
+            let mut ruff = playhead_out.lock();
 
             let samples_available = if write_idx < read_idx {
                 write_idx + RINGBUFFER_SIZE - read_idx
@@ -540,6 +555,7 @@ where
     let parts_store = sync::Arc::new(Mutex::new(PartsStore::new()));
     // define the "standard library"
     let stdlib = sync::Arc::new(Mutex::new(define_standard_library()));
+    let controls_arc = sync::Arc::new(controls);
 
     // load the default sample set ...
     if load_samples {
@@ -565,11 +581,16 @@ where
             }
 
             println!("load samples from path: {:?}", samples_path);
-            let ruffbox2 = sync::Arc::clone(&ruffbox);
+            let controls_arc2 = sync::Arc::clone(&controls_arc);
             let sample_set2 = sync::Arc::clone(&sample_set);
             let stdlib2 = sync::Arc::clone(&stdlib);
             thread::spawn(move || {
-                commands::load_sample_sets_path(&stdlib2, &ruffbox2, &sample_set2, &samples_path);
+                commands::load_sample_sets_path(
+                    &stdlib2,
+                    &controls_arc2,
+                    &sample_set2,
+                    &samples_path,
+                );
                 println!("a command (load default sample sets)");
             });
         }
@@ -579,7 +600,7 @@ where
         editor::run_editor(
             &stdlib,
             &session,
-            &ruffbox,
+            &controls_arc,
             &global_parameters,
             &sample_set,
             &parts_store,
@@ -592,7 +613,7 @@ where
         repl::start_repl(
             &stdlib,
             &session,
-            &ruffbox,
+            &controls_arc,
             &global_parameters,
             &sample_set,
             &parts_store,
