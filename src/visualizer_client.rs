@@ -6,6 +6,16 @@ use rosc::{OscMessage, OscPacket, OscType};
 use std::net;
 use std::str::FromStr;
 
+//crossbeam::channel::Sender<ControlMessage<BUFSIZE, NCHAN>>,
+//crossbeam::channel::Receiver<ControlMessage<BUFSIZE, NCHAN>>,
+/*
+let (tx, rx): (
+        Sender<ControlMessage<BUFSIZE, NCHAN>>,
+        Receiver<ControlMessage<BUFSIZE, NCHAN>>,
+    ) = crossbeam::channel::bounded(2000);
+*/
+
+
 pub struct VisualizerClient {
     pub host_addr : net::SocketAddrV4,
     pub to_addr : net::SocketAddrV4,
@@ -37,7 +47,7 @@ impl VisualizerClient {
 		addr: "/node/add".to_string(),
 		args: vec![
 		    OscType::String(g.root_generator.name.clone()),
-		    OscType::Long(*key as i64),
+		    OscType::Int(*key as i32),
 		    OscType::String(label.iter().collect()),
 		],
 	    })).unwrap();
@@ -47,11 +57,11 @@ impl VisualizerClient {
 	for (src, children) in g.root_generator.generator.children.iter() {
 	    for ch in children.iter() {
 		let msg_buf_edge = encoder::encode(&OscPacket::Message(OscMessage {
-		addr: "/egde/add".to_string(),
+		addr: "/edge/add".to_string(),
 		args: vec![
 		    OscType::String(g.root_generator.name.clone()),
-		    OscType::Long(*src as i64),
-		    OscType::Long(ch.child_hash as i64),
+		    OscType::Int(*src as i32),
+		    OscType::Int(ch.child_hash as i32),
 		    OscType::String(ch.child.last().unwrap().to_string()),
 		    OscType::Int((ch.prob * 100.0) as i32),
 		],
