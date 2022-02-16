@@ -144,6 +144,10 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
         latency = global_latency.evaluate() as f64;
     }
 
+    if let Some(vc) = &data.visualizer_client {
+        vc.update_active_node(&data.generator);
+    }
+
     let time = (data // sym, dur
         .generator
         .current_transition(&data.global_parameters)
@@ -834,6 +838,9 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
         {
             let mut sess = session.lock();
             sched_prox = sess.schedulers.remove(gen_name);
+            if let Some(c) = &sess.visualizer_client {
+                c.clear(gen_name);
+            }
         }
 
         if let Some((mut sched, _)) = sched_prox {
@@ -857,6 +864,9 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
             let mut sess = session.lock();
             for name in gen_names.iter() {
                 sched_proxies.push(sess.schedulers.remove(name));
+                if let Some(c) = &sess.visualizer_client {
+                    c.clear(name);
+                }
             }
         }
 

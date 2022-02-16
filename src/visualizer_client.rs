@@ -3,22 +3,22 @@ use crate::generator::Generator;
 use rosc::encoder;
 use rosc::{OscMessage, OscPacket, OscType};
 
+use std::collections::BTreeSet;
 use std::net;
 use std::str::FromStr;
-
-//crossbeam::channel::Sender<ControlMessage<BUFSIZE, NCHAN>>,
-//crossbeam::channel::Receiver<ControlMessage<BUFSIZE, NCHAN>>,
-/*
-let (tx, rx): (
-        Sender<ControlMessage<BUFSIZE, NCHAN>>,
-        Receiver<ControlMessage<BUFSIZE, NCHAN>>,
-    ) = crossbeam::channel::bounded(2000);
-*/
 
 pub struct VisualizerClient {
     pub host_addr: net::SocketAddrV4,
     pub to_addr: net::SocketAddrV4,
     pub socket: net::UdpSocket,
+}
+
+fn tags_to_string(tags: &BTreeSet<String>) -> String {
+    let mut name: String = "".to_owned();
+    for tag in tags.iter() {
+        name.push_str(tag);
+    }
+    name
 }
 
 impl VisualizerClient {
@@ -33,10 +33,11 @@ impl VisualizerClient {
     }
 
     pub fn create_or_update(&self, g: &Generator) {
+        let gen_name = tags_to_string(&g.id_tags);
         // switch view
         let msg_buf_add = encoder::encode(&OscPacket::Message(OscMessage {
             addr: "/graph/add".to_string(),
-            args: vec![OscType::String(g.root_generator.name.clone())],
+            args: vec![OscType::String(gen_name.clone())],
         }))
         .unwrap();
         self.socket.send_to(&msg_buf_add, self.to_addr).unwrap();
@@ -46,7 +47,8 @@ impl VisualizerClient {
             let msg_buf_node = encoder::encode(&OscPacket::Message(OscMessage {
                 addr: "/node/add".to_string(),
                 args: vec![
-                    OscType::String(g.root_generator.name.clone()),
+                    // needs full tag id
+                    OscType::String(gen_name.clone()),
                     OscType::Int(*key as i32),
                     OscType::String(label.iter().collect()),
                 ],
@@ -60,7 +62,7 @@ impl VisualizerClient {
                 let msg_buf_edge = encoder::encode(&OscPacket::Message(OscMessage {
                     addr: "/edge/add".to_string(),
                     args: vec![
-                        OscType::String(g.root_generator.name.clone()),
+                        OscType::String(gen_name.clone()),
                         OscType::Int(*src as i32),
                         OscType::Int(ch.child_hash as i32),
                         OscType::String(ch.child.last().unwrap().to_string()),
@@ -76,7 +78,7 @@ impl VisualizerClient {
         let msg_buf_render = encoder::encode(&OscPacket::Message(OscMessage {
             addr: "/render".to_string(),
             args: vec![
-                OscType::String(g.root_generator.name.clone()),
+                OscType::String(gen_name),
                 OscType::String("cose".to_string()), // layout type
             ],
         }))
@@ -85,13 +87,11 @@ impl VisualizerClient {
     }
 
     pub fn update_active_node(&self, g: &Generator) {
+        let gen_name = tags_to_string(&g.id_tags);
         if let Some(h) = g.root_generator.generator.current_state {
             let msg_buf_active_node = encoder::encode(&OscPacket::Message(OscMessage {
                 addr: "/node/active".to_string(),
-                args: vec![
-                    OscType::String(g.root_generator.name.clone()),
-                    OscType::Long(h as i64),
-                ],
+                args: vec![OscType::String(gen_name), OscType::Int(h as i32)],
             }))
             .unwrap();
             self.socket
@@ -100,10 +100,11 @@ impl VisualizerClient {
         }
     }
 
-    pub fn clear(&self, g: &Generator) {
+    pub fn clear(&self, id_tags: &BTreeSet<String>) {
+        let gen_name = tags_to_string(id_tags);
         let msg_buf_clear = encoder::encode(&OscPacket::Message(OscMessage {
             addr: "/clear".to_string(),
-            args: vec![OscType::String(g.root_generator.name.clone())],
+            args: vec![OscType::String(gen_name)],
         }))
         .unwrap();
         self.socket.send_to(&msg_buf_clear, self.to_addr).unwrap();
