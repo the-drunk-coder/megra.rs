@@ -58,7 +58,7 @@ pub struct Session<const BUFSIZE: usize, const NCHAN: usize> {
         ),
     >,
     contexts: HashMap<String, BTreeSet<BTreeSet<String>>>,
-    pub visualizer_client: Option<VisualizerClient>,
+    pub visualizer_client: Option<sync::Arc<VisualizerClient>>,
 }
 
 // basically a bfs on a dag !
@@ -117,7 +117,7 @@ fn resolve_proxy(parts_store: &PartsStore, proxy: PartProxy, generators: &mut Ve
 //////////////////////////////////////
 
 // yes, here it is ... the evaluation function ...
-// or better, the inside part of the time recursion
+// or better, the inside part of the time iteration
 fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
     data: &mut SchedulerData<BUFSIZE, NCHAN>,
 ) -> (f64, bool, bool) {
@@ -144,7 +144,7 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
         latency = global_latency.evaluate() as f64;
     }
 
-    let time = (data
+    let time = (data // sym, dur
         .generator
         .current_transition(&data.global_parameters)
         .params[&SynthParameter::Duration] as f64
@@ -297,7 +297,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
         Session {
             schedulers: HashMap::new(),
             contexts: HashMap::new(),
-	    visualizer_client: None,
+            visualizer_client: None,
         }
     }
 
@@ -357,14 +357,14 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
             println!("newcomers {:?}", newcomers);
             println!("remainders {:?}", remainders);
             println!("quitters {:?}", quitters);
-	    
+
             // HANDLE QUITTERS (generators to be stopped ...)
             // stop asynchronously to keep main thread reactive
             let session2 = sync::Arc::clone(session);
             thread::spawn(move || {
                 Session::stop_generators(&session2, &quitters);
             });
-	    
+
             // EXTERNAL SYNC
             // are we supposed to sync to some other context ??
             // get external sync ...
@@ -798,12 +798,12 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
         {
             let mut sess = session.lock();
             sched_prox = sess.schedulers.remove(&id_tags);
-	    // handle visualization if necessary
-	    if let Some(c) = &sess.visualizer_client {
-		let sd = sched_data.lock();
-		c.create_or_update(&sd.generator);
-	    }
-	    sess.schedulers.insert(id_tags.clone(), (sched, sched_data));
+            // handle visualization if necessary
+            if let Some(c) = &sess.visualizer_client {
+                let sd = sched_data.lock();
+                c.create_or_update(&sd.generator);
+            }
+            sess.schedulers.insert(id_tags.clone(), (sched, sched_data));
         }
 
         // prepare for replacement

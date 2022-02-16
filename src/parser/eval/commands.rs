@@ -432,5 +432,7 @@ pub fn connect_visualizer(
     _: &sync::Arc<Mutex<SampleSet>>,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
-    Some(EvaluatedExpr::BuiltIn(BuiltIn::Command(Command::ConnectVisualizer)))
+    Some(EvaluatedExpr::BuiltIn(BuiltIn::Command(
+        Command::ConnectVisualizer,
+    )))
 }

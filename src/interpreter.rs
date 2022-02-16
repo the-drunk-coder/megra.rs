@@ -83,9 +83,9 @@ pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
                         println!("a command (stop session)");
                     });
                 }
-		Command::ConnectVisualizer => {
+                Command::ConnectVisualizer => {
                     let mut session = session.lock();
-		    session.visualizer_client = Some(VisualizerClient::start());                    
+                    session.visualizer_client = Some(sync::Arc::new(VisualizerClient::start()));
                 }
                 Command::LoadSample((set, mut keywords, path)) => {
                     let ruffbox2 = sync::Arc::clone(ruffbox);
