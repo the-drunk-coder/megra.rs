@@ -16,8 +16,8 @@ pub fn define_standard_library() -> FunctionMap {
     standard_library.fmap.insert("rule".to_string(), eval::constructors::infer::rule);
     standard_library.fmap.insert("learn".to_string(), eval::constructors::learn::learn);
     standard_library.fmap.insert("cyc".to_string(), eval::constructors::cyc::cyc);
-    standard_library.fmap.insert("flower".to_string(), eval::constructors::cyc::cyc);
-    standard_library.fmap.insert("stages".to_string(), eval::constructors::cyc::cyc);
+    standard_library.fmap.insert("flower".to_string(), eval::constructors::flower::flower);
+    standard_library.fmap.insert("stages".to_string(), eval::constructors::stages::stages);
 
     // commands
     standard_library.fmap.insert("load-part".to_string(), eval::commands::load_part);
