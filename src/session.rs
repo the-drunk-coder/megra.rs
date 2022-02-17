@@ -901,6 +901,13 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
             }
             println!("\'");
         }
+
+        if let Some(c) = &sess.visualizer_client {
+            for (k, _) in sess.schedulers.iter() {
+                c.clear(k);
+            }
+        }
+
         sess.schedulers = HashMap::new();
         sess.contexts = HashMap::new();
         let mut ps = parts_store.lock();
