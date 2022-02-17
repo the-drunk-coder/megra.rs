@@ -28,8 +28,12 @@ fn find_keyword_param(
     key: &str,
     default: f32,
 ) -> Parameter {
-    if let Some(EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p))) = raw_params.get(key) {
-        p.clone()
+    if let Some(b) = raw_params.get(key) {
+        match b {
+            EvaluatedExpr::Float(f) => Parameter::with_value(*f),
+            EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p)) => p.clone(),
+            _ => Parameter::with_value(default),
+        }
     } else {
         Parameter::with_value(default)
     }
@@ -48,8 +52,12 @@ fn find_keyword_bool(
 }
 
 fn get_next_param(tail_drain: &mut std::vec::Drain<EvaluatedExpr>, default: f32) -> Parameter {
-    if let Some(EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p))) = tail_drain.next() {
-        p
+    if let Some(b) = tail_drain.next() {
+        match b {
+            EvaluatedExpr::Float(f) => Parameter::with_value(f),
+            EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p)) => p,
+            _ => Parameter::with_value(default),
+        }
     } else {
         Parameter::with_value(default)
     }
@@ -71,6 +79,8 @@ pub fn bounce(
     let keyword_params = get_keyword_params(&mut tail_drain);
     let steps = find_keyword_param(&keyword_params, "steps", 128.0);
 
+    println!("{:?} {:?} {:?}", min, max, steps);
+
     Some(EvaluatedExpr::BuiltIn(BuiltIn::Parameter(Parameter {
         val: 0.0,
         static_val: 0.0,
@@ -78,7 +88,7 @@ pub fn bounce(
             min,
             max,
             steps,
-            step_count: (0.0),
+            step_count: 0.0,
         })),
     })))
 }
