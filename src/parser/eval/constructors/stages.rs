@@ -13,7 +13,7 @@ use crate::parser::{BuiltIn, EvaluatedExpr, FunctionMap};
 use crate::{OutputMode, SampleSet};
 use parking_lot::Mutex;
 
-pub fn nuc(
+pub fn stages(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     global_parameters: &sync::Arc<GlobalParameters>,
