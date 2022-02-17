@@ -593,6 +593,9 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
             println!("restarted finished gen");
         } else {
             let mut sess = session.lock();
+            if let Some(c) = &sess.visualizer_client {
+                c.create_or_update(&gen);
+            }
             // start scheduler if it exists ...
             if let Some((_, data)) = sess.schedulers.get_mut(&id_tags) {
                 print!("resume generator \'");
