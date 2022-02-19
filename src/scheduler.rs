@@ -43,6 +43,7 @@ pub struct SchedulerData<const BUFSIZE: usize, const NCHAN: usize> {
 }
 
 impl<const BUFSIZE: usize, const NCHAN: usize> SchedulerData<BUFSIZE, NCHAN> {
+    #[allow(clippy::manual_map)]
     #[allow(clippy::too_many_arguments)]
     pub fn from_previous(
         old: &SchedulerData<BUFSIZE, NCHAN>,
@@ -56,12 +57,14 @@ impl<const BUFSIZE: usize, const NCHAN: usize> SchedulerData<BUFSIZE, NCHAN> {
     ) -> Self {
         let shift_diff = shift - old.shift;
         data.transfer_state(&old.generator);
+
         // keep scheduling, retain data
         let vca = if let Some(vc) = &old.visualizer_client {
-            Some(sync::Arc::clone(&vc))
+            Some(sync::Arc::clone(vc))
         } else {
             None
         };
+
         SchedulerData {
             start_time: old.start_time,
             stream_time: old.stream_time + shift_diff,
@@ -83,6 +86,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> SchedulerData<BUFSIZE, NCHAN> {
         }
     }
 
+    #[allow(clippy::manual_map)]
     #[allow(clippy::too_many_arguments)]
     pub fn from_time_data(
         old: &SchedulerData<BUFSIZE, NCHAN>,
@@ -96,7 +100,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> SchedulerData<BUFSIZE, NCHAN> {
     ) -> Self {
         let shift_diff = shift - old.shift;
         let vca = if let Some(vc) = &old.visualizer_client {
-            Some(sync::Arc::clone(&vc))
+            Some(sync::Arc::clone(vc))
         } else {
             None
         };
@@ -123,6 +127,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> SchedulerData<BUFSIZE, NCHAN> {
     }
 
     #[allow(clippy::too_many_arguments)]
+    #[allow(clippy::manual_map)]
     pub fn from_data(
         data: Box<Generator>,
         shift: f64,
@@ -141,7 +146,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> SchedulerData<BUFSIZE, NCHAN> {
         {
             let sess = session.lock();
             vca = if let Some(vc) = &sess.visualizer_client {
-                Some(sync::Arc::clone(&vc))
+                Some(sync::Arc::clone(vc))
             } else {
                 None
             };
