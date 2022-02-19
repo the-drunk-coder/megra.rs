@@ -111,7 +111,7 @@ pub fn linear(
             generator: pfa,
             event_mapping,
             duration_mapping,
-            modified: false,
+            modified: true,
             symbol_ages: HashMap::new(),
             default_duration: 200,
             last_transition: None,

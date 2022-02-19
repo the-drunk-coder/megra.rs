@@ -111,4 +111,19 @@ impl MarkovSequenceGenerator {
     pub fn reached_end_state(&self) -> bool {
         self.last_symbol.is_none() && self.last_transition.is_none()
     }
+
+    /// use this if the basic structure of the
+    /// generator has been persistently modified (i.e. after growing,
+    /// shrinking or adding rules)
+    pub fn set_modified(&mut self) {
+        self.modified = true;
+    }
+
+    pub fn is_modified(&self) -> bool {
+        self.modified
+    }
+
+    pub fn clear_modified(&mut self) {
+        self.modified = false;
+    }
 }

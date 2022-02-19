@@ -31,6 +31,7 @@ pub fn relax_raw(time_mods: &mut Vec<TimeMod>, v: f32, n: usize) {
 
 pub fn reverse_raw(gen: &mut MarkovSequenceGenerator) {
     gen.generator = reverse_pfa(&gen.generator);
+    gen.set_modified();
 }
 
 pub fn grow_raw(
@@ -129,6 +130,7 @@ pub fn grow_raw(
                 gen.duration_mapping.insert(k, v);
             }
         }
+        gen.set_modified();
     } else {
         println!("can't grow!");
     }
@@ -140,16 +142,19 @@ pub fn shrink_raw(gen: &mut MarkovSequenceGenerator, sym: char, rebalance: bool)
         gen.generator.remove_symbol(sym, rebalance);
         gen.event_mapping.remove(&sym);
         gen.symbol_ages.remove(&sym);
+        gen.set_modified();
     }
     // remove eventual duration mappings ?
 }
 
 pub fn blur_raw(gen: &mut MarkovSequenceGenerator, factor: f32) {
     gen.generator.blur(factor);
+    gen.set_modified();
 }
 
 pub fn sharpen_raw(gen: &mut MarkovSequenceGenerator, factor: f32) {
     gen.generator.sharpen(factor);
+    gen.set_modified();
 }
 
 pub fn shake_raw(gen: &mut MarkovSequenceGenerator, keep: &HashSet<SynthParameter>, factor: f32) {
@@ -161,6 +166,7 @@ pub fn shake_raw(gen: &mut MarkovSequenceGenerator, keep: &HashSet<SynthParamete
             }
         }
     }
+    gen.set_modified();
 }
 
 pub fn skip_raw(gen: &mut MarkovSequenceGenerator, times: usize) {
@@ -176,6 +182,7 @@ pub fn rewind_raw(gen: &mut MarkovSequenceGenerator, states: usize) {
 
 pub fn solidify_raw(gen: &mut MarkovSequenceGenerator, ctx_len: usize) {
     gen.generator.solidify(ctx_len);
+    gen.set_modified();
 }
 
 pub fn rnd_raw(gen: &mut MarkovSequenceGenerator, randomize_chance: f32) {
@@ -183,11 +190,13 @@ pub fn rnd_raw(gen: &mut MarkovSequenceGenerator, randomize_chance: f32) {
         gen.generator
             .randomize_edges(randomize_chance, randomize_chance);
         gen.generator.rebalance();
+        gen.set_modified();
     }
 }
 
 pub fn rep_raw(gen: &mut MarkovSequenceGenerator, repetition_chance: f32, max_repetitions: usize) {
     if repetition_chance > 0.0 {
         gen.generator.repeat(repetition_chance, max_repetitions);
+        gen.set_modified();
     }
 }

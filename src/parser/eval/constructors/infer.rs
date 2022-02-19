@@ -184,7 +184,7 @@ pub fn infer(
             generator: pfa,
             event_mapping,
             duration_mapping,
-            modified: false,
+            modified: true,
             symbol_ages: HashMap::new(),
             default_duration: dur.static_val as u64,
             last_transition: None,

@@ -145,6 +145,10 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
     }
 
     if let Some(vc) = &data.visualizer_client {
+        if data.generator.root_generator.is_modified() {
+            vc.create_or_update(&data.generator);
+            data.generator.root_generator.clear_modified()
+        }
         vc.update_active_node(&data.generator);
     }
 
@@ -593,9 +597,6 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
             println!("restarted finished gen");
         } else {
             let mut sess = session.lock();
-            if let Some(c) = &sess.visualizer_client {
-                c.create_or_update(&gen);
-            }
             // start scheduler if it exists ...
             if let Some((_, data)) = sess.schedulers.get_mut(&id_tags) {
                 print!("resume generator \'");
@@ -805,11 +806,6 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
         {
             let mut sess = session.lock();
             sched_prox = sess.schedulers.remove(&id_tags);
-            // handle visualization if necessary
-            if let Some(c) = &sess.visualizer_client {
-                let sd = sched_data.lock();
-                c.create_or_update(&sd.generator);
-            }
             sess.schedulers.insert(id_tags.clone(), (sched, sched_data));
         }
 

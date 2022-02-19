@@ -150,7 +150,7 @@ pub fn learn(
             generator: pfa,
             event_mapping,
             duration_mapping: HashMap::new(),
-            modified: false,
+            modified: true,
             symbol_ages: HashMap::new(),
             default_duration: dur.static_val as u64,
             last_transition: None,
