@@ -366,27 +366,30 @@ pub fn once<const BUFSIZE: usize, const NCHAN: usize>(
         }
 
         // latency 0.05, should be made configurable later ...
-        let mut inst = ruffbox.prepare_instance(map_name(&s.name), 0.0, bufnum);
-        // set parameters and trigger instance
-        for (k, v) in s.params.iter() {
-            // special handling for stereo param
-            match k {
-                SynthParameter::ChannelPosition => {
-                    if output_mode == OutputMode::Stereo {
-                        let pos = (*v + 1.0) * 0.5;
-                        inst.set_instance_parameter(*k, pos);
-                    } else {
-                        inst.set_instance_parameter(*k, *v);
+        if let Some(mut inst) = ruffbox.prepare_instance(map_name(&s.name), 0.0, bufnum) {
+            // set parameters and trigger instance
+            for (k, v) in s.params.iter() {
+                // special handling for stereo param
+                match k {
+                    SynthParameter::ChannelPosition => {
+                        if output_mode == OutputMode::Stereo {
+                            let pos = (*v + 1.0) * 0.5;
+                            inst.set_instance_parameter(*k, pos);
+                        } else {
+                            inst.set_instance_parameter(*k, *v);
+                        }
                     }
+                    // convert milliseconds to seconds
+                    SynthParameter::Duration => inst.set_instance_parameter(*k, *v * 0.001),
+                    SynthParameter::Attack => inst.set_instance_parameter(*k, *v * 0.001),
+                    SynthParameter::Sustain => inst.set_instance_parameter(*k, *v * 0.001),
+                    SynthParameter::Release => inst.set_instance_parameter(*k, *v * 0.001),
+                    _ => inst.set_instance_parameter(*k, *v),
                 }
-                // convert milliseconds to seconds
-                SynthParameter::Duration => inst.set_instance_parameter(*k, *v * 0.001),
-                SynthParameter::Attack => inst.set_instance_parameter(*k, *v * 0.001),
-                SynthParameter::Sustain => inst.set_instance_parameter(*k, *v * 0.001),
-                SynthParameter::Release => inst.set_instance_parameter(*k, *v * 0.001),
-                _ => inst.set_instance_parameter(*k, *v),
             }
+            ruffbox.trigger(inst);
+        } else {
+            println!("can't prepare this instance !");
         }
-        ruffbox.trigger(inst);
     }
 }

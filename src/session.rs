@@ -213,32 +213,35 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
                     bufnum = *b as usize;
                 }
 
-                let mut inst = data.ruffbox.prepare_instance(
+                if let Some(mut inst) = data.ruffbox.prepare_instance(
                     map_name(&s.name),
                     data.stream_time + latency,
                     bufnum,
-                );
-                // set parameters and trigger instance
-                for (k, v) in s.params.iter() {
-                    // special handling for stereo param
-                    match k {
-                        SynthParameter::ChannelPosition => {
-                            if data.output_mode == OutputMode::Stereo {
-                                let pos = (*v + 1.0) * 0.5;
-                                inst.set_instance_parameter(*k, pos);
-                            } else {
-                                inst.set_instance_parameter(*k, *v);
+                ) {
+                    // set parameters and trigger instance
+                    for (k, v) in s.params.iter() {
+                        // special handling for stereo param
+                        match k {
+                            SynthParameter::ChannelPosition => {
+                                if data.output_mode == OutputMode::Stereo {
+                                    let pos = (*v + 1.0) * 0.5;
+                                    inst.set_instance_parameter(*k, pos);
+                                } else {
+                                    inst.set_instance_parameter(*k, *v);
+                                }
                             }
+                            // convert milliseconds to seconds
+                            SynthParameter::Duration => inst.set_instance_parameter(*k, *v * 0.001),
+                            SynthParameter::Attack => inst.set_instance_parameter(*k, *v * 0.001),
+                            SynthParameter::Sustain => inst.set_instance_parameter(*k, *v * 0.001),
+                            SynthParameter::Release => inst.set_instance_parameter(*k, *v * 0.001),
+                            _ => inst.set_instance_parameter(*k, *v),
                         }
-                        // convert milliseconds to seconds
-                        SynthParameter::Duration => inst.set_instance_parameter(*k, *v * 0.001),
-                        SynthParameter::Attack => inst.set_instance_parameter(*k, *v * 0.001),
-                        SynthParameter::Sustain => inst.set_instance_parameter(*k, *v * 0.001),
-                        SynthParameter::Release => inst.set_instance_parameter(*k, *v * 0.001),
-                        _ => inst.set_instance_parameter(*k, *v),
                     }
+                    data.ruffbox.trigger(inst);
+                } else {
+                    println!("can't prepare instance !");
                 }
-                data.ruffbox.trigger(inst);
             }
             InterpretableEvent::Control(c) => {
                 if let Some(mut contexts) = c.ctx.clone() {
