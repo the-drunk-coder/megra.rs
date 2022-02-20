@@ -39,7 +39,11 @@ fn get_bufnum_param(
             Some(EvaluatedExpr::Float(n)) => {
                 let nn = *n;
                 tail_drain.next();
-                Parameter::with_value(nn)
+                if nn as usize > 0 {
+                    Parameter::with_value(nn - 1.0)
+                } else {
+                    Parameter::with_value(0.0)
+                }
             }
             Some(EvaluatedExpr::BuiltIn(BuiltIn::Parameter(pl))) => {
                 let p = pl.clone();

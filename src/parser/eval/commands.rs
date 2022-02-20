@@ -62,16 +62,13 @@ pub fn freeze_buffer(
     while let Some(c) = tail_drain.next() {
         match c {
             EvaluatedExpr::Keyword(k) => {
-                match k.as_str() {
-                    "in" => {
-                        // defualt is zero ...
-                        if let Some(EvaluatedExpr::Float(n)) = tail_drain.next() {
-                            if n as usize > 0 {
-                                inbuf = n as usize - 1;
-                            }
+                if k.as_str() == "in" {
+                    // default is zero ...
+                    if let Some(EvaluatedExpr::Float(n)) = tail_drain.next() {
+                        if n as usize > 0 {
+                            inbuf = n as usize - 1;
                         }
                     }
-                    _ => {}
                 }
             }
             EvaluatedExpr::Float(f) => {

@@ -235,10 +235,7 @@ fn main() -> Result<(), anyhow::Error> {
     println!("odev {}", output_device.name().unwrap());
 
     let out_config: cpal::SupportedStreamConfig = output_device.default_output_config().unwrap();
-    let mut in_conf: cpal::StreamConfig = input_device.default_input_config().unwrap().into();
-    in_conf.channels = num_live_buffers;
-    println!("in chan: {:?}", in_conf);
-    println!("out chan: {:?}", out_config);
+    let in_config: cpal::SupportedStreamConfig = input_device.default_input_config().unwrap();
 
     // let's assume it's the same for both ...
     let sample_format = out_config.sample_format();
@@ -246,6 +243,8 @@ fn main() -> Result<(), anyhow::Error> {
     match out_mode {
         OutputMode::Stereo => {
             let mut out_conf: cpal::StreamConfig = out_config.into();
+            let mut in_conf: cpal::StreamConfig = in_config.into();
+            in_conf.channels = num_live_buffers;
             out_conf.channels = 2;
             match sample_format {
                 cpal::SampleFormat::F32 => run::<f32, 2>(
@@ -291,6 +290,8 @@ fn main() -> Result<(), anyhow::Error> {
         }
         OutputMode::FourChannel => {
             let mut out_conf: cpal::StreamConfig = out_config.into();
+            let mut in_conf: cpal::StreamConfig = in_config.into();
+            in_conf.channels = num_live_buffers;
             out_conf.channels = 4;
             match sample_format {
                 cpal::SampleFormat::F32 => run::<f32, 4>(
@@ -336,6 +337,8 @@ fn main() -> Result<(), anyhow::Error> {
         }
         OutputMode::EightChannel => {
             let mut out_conf: cpal::StreamConfig = out_config.into();
+            let mut in_conf: cpal::StreamConfig = in_config.into();
+            in_conf.channels = num_live_buffers;
             out_conf.channels = 8;
             match sample_format {
                 cpal::SampleFormat::F32 => run::<f32, 8>(
@@ -406,6 +409,7 @@ where
     let out_channels = out_config.channels as usize;
     let in_channels = in_config.channels as usize;
     let err_fn = |err| eprintln!("an error occurred on stream: {}", err);
+    println!("in chan: {} out chan: {}", in_channels, out_channels);
 
     #[cfg(feature = "ringbuffer")]
     let (controls, playhead) = init_ruffbox::<128, NCHAN>(
@@ -428,35 +432,31 @@ where
     );
 
     let playhead_out = sync::Arc::new(Mutex::new(playhead)); // the one for the audio thread (out stream)...
+    let playhead_in = sync::Arc::clone(&playhead_out); // the one for the audio thread (in stream)...
+    let in_stream = input_device.build_input_stream(
+        in_config,
+        move |data: &[f32], _: &cpal::InputCallbackInfo| {
+            // these are the only two locks that are left.
+            // Maybe, in the future, I could get around them using
+            // some interior mutability pattern in the ruffbox playhead,
+            // but given that the only other point where the lock \
+            // is called is the output callback, and they have to be called in
+            // sequence anyway (or at least in a deterministic fashion, i hope),
+            // the lock here shouldn't hurt much (in fact it worked nicely even before
+            // it was possible to call the controls without a lock).
+            // Unless I run into trouble, this might just stay the way it is for now.
+            let mut ruff = playhead_in.lock();
 
-    // no need if we don't have input ...
-    if num_live_buffers > 0 {
-        let playhead_in = sync::Arc::clone(&playhead_out); // the one for the audio thread (in stream)...
-        let in_stream = input_device.build_input_stream(
-            in_config,
-            move |data: &[f32], _: &cpal::InputCallbackInfo| {
-                // these are the only two locks that are left.
-                // Maybe, in the future, I could get around them using
-                // some interior mutability pattern in the ruffbox playhead,
-                // but given that the only other point where the lock \
-                // is called is the output callback, and they have to be called in
-                // sequence anyway (or at least in a deterministic fashion, i hope),
-                // the lock here shouldn't hurt much (in fact it worked nicely even before
-                // it was possible to call the controls without a lock).
-                // Unless I run into trouble, this might just stay the way it is for now.
-                let mut ruff = playhead_in.lock();
-
-                // there might be a faster way to de-interleave here ...
-                // only use first input channel
-                for (i, frame) in data.chunks(in_channels).enumerate() {
-                    ruff.write_sample_to_live_buffer(i, frame[0]);
+            // there might be a faster way to de-interleave here ...
+            // only use first input channel
+            for (_, frame) in data.chunks(in_channels).enumerate() {
+                for (ch, s) in frame.iter().enumerate() {
+                    ruff.write_sample_to_live_buffer(ch, *s);
                 }
-            },
-            err_fn,
-        )?;
-        in_stream.play()?;
-    }
-
+            }
+        },
+        err_fn,
+    )?;
     // main audio callback (plain)
     // the plain audio callback for platforms where the blocksize
     // is static, configurable and a power of two (preferably 512)
@@ -575,6 +575,7 @@ where
         err_fn,
     )?;
 
+    in_stream.play()?;
     out_stream.play()?;
 
     // global data
