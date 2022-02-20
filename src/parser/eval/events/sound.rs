@@ -28,6 +28,29 @@ fn get_pitch_param(
     );
 }
 
+// optional bufnum param
+fn get_bufnum_param(
+    ev: &mut Event,
+    tail_drain: &mut std::iter::Peekable<std::vec::Drain<EvaluatedExpr>>,
+) {
+    ev.params.insert(
+        SynthParameter::SampleBufferNumber,
+        Box::new(match tail_drain.peek() {
+            Some(EvaluatedExpr::Float(n)) => {
+                let nn = *n;
+                tail_drain.next();
+                Parameter::with_value(nn)
+            }
+            Some(EvaluatedExpr::BuiltIn(BuiltIn::Parameter(pl))) => {
+                let p = pl.clone();
+                tail_drain.next();
+                p
+            }
+            _ => Parameter::with_value(0.0),
+        }),
+    );
+}
+
 fn synth_defaults(ev: &mut Event) {
     // set some defaults 2
     ev.params
@@ -85,6 +108,7 @@ pub fn sound(
 ) -> Option<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..).peekable();
 
+    // get the function name ...
     let fname = if let Some(EvaluatedExpr::FunctionName(f)) = tail_drain.next() {
         f
     } else {
@@ -92,6 +116,9 @@ pub fn sound(
         return None;
     };
 
+    // here's where the sound events are taken apart ...
+    // the string matching makes this a bit inflexible,
+    // so it'd be nice to find a better solution in the future ...
     let mut ev = match fname.as_str() {
         "sine" => {
             let mut ev =
@@ -133,6 +160,27 @@ pub fn sound(
         }
         "silence" => Event::with_name_and_operation("silence".to_string(), EventOperation::Replace),
         "~" => Event::with_name_and_operation("silence".to_string(), EventOperation::Replace),
+        "feedr" => {
+            let mut ev = Event::with_name("livesampler".to_string());
+            ev.tags.insert(fname);
+
+            get_bufnum_param(&mut ev, &mut tail_drain);
+            sample_defaults(&mut ev);
+
+            ev // return event
+        }
+        "freezr" => {
+            // this one needs extra treatment because the
+            // offsets for the buffer number need to be calculated
+            // in the ruffbox backend ...
+            let mut ev = Event::with_name("frozensampler".to_string());
+            ev.tags.insert(fname);
+
+            get_bufnum_param(&mut ev, &mut tail_drain);
+            sample_defaults(&mut ev);
+
+            ev // return event
+        }
         _ => {
             // check if it's a sample event
             let sample_set = sample_set_sync.lock();

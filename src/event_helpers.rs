@@ -11,6 +11,7 @@ pub fn map_name(name: &str) -> SourceType {
         "risset" => SourceType::RissetBell,
         "sampler" => SourceType::Sampler,
         "livesampler" => SourceType::LiveSampler,
+        "frozensampler" => SourceType::FrozenSampler,
         _ => SourceType::SineSynth,
     }
 }

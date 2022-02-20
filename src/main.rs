@@ -91,10 +91,18 @@ fn main() -> Result<(), anyhow::Error> {
         "mononoki",
     );
     opts.optopt("", "reverb-ir", "reverb impulse response (file)", "");
+
+    opts.optopt(
+        "",
+        "live-buffers",
+        "number of live input buffers (creates one input channels per live buffer)",
+        "1",
+    );
+
     opts.optopt(
         "",
         "live-buffer-time",
-        "the capacity of the live input buffer in seconds",
+        "the capacity of the live input buffers in seconds",
         "3.0",
     );
 
@@ -162,6 +170,16 @@ fn main() -> Result<(), anyhow::Error> {
         _ => ReverbMode::FreeVerb,
     };
 
+    let num_live_buffers: u16 = if let Some(s) = matches.opt_str("live-buffers") {
+        if let Ok(f) = s.parse() {
+            f
+        } else {
+            1
+        }
+    } else {
+        1
+    };
+
     let live_buffer_time: f32 = if let Some(s) = matches.opt_str("live-buffer-time") {
         if let Ok(f) = s.parse() {
             f
@@ -217,8 +235,9 @@ fn main() -> Result<(), anyhow::Error> {
     println!("odev {}", output_device.name().unwrap());
 
     let out_config: cpal::SupportedStreamConfig = output_device.default_output_config().unwrap();
-    let in_config: cpal::SupportedStreamConfig = input_device.default_input_config().unwrap();
-    println!("in chan: {:?}", in_config);
+    let mut in_conf: cpal::StreamConfig = input_device.default_input_config().unwrap().into();
+    in_conf.channels = num_live_buffers;
+    println!("in chan: {:?}", in_conf);
     println!("out chan: {:?}", out_config);
 
     // let's assume it's the same for both ...
@@ -227,7 +246,6 @@ fn main() -> Result<(), anyhow::Error> {
     match out_mode {
         OutputMode::Stereo => {
             let mut out_conf: cpal::StreamConfig = out_config.into();
-            let in_conf: cpal::StreamConfig = in_config.into();
             out_conf.channels = 2;
             match sample_format {
                 cpal::SampleFormat::F32 => run::<f32, 2>(
@@ -236,6 +254,7 @@ fn main() -> Result<(), anyhow::Error> {
                     &out_conf,
                     &in_conf,
                     out_mode,
+                    num_live_buffers as usize,
                     live_buffer_time,
                     editor,
                     load_samples,
@@ -248,6 +267,7 @@ fn main() -> Result<(), anyhow::Error> {
                     &out_conf,
                     &in_conf,
                     out_mode,
+                    num_live_buffers as usize,
                     live_buffer_time,
                     editor,
                     load_samples,
@@ -260,6 +280,7 @@ fn main() -> Result<(), anyhow::Error> {
                     &out_conf,
                     &in_conf,
                     out_mode,
+                    num_live_buffers as usize,
                     live_buffer_time,
                     editor,
                     load_samples,
@@ -270,7 +291,6 @@ fn main() -> Result<(), anyhow::Error> {
         }
         OutputMode::FourChannel => {
             let mut out_conf: cpal::StreamConfig = out_config.into();
-            let in_conf: cpal::StreamConfig = in_config.into();
             out_conf.channels = 4;
             match sample_format {
                 cpal::SampleFormat::F32 => run::<f32, 4>(
@@ -279,6 +299,7 @@ fn main() -> Result<(), anyhow::Error> {
                     &out_conf,
                     &in_conf,
                     out_mode,
+                    num_live_buffers as usize,
                     live_buffer_time,
                     editor,
                     load_samples,
@@ -291,6 +312,7 @@ fn main() -> Result<(), anyhow::Error> {
                     &out_conf,
                     &in_conf,
                     out_mode,
+                    num_live_buffers as usize,
                     live_buffer_time,
                     editor,
                     load_samples,
@@ -303,6 +325,7 @@ fn main() -> Result<(), anyhow::Error> {
                     &out_conf,
                     &in_conf,
                     out_mode,
+                    num_live_buffers as usize,
                     live_buffer_time,
                     editor,
                     load_samples,
@@ -313,7 +336,6 @@ fn main() -> Result<(), anyhow::Error> {
         }
         OutputMode::EightChannel => {
             let mut out_conf: cpal::StreamConfig = out_config.into();
-            let in_conf: cpal::StreamConfig = in_config.into();
             out_conf.channels = 8;
             match sample_format {
                 cpal::SampleFormat::F32 => run::<f32, 8>(
@@ -322,6 +344,7 @@ fn main() -> Result<(), anyhow::Error> {
                     &out_conf,
                     &in_conf,
                     out_mode,
+                    num_live_buffers as usize,
                     live_buffer_time,
                     editor,
                     load_samples,
@@ -334,6 +357,7 @@ fn main() -> Result<(), anyhow::Error> {
                     &out_conf,
                     &in_conf,
                     out_mode,
+                    num_live_buffers as usize,
                     live_buffer_time,
                     editor,
                     load_samples,
@@ -346,6 +370,7 @@ fn main() -> Result<(), anyhow::Error> {
                     &out_conf,
                     &in_conf,
                     out_mode,
+                    num_live_buffers as usize,
                     live_buffer_time,
                     editor,
                     load_samples,
@@ -366,6 +391,7 @@ fn run<T, const NCHAN: usize>(
     out_config: &cpal::StreamConfig,
     in_config: &cpal::StreamConfig,
     mode: OutputMode,
+    num_live_buffers: usize,
     live_buffer_time: f32,
     editor: bool,
     load_samples: bool,
@@ -383,7 +409,7 @@ where
 
     #[cfg(feature = "ringbuffer")]
     let (controls, playhead) = init_ruffbox::<128, NCHAN>(
-        true,
+        num_live_buffers,
         live_buffer_time.into(),
         reverb_mode,
         sample_rate.into(),
@@ -393,7 +419,7 @@ where
 
     #[cfg(not(feature = "ringbuffer"))]
     let (controls, playhead) = init_ruffbox::<512, NCHAN>(
-        true,
+        num_live_buffers,
         live_buffer_time.into(),
         reverb_mode,
         sample_rate.into(),
@@ -402,30 +428,34 @@ where
     );
 
     let playhead_out = sync::Arc::new(Mutex::new(playhead)); // the one for the audio thread (out stream)...
-    let playhead_in = sync::Arc::clone(&playhead_out); // the one for the audio thread (in stream)...
 
-    let in_stream = input_device.build_input_stream(
-        in_config,
-        move |data: &[f32], _: &cpal::InputCallbackInfo| {
-            // these are the only two locks that are left.
-            // Maybe, in the future, I could get around them using
-            // some interior mutability pattern in the ruffbox playhead,
-            // but given that the only other point where the lock \
-            // is called is the output callback, and they have to be called in
-            // sequence anyway (or at least in a deterministic fashion, i hope),
-            // the lock here shouldn't hurt much (in fact it worked nicely even before
-            // it was possible to call the controls without a lock).
-            // Unless I run into trouble, this might just stay the way it is for now.
-            let mut ruff = playhead_in.lock();
+    // no need if we don't have input ...
+    if num_live_buffers > 0 {
+        let playhead_in = sync::Arc::clone(&playhead_out); // the one for the audio thread (in stream)...
+        let in_stream = input_device.build_input_stream(
+            in_config,
+            move |data: &[f32], _: &cpal::InputCallbackInfo| {
+                // these are the only two locks that are left.
+                // Maybe, in the future, I could get around them using
+                // some interior mutability pattern in the ruffbox playhead,
+                // but given that the only other point where the lock \
+                // is called is the output callback, and they have to be called in
+                // sequence anyway (or at least in a deterministic fashion, i hope),
+                // the lock here shouldn't hurt much (in fact it worked nicely even before
+                // it was possible to call the controls without a lock).
+                // Unless I run into trouble, this might just stay the way it is for now.
+                let mut ruff = playhead_in.lock();
 
-            // there might be a faster way to de-interleave here ...
-            // only use first input channel
-            for (_, frame) in data.chunks(in_channels).enumerate() {
-                ruff.write_sample_to_live_buffer(frame[0]);
-            }
-        },
-        err_fn,
-    )?;
+                // there might be a faster way to de-interleave here ...
+                // only use first input channel
+                for (i, frame) in data.chunks(in_channels).enumerate() {
+                    ruff.write_sample_to_live_buffer(i, frame[0]);
+                }
+            },
+            err_fn,
+        )?;
+        in_stream.play()?;
+    }
 
     // main audio callback (plain)
     // the plain audio callback for platforms where the blocksize
@@ -545,7 +575,6 @@ where
         err_fn,
     )?;
 
-    in_stream.play()?;
     out_stream.play()?;
 
     // global data

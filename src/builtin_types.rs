@@ -47,13 +47,13 @@ pub enum Command {
     LoadSampleSet(String),                             // set path
     LoadSampleSets(String),                            // top level sets set path
     LoadPart((String, Part)),                          // set (events), keyword, path
-    StepPart(String),
-    FreezeBuffer(usize),                          // freeze live buffer
-    ExportDotStatic((String, Generator)),         // filename, generator
-    ExportDotRunning((String, BTreeSet<String>)), // filename, generator id
-    ExportDotPart((String, String)),              // filename, part name
-    Once((Vec<StaticEvent>, Vec<ControlEvent>)),
-    ConnectVisualizer,
+    StepPart(String),                                  // step through specified path
+    FreezeBuffer(usize, usize),                        // freeze live buffer
+    ExportDotStatic((String, Generator)),              // filename, generator
+    ExportDotRunning((String, BTreeSet<String>)),      // filename, generator id
+    ExportDotPart((String, String)),                   // filename, part name
+    Once((Vec<StaticEvent>, Vec<ControlEvent>)),       // execute event(s) once
+    ConnectVisualizer,                                 // connect visualizer
 }
 
 #[derive(Clone)]

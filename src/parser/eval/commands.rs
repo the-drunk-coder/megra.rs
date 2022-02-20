@@ -53,14 +53,38 @@ pub fn freeze_buffer(
 ) -> Option<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..).skip(1);
 
-    let freeze_buffer = if let Some(EvaluatedExpr::Float(f)) = tail_drain.next() {
-        f as usize
-    } else {
-        1
-    };
+    // on the user side,
+    // both input- and freeze buffers are counted
+    // starting at 1
+    let mut inbuf: usize = 0;
+    let mut freezbuf: usize = 0;
+
+    while let Some(c) = tail_drain.next() {
+        match c {
+            EvaluatedExpr::Keyword(k) => {
+                match k.as_str() {
+                    "in" => {
+                        // defualt is zero ...
+                        if let Some(EvaluatedExpr::Float(n)) = tail_drain.next() {
+                            if n as usize > 0 {
+                                inbuf = n as usize - 1;
+                            }
+                        }
+                    }
+                    _ => {}
+                }
+            }
+            EvaluatedExpr::Float(f) => {
+                if f as usize > 0 {
+                    freezbuf = f as usize - 1;
+                }
+            }
+            _ => {}
+        }
+    }
 
     Some(EvaluatedExpr::BuiltIn(BuiltIn::Command(
-        Command::FreezeBuffer(freeze_buffer),
+        Command::FreezeBuffer(freezbuf, inbuf),
     )))
 }
 
@@ -96,12 +120,12 @@ pub fn load_sample(
                     continue;
                 }
                 "set" => {
-                    if let EvaluatedExpr::Symbol(n) = tail_drain.next().unwrap() {
+                    if let Some(EvaluatedExpr::Symbol(n)) = tail_drain.next() {
                         set = n.to_string();
                     }
                 }
                 "path" => {
-                    if let EvaluatedExpr::String(n) = tail_drain.next().unwrap() {
+                    if let Some(EvaluatedExpr::String(n)) = tail_drain.next() {
                         path = n.to_string();
                     }
                 }

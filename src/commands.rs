@@ -22,8 +22,9 @@ use crate::session::*;
 pub fn freeze_buffer<const BUFSIZE: usize, const NCHAN: usize>(
     ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
     freezbuf: usize,
+    inbuf: usize,
 ) {
-    ruffbox.freeze_buffer(freezbuf);
+    ruffbox.freeze_buffer(freezbuf, inbuf);
 }
 
 pub fn load_sample<const BUFSIZE: usize, const NCHAN: usize>(
