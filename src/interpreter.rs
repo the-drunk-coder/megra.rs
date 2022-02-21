@@ -85,7 +85,11 @@ pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
                 }
                 Command::ConnectVisualizer => {
                     let mut session = session.lock();
-                    session.visualizer_client = Some(sync::Arc::new(VisualizerClient::start()));
+                    if session.visualizer_client.is_none() {
+                        session.visualizer_client = Some(sync::Arc::new(VisualizerClient::start()));
+                    } else {
+                        println!("visualizer already connected !");
+                    }
                 }
                 Command::LoadSample((set, mut keywords, path)) => {
                     let ruffbox2 = sync::Arc::clone(ruffbox);

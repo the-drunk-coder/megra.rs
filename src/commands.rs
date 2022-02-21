@@ -144,6 +144,7 @@ pub fn load_sample_set<const BUFSIZE: usize, const NCHAN: usize>(
         }
     }
 }
+
 pub fn load_sample_set_string<const BUFSIZE: usize, const NCHAN: usize>(
     function_map: &sync::Arc<Mutex<FunctionMap>>,
     ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
