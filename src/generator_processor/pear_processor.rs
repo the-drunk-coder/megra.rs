@@ -82,4 +82,12 @@ impl GeneratorProcessor for PearProcessor {
             }
         }
     }
+
+    fn visualize_if_possible(&mut self, _: &sync::Arc<VisualizerClient>) {
+        // pass ... no idea (yet) how to visualize this ...
+    }
+
+    fn clear_visualization(&self, _: &sync::Arc<VisualizerClient>) {
+        // pass, same as above
+    }
 }

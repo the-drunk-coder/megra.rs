@@ -231,4 +231,12 @@ impl GeneratorProcessor for LifemodelProcessor {
 
         self.step_count += 1;
     }
+
+    fn visualize_if_possible(&mut self, _: &sync::Arc<VisualizerClient>) {
+        // pass
+    }
+
+    fn clear_visualization(&self, _: &sync::Arc<VisualizerClient>) {
+        // pass, same as above
+    }
 }

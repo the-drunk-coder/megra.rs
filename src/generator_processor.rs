@@ -1,6 +1,9 @@
 use std::collections::HashMap;
 use std::sync::*;
 
+use crate::visualizer_client::VisualizerClient;
+use std::sync;
+
 use crate::{
     builtin_types::{ConfigParameter, GlobalParameters},
     event::{Event, InterpretableEvent, StaticEvent},
@@ -26,6 +29,8 @@ pub trait GeneratorProcessor: GeneratorProcessorClone {
         transition: &mut StaticEvent,
         global_parameters: &Arc<GlobalParameters>,
     );
+    fn visualize_if_possible(&mut self, vis_client: &sync::Arc<VisualizerClient>);
+    fn clear_visualization(&self, vis_client: &sync::Arc<VisualizerClient>);
 }
 
 pub trait GeneratorProcessorClone {

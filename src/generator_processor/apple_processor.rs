@@ -48,4 +48,12 @@ impl GeneratorProcessor for AppleProcessor {
             }
         }
     }
+
+    fn visualize_if_possible(&mut self, _: &sync::Arc<VisualizerClient>) {
+        // pass
+    }
+
+    fn clear_visualization(&self, _: &sync::Arc<VisualizerClient>) {
+        // pass
+    }
 }

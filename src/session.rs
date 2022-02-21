@@ -150,6 +150,9 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
             data.generator.root_generator.clear_modified()
         }
         vc.update_active_node(&data.generator);
+        for proc in data.generator.processors.iter_mut() {
+            proc.visualize_if_possible(vc);
+        }
     }
 
     let time = (data // sym, dur
@@ -845,7 +848,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
             }
         }
 
-        if let Some((mut sched, _)) = sched_prox {
+        if let Some((mut sched, data)) = sched_prox {
             sched.stop();
             sched.join();
             print!("stopped/removed generator \'");
@@ -853,6 +856,13 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                 print!("{} ", tag);
             }
             println!("\'");
+            let sess = session.lock();
+            if let Some(c) = &sess.visualizer_client {
+                let d = data.lock();
+                for proc in d.generator.processors.iter() {
+                    proc.clear_visualization(c);
+                }
+            }
         }
     }
 
@@ -875,9 +885,16 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
         // stop
         let mut sched_proxies2 = Vec::new(); // sometimes rust is really annoying ...
         let mut prox_drain = sched_proxies.drain(..);
-        while let Some(Some((mut sched, _))) = prox_drain.next() {
+        while let Some(Some((mut sched, data))) = prox_drain.next() {
             sched.stop();
             sched_proxies2.push(sched);
+            let sess = session.lock();
+            if let Some(c) = &sess.visualizer_client {
+                let d = data.lock();
+                for proc in d.generator.processors.iter() {
+                    proc.clear_visualization(c);
+                }
+            }
         }
 
         // join
@@ -905,8 +922,12 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
         }
 
         if let Some(c) = &sess.visualizer_client {
-            for (k, _) in sess.schedulers.iter() {
+            for (k, (_, data)) in sess.schedulers.iter() {
                 c.clear(k);
+                let d = data.lock();
+                for proc in d.generator.processors.iter() {
+                    proc.clear_visualization(c);
+                }
             }
         }
 
