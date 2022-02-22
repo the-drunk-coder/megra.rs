@@ -63,8 +63,8 @@ pub fn collect_lifemodel(tail: &mut Vec<EvaluatedExpr>) -> Box<dyn GeneratorProc
                     }
                 }
                 "method" => {
-                    if let Some(EvaluatedExpr::Keyword(k)) = tail_drain.next() {
-                        proc.growth_method = k;
+                    if let Some(EvaluatedExpr::Symbol(s)) = tail_drain.next() {
+                        proc.growth_method = s;
                     }
                 }
                 "autophagia" => {
