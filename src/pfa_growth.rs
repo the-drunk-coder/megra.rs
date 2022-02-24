@@ -164,6 +164,7 @@ pub fn grow_triloop(pfa: &mut Pfa<char>) -> Option<PfaOperationResult<char>> {
     //pfa.pad_history();
 
     if pfa.history.len() < 3 {
+        println!("history too short");
         return None;
     }
 
@@ -171,7 +172,7 @@ pub fn grow_triloop(pfa: &mut Pfa<char>) -> Option<PfaOperationResult<char>> {
     let dest_id = vec![*pfa.history.get(pfa.history.len() - 2).unwrap()];
 
     // make sure states exists
-    if pfa.has_state(&source_id) && pfa.has_state(&dest_id) {
+    if !(pfa.has_state(&source_id) && pfa.has_state(&dest_id)) {
         return None;
     }
 
@@ -237,6 +238,7 @@ pub fn grow_loop(pfa: &mut Pfa<char>) -> Option<PfaOperationResult<char>> {
 
     // unwraps should be fine because the history is padded ...
     if pfa.history.len() < 3 {
+        println!("history too short");
         return None;
     }
 
@@ -244,7 +246,7 @@ pub fn grow_loop(pfa: &mut Pfa<char>) -> Option<PfaOperationResult<char>> {
     let source_id = vec![*pfa.history.get(pfa.history.len() - 2).unwrap()];
 
     // make sure states exists
-    if pfa.has_state(&source_id) && pfa.has_state(&dest_id) {
+    if !(pfa.has_state(&source_id) && pfa.has_state(&dest_id)) {
         return None;
     }
 
@@ -323,7 +325,7 @@ pub fn grow_quadloop(pfa: &mut Pfa<char>) -> Option<PfaOperationResult<char>> {
     let dest_id = vec![*pfa.history.get(pfa.history.len() - 3).unwrap()];
 
     // make sure states exists
-    if pfa.has_state(&source_id) && pfa.has_state(&dest_id) {
+    if !(pfa.has_state(&source_id) && pfa.has_state(&dest_id)) {
         return None;
     }
 
