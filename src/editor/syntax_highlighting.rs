@@ -1,5 +1,6 @@
 use crate::parser;
 use egui::text::LayoutJob;
+use egui::FontId;
 
 /// Memoized Code highlighting
 pub fn highlight(ctx: &egui::Context, theme: &CodeTheme, code: &str) -> LayoutJob {
@@ -32,7 +33,7 @@ enum TokenType {
     Whitespace,
 }
 
-#[derive(Clone, Copy, Hash, PartialEq)]
+#[derive(Clone, Hash, PartialEq)]
 #[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
 #[cfg_attr(feature = "serde", serde(default))]
 pub struct CodeTheme {
@@ -62,18 +63,18 @@ impl CodeTheme {
 
 impl CodeTheme {
     pub fn dark() -> Self {
-        let text_style = egui::TextStyle::Monospace;
+        let text_style = FontId::monospace(13.0);
         use egui::{Color32, TextFormat};
         Self {
             formats: enum_map::enum_map![
-                    TokenType::Comment => TextFormat::simple(text_style, Color32::from_gray(120)),
-            TokenType::Normal => TextFormat::simple(text_style, Color32::from_gray(200)),
-            TokenType::Boolean => TextFormat::simple(text_style, Color32::from_rgb(0, 200, 100)),
-                    TokenType::Keyword => TextFormat::simple(text_style, Color32::from_rgb(200, 20, 200)),
-                    TokenType::StringLiteral => TextFormat::simple(text_style, egui::Color32::from_rgb(200, 200, 10)),
-                    TokenType::Function => TextFormat::simple(text_style, Color32::from_rgb(220, 20, 100)),
-                    TokenType::Whitespace => TextFormat::simple(text_style, Color32::TRANSPARENT),
-            TokenType::Linebreak => TextFormat::simple(text_style, Color32::TRANSPARENT),
+                    TokenType::Comment => TextFormat::simple(text_style.clone(), Color32::from_gray(120)),
+            TokenType::Normal => TextFormat::simple(text_style.clone(), Color32::from_gray(200)),
+            TokenType::Boolean => TextFormat::simple(text_style.clone(), Color32::from_rgb(0, 200, 100)),
+                    TokenType::Keyword => TextFormat::simple(text_style.clone(), Color32::from_rgb(200, 20, 200)),
+                    TokenType::StringLiteral => TextFormat::simple(text_style.clone(), egui::Color32::from_rgb(200, 200, 10)),
+                    TokenType::Function => TextFormat::simple(text_style.clone(), Color32::from_rgb(220, 20, 100)),
+                    TokenType::Whitespace => TextFormat::simple(text_style.clone(), Color32::TRANSPARENT),
+            TokenType::Linebreak => TextFormat::simple(text_style.clone(), Color32::TRANSPARENT),
                 ],
         }
     }
@@ -90,7 +91,7 @@ impl Highlighter {
         while !text.is_empty() {
             if text.starts_with(";;") {
                 let end = text.find('\n').unwrap_or(text.len());
-                job.append(&text[..end], 0.0, theme.formats[TokenType::Comment]);
+                job.append(&text[..end], 0.0, theme.formats[TokenType::Comment].clone());
                 text = &text[end..];
             } else if text.starts_with('"') {
                 let end = text[1..]
@@ -98,18 +99,22 @@ impl Highlighter {
                     .map(|i| i + 2)
                     .or_else(|| text.find('\n'))
                     .unwrap_or(text.len());
-                job.append(&text[..end], 0.0, theme.formats[TokenType::StringLiteral]);
+                job.append(
+                    &text[..end],
+                    0.0,
+                    theme.formats[TokenType::StringLiteral].clone(),
+                );
                 text = &text[end..];
             } else if text.starts_with(':') {
                 let end = text[1..]
                     .find(|c: char| !c.is_ascii_alphanumeric())
                     .map_or_else(|| text.len(), |i| i + 1);
-                job.append(&text[..end], 0.0, theme.formats[TokenType::Keyword]);
+                job.append(&text[..end], 0.0, theme.formats[TokenType::Keyword].clone());
                 text = &text[end..];
             } else if text.starts_with('#') {
                 // avoid crash by checking text length
                 let end = if text.len() > 1 { 2 } else { 1 };
-                job.append(&text[..end], 0.0, theme.formats[TokenType::Boolean]);
+                job.append(&text[..end], 0.0, theme.formats[TokenType::Boolean].clone());
                 text = &text[end..];
             } else if text.starts_with(|c: char| c.is_ascii_alphanumeric()) {
                 let end = text[1..]
@@ -121,19 +126,23 @@ impl Highlighter {
                 } else {
                     TokenType::Normal
                 };
-                job.append(word, 0.0, theme.formats[tt]);
+                job.append(word, 0.0, theme.formats[tt].clone());
                 text = &text[end..];
             } else if text.starts_with(|c: char| c.is_ascii_whitespace()) {
                 let end = text[1..]
                     .find(|c: char| !c.is_ascii_whitespace())
                     .map_or_else(|| text.len(), |i| i + 1);
-                job.append(&text[..end], 0.0, theme.formats[TokenType::Whitespace]);
+                job.append(
+                    &text[..end],
+                    0.0,
+                    theme.formats[TokenType::Whitespace].clone(),
+                );
                 text = &text[end..];
             } else {
                 let mut it = text.char_indices();
                 it.next();
                 let end = it.next().map_or(text.len(), |(idx, _chr)| idx);
-                job.append(&text[..end], 0.0, theme.formats[TokenType::Normal]);
+                job.append(&text[..end], 0.0, theme.formats[TokenType::Normal].clone());
                 text = &text[end..];
             }
         }

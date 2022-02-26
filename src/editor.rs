@@ -79,5 +79,5 @@ pub fn run_editor<const BUFSIZE: usize, const NCHAN: usize>(
 
     app.set_callback(&callback_ref);
 
-    egui_glium::run(Box::new(app), &epi::NativeOptions::default());
+    egui_glow::run(Box::new(app), &epi::NativeOptions::default());
 }

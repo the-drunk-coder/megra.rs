@@ -108,7 +108,7 @@ pub struct LivecodeTextEdit<'t> {
     text: &'t mut dyn TextBuffer,
     id: Option<Id>,
     id_source: Option<Id>,
-    text_style: Option<TextStyle>,
+    font_selection: FontSelection,
     text_color: Option<Color32>,
     layouter: Option<&'t mut dyn FnMut(&Ui, &str, f32) -> Arc<Galley>>,
     desired_width: Option<f32>,
@@ -129,7 +129,7 @@ impl<'t> LivecodeTextEdit<'t> {
             text,
             id: None,
             id_source: None,
-            text_style: None,
+            font_selection: Default::default(),
             text_color: None,
             layouter: None,
             desired_width: None,
@@ -145,7 +145,7 @@ impl<'t> LivecodeTextEdit<'t> {
     /// - monospaced font
     /// - focus lock
     pub fn code_editor(self) -> Self {
-        self.text_style(TextStyle::Monospace).lock_focus(true)
+        self.font(FontId::monospace(13.0)).lock_focus(true)
     }
 
     pub fn eval_callback(mut self, callback: &Arc<Mutex<dyn FnMut(&String)>>) -> Self {
@@ -153,8 +153,8 @@ impl<'t> LivecodeTextEdit<'t> {
         self
     }
 
-    pub fn text_style(mut self, text_style: TextStyle) -> Self {
-        self.text_style = Some(text_style);
+    pub fn font(mut self, font: FontId) -> Self {
+        self.font_selection = FontSelection::FontId(font);
         self
     }
 
@@ -247,7 +247,7 @@ impl<'t> LivecodeTextEdit<'t> {
             text,
             id,
             id_source,
-            text_style,
+            font_selection,
             text_color,
             layouter,
             desired_width: _,
@@ -263,10 +263,8 @@ impl<'t> LivecodeTextEdit<'t> {
             .unwrap_or_else(|| ui.visuals().widgets.inactive.text_color());
 
         let prev_text = text.as_ref().to_owned();
-        let text_style = text_style
-            .or(ui.style().override_text_style)
-            .unwrap_or_else(|| ui.style().body_text_style);
-        let row_height = ui.fonts().row_height(text_style);
+        let font_id = font_selection.resolve(ui.style());
+        let row_height = ui.fonts().row_height(&font_id);
         const MIN_WIDTH: f32 = 24.0; // Never make a `LivecodeTextEdit` more narrow than this.
         let available_width = ui.available_width().at_least(MIN_WIDTH);
         //println!("available {}", available_width);
@@ -283,7 +281,7 @@ impl<'t> LivecodeTextEdit<'t> {
         let mut default_layouter = move |ui: &Ui, text: &str, wrap_width: f32| {
             ui.fonts().layout_job(LayoutJob::simple(
                 text.to_string(),
-                text_style,
+                font_id.clone(),
                 text_color,
                 wrap_width,
             ))
@@ -324,7 +322,7 @@ impl<'t> LivecodeTextEdit<'t> {
         let mut response = ui.interact(rect, id, sense);
         let painter = ui.painter_at(rect);
 
-        if let Some(pointer_pos) = ui.input().pointer.interact_pos() {
+        if let Some(pointer_pos) = ui.ctx().pointer_interact_pos() {
             if response.hovered() && text.is_mutable() {
                 ui.output().mutable_text_under_cursor = true;
             }
@@ -868,7 +866,7 @@ fn paint_cursor_selection(
         ui.visuals().selection.bg_fill.linear_multiply(0.5)
     };
 
-    let [min, max] = cursor_range.sorted();
+    let [min, max] = cursor_range.sorted_cursors();
     let min = min.rcursor;
     let max = max.rcursor;
 
@@ -937,7 +935,8 @@ fn paint_cursor_end(
 // ----------------------------------------------------------------------------
 
 fn selected_str<'s>(text: &'s dyn TextBuffer, cursor_range: &CursorRange) -> &'s str {
-    let [min, max] = cursor_range.sorted();
+    let [min, max] = cursor_range.sorted_cursors();
+
     text.char_range(min.ccursor.index..max.ccursor.index)
 }
 
@@ -948,7 +947,7 @@ fn insert_text(ccursor: &mut CCursor, text: &mut dyn TextBuffer, text_to_insert:
 // ----------------------------------------------------------------------------
 
 fn delete_selected(text: &mut dyn TextBuffer, cursor_range: &CursorRange) -> CCursor {
-    let [min, max] = cursor_range.sorted();
+    let [min, max] = cursor_range.sorted_cursors();
     delete_selected_ccursor_range(text, [min.ccursor, max.ccursor])
 }
 
@@ -989,7 +988,7 @@ fn delete_paragraph_before_cursor(
     galley: &Galley,
     cursor_range: &CursorRange,
 ) -> CCursor {
-    let [min, max] = cursor_range.sorted();
+    let [min, max] = cursor_range.sorted_cursors();
     let min = galley.from_pcursor(PCursor {
         paragraph: min.pcursor.paragraph,
         offset: 0,
@@ -1007,7 +1006,7 @@ fn delete_paragraph_after_cursor(
     galley: &Galley,
     cursor_range: &CursorRange,
 ) -> CCursor {
-    let [min, max] = cursor_range.sorted();
+    let [min, max] = cursor_range.sorted_cursors();
     let max = galley.from_pcursor(PCursor {
         paragraph: max.pcursor.paragraph,
         offset: usize::MAX, // end of paragraph
@@ -1335,7 +1334,7 @@ fn is_word_char(c: char) -> bool {
 // LIVECODE TEXT EDIT HELPERS
 /// find toplevel s-expression from current cursor position ...
 fn find_toplevel_sexp(text: &str, cursorp: &CursorRange) -> Option<CCursorRange> {
-    let [min, _] = cursorp.sorted();
+    let [min, _] = cursorp.sorted_cursors();
 
     let mut pos = min.ccursor.index;
     let mut rev_pos = text.chars().count() - pos;

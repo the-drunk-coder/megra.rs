@@ -4,8 +4,9 @@ use egui::ScrollArea;
 use parking_lot::Mutex;
 use std::{fs, path, sync::*};
 
+use egui::style::Margin;
+use egui::FontId;
 use epaint::text::{FontData, FontDefinitions, FontFamily};
-
 // custom text edit window
 use crate::editor::livecode_text_edit::LivecodeTextEdit;
 use crate::editor::syntax_highlighting::*;
@@ -72,7 +73,7 @@ impl epi::App for MegraEditor {
 
     fn setup(
         &mut self,
-        ctx: &egui::CtxRef,
+        ctx: &egui::Context,
         _frame: &epi::Frame,
         storage: Option<&dyn epi::Storage>,
     ) {
@@ -92,14 +93,14 @@ impl epi::App for MegraEditor {
         match &self.font {
             Some(EditorFont::ComicMono) => {
                 fonts
-                    .fonts_for_family
+                    .families
                     .get_mut(&FontFamily::Monospace)
                     .unwrap()
                     .insert(0, "ComicMono".to_owned());
             }
             Some(EditorFont::Mononoki) => {
                 fonts
-                    .fonts_for_family
+                    .families
                     .get_mut(&FontFamily::Monospace)
                     .unwrap()
                     .insert(0, "ComicMono".to_owned());
@@ -110,7 +111,7 @@ impl epi::App for MegraEditor {
                         .font_data
                         .insert("custom_font".to_owned(), FontData::from_owned(font_data));
                     fonts
-                        .fonts_for_family
+                        .families
                         .get_mut(&FontFamily::Monospace)
                         .unwrap()
                         .insert(0, "custom_font".to_owned());
@@ -118,7 +119,7 @@ impl epi::App for MegraEditor {
                 Err(_) => {
                     println!("couldn't read custom font, using default");
                     fonts
-                        .fonts_for_family
+                        .families
                         .get_mut(&FontFamily::Monospace)
                         .unwrap()
                         .insert(0, "ComicMono".to_owned());
@@ -126,7 +127,7 @@ impl epi::App for MegraEditor {
             },
             None => {
                 fonts
-                    .fonts_for_family
+                    .families
                     .get_mut(&FontFamily::Monospace)
                     .unwrap()
                     .insert(0, "mononoki".to_owned());
@@ -203,18 +204,18 @@ impl epi::App for MegraEditor {
 
     /// Called each time the UI needs repainting, which may be many times per second.
     /// Put your widgets into a `SidePanel`, `TopPanel`, `CentralPanel`, `Window` or `Area`.
-    fn update(&mut self, ctx: &egui::CtxRef, _: &epi::Frame) {
+    fn update(&mut self, ctx: &egui::Context, _: &epi::Frame) {
         // some frame options ...
         let mut frame = egui::Frame::none();
         frame.fill = egui::Color32::BLACK;
-        frame.margin = egui::Vec2::new(3.0, 3.0);
+        frame.margin = Margin::symmetric(3.0, 3.0);
         egui::CentralPanel::default().frame(frame).show(ctx, |ui| {
             let mut sketch_number = SketchNumber::Num(self.sketch_number);
 
             ui.horizontal(|ui| {
                 ui.add(
                     egui::Label::new(
-                        egui::RichText::new("Mégra Editor").text_style(egui::TextStyle::Monospace),
+                        egui::RichText::new("Mégra Editor").font(FontId::monospace(13.0)),
                     )
                     .wrap(false),
                 );
