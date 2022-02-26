@@ -59,6 +59,12 @@ pub struct LivecodeTextEditOutput {
     /// The state we stored after the run/
     pub state: LivecodeTextEditState,
 
+    /// Where the text in [`Self::galley`] ended up on the screen.
+    //pub text_draw_pos: crate::Pos2,
+
+    /// The text was clipped to this rectangle when painted.
+    //pub text_clip_rect: crate::Rect,
+
     /// Where the text cursor is.
     pub cursor_range: Option<egui::widgets::text_edit::CursorRange>,
 }
@@ -320,7 +326,8 @@ impl<'t> LivecodeTextEdit<'t> {
         };
 
         let mut response = ui.interact(rect, id, sense);
-        let painter = ui.painter_at(rect);
+        let text_clip_rect = rect;
+        let painter = ui.painter_at(text_clip_rect);
 
         if let Some(pointer_pos) = ui.ctx().pointer_interact_pos() {
             if response.hovered() && text.is_mutable() {
@@ -407,10 +414,19 @@ impl<'t> LivecodeTextEdit<'t> {
             if changed {
                 response.mark_changed();
             }
+
             cursor_range = Some(new_cursor_range);
         }
 
         let text_draw_pos = response.rect.min;
+
+        let selection_changed = if let (Some(cursor_range), Some(prev_cursor_range)) =
+            (cursor_range, prev_cursor_range)
+        {
+            prev_cursor_range.as_ccursor_range() != cursor_range.as_ccursor_range()
+        } else {
+            false
+        };
 
         if ui.is_rect_visible(rect) {
             painter.galley(text_draw_pos, galley.clone());
@@ -468,7 +484,7 @@ impl<'t> LivecodeTextEdit<'t> {
                         }
                     }
 
-                    paint_cursor_end(
+                    let cursor_pos = paint_cursor_end(
                         ui,
                         row_height,
                         &painter,
@@ -477,15 +493,14 @@ impl<'t> LivecodeTextEdit<'t> {
                         &cursor_range.primary,
                     );
 
+                    if response.changed() || selection_changed {
+                        ui.scroll_to_rect(cursor_pos, None); // keep cursor in view
+                    }
+
                     if text.is_mutable() {
                         // egui_web uses `text_cursor_pos` when showing IME,
                         // so only set it when text is editable and visible!
-                        ui.ctx().output().text_cursor_pos = Some(
-                            galley
-                                .pos_from_cursor(&cursor_range.primary)
-                                .translate(response.rect.min.to_vec2())
-                                .left_top(),
-                        );
+                        ui.ctx().output().text_cursor_pos = Some(cursor_pos.left_top());
                     }
                 }
             }
@@ -902,7 +917,7 @@ fn paint_cursor_end(
     pos: Pos2,
     galley: &Galley,
     cursor: &Cursor,
-) {
+) -> Rect {
     let stroke = ui.visuals().selection.stroke;
 
     let mut cursor_pos = galley.pos_from_cursor(cursor).translate(pos.to_vec2());
@@ -930,6 +945,8 @@ fn paint_cursor_end(
             (width, stroke.color),
         );
     }
+
+    cursor_pos
 }
 
 // ----------------------------------------------------------------------------
