@@ -508,14 +508,6 @@ impl<'t> LivecodeTextEdit<'t> {
 
         state.clone().store(ui.ctx(), id);
 
-        let selection_changed = if let (Some(cursor_range), Some(prev_cursor_range)) =
-            (cursor_range, prev_cursor_range)
-        {
-            prev_cursor_range.as_ccursor_range() != cursor_range.as_ccursor_range()
-        } else {
-            false
-        };
-
         if response.changed() {
             response.widget_info(|| WidgetInfo::text_edit(prev_text.as_str(), text.as_str()));
         } else if selection_changed {
@@ -570,7 +562,8 @@ fn livecode_events(
 
     let mut any_change = false;
 
-    for event in &ui.input().events {
+    let events = ui.input().events.clone(); // avoid dead-lock by cloning. TODO: optimize
+    for event in &events {
         let did_mutate_text = match event {
             Event::Copy => {
                 // clear selection
