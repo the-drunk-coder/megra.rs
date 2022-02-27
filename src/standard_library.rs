@@ -13,6 +13,7 @@ pub fn define_standard_library() -> FunctionMap {
     standard_library.fmap.insert("nuc".to_string(), eval::constructors::nuc::nuc);
     standard_library.fmap.insert("fully".to_string(), eval::constructors::fully::fully);
     standard_library.fmap.insert("friendship".to_string(), eval::constructors::friendship::friendship);
+    standard_library.fmap.insert("lin".to_string(), eval::constructors::linear::linear);
     standard_library.fmap.insert("linear".to_string(), eval::constructors::linear::linear);
     standard_library.fmap.insert("loop".to_string(), eval::constructors::r#loop::a_loop);
     standard_library.fmap.insert("chop".to_string(), eval::constructors::chop::chop);
