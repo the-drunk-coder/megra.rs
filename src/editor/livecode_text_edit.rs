@@ -1142,8 +1142,12 @@ fn on_key_press(
                 text.as_str().chars().last().unwrap() // we know text isn't empty
             };
 
-            let prev_char = if let Some(ch) = text.as_str().chars().nth(idx - 1) {
-                ch
+            let prev_char = if idx > 0 {
+                if let Some(ch) = text.as_str().chars().nth(idx - 1) {
+                    ch
+                } else {
+                    next_char
+                }
             } else {
                 next_char
             };
