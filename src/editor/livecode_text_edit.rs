@@ -579,6 +579,15 @@ fn livecode_events(
                     None
                 }
             }
+            Event::Paste(text_to_insert) => {
+                if !text_to_insert.is_empty() {
+                    let mut ccursor = delete_selected(text, &cursor_range);
+                    insert_text(&mut ccursor, text, text_to_insert);
+                    Some(CCursorRange::one(ccursor))
+                } else {
+                    None
+                }
+            }
             Event::Key {
                 key: Key::W,
                 pressed: true,
