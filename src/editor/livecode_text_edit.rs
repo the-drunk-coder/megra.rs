@@ -59,12 +59,6 @@ pub struct LivecodeTextEditOutput {
     /// The state we stored after the run/
     pub state: LivecodeTextEditState,
 
-    /// Where the text in [`Self::galley`] ended up on the screen.
-    //pub text_draw_pos: crate::Pos2,
-
-    /// The text was clipped to this rectangle when painted.
-    //pub text_clip_rect: crate::Rect,
-
     /// Where the text cursor is.
     pub cursor_range: Option<egui::widgets::text_edit::CursorRange>,
 }
@@ -229,8 +223,6 @@ impl<'t> Widget for LivecodeTextEdit<'t> {
 impl<'t> LivecodeTextEdit<'t> {
     /// Show the [`LivecodeTextEdit`], returning a rich [`TextEditOutput`].
     pub fn show(self, ui: &mut Ui) -> LivecodeTextEditOutput {
-        //let is_mutable = self.text.is_mutable();
-        //let where_to_put_background = ui.painter().add(Shape::Noop);
         let margin = Vec2::new(0.0, 0.0);
         let max_rect = ui.available_rect_before_wrap().shrink2(margin);
         let mut content_ui = ui.child_ui(max_rect, *ui.layout());
@@ -781,7 +773,6 @@ fn livecode_events(
                 modifiers,
             } => {
                 if modifiers.command {
-                    //println!("toggle {}",state.selection_toggle);
                     state.selection_toggle = !state.selection_toggle;
                 } else {
                     state.clear_paren_selection();
