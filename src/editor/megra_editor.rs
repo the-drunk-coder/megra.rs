@@ -303,7 +303,7 @@ impl epi::App for MegraEditor {
                     }
 
                     let ln = egui::Label::new(
-                        egui::RichText::new(linenums).text_style(egui::TextStyle::Monospace),
+                        egui::RichText::new(linenums).font(FontId::monospace(13.0)),
                     );
 
                     ui.horizontal(|ui| {
