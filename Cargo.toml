@@ -34,6 +34,7 @@ dashmap = "5.1.0"
 chrono = "0.4"
 enum-map = { version = "1", features = ["serde"] }
 rosc = "~0.5"
+hound = "3.4"
 
 [dev-dependencies]
 assert_approx_eq = "1.1.0"
