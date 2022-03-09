@@ -58,19 +58,21 @@ pub fn stop_writer_thread(handle: CatchHandle) {
 pub fn start_writer_thread<const MAX: usize, const NCHAN: usize>(
     catch: Catch<MAX, NCHAN>,
     write_interval: f64,
+    samplerate: u32,
 ) -> CatchHandle {
     let running = sync::Arc::new(AtomicBool::new(true));
     let running2 = running.clone();
 
+    // create the writer thread
     let builder = thread::Builder::new().name("disk_writer_thread".into());
 
     let handle = Some(
         builder
             .spawn(move || {
                 let spec = hound::WavSpec {
-                    channels: NCHAN as u16,
-                    sample_rate: 44100,
-                    bits_per_sample: 32,
+                    channels: NCHAN as u16, // record with global number of channels
+                    sample_rate: samplerate,
+                    bits_per_sample: 32, // 32bit float is fixed
                     sample_format: hound::SampleFormat::Float,
                 };
 
@@ -147,7 +149,7 @@ mod tests {
     fn test_real_time_stream() {
         let (throw, catch) = init_real_time_stream::<512, 2>(100);
 
-        let handle = start_writer_thread(catch, 0.1);
+        let handle = start_writer_thread(catch, 0.1, 44100);
 
         let mut buf: [[f32; 512]; 2] = [[1.0; 512]; 2];
 
