@@ -3,7 +3,7 @@ use crossbeam::channel::Sender;
 use hound;
 use std::path::Path;
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::time::Duration;
+use std::time::{Duration, Instant};
 use std::{sync, thread};
 
 struct StreamItem<const MAX: usize, const NCHAN: usize> {
@@ -77,6 +77,9 @@ pub fn start_writer_thread<const MAX: usize, const NCHAN: usize>(
                     sample_format: hound::SampleFormat::Float,
                 };
 
+                let mut logical_time = 0.0;
+                let start_time = Instant::now();
+
                 let path: &Path = "megra_recording.wav".as_ref();
 
                 let mut writer = hound::WavWriter::create(path, spec).unwrap();
@@ -92,8 +95,14 @@ pub fn start_writer_thread<const MAX: usize, const NCHAN: usize>(
                         catch.return_q.send(stream_item).unwrap();
                     }
 
+                    let cur = start_time.elapsed().as_secs_f64();
+                    let mut diff = cur - logical_time;
+                    if diff < 0.0 {
+                        diff = 0.0;
+                    }
+                    logical_time += write_interval;
                     // needs time correction !
-                    thread::sleep(Duration::from_secs_f64(write_interval));
+                    thread::sleep(Duration::from_secs_f64(write_interval - diff));
                 }
             })
             .unwrap(),
