@@ -20,18 +20,20 @@ impl<const MAX: usize, const NCHAN: usize> Throw<MAX, NCHAN> {
     pub fn write_samples(&self, block: &[[f32; MAX]; NCHAN], size: usize) {
         match self.return_q.try_recv() {
             Ok(mut stream_item) => {
-                if size < MAX {
+                if size <= MAX {
                     for ch in 0..NCHAN {
                         for s in 0..size {
                             stream_item.buffer[ch][s] = block[ch][s];
                         }
                     }
+                    stream_item.size = size;
+                    match self.throw_q.send(stream_item) {
+                        Ok(_) => {}
+                        Err(_) => {
+                            println!("couldn't send streamitem");
+                        }
+                    }
                 }
-
-		match self.throw_q.send(stream_item) {
-		    Ok(_) => {}
-		    Err(e) => {println!("{:?}", e);}
-		} 
             }
             Err(_) => {}
         }
@@ -73,16 +75,17 @@ pub fn start_writer_thread<const MAX: usize, const NCHAN: usize>(
                 };
 
                 let path: &Path = "megra_recording.wav".as_ref();
-                
+
                 let mut writer = hound::WavWriter::create(path, spec).unwrap();
-                
+
                 while running2.load(Ordering::SeqCst) {
-                    for stream_item in catch.catch_q.try_iter() {
+                    for mut stream_item in catch.catch_q.try_iter() {
                         for s in 0..stream_item.size {
                             for ch in 0..NCHAN {
                                 writer.write_sample(stream_item.buffer[ch][s]).unwrap();
                             }
                         }
+                        stream_item.size = 0;
                         catch.return_q.send(stream_item).unwrap();
                     }
 
@@ -133,35 +136,32 @@ pub fn init_real_time_stream<const MAX: usize, const NCHAN: usize>(
     (throw, catch)
 }
 
-
 // TEST TEST TEST
 #[cfg(test)]
 mod tests {
     // Note this useful idiom: importing names from outer (for mod tests) scope.
     use super::*;
     use rand::Rng;
-    
+
     #[test]
     fn test_real_time_stream() {
+        let (throw, catch) = init_real_time_stream::<512, 2>(100);
 
-	let (throw, catch) = init_real_time_stream::<512,2>(100);
+        let handle = start_writer_thread(catch, 0.1);
 
-	let handle = start_writer_thread(catch, 0.1);
+        let mut buf: [[f32; 512]; 2] = [[1.0; 512]; 2];
 
-	let mut buf : [[f32; 512]; 2] = [[1.0; 512]; 2];
+        for _ in 0..100 {
+            // fill buffer with noise
+            for i in 0..512 {
+                buf[0][i] = rand::thread_rng().gen_range(-0.5..0.5);
+                buf[1][i] = buf[0][i];
+            }
+            throw.write_samples(&buf, 512);
 
-	for i in 0..512 {
-	    buf[0][i] = rand::thread_rng().gen_range(-1.0..1.0);
-	}
-	
-	for i in 0..100 {
-	    //println!("{}", i);
-	    throw.write_samples(&buf, 512);
-	    
             thread::sleep(Duration::from_secs_f64(0.003));
-	}
+        }
 
-	stop_writer_thread(handle);
-	
+        stop_writer_thread(handle);
     }
 }
