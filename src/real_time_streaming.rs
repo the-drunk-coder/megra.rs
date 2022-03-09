@@ -1,7 +1,6 @@
 use crossbeam::channel::Receiver;
 use crossbeam::channel::Sender;
 use hound;
-use std::path::Path;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::{Duration, Instant};
 use std::{sync, thread};
@@ -59,6 +58,7 @@ pub fn stop_writer_thread(handle: CatchHandle) {
 pub fn start_writer_thread<const MAX: usize, const NCHAN: usize>(
     catch: Catch<MAX, NCHAN>,
     samplerate: u32,
+    path: String,
 ) -> CatchHandle {
     let write_interval = catch.write_interval_ms;
     let running = sync::Arc::new(AtomicBool::new(true));
@@ -79,8 +79,6 @@ pub fn start_writer_thread<const MAX: usize, const NCHAN: usize>(
 
                 let mut logical_time = 0.0;
                 let start_time = Instant::now();
-
-                let path: &Path = "megra_recording.wav".as_ref();
 
                 let mut writer = hound::WavWriter::create(path, spec).unwrap();
 
@@ -164,8 +162,8 @@ mod tests {
     #[test]
     fn test_real_time_stream() {
         let (throw, catch) = init_real_time_stream::<512, 2>(0.003, 0.1);
-
-        let handle = start_writer_thread(catch, 44100);
+        let path = "megra_recording.wav".to_string();
+        let handle = start_writer_thread(catch, 44100, path);
 
         let mut buf: [[f32; 512]; 2] = [[1.0; 512]; 2];
 
