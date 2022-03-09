@@ -43,6 +43,7 @@ impl<const MAX: usize, const NCHAN: usize> Throw<MAX, NCHAN> {
 pub struct Catch<const MAX: usize, const NCHAN: usize> {
     catch_q: crossbeam::channel::Receiver<StreamItem<MAX, NCHAN>>,
     return_q: crossbeam::channel::Sender<StreamItem<MAX, NCHAN>>,
+    write_interval_ms: f64,
 }
 
 pub struct CatchHandle {
@@ -57,9 +58,9 @@ pub fn stop_writer_thread(handle: CatchHandle) {
 
 pub fn start_writer_thread<const MAX: usize, const NCHAN: usize>(
     catch: Catch<MAX, NCHAN>,
-    write_interval: f64,
     samplerate: u32,
 ) -> CatchHandle {
+    let write_interval = catch.write_interval_ms;
     let running = sync::Arc::new(AtomicBool::new(true));
     let running2 = running.clone();
 
@@ -102,7 +103,8 @@ pub fn start_writer_thread<const MAX: usize, const NCHAN: usize>(
 }
 
 pub fn init_real_time_stream<const MAX: usize, const NCHAN: usize>(
-    pre_fill: usize,
+    block_interval_ms: f64,
+    write_interval_ms: f64,
 ) -> (Throw<MAX, NCHAN>, Catch<MAX, NCHAN>) {
     let (tx_send, rx_send): (
         Sender<StreamItem<MAX, NCHAN>>,
@@ -114,6 +116,10 @@ pub fn init_real_time_stream<const MAX: usize, const NCHAN: usize>(
         Receiver<StreamItem<MAX, NCHAN>>,
     ) = crossbeam::channel::bounded(2000);
 
+    // assume write interval is smaller than block interval ...
+    // also, use a safety margin
+    let pre_fill: usize = ((write_interval_ms / block_interval_ms) * 1.6) as usize;
+    println!("real time stream pre-fill {}", pre_fill);
     // pre-fill return queue with specified amount of
     // stream items
     for _ in 0..pre_fill {
@@ -133,6 +139,7 @@ pub fn init_real_time_stream<const MAX: usize, const NCHAN: usize>(
     let catch = Catch::<MAX, NCHAN> {
         catch_q: rx_send,
         return_q: tx_return,
+        write_interval_ms,
     };
 
     (throw, catch)
@@ -147,9 +154,9 @@ mod tests {
 
     #[test]
     fn test_real_time_stream() {
-        let (throw, catch) = init_real_time_stream::<512, 2>(100);
+        let (throw, catch) = init_real_time_stream::<512, 2>(0.003, 0.1);
 
-        let handle = start_writer_thread(catch, 0.1, 44100);
+        let handle = start_writer_thread(catch, 44100);
 
         let mut buf: [[f32; 512]; 2] = [[1.0; 512]; 2];
 
