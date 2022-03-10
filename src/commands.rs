@@ -201,7 +201,7 @@ pub fn start_recording<const BUFSIZE: usize, const NCHAN: usize>(
                 44100,
                 "megra_foo.wav".to_string(),
             ));
-	    rec_ctrl.is_recording.store(true, Ordering::SeqCst);
+            rec_ctrl.is_recording.store(true, Ordering::SeqCst);
         }
         session.lock().rec_control = Some(rec_ctrl);
     }
@@ -215,8 +215,8 @@ pub fn stop_recording<const BUFSIZE: usize, const NCHAN: usize>(
     if let Some(mut rec_ctrl) = maybe_rec_ctrl {
         let maybe_catch_handle = rec_ctrl.catch_handle.take();
         if let Some(catch_handle) = maybe_catch_handle {
-	    rec_ctrl.is_recording.store(false, Ordering::SeqCst);
-            real_time_streaming::stop_writer_thread(catch_handle);	    
+            rec_ctrl.is_recording.store(false, Ordering::SeqCst);
+            real_time_streaming::stop_writer_thread(catch_handle);
         }
         session.lock().rec_control = Some(rec_ctrl);
     }

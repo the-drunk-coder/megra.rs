@@ -17,24 +17,19 @@ pub struct Throw<const MAX: usize, const NCHAN: usize> {
 
 impl<const MAX: usize, const NCHAN: usize> Throw<MAX, NCHAN> {
     pub fn write_samples(&self, block: &[[f32; MAX]; NCHAN], size: usize) {
-        match self.return_q.try_recv() {
-            Ok(mut stream_item) => {
-                if size <= MAX {
-                    for ch in 0..NCHAN {
-                        for s in 0..size {
-                            stream_item.buffer[ch][s] = block[ch][s];
-                        }
-                    }
-                    stream_item.size = size;
-                    match self.throw_q.send(stream_item) {
-                        Ok(_) => {}
-                        Err(_) => {
-                            println!("couldn't send streamitem");
-                        }
+        if let Ok(mut stream_item) = self.return_q.try_recv() {
+            if size <= MAX {
+                for (ch, ch_block) in block.iter().enumerate().take(NCHAN) {
+                    stream_item.buffer[ch][..size].copy_from_slice(&ch_block[..size]);
+                }
+                stream_item.size = size;
+                match self.throw_q.send(stream_item) {
+                    Ok(_) => {}
+                    Err(_) => {
+                        println!("couldn't send streamitem");
                     }
                 }
             }
-            Err(_) => {}
         }
     }
 }
