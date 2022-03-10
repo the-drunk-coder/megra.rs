@@ -49,6 +49,7 @@ pub struct RecordingControl<const MAX: usize, const NCHAN: usize> {
     pub is_recording: sync::Arc<AtomicBool>, // communicate with the other thread
     pub catch: Option<Catch<MAX, NCHAN>>,
     pub catch_handle: Option<CatchHandle>,
+    pub samplerate: u32,
 }
 
 pub fn stop_writer_thread(handle: CatchHandle) {

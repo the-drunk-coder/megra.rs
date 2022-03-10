@@ -479,6 +479,7 @@ where
         is_recording: sync::Arc::clone(&is_recording),
         catch: Some(catch),
         catch_handle: None,
+        samplerate: sample_rate as u32,
     };
 
     // main audio callback (plain)

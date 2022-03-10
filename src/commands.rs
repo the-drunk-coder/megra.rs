@@ -188,44 +188,44 @@ pub fn load_part(parts_store: &sync::Arc<Mutex<PartsStore>>, name: String, part:
     ps.insert(name, part);
 }
 
-/// execute a pre-defined part step by step
+/// start a recording
 pub fn start_recording<const BUFSIZE: usize, const NCHAN: usize>(
     session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
 ) {
     let maybe_rec_ctrl = session.lock().rec_control.take();
     if let Some(mut rec_ctrl) = maybe_rec_ctrl {
-	if rec_ctrl.is_recording.load(Ordering::SeqCst) {
-	    println!("there's already a recording in progress, please stop first !");
-	} else {
-	    let maybe_catch = rec_ctrl.catch.take();
+        if rec_ctrl.is_recording.load(Ordering::SeqCst) {
+            println!("there's already a recording in progress, please stop first !");
+        } else {
+            let maybe_catch = rec_ctrl.catch.take();
             if let Some(catch) = maybe_catch {
-		rec_ctrl.catch_handle = Some(real_time_streaming::start_writer_thread(
+                rec_ctrl.catch_handle = Some(real_time_streaming::start_writer_thread(
                     catch,
-                    44100,
+                    rec_ctrl.samplerate,
                     "megra_foo.wav".to_string(),
-		));
-		rec_ctrl.is_recording.store(true, Ordering::SeqCst);
+                ));
+                rec_ctrl.is_recording.store(true, Ordering::SeqCst);
             }
-	}	        
+        }
         session.lock().rec_control = Some(rec_ctrl);
     }
 }
 
-/// execute a pre-defined part step by step
+/// stop a running recording
 pub fn stop_recording<const BUFSIZE: usize, const NCHAN: usize>(
     session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
 ) {
     let maybe_rec_ctrl = session.lock().rec_control.take();
     if let Some(mut rec_ctrl) = maybe_rec_ctrl {
-	if rec_ctrl.is_recording.load(Ordering::SeqCst) {
-	    let maybe_catch_handle = rec_ctrl.catch_handle.take();
+        if rec_ctrl.is_recording.load(Ordering::SeqCst) {
+            let maybe_catch_handle = rec_ctrl.catch_handle.take();
             if let Some(catch_handle) = maybe_catch_handle {
-		rec_ctrl.is_recording.store(false, Ordering::SeqCst);
-		real_time_streaming::stop_writer_thread(catch_handle);
+                rec_ctrl.is_recording.store(false, Ordering::SeqCst);
+                real_time_streaming::stop_writer_thread(catch_handle);
             }
-	} else {
-	    println!("can't stop recording that isn't running !");
-	}        
+        } else {
+            println!("can't stop recording that isn't running !");
+        }
         session.lock().rec_control = Some(rec_ctrl);
     }
 }
