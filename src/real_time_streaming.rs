@@ -46,8 +46,14 @@ pub struct Catch<const MAX: usize, const NCHAN: usize> {
 }
 
 pub struct CatchHandle {
-    handle: Option<thread::JoinHandle<()>>,
-    running: sync::Arc<AtomicBool>,
+    pub handle: Option<thread::JoinHandle<()>>,
+    pub running: sync::Arc<AtomicBool>,
+}
+
+pub struct RecordingControl<const MAX: usize, const NCHAN: usize> {
+    pub is_recording: sync::Arc<AtomicBool>, // communicate with the other thread
+    pub catch: Option<Catch<MAX, NCHAN>>,
+    pub catch_handle: Option<CatchHandle>,
 }
 
 pub fn stop_writer_thread(handle: CatchHandle) {

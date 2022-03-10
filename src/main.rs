@@ -39,6 +39,7 @@ use getopts::Options;
 use parking_lot::Mutex;
 use ruffbox_synth::ruffbox::{init_ruffbox, ReverbMode};
 use standard_library::define_standard_library;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::{env, sync, thread};
 
 fn print_help(program: &str, opts: Options) {
@@ -458,6 +459,28 @@ where
         },
         err_fn,
     )?;
+
+    // write real time stream 4 times a sec ...
+    #[cfg(not(feature = "ringbuffer"))]
+    let (throw, catch) = real_time_streaming::init_real_time_stream::<512, NCHAN>(
+        (512.0 / sample_rate) as f64,
+        0.25,
+    );
+
+    #[cfg(feature = "ringbuffer")]
+    let (throw, catch) = real_time_streaming::init_real_time_stream::<128, NCHAN>(
+        (128.0 / sample_rate) as f64,
+        0.25,
+    );
+
+    let is_recording = sync::Arc::new(AtomicBool::new(false));
+
+    let rec_control = real_time_streaming::RecordingControl {
+        is_recording: sync::Arc::clone(&is_recording),
+        catch: Some(catch),
+        catch_handle: None,
+    };
+
     // main audio callback (plain)
     // the plain audio callback for platforms where the blocksize
     // is static, configurable and a power of two (preferably 512)
@@ -472,6 +495,10 @@ where
             // as the jack timing from cpal can't be trusted right now, the
             // ruffbox handles it's own logical time ...
             let ruff_out = ruff.process(0.0, true);
+
+            if is_recording.load(Ordering::SeqCst) {
+                throw.write_samples(&ruff_out, 512);
+            }
 
             // there might be a faster way to de-interleave here ...
             for (frame_count, frame) in data.chunks_mut(out_channels).enumerate() {
@@ -525,6 +552,11 @@ where
 
                 while samples_actually_needed > 0 {
                     let ruff_out = ruff.process(0.0, true);
+
+                    if is_recording.load(Ordering::SeqCst) {
+                        throw.write_samples(&ruff_out, 128);
+                    }
+
                     //produced += BLOCKSIZE;
                     for ch in 0..out_channels {
                         let mut tmp_write_idx = write_idx;
@@ -580,7 +612,10 @@ where
     out_stream.play()?;
 
     // global data
-    let session = sync::Arc::new(Mutex::new(Session::new()));
+    let mut raw_session = Session::new();
+    raw_session.rec_control = Some(rec_control);
+    let session = sync::Arc::new(Mutex::new(raw_session));
+
     let global_parameters = sync::Arc::new(GlobalParameters::with_capacity(1));
     let sample_set = sync::Arc::new(Mutex::new(SampleSet::new()));
     let parts_store = sync::Arc::new(Mutex::new(PartsStore::new()));

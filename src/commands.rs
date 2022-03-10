@@ -16,8 +16,10 @@ use crate::generator::*;
 use crate::parameter::*;
 use crate::parser::eval;
 use crate::parser::FunctionMap;
+use crate::real_time_streaming;
 use crate::sample_set::SampleSet;
 use crate::session::*;
+use std::sync::atomic::Ordering;
 
 pub fn freeze_buffer<const BUFSIZE: usize, const NCHAN: usize>(
     ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
@@ -184,6 +186,40 @@ pub fn load_sample_sets_path<const BUFSIZE: usize, const NCHAN: usize>(
 pub fn load_part(parts_store: &sync::Arc<Mutex<PartsStore>>, name: String, part: Part) {
     let mut ps = parts_store.lock();
     ps.insert(name, part);
+}
+
+/// execute a pre-defined part step by step
+pub fn start_recording<const BUFSIZE: usize, const NCHAN: usize>(
+    session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
+) {
+    let maybe_rec_ctrl = session.lock().rec_control.take();
+    if let Some(mut rec_ctrl) = maybe_rec_ctrl {
+        let maybe_catch = rec_ctrl.catch.take();
+        if let Some(catch) = maybe_catch {
+            rec_ctrl.catch_handle = Some(real_time_streaming::start_writer_thread(
+                catch,
+                44100,
+                "megra_foo.wav".to_string(),
+            ));
+	    rec_ctrl.is_recording.store(true, Ordering::SeqCst);
+        }
+        session.lock().rec_control = Some(rec_ctrl);
+    }
+}
+
+/// execute a pre-defined part step by step
+pub fn stop_recording<const BUFSIZE: usize, const NCHAN: usize>(
+    session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
+) {
+    let maybe_rec_ctrl = session.lock().rec_control.take();
+    if let Some(mut rec_ctrl) = maybe_rec_ctrl {
+        let maybe_catch_handle = rec_ctrl.catch_handle.take();
+        if let Some(catch_handle) = maybe_catch_handle {
+	    rec_ctrl.is_recording.store(false, Ordering::SeqCst);
+            real_time_streaming::stop_writer_thread(catch_handle);	    
+        }
+        session.lock().rec_control = Some(rec_ctrl);
+    }
 }
 
 /// execute a pre-defined part step by step

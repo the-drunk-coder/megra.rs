@@ -14,6 +14,7 @@ use crate::event::InterpretableEvent;
 use crate::event_helpers::*;
 use crate::generator::Generator;
 use crate::parameter::*;
+use crate::real_time_streaming;
 use crate::scheduler::{Scheduler, SchedulerData};
 use crate::visualizer_client::VisualizerClient;
 
@@ -59,6 +60,7 @@ pub struct Session<const BUFSIZE: usize, const NCHAN: usize> {
     >,
     contexts: HashMap<String, BTreeSet<BTreeSet<String>>>,
     pub visualizer_client: Option<sync::Arc<VisualizerClient>>,
+    pub rec_control: Option<real_time_streaming::RecordingControl<BUFSIZE, NCHAN>>,
 }
 
 // basically a bfs on a dag !
@@ -312,6 +314,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
             schedulers: HashMap::new(),
             contexts: HashMap::new(),
             visualizer_client: None,
+            rec_control: None,
         }
     }
 

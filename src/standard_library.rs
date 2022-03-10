@@ -43,6 +43,8 @@ pub fn define_standard_library() -> FunctionMap {
     standard_library.fmap.insert("step-part".to_string(), eval::commands::step_part);
     standard_library.fmap.insert("clear".to_string(), eval::commands::clear);
     standard_library.fmap.insert("connect-visualizer".to_string(), eval::commands::connect_visualizer);
+    standard_library.fmap.insert("rec".to_string(), eval::commands::start_recording);
+    standard_library.fmap.insert("stop-rec".to_string(), eval::commands::stop_recording);
 
     // control event
     standard_library.fmap.insert("ctrl".to_string(), eval::events::control::control);

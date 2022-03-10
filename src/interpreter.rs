@@ -91,6 +91,12 @@ pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
                         println!("visualizer already connected !");
                     }
                 }
+                Command::StartRecording => {
+                    commands::start_recording(&session);
+                }
+                Command::StopRecording => {
+                    commands::stop_recording(&session);
+                }
                 Command::LoadSample((set, mut keywords, path)) => {
                     let ruffbox2 = sync::Arc::clone(ruffbox);
                     let fmap2 = sync::Arc::clone(function_map);

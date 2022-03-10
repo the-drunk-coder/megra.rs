@@ -457,3 +457,27 @@ pub fn connect_visualizer(
         Command::ConnectVisualizer,
     )))
 }
+
+pub fn start_recording(
+    _: &FunctionMap,
+    _: &mut Vec<EvaluatedExpr>,
+    _: &sync::Arc<GlobalParameters>,
+    _: &sync::Arc<Mutex<SampleSet>>,
+    _: OutputMode,
+) -> Option<EvaluatedExpr> {
+    Some(EvaluatedExpr::BuiltIn(BuiltIn::Command(
+        Command::StartRecording,
+    )))
+}
+
+pub fn stop_recording(
+    _: &FunctionMap,
+    _: &mut Vec<EvaluatedExpr>,
+    _: &sync::Arc<GlobalParameters>,
+    _: &sync::Arc<Mutex<SampleSet>>,
+    _: OutputMode,
+) -> Option<EvaluatedExpr> {
+    Some(EvaluatedExpr::BuiltIn(BuiltIn::Command(
+        Command::StopRecording,
+    )))
+}
