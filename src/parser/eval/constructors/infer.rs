@@ -102,6 +102,7 @@ pub fn infer(
 
     let mut ev_vec = Vec::new();
     let mut cur_key: String = "".to_string();
+    let mut keep_root = false;
 
     while let Some(c) = tail_drain.next() {
         if collect_events {
@@ -167,13 +168,24 @@ pub fn infer(
                     }
                     _ => {}
                 },
+                "keep" => {
+                    if let Some(EvaluatedExpr::Boolean(b)) = tail_drain.next() {
+                        keep_root = b;
+                    }
+                }
                 _ => println!("{}", k),
             },
             _ => println! {"ignored"},
         }
     }
 
-    let pfa = pfa::Pfa::<char>::infer_from_rules(&mut rules, true);
+    // only re-generate if necessary
+    let pfa = if !keep_root {
+        pfa::Pfa::<char>::infer_from_rules(&mut rules, true)
+    } else {
+        pfa::Pfa::<char>::new()
+    };
+
     let mut id_tags = BTreeSet::new();
     id_tags.insert(name.clone());
 
@@ -181,7 +193,7 @@ pub fn infer(
         id_tags,
         root_generator: MarkovSequenceGenerator {
             name,
-            generator: pfa,
+            generator: pfa, // will be empty if we intend on keeping the root generator
             event_mapping,
             duration_mapping,
             modified: true,
@@ -192,6 +204,6 @@ pub fn infer(
         },
         processors: Vec::new(),
         time_mods: Vec::new(),
-        keep_root: false,
+        keep_root,
     })))
 }

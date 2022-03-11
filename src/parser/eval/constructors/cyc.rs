@@ -62,6 +62,7 @@ pub fn cyc(
     // collect final events in their position in the cycle
     let mut ev_vecs = Vec::new();
     let mut cycle_string: String = "".to_string();
+    let mut keep_root = false;
 
     while let Some(c) = tail_drain.next() {
         if collect_template {
@@ -139,6 +140,11 @@ pub fn cyc(
                     collect_template = true;
                     continue;
                 }
+                "keep" => {
+                    if let Some(EvaluatedExpr::Boolean(b)) = tail_drain.next() {
+                        keep_root = b;
+                    }
+                }
                 _ => println!("{}", k),
             },
             EvaluatedExpr::String(d) => {
@@ -148,157 +154,161 @@ pub fn cyc(
         }
     }
 
-    let mut parsed_cycle = cyc_parser::eval_cyc_from_str(
-        &cycle_string,
-        functions,
-        sample_set,
-        out_mode,
-        &template_evs,
-        &collected_mapping,
-        global_parameters,
-    );
-
-    if parsed_cycle.is_empty() {
-        println!("couldn't parse cycle");
-    }
-
-    for mut cyc_evs in parsed_cycle.drain(..) {
-        match cyc_evs.as_slice() {
-            [cyc_parser::CycleResult::Duration(d)] => {
-                // only single durations count
-                // slice pattern are awesome !
-                *dur_vec.last_mut().unwrap() = Parameter::with_value(*d);
-            }
-            _ => {
-                let mut pos_vec = Vec::new();
-                dur_vec.push(dur.clone());
-
-                for ev in cyc_evs.drain(..) {
-                    match ev {
-                        cyc_parser::CycleResult::SoundEvent(s) => {
-                            pos_vec.push(SourceEvent::Sound(s))
-                        }
-                        cyc_parser::CycleResult::ControlEvent(c) => {
-                            pos_vec.push(SourceEvent::Control(c))
-                        }
-                        _ => {}
-                    }
-                }
-
-                ev_vecs.push(pos_vec);
-            }
-        }
-    }
-
-    // generated ids
-    let mut last_char: char = '1';
-    let first_char = last_char;
-
     let mut event_mapping = HashMap::<char, Vec<SourceEvent>>::new();
     let mut duration_mapping = HashMap::<(char, char), Event>::new();
 
-    // collect cycle rules
-    let mut rules = Vec::new();
+    // re-generate pfa if necessary
+    let pfa = if !keep_root {
+        let mut parsed_cycle = cyc_parser::eval_cyc_from_str(
+            &cycle_string,
+            functions,
+            sample_set,
+            out_mode,
+            &template_evs,
+            &collected_mapping,
+            global_parameters,
+        );
+        if parsed_cycle.is_empty() {
+            println!("couldn't parse cycle");
+        }
+        for mut cyc_evs in parsed_cycle.drain(..) {
+            match cyc_evs.as_slice() {
+                [cyc_parser::CycleResult::Duration(d)] => {
+                    // only single durations count
+                    // slice pattern are awesome !
+                    *dur_vec.last_mut().unwrap() = Parameter::with_value(*d);
+                }
+                _ => {
+                    let mut pos_vec = Vec::new();
+                    dur_vec.push(dur.clone());
 
-    let mut count = 0;
-    let num_events = ev_vecs.len();
-    for ev in ev_vecs.drain(..) {
-        let next_char: char = std::char::from_u32(last_char as u32 + 1).unwrap();
+                    for ev in cyc_evs.drain(..) {
+                        match ev {
+                            cyc_parser::CycleResult::SoundEvent(s) => {
+                                pos_vec.push(SourceEvent::Sound(s))
+                            }
+                            cyc_parser::CycleResult::ControlEvent(c) => {
+                                pos_vec.push(SourceEvent::Control(c))
+                            }
+                            _ => {}
+                        }
+                    }
 
-        event_mapping.insert(last_char, ev);
+                    ev_vecs.push(pos_vec);
+                }
+            }
+        }
 
-        let mut dur_ev = Event::with_name("transition".to_string());
-        dur_ev
-            .params
-            .insert(SynthParameter::Duration, Box::new(dur_vec[count].clone()));
-        duration_mapping.insert((last_char, next_char), dur_ev);
+        // generated ids
+        let mut last_char: char = '1';
+        let first_char = last_char;
 
-        if count < num_events {
-            if repetition_chance > 0.0 {
-                //println!("add rep chance");
-                // repetition rule
-                rules.push(Rule {
-                    source: vec![last_char],
-                    symbol: last_char,
-                    probability: repetition_chance / 100.0,
-                });
+        // collect cycle rules
+        let mut rules = Vec::new();
 
-                // next rule
-                if count == num_events - 1 {
+        let mut count = 0;
+        let num_events = ev_vecs.len();
+        for ev in ev_vecs.drain(..) {
+            let next_char: char = std::char::from_u32(last_char as u32 + 1).unwrap();
+
+            event_mapping.insert(last_char, ev);
+
+            let mut dur_ev = Event::with_name("transition".to_string());
+            dur_ev
+                .params
+                .insert(SynthParameter::Duration, Box::new(dur_vec[count].clone()));
+            duration_mapping.insert((last_char, next_char), dur_ev);
+
+            if count < num_events {
+                if repetition_chance > 0.0 {
+                    //println!("add rep chance");
+                    // repetition rule
+                    rules.push(Rule {
+                        source: vec![last_char],
+                        symbol: last_char,
+                        probability: repetition_chance / 100.0,
+                    });
+
+                    // next rule
+                    if count == num_events - 1 {
+                        rules.push(Rule {
+                            source: vec![last_char],
+                            symbol: first_char,
+                            probability: 1.0 - (repetition_chance / 100.0),
+                        });
+                    } else {
+                        rules.push(Rule {
+                            source: vec![last_char],
+                            symbol: next_char,
+                            probability: 1.0 - (repetition_chance / 100.0),
+                        });
+                    }
+
+                    // endless repetition allowed per default ...
+                    if max_repetitions >= 2.0 {
+                        let mut max_rep_source = Vec::new();
+                        for _ in 0..max_repetitions as usize {
+                            max_rep_source.push(last_char);
+                        }
+                        // max repetition rule
+                        if count == num_events - 1 {
+                            rules.push(Rule {
+                                source: max_rep_source,
+                                symbol: first_char,
+                                probability: 1.0,
+                            });
+                        } else {
+                            rules.push(Rule {
+                                source: max_rep_source,
+                                symbol: next_char,
+                                probability: 1.0,
+                            });
+                        }
+                    }
+                } else if count == num_events - 1 {
                     rules.push(Rule {
                         source: vec![last_char],
                         symbol: first_char,
-                        probability: 1.0 - (repetition_chance / 100.0),
+                        probability: 1.0,
                     });
                 } else {
                     rules.push(Rule {
                         source: vec![last_char],
                         symbol: next_char,
-                        probability: 1.0 - (repetition_chance / 100.0),
+                        probability: 1.0,
                     });
                 }
 
-                // endless repetition allowed per default ...
-                if max_repetitions >= 2.0 {
-                    let mut max_rep_source = Vec::new();
-                    for _ in 0..max_repetitions as usize {
-                        max_rep_source.push(last_char);
-                    }
-                    // max repetition rule
-                    if count == num_events - 1 {
-                        rules.push(Rule {
-                            source: max_rep_source,
-                            symbol: first_char,
-                            probability: 1.0,
-                        });
-                    } else {
-                        rules.push(Rule {
-                            source: max_rep_source,
-                            symbol: next_char,
-                            probability: 1.0,
-                        });
-                    }
-                }
-            } else if count == num_events - 1 {
-                rules.push(Rule {
-                    source: vec![last_char],
-                    symbol: first_char,
-                    probability: 1.0,
-                });
-            } else {
-                rules.push(Rule {
-                    source: vec![last_char],
-                    symbol: next_char,
-                    probability: 1.0,
-                });
+                last_char = next_char;
             }
 
-            last_char = next_char;
+            count += 1;
         }
 
-        count += 1;
-    }
+        // if our cycle isn't empty ...
+        if count != 0 {
+            // create duration event (otherwise not needed ...)
+            let mut dur_ev = Event::with_name("transition".to_string());
+            dur_ev.params.insert(
+                SynthParameter::Duration,
+                Box::new(dur_vec.last().unwrap().clone()),
+            );
+            duration_mapping.insert((last_char, first_char), dur_ev);
+        }
 
-    // if our cycle isn't empty ...
-    if count != 0 {
-        // create duration event (otherwise not needed ...)
-        let mut dur_ev = Event::with_name("transition".to_string());
-        dur_ev.params.insert(
-            SynthParameter::Duration,
-            Box::new(dur_vec.last().unwrap().clone()),
-        );
-        duration_mapping.insert((last_char, first_char), dur_ev);
-    }
+        let mut tmp = Pfa::<char>::infer_from_rules(&mut rules, true);
 
-    let mut pfa = Pfa::<char>::infer_from_rules(&mut rules, true);
-
-    // this seems to be heavy ...
-    // what's so heavy here ??
-    if randomize_chance > 0.0 {
-        //println!("add rnd chance");
-        pfa.randomize_edges(randomize_chance, randomize_chance);
-        pfa.rebalance();
-    }
+        // this seems to be heavy ...
+        // what's so heavy here ??
+        if randomize_chance > 0.0 {
+            //println!("add rnd chance");
+            tmp.randomize_edges(randomize_chance, randomize_chance);
+            tmp.rebalance();
+        }
+        tmp
+    } else {
+        Pfa::<char>::new()
+    };
 
     let mut id_tags = BTreeSet::new();
     id_tags.insert(name.clone());
@@ -318,6 +328,6 @@ pub fn cyc(
         },
         processors: Vec::new(),
         time_mods: Vec::new(),
-        keep_root: false,
+        keep_root,
     })))
 }

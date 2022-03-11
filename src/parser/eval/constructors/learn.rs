@@ -31,6 +31,7 @@ pub fn learn(
         "".to_string()
     };
 
+    let mut keep_root = false;
     let mut sample: String = "".to_string();
     let mut event_mapping = HashMap::<char, Vec<SourceEvent>>::new();
 
@@ -125,6 +126,11 @@ pub fn learn(
                         autosilence = b;
                     }
                 }
+                "keep" => {
+                    if let Some(EvaluatedExpr::Boolean(b)) = tail_drain.next() {
+                        keep_root = b;
+                    }
+                }
                 _ => println!("{}", k),
             },
             _ => println! {"ignored {:?}", c},
@@ -139,7 +145,12 @@ pub fn learn(
     }
 
     let s_v: std::vec::Vec<char> = sample.chars().collect();
-    let pfa = Pfa::<char>::learn(&s_v, bound, epsilon, pfa_size);
+    let pfa = if !keep_root {
+        // only regenerate if necessary
+        Pfa::<char>::learn(&s_v, bound, epsilon, pfa_size)
+    } else {
+        Pfa::<char>::new()
+    };
     let mut id_tags = BTreeSet::new();
     id_tags.insert(name.clone());
 
@@ -158,6 +169,6 @@ pub fn learn(
         },
         processors: Vec::new(),
         time_mods: Vec::new(),
-        keep_root: false,
+        keep_root,
     })))
 }

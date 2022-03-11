@@ -38,6 +38,8 @@ pub fn fully(
     let mut collected_mapping = HashMap::<char, Vec<SourceEvent>>::new();
     let mut cur_key: String = "".to_string();
 
+    let mut keep_root = false;
+
     let mut final_mapping = HashMap::new();
     let mut last_char: char = 'a'; // label chars
     let mut labels = Vec::new();
@@ -129,32 +131,42 @@ pub fn fully(
                     collect_final = true;
                     continue;
                 }
+                "keep" => {
+                    if let Some(EvaluatedExpr::Boolean(b)) = tail_drain.next() {
+                        keep_root = b;
+                    }
+                }
                 _ => println!("{}", k),
             }
         }
     }
 
     let mut duration_mapping = HashMap::new();
-    let prob = 1.0 / (labels.len() - 1) as f32;
-    // rules to collect ...
-    let mut rules = Vec::new();
-    for label_a in labels.iter() {
-        for label_b in labels.iter() {
-            rules.push(Rule {
-                source: vec![*label_a],
-                symbol: *label_b,
-                probability: prob,
-            });
 
-            let mut dur_ev = Event::with_name("transition".to_string());
-            dur_ev
-                .params
-                .insert(SynthParameter::Duration, Box::new(dur.clone()));
-            duration_mapping.insert((*label_a, *label_b), dur_ev);
+    let pfa = if !keep_root {
+        let prob = 1.0 / (labels.len() - 1) as f32;
+        // rules to collect ...
+        let mut rules = Vec::new();
+        for label_a in labels.iter() {
+            for label_b in labels.iter() {
+                rules.push(Rule {
+                    source: vec![*label_a],
+                    symbol: *label_b,
+                    probability: prob,
+                });
+
+                let mut dur_ev = Event::with_name("transition".to_string());
+                dur_ev
+                    .params
+                    .insert(SynthParameter::Duration, Box::new(dur.clone()));
+                duration_mapping.insert((*label_a, *label_b), dur_ev);
+            }
         }
-    }
 
-    let pfa = Pfa::<char>::infer_from_rules(&mut rules, true);
+        Pfa::<char>::infer_from_rules(&mut rules, true)
+    } else {
+        Pfa::<char>::new()
+    };
 
     let mut id_tags = BTreeSet::new();
     id_tags.insert(name.clone());
@@ -174,6 +186,6 @@ pub fn fully(
         },
         processors: Vec::new(),
         time_mods: Vec::new(),
-        keep_root: false,
+        keep_root,
     })))
 }

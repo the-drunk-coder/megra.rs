@@ -32,6 +32,8 @@ pub fn flower(
         "".to_string()
     };
 
+    let mut keep_root = false;
+
     let mut collect_labeled = false;
     let mut collect_final = false;
 
@@ -180,155 +182,166 @@ pub fn flower(
                         max_repetitions = n;
                     }
                 }
+                "keep" => {
+                    if let Some(EvaluatedExpr::Boolean(b)) = tail_drain.next() {
+                        keep_root = b;
+                    }
+                }
                 _ => println!("{}", k),
             }
         }
     }
 
-    // first of all check if we have enough petal events
-    // if not, repeat the last event until we do ...
-    let needed_petals = petal_labels.len() % num_layers;
-    if needed_petals != 0 {
-        let last_found = last_char;
-        for _ in 0..needed_petals {
-            let next_char: char = std::char::from_u32(last_char as u32 + 1).unwrap();
-            last_char = next_char;
-            petal_labels.push(next_char);
-            let repetition = final_mapping.get(&last_found).unwrap().clone();
-            final_mapping.insert(next_char, repetition);
-        }
-    }
-
-    ////////////////////
-    // assemble rules //
-    ////////////////////
-
-    // rules to collect ...
-    let mut rules = Vec::new();
-    let mut dur_ev = Event::with_name("transition".to_string());
-    dur_ev
-        .params
-        .insert(SynthParameter::Duration, Box::new(dur.clone()));
-
     let mut duration_mapping = HashMap::new();
 
-    // convert repetition chance
-    if repetition_chance > 0.0 {
-        repetition_chance /= 100.0;
-    }
+    let pfa = if !keep_root {
+        // first of all check if we have enough petal events
+        // if not, repeat the last event until we do ...
+        let needed_petals = petal_labels.len() % num_layers;
+        if needed_petals != 0 {
+            let last_found = last_char;
+            for _ in 0..needed_petals {
+                let next_char: char = std::char::from_u32(last_char as u32 + 1).unwrap();
+                last_char = next_char;
+                petal_labels.push(next_char);
+                let repetition = final_mapping.get(&last_found).unwrap().clone();
+                final_mapping.insert(next_char, repetition);
+            }
+        }
 
-    let pistil_exit_prob =
-        (1.0 - repetition_chance) / ((petal_labels.len()) as f32 / num_layers as f32);
-    let norep_pistil_exit_prob = 1.0 / ((petal_labels.len()) as f32 / num_layers as f32);
+        ////////////////////
+        // assemble rules //
+        ////////////////////
 
-    let mut petal_iter = petal_labels.iter();
+        // rules to collect ...
+        let mut rules = Vec::new();
+        let mut dur_ev = Event::with_name("transition".to_string());
+        dur_ev
+            .params
+            .insert(SynthParameter::Duration, Box::new(dur.clone()));
 
-    // pistil repetition
-    if repetition_chance > 0.0 {
-        rules.push(Rule {
-            source: vec![pistil_label],
-            symbol: pistil_label,
-            probability: repetition_chance,
-        });
-    }
+        // convert repetition chance
+        if repetition_chance > 0.0 {
+            repetition_chance /= 100.0;
+        }
 
-    for _ in 0..(petal_labels.len() / num_layers) {
-        let mut label_a = pistil_label;
-        let mut cur_prob = pistil_exit_prob;
+        let pistil_exit_prob =
+            (1.0 - repetition_chance) / ((petal_labels.len()) as f32 / num_layers as f32);
+        let norep_pistil_exit_prob = 1.0 / ((petal_labels.len()) as f32 / num_layers as f32);
 
-        for l in 0..num_layers {
-            if let Some(label_b) = petal_iter.next() {
-                //////////////////////
-                // event repetition //
-                //////////////////////
-                // pistil repetition exit
-                if label_a == pistil_label && repetition_chance > 0.0 && max_repetitions >= 2.0 {
-                    let max_rep_source = vec![pistil_label; max_repetitions as usize];
+        let mut petal_iter = petal_labels.iter();
 
-                    // max repetition rule
-                    rules.push(Rule {
-                        source: max_rep_source,
-                        symbol: *label_b,
-                        probability: norep_pistil_exit_prob,
-                    });
-                }
+        // pistil repetition
+        if repetition_chance > 0.0 {
+            rules.push(Rule {
+                source: vec![pistil_label],
+                symbol: pistil_label,
+                probability: repetition_chance,
+            });
+        }
 
-                rules.push(Rule {
-                    source: vec![label_a],
-                    symbol: *label_b,
-                    probability: cur_prob,
-                });
+        for _ in 0..(petal_labels.len() / num_layers) {
+            let mut label_a = pistil_label;
+            let mut cur_prob = pistil_exit_prob;
 
-                // we already repeated the pistil label ...
-                if repetition_chance > 0.0 {
-                    rules.push(Rule {
-                        source: vec![*label_b],
-                        symbol: *label_b,
-                        probability: repetition_chance,
-                    });
+            for l in 0..num_layers {
+                if let Some(label_b) = petal_iter.next() {
+                    //////////////////////
+                    // event repetition //
+                    //////////////////////
+                    // pistil repetition exit
+                    if label_a == pistil_label && repetition_chance > 0.0 && max_repetitions >= 2.0
+                    {
+                        let max_rep_source = vec![pistil_label; max_repetitions as usize];
 
-                    if label_a != pistil_label && max_repetitions >= 2.0 {
-                        let mut max_rep_source = Vec::new();
-                        for _ in 0..max_repetitions as usize {
-                            max_rep_source.push(label_a);
-                        }
                         // max repetition rule
                         rules.push(Rule {
                             source: max_rep_source,
                             symbol: *label_b,
-                            probability: 1.0,
+                            probability: norep_pistil_exit_prob,
                         });
                     }
-                }
 
-                if l == num_layers - 1 {
                     rules.push(Rule {
-                        source: vec![*label_b],
-                        symbol: label_a,
-                        probability: 1.0 - repetition_chance,
+                        source: vec![label_a],
+                        symbol: *label_b,
+                        probability: cur_prob,
                     });
 
-                    if repetition_chance > 0.0 && max_repetitions >= 2.0 {
-                        // event repetition, special case
-                        // (outermost layer ...)
-                        let mut max_rep_source = Vec::new();
-                        for _ in 0..max_repetitions as usize {
-                            max_rep_source.push(*label_b);
-                        }
-                        // max repetition rule
+                    // we already repeated the pistil label ...
+                    if repetition_chance > 0.0 {
                         rules.push(Rule {
-                            source: max_rep_source,
+                            source: vec![*label_b],
+                            symbol: *label_b,
+                            probability: repetition_chance,
+                        });
+
+                        if label_a != pistil_label && max_repetitions >= 2.0 {
+                            let mut max_rep_source = Vec::new();
+                            for _ in 0..max_repetitions as usize {
+                                max_rep_source.push(label_a);
+                            }
+                            // max repetition rule
+                            rules.push(Rule {
+                                source: max_rep_source,
+                                symbol: *label_b,
+                                probability: 1.0,
+                            });
+                        }
+                    }
+
+                    if l == num_layers - 1 {
+                        rules.push(Rule {
+                            source: vec![*label_b],
                             symbol: label_a,
-                            probability: 1.0,
+                            probability: 1.0 - repetition_chance,
+                        });
+
+                        if repetition_chance > 0.0 && max_repetitions >= 2.0 {
+                            // event repetition, special case
+                            // (outermost layer ...)
+                            let mut max_rep_source = Vec::new();
+                            for _ in 0..max_repetitions as usize {
+                                max_rep_source.push(*label_b);
+                            }
+                            // max repetition rule
+                            rules.push(Rule {
+                                source: max_rep_source,
+                                symbol: label_a,
+                                probability: 1.0,
+                            });
+                        }
+                    } else {
+                        rules.push(Rule {
+                            source: vec![*label_b],
+                            symbol: label_a,
+                            probability: 0.5 - repetition_chance,
                         });
                     }
-                } else {
-                    rules.push(Rule {
-                        source: vec![*label_b],
-                        symbol: label_a,
-                        probability: 0.5 - repetition_chance,
-                    });
+
+                    duration_mapping.insert((label_a, *label_b), dur_ev.clone());
+                    duration_mapping.insert((*label_b, label_a), dur_ev.clone());
+
+                    label_a = *label_b;
+
+                    cur_prob = 0.5;
                 }
-
-                duration_mapping.insert((label_a, *label_b), dur_ev.clone());
-                duration_mapping.insert((*label_b, label_a), dur_ev.clone());
-
-                label_a = *label_b;
-
-                cur_prob = 0.5;
             }
         }
-    }
 
-    let mut pfa = Pfa::<char>::infer_from_rules(&mut rules, true);
+        let mut tmp = Pfa::<char>::infer_from_rules(&mut rules, true);
 
-    // this seems to be heavy ...
-    // what's so heavy here ??
-    if randomize_chance > 0.0 {
-        //println!("add rnd chance");
-        pfa.randomize_edges(randomize_chance, randomize_chance);
-        pfa.rebalance();
-    }
+        // this seems to be heavy ...
+        // what's so heavy here ??
+        if randomize_chance > 0.0 {
+            //println!("add rnd chance");
+            tmp.randomize_edges(randomize_chance, randomize_chance);
+            tmp.rebalance();
+        }
+        tmp
+    } else {
+        Pfa::<char>::new()
+    };
 
     let mut id_tags = BTreeSet::new();
     id_tags.insert(name.clone());
@@ -348,6 +361,6 @@ pub fn flower(
         },
         processors: Vec::new(),
         time_mods: Vec::new(),
-        keep_root: false,
+        keep_root,
     })))
 }

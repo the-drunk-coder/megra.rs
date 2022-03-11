@@ -65,18 +65,18 @@ pub fn nuc(
                     }
                     _ => {}
                 },
-                "reset" => {
+                "keep" => {
                     if let Some(EvaluatedExpr::Boolean(b)) = tail_drain.next() {
-                        keep_root = !b;
+                        keep_root = b;
                     }
                 }
-
                 _ => println!("{}", k),
             },
             _ => println! {"ignored"},
         }
     }
 
+    // only re-generate if necessary ...
     let pfa = if !keep_root {
         event_mapping.insert('a', ev_vec);
 

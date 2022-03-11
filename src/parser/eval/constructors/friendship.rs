@@ -54,6 +54,7 @@ pub fn friendship(
         unreachable!()
     };
 
+    let mut keep_root = false;
     let mut repetition_chance: f32 = 0.0;
     let mut randomize_chance: f32 = 0.0;
     let mut max_repetitions: f32 = 0.0;
@@ -177,150 +178,161 @@ pub fn friendship(
                     collect_final = true;
                     continue;
                 }
+                "keep" => {
+                    if let Some(EvaluatedExpr::Boolean(b)) = tail_drain.next() {
+                        keep_root = b;
+                    }
+                }
                 _ => println!("{}", k),
             }
         }
     }
 
-    // first of all check if we have enough friends events
-    let needed_friends = friends_labels.len() % 2;
-    if needed_friends != 0 {
-        let last_found = last_char;
-        for _ in 0..needed_friends {
-            let next_char: char = std::char::from_u32(last_char as u32 + 1).unwrap();
-            last_char = next_char;
-            friends_labels.push(next_char);
-            let repetition = final_mapping.get(&last_found).unwrap().clone();
-            final_mapping.insert(next_char, repetition);
-        }
-    }
-
-    // convert repetition chance
-    if repetition_chance > 0.0 {
-        repetition_chance /= 100.0;
-    }
-
     let mut duration_mapping = HashMap::new();
-    let center_exit_prob = (1.0 - repetition_chance) / (friends_labels.len() as f32 / 2.0);
-    let norep_center_exit_prob = 1.0 / (friends_labels.len() as f32 / 2.0);
 
-    // rules to collect ...
-    let mut rules = Vec::new();
-    let mut dur_ev = Event::with_name("transition".to_string());
-    dur_ev
-        .params
-        .insert(SynthParameter::Duration, Box::new(dur.clone()));
-
-    let mut friends_iter = friends_labels.iter();
-
-    // center repetition
-    if repetition_chance > 0.0 {
-        rules.push(Rule {
-            source: vec![center_label],
-            symbol: center_label,
-            probability: repetition_chance,
-        });
-    }
-
-    for _ in 0..(friends_labels.len() / 2) {
-        if let Some(label_a) = friends_iter.next() {
-            if let Some(label_b) = friends_iter.next() {
-                rules.push(Rule {
-                    source: vec![center_label],
-                    symbol: *label_a,
-                    probability: center_exit_prob,
-                });
-
-                // center max repetition
-                if repetition_chance > 0.0 && max_repetitions >= 2.0 {
-                    let max_rep_source = vec![center_label; max_repetitions as usize];
-
-                    // max repetition rule
-                    rules.push(Rule {
-                        source: max_rep_source,
-                        symbol: *label_a,
-                        probability: norep_center_exit_prob,
-                    });
-                }
-
-                //println!("push rule {} -> {}", center_label, label_a);
-
-                rules.push(Rule {
-                    source: vec![*label_a],
-                    symbol: *label_b,
-                    probability: 1.0 - repetition_chance,
-                });
-
-                if repetition_chance > 0.0 {
-                    rules.push(Rule {
-                        source: vec![*label_a],
-                        symbol: *label_a,
-                        probability: repetition_chance,
-                    });
-
-                    if max_repetitions >= 2.0 {
-                        let mut max_rep_source = Vec::new();
-                        for _ in 0..max_repetitions as usize {
-                            max_rep_source.push(*label_a);
-                        }
-
-                        // max repetition rule
-                        rules.push(Rule {
-                            source: max_rep_source,
-                            symbol: *label_b,
-                            probability: 1.0,
-                        });
-                    }
-                }
-
-                //println!("push rule {} -> {}", label_a, label_b);
-
-                rules.push(Rule {
-                    source: vec![*label_b],
-                    symbol: center_label,
-                    probability: 1.0 - repetition_chance,
-                });
-
-                if repetition_chance > 0.0 {
-                    rules.push(Rule {
-                        source: vec![*label_b],
-                        symbol: *label_b,
-                        probability: repetition_chance,
-                    });
-
-                    if max_repetitions >= 2.0 {
-                        let mut max_rep_source = Vec::new();
-                        for _ in 0..max_repetitions as usize {
-                            max_rep_source.push(*label_b);
-                        }
-
-                        // max repetition rule
-                        rules.push(Rule {
-                            source: max_rep_source,
-                            symbol: center_label,
-                            probability: 1.0,
-                        });
-                    }
-                }
-
-                //println!("push rule {} -> {}", label_b, center_label);
-
-                duration_mapping.insert((center_label, *label_a), dur_ev.clone());
-                duration_mapping.insert((*label_a, *label_b), dur_ev.clone());
-                duration_mapping.insert((*label_b, center_label), dur_ev.clone());
+    let pfa = if !keep_root {
+        // first of all check if we have enough friends events
+        let needed_friends = friends_labels.len() % 2;
+        if needed_friends != 0 {
+            let last_found = last_char;
+            for _ in 0..needed_friends {
+                let next_char: char = std::char::from_u32(last_char as u32 + 1).unwrap();
+                last_char = next_char;
+                friends_labels.push(next_char);
+                let repetition = final_mapping.get(&last_found).unwrap().clone();
+                final_mapping.insert(next_char, repetition);
             }
         }
-    }
 
-    let mut pfa = Pfa::<char>::infer_from_rules(&mut rules, true);
+        // convert repetition chance
+        if repetition_chance > 0.0 {
+            repetition_chance /= 100.0;
+        }
 
-    // this seems to be heavy ...
-    // what's so heavy here ??
-    if randomize_chance > 0.0 {
-        //println!("add rnd chance");
-        pfa.randomize_edges(randomize_chance, randomize_chance);
-        pfa.rebalance();
-    }
+        let center_exit_prob = (1.0 - repetition_chance) / (friends_labels.len() as f32 / 2.0);
+        let norep_center_exit_prob = 1.0 / (friends_labels.len() as f32 / 2.0);
+
+        // rules to collect ...
+        let mut rules = Vec::new();
+        let mut dur_ev = Event::with_name("transition".to_string());
+        dur_ev
+            .params
+            .insert(SynthParameter::Duration, Box::new(dur.clone()));
+
+        let mut friends_iter = friends_labels.iter();
+
+        // center repetition
+        if repetition_chance > 0.0 {
+            rules.push(Rule {
+                source: vec![center_label],
+                symbol: center_label,
+                probability: repetition_chance,
+            });
+        }
+
+        for _ in 0..(friends_labels.len() / 2) {
+            if let Some(label_a) = friends_iter.next() {
+                if let Some(label_b) = friends_iter.next() {
+                    rules.push(Rule {
+                        source: vec![center_label],
+                        symbol: *label_a,
+                        probability: center_exit_prob,
+                    });
+
+                    // center max repetition
+                    if repetition_chance > 0.0 && max_repetitions >= 2.0 {
+                        let max_rep_source = vec![center_label; max_repetitions as usize];
+
+                        // max repetition rule
+                        rules.push(Rule {
+                            source: max_rep_source,
+                            symbol: *label_a,
+                            probability: norep_center_exit_prob,
+                        });
+                    }
+
+                    //println!("push rule {} -> {}", center_label, label_a);
+
+                    rules.push(Rule {
+                        source: vec![*label_a],
+                        symbol: *label_b,
+                        probability: 1.0 - repetition_chance,
+                    });
+
+                    if repetition_chance > 0.0 {
+                        rules.push(Rule {
+                            source: vec![*label_a],
+                            symbol: *label_a,
+                            probability: repetition_chance,
+                        });
+
+                        if max_repetitions >= 2.0 {
+                            let mut max_rep_source = Vec::new();
+                            for _ in 0..max_repetitions as usize {
+                                max_rep_source.push(*label_a);
+                            }
+
+                            // max repetition rule
+                            rules.push(Rule {
+                                source: max_rep_source,
+                                symbol: *label_b,
+                                probability: 1.0,
+                            });
+                        }
+                    }
+
+                    //println!("push rule {} -> {}", label_a, label_b);
+
+                    rules.push(Rule {
+                        source: vec![*label_b],
+                        symbol: center_label,
+                        probability: 1.0 - repetition_chance,
+                    });
+
+                    if repetition_chance > 0.0 {
+                        rules.push(Rule {
+                            source: vec![*label_b],
+                            symbol: *label_b,
+                            probability: repetition_chance,
+                        });
+
+                        if max_repetitions >= 2.0 {
+                            let mut max_rep_source = Vec::new();
+                            for _ in 0..max_repetitions as usize {
+                                max_rep_source.push(*label_b);
+                            }
+
+                            // max repetition rule
+                            rules.push(Rule {
+                                source: max_rep_source,
+                                symbol: center_label,
+                                probability: 1.0,
+                            });
+                        }
+                    }
+
+                    //println!("push rule {} -> {}", label_b, center_label);
+
+                    duration_mapping.insert((center_label, *label_a), dur_ev.clone());
+                    duration_mapping.insert((*label_a, *label_b), dur_ev.clone());
+                    duration_mapping.insert((*label_b, center_label), dur_ev.clone());
+                }
+            }
+        }
+
+        let mut tmp = Pfa::<char>::infer_from_rules(&mut rules, true);
+
+        // this seems to be heavy ...
+        // what's so heavy here ??
+        if randomize_chance > 0.0 {
+            //println!("add rnd chance");
+            tmp.randomize_edges(randomize_chance, randomize_chance);
+            tmp.rebalance();
+        }
+        tmp
+    } else {
+        Pfa::<char>::new()
+    };
 
     let mut id_tags = BTreeSet::new();
     id_tags.insert(name.clone());
@@ -340,6 +352,6 @@ pub fn friendship(
         },
         processors: Vec::new(),
         time_mods: Vec::new(),
-        keep_root: false,
+        keep_root,
     })))
 }

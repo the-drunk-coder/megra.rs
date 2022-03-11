@@ -44,6 +44,7 @@ pub fn stages(
         unreachable!()
     };
 
+    let mut keep_root = false;
     let mut randomize_chance: f32 = 0.0;
     let mut pnext: f32 = 0.0;
     let mut pprev: f32 = 0.0;
@@ -81,6 +82,11 @@ pub fn stages(
                         randomize_chance = n;
                     }
                 }
+                "keep" => {
+                    if let Some(EvaluatedExpr::Boolean(b)) = tail_drain.next() {
+                        keep_root = b;
+                    }
+                }
                 _ => println!("{}", k),
             },
             EvaluatedExpr::BuiltIn(BuiltIn::SoundEvent(e)) => {
@@ -100,148 +106,153 @@ pub fn stages(
     /////////////////////////////////
 
     let mut event_mapping = HashMap::<char, Vec<SourceEvent>>::new();
-    let mut last_char: char = '1'; // label chars
-    let mut labels = Vec::new();
-    for ev in collected_evs.drain(..) {
-        event_mapping.insert(last_char, vec![ev]);
-        labels.push(vec![last_char]);
-        last_char = std::char::from_u32(last_char as u32 + 1).unwrap();
-    }
-
-    // rules to collect ...
-    let mut rules = Vec::new();
-    let mut dur_ev = Event::with_name("transition".to_string());
-    dur_ev
-        .params
-        .insert(SynthParameter::Duration, Box::new(dur.clone()));
-
     let mut duration_mapping = HashMap::new();
 
-    if labels.len() == 1 {
-        rules.push(Rule {
-            source: labels[0].clone(),
-            symbol: labels[0][0],
-            probability: 1.0,
-        });
-        duration_mapping.insert((labels[0][0], labels[0][0]), dur_ev.clone());
-    } else if labels.len() == 2 {
-        rules.push(Rule {
-            source: labels[0].clone(),
-            symbol: labels[0][0],
-            probability: 1.0 - pnext,
-        });
-        rules.push(Rule {
-            source: labels[1].clone(),
-            symbol: labels[1][0],
-            probability: 1.0 - pnext,
-        });
-        rules.push(Rule {
-            source: labels[0].clone(),
-            symbol: labels[1][0],
-            probability: pnext,
-        });
-        rules.push(Rule {
-            source: labels[1].clone(),
-            symbol: labels[0][0],
-            probability: pnext,
-        });
-        duration_mapping.insert((labels[0][0], labels[0][0]), dur_ev.clone());
-        duration_mapping.insert((labels[0][0], labels[1][0]), dur_ev.clone());
-        duration_mapping.insert((labels[1][0], labels[0][0]), dur_ev.clone());
-        duration_mapping.insert((labels[1][0], labels[1][0]), dur_ev.clone());
-    } else {
-        for (i, _) in labels.iter().enumerate() {
-            if i == 0 {
-                rules.push(Rule {
-                    source: labels[i].clone(),
-                    symbol: labels[i][0],
-                    probability: if cyclical {
-                        1.0 - pnext - pprev
-                    } else {
-                        1.0 - pnext
-                    },
-                });
+    let pfa = if !keep_root {
+        let mut last_char: char = '1'; // label chars
+        let mut labels = Vec::new();
+        for ev in collected_evs.drain(..) {
+            event_mapping.insert(last_char, vec![ev]);
+            labels.push(vec![last_char]);
+            last_char = std::char::from_u32(last_char as u32 + 1).unwrap();
+        }
 
-                rules.push(Rule {
-                    source: labels[i].clone(),
-                    symbol: labels[i + 1][0],
-                    probability: pnext,
-                });
+        // rules to collect ...
+        let mut rules = Vec::new();
+        let mut dur_ev = Event::with_name("transition".to_string());
+        dur_ev
+            .params
+            .insert(SynthParameter::Duration, Box::new(dur.clone()));
 
-                if cyclical {
+        if labels.len() == 1 {
+            rules.push(Rule {
+                source: labels[0].clone(),
+                symbol: labels[0][0],
+                probability: 1.0,
+            });
+            duration_mapping.insert((labels[0][0], labels[0][0]), dur_ev.clone());
+        } else if labels.len() == 2 {
+            rules.push(Rule {
+                source: labels[0].clone(),
+                symbol: labels[0][0],
+                probability: 1.0 - pnext,
+            });
+            rules.push(Rule {
+                source: labels[1].clone(),
+                symbol: labels[1][0],
+                probability: 1.0 - pnext,
+            });
+            rules.push(Rule {
+                source: labels[0].clone(),
+                symbol: labels[1][0],
+                probability: pnext,
+            });
+            rules.push(Rule {
+                source: labels[1].clone(),
+                symbol: labels[0][0],
+                probability: pnext,
+            });
+            duration_mapping.insert((labels[0][0], labels[0][0]), dur_ev.clone());
+            duration_mapping.insert((labels[0][0], labels[1][0]), dur_ev.clone());
+            duration_mapping.insert((labels[1][0], labels[0][0]), dur_ev.clone());
+            duration_mapping.insert((labels[1][0], labels[1][0]), dur_ev.clone());
+        } else {
+            for (i, _) in labels.iter().enumerate() {
+                if i == 0 {
                     rules.push(Rule {
                         source: labels[i].clone(),
-                        symbol: labels.last().unwrap()[0], // if labels are empty this shouldn't be reached
+                        symbol: labels[i][0],
+                        probability: if cyclical {
+                            1.0 - pnext - pprev
+                        } else {
+                            1.0 - pnext
+                        },
+                    });
+
+                    rules.push(Rule {
+                        source: labels[i].clone(),
+                        symbol: labels[i + 1][0],
                         probability: pnext,
                     });
 
-                    duration_mapping
-                        .insert((labels[i][0], labels.last().unwrap()[0]), dur_ev.clone());
-                }
+                    if cyclical {
+                        rules.push(Rule {
+                            source: labels[i].clone(),
+                            symbol: labels.last().unwrap()[0], // if labels are empty this shouldn't be reached
+                            probability: pnext,
+                        });
 
-                duration_mapping.insert((labels[i][0], labels[i][0]), dur_ev.clone());
-                duration_mapping.insert((labels[i][0], labels[i + 1][0]), dur_ev.clone());
-            } else if i == labels.len() - 1 {
-                rules.push(Rule {
-                    source: labels[i].clone(),
-                    symbol: labels[i][0],
-                    probability: if cyclical {
-                        1.0 - pnext - pprev
-                    } else {
-                        1.0 - pprev
-                    },
-                });
+                        duration_mapping
+                            .insert((labels[i][0], labels.last().unwrap()[0]), dur_ev.clone());
+                    }
 
-                rules.push(Rule {
-                    source: labels[i].clone(),
-                    symbol: labels[i - 1][0],
-                    probability: pprev,
-                });
-
-                if cyclical {
+                    duration_mapping.insert((labels[i][0], labels[i][0]), dur_ev.clone());
+                    duration_mapping.insert((labels[i][0], labels[i + 1][0]), dur_ev.clone());
+                } else if i == labels.len() - 1 {
                     rules.push(Rule {
                         source: labels[i].clone(),
-                        symbol: labels.first().unwrap()[0], // if labels are empty this shouldn't be reached
+                        symbol: labels[i][0],
+                        probability: if cyclical {
+                            1.0 - pnext - pprev
+                        } else {
+                            1.0 - pprev
+                        },
+                    });
+
+                    rules.push(Rule {
+                        source: labels[i].clone(),
+                        symbol: labels[i - 1][0],
+                        probability: pprev,
+                    });
+
+                    if cyclical {
+                        rules.push(Rule {
+                            source: labels[i].clone(),
+                            symbol: labels.first().unwrap()[0], // if labels are empty this shouldn't be reached
+                            probability: pnext,
+                        });
+                        duration_mapping
+                            .insert((labels[i][0], labels.first().unwrap()[0]), dur_ev.clone());
+                    }
+
+                    duration_mapping.insert((labels[i][0], labels[i][0]), dur_ev.clone());
+                    duration_mapping.insert((labels[i][0], labels[i - 1][0]), dur_ev.clone());
+                } else {
+                    rules.push(Rule {
+                        source: labels[i].clone(),
+                        symbol: labels[i][0],
+                        probability: 1.0 - pnext - pprev,
+                    });
+                    rules.push(Rule {
+                        source: labels[i].clone(),
+                        symbol: labels[i + 1][0],
                         probability: pnext,
                     });
-                    duration_mapping
-                        .insert((labels[i][0], labels.first().unwrap()[0]), dur_ev.clone());
+                    rules.push(Rule {
+                        source: labels[i].clone(),
+                        symbol: labels[i - 1][0],
+                        probability: pprev,
+                    });
+                    duration_mapping.insert((labels[i][0], labels[i][0]), dur_ev.clone());
+                    duration_mapping.insert((labels[i][0], labels[i + 1][0]), dur_ev.clone());
+                    duration_mapping.insert((labels[i][0], labels[i - 1][0]), dur_ev.clone());
                 }
-
-                duration_mapping.insert((labels[i][0], labels[i][0]), dur_ev.clone());
-                duration_mapping.insert((labels[i][0], labels[i - 1][0]), dur_ev.clone());
-            } else {
-                rules.push(Rule {
-                    source: labels[i].clone(),
-                    symbol: labels[i][0],
-                    probability: 1.0 - pnext - pprev,
-                });
-                rules.push(Rule {
-                    source: labels[i].clone(),
-                    symbol: labels[i + 1][0],
-                    probability: pnext,
-                });
-                rules.push(Rule {
-                    source: labels[i].clone(),
-                    symbol: labels[i - 1][0],
-                    probability: pprev,
-                });
-                duration_mapping.insert((labels[i][0], labels[i][0]), dur_ev.clone());
-                duration_mapping.insert((labels[i][0], labels[i + 1][0]), dur_ev.clone());
-                duration_mapping.insert((labels[i][0], labels[i - 1][0]), dur_ev.clone());
             }
         }
-    }
 
-    let mut pfa = Pfa::<char>::infer_from_rules(&mut rules, true);
+        let mut tmp = Pfa::<char>::infer_from_rules(&mut rules, true);
 
-    // this seems to be heavy ...
-    // what's so heavy here ??
-    if randomize_chance > 0.0 {
-        //println!("add rnd chance");
-        pfa.randomize_edges(randomize_chance, randomize_chance);
-        pfa.rebalance();
-    }
+        // this seems to be heavy ...
+        // what's so heavy here ??
+        if randomize_chance > 0.0 {
+            //println!("add rnd chance");
+            tmp.randomize_edges(randomize_chance, randomize_chance);
+            tmp.rebalance();
+        }
+        tmp
+    } else {
+        Pfa::<char>::new()
+    };
 
     let mut id_tags = BTreeSet::new();
     id_tags.insert(name.clone());
@@ -261,6 +272,6 @@ pub fn stages(
         },
         processors: Vec::new(),
         time_mods: Vec::new(),
-        keep_root: false,
+        keep_root,
     })))
 }

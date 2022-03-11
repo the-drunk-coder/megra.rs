@@ -613,7 +613,6 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                     print!("{} ", tag);
                 }
                 println!("\'");
-                let keep_root = gen.keep_root;
                 // keep the scheduler running, just replace the data ...
                 let mut sched_data = data.lock();
                 *sched_data = SchedulerData::<BUFSIZE, NCHAN>::from_previous(
@@ -625,7 +624,6 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                     parts_store,
                     block_tags,
                     solo_tags,
-                    keep_root,
                 );
                 println!("replaced sched data");
             }
@@ -682,7 +680,6 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                     print!("{} ", tag);
                 }
                 println!("\'");
-                let keep_root = gen.keep_root;
                 // keep the scheduler running, just replace the data ...
                 let mut sched_data = data.lock();
                 *sched_data = SchedulerData::<BUFSIZE, NCHAN>::from_previous(
@@ -694,7 +691,6 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                     parts_store,
                     block_tags,
                     solo_tags,
-                    keep_root,
                 );
             }
         }

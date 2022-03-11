@@ -54,10 +54,9 @@ impl<const BUFSIZE: usize, const NCHAN: usize> SchedulerData<BUFSIZE, NCHAN> {
         parts_store: &sync::Arc<Mutex<PartsStore>>,
         block_tags: &BTreeSet<String>,
         solo_tags: &BTreeSet<String>,
-        keep_root: bool,
     ) -> Self {
         let shift_diff = shift - old.shift;
-        if !keep_root {
+        if data.keep_root {
             data.transfer_state(&old.generator);
         } else {
             data.root_generator = old.generator.root_generator.clone();
