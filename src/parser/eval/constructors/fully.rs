@@ -32,7 +32,6 @@ pub fn fully(
     };
 
     let mut collect_labeled = false;
-    let mut collect_final = false;
 
     let mut collected_evs = Vec::new();
     let mut collected_mapping = HashMap::<char, Vec<SourceEvent>>::new();
@@ -86,34 +85,30 @@ pub fn fully(
             }
         }
 
-        if collect_final {
-            let next_char: char = std::char::from_u32(last_char as u32 + 1).unwrap();
-            last_char = next_char;
-            labels.push(next_char);
-            let mut final_vec = Vec::new();
-
-            match c {
-                EvaluatedExpr::Symbol(ref s) => {
-                    let label = s.chars().next().unwrap();
-                    if collected_mapping.contains_key(&label) {
-                        final_vec.append(&mut collected_mapping.get(&label).unwrap().clone());
-                    }
+        match c {
+            EvaluatedExpr::Symbol(ref s) => {
+                let mut final_vec = Vec::new();
+                let label = s.chars().next().unwrap();
+                if collected_mapping.contains_key(&label) {
+                    final_vec.append(&mut collected_mapping.get(&label).unwrap().clone());
                 }
-                EvaluatedExpr::BuiltIn(BuiltIn::SoundEvent(e)) => {
-                    final_vec.push(SourceEvent::Sound(e));
-                }
-                EvaluatedExpr::BuiltIn(BuiltIn::ControlEvent(e)) => {
-                    final_vec.push(SourceEvent::Control(e));
-                }
-                _ => {}
+                final_mapping.insert(label, final_vec);
             }
-
-            final_mapping.insert(next_char, final_vec);
-            continue;
-        }
-
-        if let EvaluatedExpr::Keyword(k) = c {
-            match k.as_str() {
+            EvaluatedExpr::BuiltIn(BuiltIn::SoundEvent(e)) => {
+                let next_char: char = std::char::from_u32(last_char as u32 + 1).unwrap();
+                last_char = next_char;
+                labels.push(next_char);
+                let final_vec = vec![SourceEvent::Sound(e)];
+                final_mapping.insert(next_char, final_vec);
+            }
+            EvaluatedExpr::BuiltIn(BuiltIn::ControlEvent(e)) => {
+                let next_char: char = std::char::from_u32(last_char as u32 + 1).unwrap();
+                last_char = next_char;
+                labels.push(next_char);
+                let final_vec = vec![SourceEvent::Control(e)];
+                final_mapping.insert(next_char, final_vec);
+            }
+            EvaluatedExpr::Keyword(k) => match k.as_str() {
                 "dur" => match tail_drain.next() {
                     Some(EvaluatedExpr::Float(n)) => {
                         dur = Parameter::with_value(n);
@@ -127,17 +122,14 @@ pub fn fully(
                     collect_labeled = true;
                     continue;
                 }
-                "rest" => {
-                    collect_final = true;
-                    continue;
-                }
                 "keep" => {
                     if let Some(EvaluatedExpr::Boolean(b)) = tail_drain.next() {
                         keep_root = b;
                     }
                 }
                 _ => println!("{}", k),
-            }
+            },
+            _ => {}
         }
     }
 
