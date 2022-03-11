@@ -193,6 +193,7 @@ pub fn load_part(parts_store: &sync::Arc<Mutex<PartsStore>>, name: String, part:
 /// start a recording
 pub fn start_recording<const BUFSIZE: usize, const NCHAN: usize>(
     session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
+    prefix: Option<String>,
 ) {
     let maybe_rec_ctrl = session.lock().rec_control.take();
     if let Some(mut rec_ctrl) = maybe_rec_ctrl {
@@ -203,10 +204,19 @@ pub fn start_recording<const BUFSIZE: usize, const NCHAN: usize>(
             if let Some(catch) = maybe_catch {
                 // place in recordings folder
                 if let Some(proj_dirs) = ProjectDirs::from("de", "parkellipsen", "megra") {
-                    let id = format!(
-                        "megra_recording_{}.wav",
-                        Local::now().format("%Y%m%d_%H%M_%S")
-                    );
+                    let id = if let Some(p) = prefix {
+                        format!(
+                            "{}_{}.wav",
+			    p,
+                            Local::now().format("%Y%m%d_%H%M_%S")
+                        )
+                    } else {
+                        format!(
+                            "megra_recording_{}.wav",
+                            Local::now().format("%Y%m%d_%H%M_%S")
+                        )
+                    };
+
                     let recordings_path = proj_dirs.config_dir().join("recordings");
 
                     let file_path = if recordings_path.exists() {

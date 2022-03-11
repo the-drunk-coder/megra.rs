@@ -91,8 +91,8 @@ pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
                         println!("visualizer already connected !");
                     }
                 }
-                Command::StartRecording => {
-                    commands::start_recording(session);
+                Command::StartRecording(prefix) => {
+                    commands::start_recording(session, prefix);
                 }
                 Command::StopRecording => {
                     commands::stop_recording(session);

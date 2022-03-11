@@ -460,13 +460,20 @@ pub fn connect_visualizer(
 
 pub fn start_recording(
     _: &FunctionMap,
-    _: &mut Vec<EvaluatedExpr>,
+    tail: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<GlobalParameters>,
     _: &sync::Arc<Mutex<SampleSet>>,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
+    let mut tail_drain = tail.drain(..).skip(1);
+    let prefix = if let Some(EvaluatedExpr::String(s)) = tail_drain.next() {
+        Some(s)
+    } else {
+        None
+    };
+
     Some(EvaluatedExpr::BuiltIn(BuiltIn::Command(
-        Command::StartRecording,
+        Command::StartRecording(prefix),
     )))
 }
 
