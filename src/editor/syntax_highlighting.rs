@@ -191,5 +191,7 @@ fn is_function(word: &str) -> bool {
             | "exh"
             | "inexh"
             | "stages"
+            | "rec"
+            | "stop-rec"
     )
 }

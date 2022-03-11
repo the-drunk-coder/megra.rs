@@ -205,11 +205,7 @@ pub fn start_recording<const BUFSIZE: usize, const NCHAN: usize>(
                 // place in recordings folder
                 if let Some(proj_dirs) = ProjectDirs::from("de", "parkellipsen", "megra") {
                     let id = if let Some(p) = prefix {
-                        format!(
-                            "{}_{}.wav",
-			    p,
-                            Local::now().format("%Y%m%d_%H%M_%S")
-                        )
+                        format!("{}_{}.wav", p, Local::now().format("%Y%m%d_%H%M_%S"))
                     } else {
                         format!(
                             "megra_recording_{}.wav",
