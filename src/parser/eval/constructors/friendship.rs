@@ -340,5 +340,6 @@ pub fn friendship(
         },
         processors: Vec::new(),
         time_mods: Vec::new(),
+        keep_root: false,
     })))
 }

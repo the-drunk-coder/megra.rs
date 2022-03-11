@@ -141,5 +141,6 @@ pub fn a_loop(
         },
         processors: Vec::new(),
         time_mods: Vec::new(),
+        keep_root: false,
     })))
 }

@@ -318,5 +318,6 @@ pub fn cyc(
         },
         processors: Vec::new(),
         time_mods: Vec::new(),
+        keep_root: false,
     })))
 }

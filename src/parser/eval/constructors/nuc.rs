@@ -47,6 +47,7 @@ pub fn nuc(
     };
 
     let mut ev_vec = Vec::new();
+    let mut keep_root = false;
 
     while let Some(c) = tail_drain.next() {
         match c {
@@ -64,27 +65,38 @@ pub fn nuc(
                     }
                     _ => {}
                 },
+                "reset" => {
+                    if let Some(EvaluatedExpr::Boolean(b)) = tail_drain.next() {
+                        keep_root = !b;
+                    }
+                }
+
                 _ => println!("{}", k),
             },
             _ => println! {"ignored"},
         }
     }
 
-    event_mapping.insert('a', ev_vec);
+    let pfa = if !keep_root {
+        event_mapping.insert('a', ev_vec);
 
-    let mut dur_ev = Event::with_name("transition".to_string());
-    dur_ev
-        .params
-        .insert(SynthParameter::Duration, Box::new(dur.clone()));
-    duration_mapping.insert(('a', 'a'), dur_ev);
-    // one rule to rule them all
-    rules.push(Rule {
-        source: vec!['a'],
-        symbol: 'a',
-        probability: 1.0,
-    });
+        let mut dur_ev = Event::with_name("transition".to_string());
+        dur_ev
+            .params
+            .insert(SynthParameter::Duration, Box::new(dur.clone()));
+        duration_mapping.insert(('a', 'a'), dur_ev);
+        // one rule to rule them all
+        rules.push(Rule {
+            source: vec!['a'],
+            symbol: 'a',
+            probability: 1.0,
+        });
 
-    let pfa = Pfa::<char>::infer_from_rules(&mut rules, false);
+        Pfa::<char>::infer_from_rules(&mut rules, false)
+    } else {
+        Pfa::<char>::new()
+    };
+
     let mut id_tags = BTreeSet::new();
     id_tags.insert(name.clone());
 
@@ -103,6 +115,7 @@ pub fn nuc(
         },
         processors: Vec::new(),
         time_mods: Vec::new(),
+        keep_root,
     })))
 }
 

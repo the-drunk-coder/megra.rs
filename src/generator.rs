@@ -36,6 +36,7 @@ pub struct Generator {
     pub root_generator: MarkovSequenceGenerator,
     pub processors: Vec<Box<dyn GeneratorProcessor + Send>>,
     pub time_mods: Vec<TimeMod>,
+    pub keep_root: bool,
 }
 
 impl Generator {

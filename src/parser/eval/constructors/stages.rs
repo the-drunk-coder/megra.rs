@@ -261,5 +261,6 @@ pub fn stages(
         },
         processors: Vec::new(),
         time_mods: Vec::new(),
+        keep_root: false,
     })))
 }
