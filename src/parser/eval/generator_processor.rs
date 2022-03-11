@@ -84,7 +84,6 @@ fn eval_generator_processor(
     Some(match last {
         Some(EvaluatedExpr::BuiltIn(BuiltIn::Generator(mut g))) => {
             g.processors.push(collector(tail));
-
             EvaluatedExpr::BuiltIn(BuiltIn::Generator(g))
         }
         Some(EvaluatedExpr::Symbol(s)) => {
@@ -138,6 +137,10 @@ fn eval_generator_processor(
                 GeneratorProcessorOrModifier::GeneratorModifierFunction(gmf) => {
                     // if it's a generator modifier function, such as shrink or skip,
                     // push it back as it belongs to the overarching processor
+                    // meaning, for example, if we have an "every" processor,
+                    // this should be applied by the every processor.
+                    // it does lead to some not-so-nice ambiguities but i guess that's
+                    // what we have to deal with ... can't be decided really
                     tail.push(EvaluatedExpr::BuiltIn(
                         BuiltIn::GeneratorProcessorOrModifier(
                             GeneratorProcessorOrModifier::GeneratorModifierFunction(gmf),
