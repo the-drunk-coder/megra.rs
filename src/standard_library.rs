@@ -227,6 +227,7 @@ pub fn define_standard_library() -> FunctionMap {
     standard_library.fmap.insert("rnd".to_string(), eval::generator_modifier::eval_rnd);
     standard_library.fmap.insert("rep".to_string(), eval::generator_modifier::eval_rep);
     standard_library.fmap.insert("reverse".to_string(), eval::generator_modifier::eval_reverse);
+    standard_library.fmap.insert("keep".to_string(), eval::generator_modifier::eval_keep);
         
     standard_library
 }

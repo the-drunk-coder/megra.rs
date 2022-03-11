@@ -11,6 +11,7 @@ use crate::{
 pub type GenModFun = fn(
     &mut MarkovSequenceGenerator,
     &mut Vec<TimeMod>,
+    &mut bool,
     &[ConfigParameter],
     &HashMap<String, ConfigParameter>,
 );
@@ -18,6 +19,7 @@ pub type GenModFun = fn(
 pub fn haste(
     _: &mut MarkovSequenceGenerator,
     time_mods: &mut Vec<TimeMod>,
+    _: &mut bool,
     pos_args: &[ConfigParameter],
     _: &HashMap<String, ConfigParameter>,
 ) {
@@ -32,6 +34,7 @@ pub fn haste(
 pub fn reverse(
     gen: &mut MarkovSequenceGenerator,
     _: &mut Vec<TimeMod>,
+    _: &mut bool,
     _: &[ConfigParameter],
     _: &HashMap<String, ConfigParameter>,
 ) {
@@ -41,6 +44,7 @@ pub fn reverse(
 pub fn relax(
     _: &mut MarkovSequenceGenerator,
     time_mods: &mut Vec<TimeMod>,
+    _: &mut bool,
     pos_args: &[ConfigParameter],
     _: &HashMap<String, ConfigParameter>,
 ) {
@@ -54,6 +58,7 @@ pub fn relax(
 pub fn grow(
     gen: &mut MarkovSequenceGenerator,
     _: &mut Vec<TimeMod>,
+    _: &mut bool,
     pos_args: &[ConfigParameter],
     named_args: &HashMap<String, ConfigParameter>,
 ) {
@@ -72,6 +77,7 @@ pub fn grow(
 pub fn shrink(
     gen: &mut MarkovSequenceGenerator,
     _: &mut Vec<TimeMod>,
+    _: &mut bool,
     _: &[ConfigParameter],
     _: &HashMap<String, ConfigParameter>,
 ) {
@@ -84,6 +90,7 @@ pub fn shrink(
 pub fn shake(
     gen: &mut MarkovSequenceGenerator,
     _: &mut Vec<TimeMod>,
+    _: &mut bool,
     pos_args: &[ConfigParameter],
     _: &HashMap<String, ConfigParameter>,
 ) {
@@ -95,6 +102,7 @@ pub fn shake(
 pub fn sharpen(
     gen: &mut MarkovSequenceGenerator,
     _: &mut Vec<TimeMod>,
+    _: &mut bool,
     pos_args: &[ConfigParameter],
     _: &HashMap<String, ConfigParameter>,
 ) {
@@ -106,6 +114,7 @@ pub fn sharpen(
 pub fn blur(
     gen: &mut MarkovSequenceGenerator,
     _: &mut Vec<TimeMod>,
+    _: &mut bool,
     pos_args: &[ConfigParameter],
     _: &HashMap<String, ConfigParameter>,
 ) {
@@ -117,6 +126,7 @@ pub fn blur(
 pub fn skip(
     gen: &mut MarkovSequenceGenerator,
     _: &mut Vec<TimeMod>,
+    _: &mut bool,
     pos_args: &[ConfigParameter],
     _: &HashMap<String, ConfigParameter>,
 ) {
@@ -128,6 +138,7 @@ pub fn skip(
 pub fn rewind(
     gen: &mut MarkovSequenceGenerator,
     _: &mut Vec<TimeMod>,
+    _: &mut bool,
     pos_args: &[ConfigParameter],
     _: &HashMap<String, ConfigParameter>,
 ) {
@@ -139,6 +150,7 @@ pub fn rewind(
 pub fn solidify(
     gen: &mut MarkovSequenceGenerator,
     _: &mut Vec<TimeMod>,
+    _: &mut bool,
     pos_args: &[ConfigParameter],
     _: &HashMap<String, ConfigParameter>,
 ) {
@@ -150,6 +162,7 @@ pub fn solidify(
 pub fn rnd(
     gen: &mut MarkovSequenceGenerator,
     _: &mut Vec<TimeMod>,
+    _: &mut bool,
     pos_args: &[ConfigParameter],
     _: &HashMap<String, ConfigParameter>,
 ) {
@@ -158,9 +171,20 @@ pub fn rnd(
     }
 }
 
+pub fn keep(
+    _: &mut MarkovSequenceGenerator,
+    _: &mut Vec<TimeMod>,
+    keep_root: &mut bool,
+    _: &[ConfigParameter],
+    _: &HashMap<String, ConfigParameter>,
+) {
+    *keep_root = true;
+}
+
 pub fn rep(
     gen: &mut MarkovSequenceGenerator,
     _: &mut Vec<TimeMod>,
+    _: &mut bool,
     pos_args: &[ConfigParameter],
     _: &HashMap<String, ConfigParameter>,
 ) {

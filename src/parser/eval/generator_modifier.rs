@@ -43,6 +43,16 @@ pub fn eval_haste(
     eval_generator_modifier(haste, tail)
 }
 
+pub fn eval_keep(
+    _: &FunctionMap,
+    tail: &mut Vec<EvaluatedExpr>,
+    _: &sync::Arc<GlobalParameters>,
+    _: &sync::Arc<Mutex<SampleSet>>,
+    _: OutputMode,
+) -> Option<EvaluatedExpr> {
+    eval_generator_modifier(keep, tail)
+}
+
 pub fn eval_relax(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
@@ -174,6 +184,7 @@ fn eval_generator_modifier(fun: GenModFun, tail: &mut Vec<EvaluatedExpr>) -> Opt
             fun(
                 &mut g.root_generator,
                 &mut g.time_mods,
+                &mut g.keep_root,
                 &pos_args,
                 &named_args,
             );

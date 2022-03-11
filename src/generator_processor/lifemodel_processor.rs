@@ -94,6 +94,7 @@ impl GeneratorProcessor for LifemodelProcessor {
         gen: &mut MarkovSequenceGenerator,
         global_parameters: &Arc<GlobalParameters>,
         _: &mut Vec<TimeMod>,
+        _: &mut bool,
     ) {
         // check if we need to grow ...
         let mut something_happened = false;

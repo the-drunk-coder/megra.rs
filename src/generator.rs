@@ -63,10 +63,13 @@ impl Generator {
 
         for proc in self.processors.iter_mut() {
             proc.process_events(&mut events, global_parameters);
+            // here the borrow checker leads to some really ugly code ...
+            // i'd rather pass "self" but then it complains ...
             proc.process_generator(
                 &mut self.root_generator,
                 global_parameters,
                 &mut self.time_mods,
+                &mut self.keep_root,
             );
         }
 

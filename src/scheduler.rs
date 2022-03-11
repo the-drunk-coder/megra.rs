@@ -57,6 +57,8 @@ impl<const BUFSIZE: usize, const NCHAN: usize> SchedulerData<BUFSIZE, NCHAN> {
     ) -> Self {
         let shift_diff = shift - old.shift;
 
+        println!("{:?} {}", data.id_tags, data.keep_root);
+
         if !data.keep_root {
             data.transfer_state(&old.generator);
         } else {

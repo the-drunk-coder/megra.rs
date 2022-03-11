@@ -33,6 +33,7 @@ impl GeneratorProcessor for GeneratorWrapperProcessor {
         _: &mut MarkovSequenceGenerator,
         _: &Arc<GlobalParameters>,
         _: &mut Vec<TimeMod>,
+        _: &mut bool,
     ) { /* pass */
     }
 

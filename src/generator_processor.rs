@@ -23,6 +23,7 @@ pub trait GeneratorProcessor: GeneratorProcessorClone {
         generator: &mut MarkovSequenceGenerator,
         global_parameters: &Arc<GlobalParameters>,
         time_mods: &mut Vec<TimeMod>,
+        keep_root: &mut bool,
     );
     fn process_transition(
         &mut self,

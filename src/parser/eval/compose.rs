@@ -64,7 +64,13 @@ pub fn compose(
                 match gpom {
                     GeneratorProcessorOrModifier::GeneratorProcessor(gp) => procs.push(gp),
                     GeneratorProcessorOrModifier::GeneratorModifierFunction((fun, pos, named)) => {
-                        fun(&mut g.root_generator, &mut Vec::new(), &pos, &named)
+                        fun(
+                            &mut g.root_generator,
+                            &mut g.time_mods,
+                            &mut g.keep_root,
+                            &pos,
+                            &named,
+                        )
                     }
                 }
             }
@@ -84,7 +90,13 @@ pub fn compose(
                             fun,
                             pos,
                             named,
-                        )) => fun(&mut gen.root_generator, &mut Vec::new(), pos, named),
+                        )) => fun(
+                            &mut gen.root_generator,
+                            &mut gen.time_mods,
+                            &mut gen.keep_root,
+                            pos,
+                            named,
+                        ),
                     }
                 }
             }
