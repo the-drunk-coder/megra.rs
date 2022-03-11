@@ -81,13 +81,7 @@ fn resolve_proxy(parts_store: &PartsStore, proxy: PartProxy, generators: &mut Ve
                                 fun,
                                 pos,
                                 named,
-                            )) => fun(
-                                &mut gen.root_generator,
-                                &mut gen.time_mods,
-                                &mut gen.keep_root,
-                                &pos,
-                                &named,
-                            ),
+                            )) => fun(&mut gen, &pos, &named),
                         }
                     }
                     //gen.id_tags.insert(s.clone());
@@ -108,13 +102,7 @@ fn resolve_proxy(parts_store: &PartsStore, proxy: PartProxy, generators: &mut Ve
                                     fun,
                                     pos,
                                     named,
-                                )) => fun(
-                                    &mut gen.root_generator,
-                                    &mut gen.time_mods,
-                                    &mut gen.keep_root,
-                                    &pos,
-                                    &named,
-                                ),
+                                )) => fun(&mut gen, &pos, &named),
                             }
                         }
                         //gen.id_tags.insert(s.clone());

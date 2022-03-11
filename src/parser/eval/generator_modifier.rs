@@ -181,13 +181,7 @@ fn eval_generator_modifier(fun: GenModFun, tail: &mut Vec<EvaluatedExpr>) -> Opt
             tail_drain.next();
             let (pos_args, named_args) = get_args(&mut tail_drain);
             // apply to generator
-            fun(
-                &mut g.root_generator,
-                &mut g.time_mods,
-                &mut g.keep_root,
-                &pos_args,
-                &named_args,
-            );
+            fun(&mut g, &pos_args, &named_args);
             EvaluatedExpr::BuiltIn(BuiltIn::Generator(g))
         }
         Some(EvaluatedExpr::BuiltIn(BuiltIn::GeneratorProcessorOrModifier(gpom))) => {

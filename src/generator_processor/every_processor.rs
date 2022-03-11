@@ -3,9 +3,8 @@ use std::sync::*;
 use crate::{
     builtin_types::GlobalParameters,
     event::{InterpretableEvent, StaticEvent},
-    generator::TimeMod,
+    generator::Generator,
     generator_processor::*,
-    markov_sequence_generator::MarkovSequenceGenerator,
 };
 
 /// Apple-ys events to the throughcoming ones
@@ -58,19 +57,13 @@ impl GeneratorProcessor for EveryProcessor {
         }
     }
 
-    fn process_generator(
-        &mut self,
-        gen: &mut MarkovSequenceGenerator,
-        _: &Arc<GlobalParameters>,
-        time_mods: &mut Vec<TimeMod>,
-        keep_root: &mut bool,
-    ) {
+    fn process_generator(&mut self, gen: &mut Generator, _: &Arc<GlobalParameters>) {
         for (step, _, gen_mods) in self.things_to_be_applied.iter_mut() {
             // genmodfuns not needed here ...
             let cur_step: usize = (step.static_val as usize) % 101;
             if self.step_count % cur_step == 0 {
                 for (gen_mod_fun, pos_args, named_args) in gen_mods.iter() {
-                    gen_mod_fun(gen, time_mods, keep_root, pos_args, named_args)
+                    gen_mod_fun(gen, pos_args, named_args)
                 }
             }
         }

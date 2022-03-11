@@ -3,9 +3,8 @@ use std::sync::*;
 use crate::{
     builtin_types::GlobalParameters,
     event::{InterpretableEvent, StaticEvent},
-    generator::{Generator, TimeMod},
+    generator::Generator,
     generator_processor::*,
-    markov_sequence_generator::MarkovSequenceGenerator,
 };
 
 /// Apple-ys events to the throughcoming ones
@@ -28,13 +27,8 @@ impl GeneratorWrapperProcessor {
 
 // zip mode etc seem to be outdated ... going for any mode for now
 impl GeneratorProcessor for GeneratorWrapperProcessor {
-    fn process_generator(
-        &mut self,
-        _: &mut MarkovSequenceGenerator,
-        _: &Arc<GlobalParameters>,
-        _: &mut Vec<TimeMod>,
-        _: &mut bool,
-    ) { /* pass */
+    fn process_generator(&mut self, _: &mut Generator, _: &Arc<GlobalParameters>) {
+        /* pass */
     }
 
     fn process_events(

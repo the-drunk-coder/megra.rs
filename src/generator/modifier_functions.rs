@@ -2,63 +2,43 @@ use rand::seq::SliceRandom;
 use std::collections::{HashMap, HashSet};
 
 use crate::{
-    builtin_types::ConfigParameter,
-    generator::{modifier_functions_raw::*, TimeMod},
-    markov_sequence_generator::MarkovSequenceGenerator,
+    builtin_types::ConfigParameter, generator::modifier_functions_raw::*, generator::Generator,
     parameter::Parameter,
 };
 
-pub type GenModFun = fn(
-    &mut MarkovSequenceGenerator,
-    &mut Vec<TimeMod>,
-    &mut bool,
-    &[ConfigParameter],
-    &HashMap<String, ConfigParameter>,
-);
+pub type GenModFun = fn(&mut Generator, &[ConfigParameter], &HashMap<String, ConfigParameter>);
 
 pub fn haste(
-    _: &mut MarkovSequenceGenerator,
-    time_mods: &mut Vec<TimeMod>,
-    _: &mut bool,
+    gen: &mut Generator,
     pos_args: &[ConfigParameter],
     _: &HashMap<String, ConfigParameter>,
 ) {
     // sanity check, otherwise nothing happens ...
     if let Some(ConfigParameter::Numeric(n)) = pos_args.get(0) {
         if let Some(ConfigParameter::Numeric(v)) = pos_args.get(1) {
-            haste_raw(time_mods, *v, *n as usize);
+            haste_raw(&mut gen.time_mods, *v, *n as usize);
         }
     }
 }
 
-pub fn reverse(
-    gen: &mut MarkovSequenceGenerator,
-    _: &mut Vec<TimeMod>,
-    _: &mut bool,
-    _: &[ConfigParameter],
-    _: &HashMap<String, ConfigParameter>,
-) {
-    reverse_raw(gen);
+pub fn reverse(gen: &mut Generator, _: &[ConfigParameter], _: &HashMap<String, ConfigParameter>) {
+    reverse_raw(&mut gen.root_generator);
 }
 
 pub fn relax(
-    _: &mut MarkovSequenceGenerator,
-    time_mods: &mut Vec<TimeMod>,
-    _: &mut bool,
+    gen: &mut Generator,
     pos_args: &[ConfigParameter],
     _: &HashMap<String, ConfigParameter>,
 ) {
     if let Some(ConfigParameter::Numeric(n)) = pos_args.get(0) {
         if let Some(ConfigParameter::Numeric(v)) = pos_args.get(1) {
-            relax_raw(time_mods, *v, *n as usize);
+            relax_raw(&mut gen.time_mods, *v, *n as usize);
         }
     }
 }
 
 pub fn grow(
-    gen: &mut MarkovSequenceGenerator,
-    _: &mut Vec<TimeMod>,
-    _: &mut bool,
+    gen: &mut Generator,
     pos_args: &[ConfigParameter],
     named_args: &HashMap<String, ConfigParameter>,
 ) {
@@ -70,127 +50,110 @@ pub fn grow(
             "flower".to_string()
         };
 
-        grow_raw(gen, &m, *f, &HashSet::new(), &Vec::<Parameter>::new());
+        grow_raw(
+            &mut gen.root_generator,
+            &m,
+            *f,
+            &HashSet::new(),
+            &Vec::<Parameter>::new(),
+        );
     }
 }
 
-pub fn shrink(
-    gen: &mut MarkovSequenceGenerator,
-    _: &mut Vec<TimeMod>,
-    _: &mut bool,
-    _: &[ConfigParameter],
-    _: &HashMap<String, ConfigParameter>,
-) {
-    if let Some(random_symbol) = gen.generator.alphabet.choose(&mut rand::thread_rng()) {
+pub fn shrink(gen: &mut Generator, _: &[ConfigParameter], _: &HashMap<String, ConfigParameter>) {
+    if let Some(random_symbol) = gen
+        .root_generator
+        .generator
+        .alphabet
+        .choose(&mut rand::thread_rng())
+    {
         let r2 = *random_symbol;
-        shrink_raw(gen, r2, true);
+        shrink_raw(&mut gen.root_generator, r2, true);
     }
 }
 
 pub fn shake(
-    gen: &mut MarkovSequenceGenerator,
-    _: &mut Vec<TimeMod>,
-    _: &mut bool,
+    gen: &mut Generator,
     pos_args: &[ConfigParameter],
     _: &HashMap<String, ConfigParameter>,
 ) {
     if let Some(ConfigParameter::Numeric(f)) = pos_args.get(0) {
-        shake_raw(gen, &HashSet::new(), *f);
+        shake_raw(&mut gen.root_generator, &HashSet::new(), *f);
     }
 }
 
 pub fn sharpen(
-    gen: &mut MarkovSequenceGenerator,
-    _: &mut Vec<TimeMod>,
-    _: &mut bool,
+    gen: &mut Generator,
     pos_args: &[ConfigParameter],
     _: &HashMap<String, ConfigParameter>,
 ) {
     if let Some(ConfigParameter::Numeric(f)) = pos_args.get(0) {
-        sharpen_raw(gen, *f);
+        sharpen_raw(&mut gen.root_generator, *f);
     }
 }
 
 pub fn blur(
-    gen: &mut MarkovSequenceGenerator,
-    _: &mut Vec<TimeMod>,
-    _: &mut bool,
+    gen: &mut Generator,
     pos_args: &[ConfigParameter],
     _: &HashMap<String, ConfigParameter>,
 ) {
     if let Some(ConfigParameter::Numeric(f)) = pos_args.get(0) {
-        blur_raw(gen, *f);
+        blur_raw(&mut gen.root_generator, *f);
     }
 }
 
 pub fn skip(
-    gen: &mut MarkovSequenceGenerator,
-    _: &mut Vec<TimeMod>,
-    _: &mut bool,
+    gen: &mut Generator,
     pos_args: &[ConfigParameter],
     _: &HashMap<String, ConfigParameter>,
 ) {
     if let Some(ConfigParameter::Numeric(f)) = pos_args.get(0) {
-        skip_raw(gen, *f as usize);
+        skip_raw(&mut gen.root_generator, *f as usize);
     }
 }
 
 pub fn rewind(
-    gen: &mut MarkovSequenceGenerator,
-    _: &mut Vec<TimeMod>,
-    _: &mut bool,
+    gen: &mut Generator,
     pos_args: &[ConfigParameter],
     _: &HashMap<String, ConfigParameter>,
 ) {
     if let Some(ConfigParameter::Numeric(f)) = pos_args.get(0) {
-        rewind_raw(gen, *f as usize);
+        rewind_raw(&mut gen.root_generator, *f as usize);
     }
 }
 
 pub fn solidify(
-    gen: &mut MarkovSequenceGenerator,
-    _: &mut Vec<TimeMod>,
-    _: &mut bool,
+    gen: &mut Generator,
     pos_args: &[ConfigParameter],
     _: &HashMap<String, ConfigParameter>,
 ) {
     if let Some(ConfigParameter::Numeric(f)) = pos_args.get(0) {
-        solidify_raw(gen, *f as usize);
+        solidify_raw(&mut gen.root_generator, *f as usize);
     }
 }
 
 pub fn rnd(
-    gen: &mut MarkovSequenceGenerator,
-    _: &mut Vec<TimeMod>,
-    _: &mut bool,
+    gen: &mut Generator,
     pos_args: &[ConfigParameter],
     _: &HashMap<String, ConfigParameter>,
 ) {
     if let Some(ConfigParameter::Numeric(f)) = pos_args.get(0) {
-        rnd_raw(gen, f / 100.0);
+        rnd_raw(&mut gen.root_generator, f / 100.0);
     }
 }
 
-pub fn keep(
-    _: &mut MarkovSequenceGenerator,
-    _: &mut Vec<TimeMod>,
-    keep_root: &mut bool,
-    _: &[ConfigParameter],
-    _: &HashMap<String, ConfigParameter>,
-) {
-    *keep_root = true;
+pub fn keep(gen: &mut Generator, _: &[ConfigParameter], _: &HashMap<String, ConfigParameter>) {
+    gen.keep_root = true;
 }
 
 pub fn rep(
-    gen: &mut MarkovSequenceGenerator,
-    _: &mut Vec<TimeMod>,
-    _: &mut bool,
+    gen: &mut Generator,
     pos_args: &[ConfigParameter],
     _: &HashMap<String, ConfigParameter>,
 ) {
     if let Some(ConfigParameter::Numeric(r)) = pos_args.get(0) {
         if let Some(ConfigParameter::Numeric(m)) = pos_args.get(1) {
-            rep_raw(gen, r / 100.0, *m as usize);
+            rep_raw(&mut gen.root_generator, r / 100.0, *m as usize);
         }
     }
 }

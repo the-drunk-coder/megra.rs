@@ -61,17 +61,20 @@ impl Generator {
             }
         }
 
-        for proc in self.processors.iter_mut() {
+        // temporarily take ownership of processors ...
+        // that way we can pass "self" to the "process_generator"
+        // function without having to pass the components individually ...
+        let mut tmp_procs = Vec::new();
+        tmp_procs.append(&mut self.processors);
+
+        for proc in tmp_procs.iter_mut() {
             proc.process_events(&mut events, global_parameters);
-            // here the borrow checker leads to some really ugly code ...
-            // i'd rather pass "self" but then it complains ...
-            proc.process_generator(
-                &mut self.root_generator,
-                global_parameters,
-                &mut self.time_mods,
-                &mut self.keep_root,
-            );
+
+            proc.process_generator(self, global_parameters);
         }
+
+        // and back home ...
+        self.processors.append(&mut tmp_procs);
 
         if events.is_empty() {
             println!("no events");

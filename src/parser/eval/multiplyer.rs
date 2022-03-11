@@ -228,13 +228,7 @@ pub fn eval_multiplyer(
                             fun,
                             pos,
                             named,
-                        )) => fun(
-                            &mut pclone.root_generator,
-                            &mut pclone.time_mods,
-                            &mut pclone.keep_root,
-                            &pos,
-                            &named,
-                        ),
+                        )) => fun(&mut pclone, &pos, &named),
                     }
                 }
 
@@ -281,13 +275,7 @@ pub fn eval_multiplyer(
                                 fun,
                                 pos,
                                 named,
-                            )) => fun(
-                                &mut pclone.root_generator,
-                                &mut pclone.time_mods,
-                                &mut pclone.keep_root,
-                                &pos,
-                                &named,
-                            ),
+                            )) => fun(&mut pclone, &pos, &named),
                         }
                     }
 

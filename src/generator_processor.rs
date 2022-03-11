@@ -7,8 +7,8 @@ use std::sync;
 use crate::{
     builtin_types::{ConfigParameter, GlobalParameters},
     event::{Event, InterpretableEvent, StaticEvent},
-    generator::{GenModFun, TimeMod},
-    markov_sequence_generator::MarkovSequenceGenerator,
+    generator::GenModFun,
+    generator::Generator,
     parameter::Parameter,
 };
 
@@ -20,10 +20,8 @@ pub trait GeneratorProcessor: GeneratorProcessorClone {
     );
     fn process_generator(
         &mut self,
-        generator: &mut MarkovSequenceGenerator,
+        generator: &mut Generator,
         global_parameters: &Arc<GlobalParameters>,
-        time_mods: &mut Vec<TimeMod>,
-        keep_root: &mut bool,
     );
     fn process_transition(
         &mut self,

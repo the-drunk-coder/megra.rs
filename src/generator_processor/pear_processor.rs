@@ -5,9 +5,8 @@ use std::sync::*;
 use crate::{
     builtin_types::GlobalParameters,
     event::{InterpretableEvent, StaticEvent},
-    generator::TimeMod,
+    generator::Generator,
     generator_processor::*,
-    markov_sequence_generator::MarkovSequenceGenerator,
     parameter::Parameter,
 };
 
@@ -29,13 +28,8 @@ impl PearProcessor {
 
 // zip mode etc seem to be outdated ... going for any mode for now
 impl GeneratorProcessor for PearProcessor {
-    fn process_generator(
-        &mut self,
-        _: &mut MarkovSequenceGenerator,
-        _: &Arc<GlobalParameters>,
-        _: &mut Vec<TimeMod>,
-        _: &mut bool,
-    ) { /* pass */
+    fn process_generator(&mut self, _: &mut Generator, _: &Arc<GlobalParameters>) {
+        /* pass */
     }
 
     fn process_events(&mut self, events: &mut Vec<InterpretableEvent>, _: &Arc<GlobalParameters>) {

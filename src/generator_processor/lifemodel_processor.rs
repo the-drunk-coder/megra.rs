@@ -7,9 +7,9 @@ use ruffbox_synth::ruffbox::synth::SynthParameter;
 use crate::{
     builtin_types::{BuiltinGlobalParameters, GlobalParameters},
     event::{InterpretableEvent, StaticEvent},
-    generator::{modifier_functions_raw::*, TimeMod},
+    generator::modifier_functions_raw::*,
+    generator::Generator,
     generator_processor::*,
-    markov_sequence_generator::MarkovSequenceGenerator,
     parameter::*,
 };
 
@@ -91,10 +91,8 @@ impl GeneratorProcessor for LifemodelProcessor {
 
     fn process_generator(
         &mut self,
-        gen: &mut MarkovSequenceGenerator,
+        gen: &mut Generator,
         global_parameters: &Arc<GlobalParameters>,
-        _: &mut Vec<TimeMod>,
-        _: &mut bool,
     ) {
         // check if we need to grow ...
         let mut something_happened = false;
@@ -127,26 +125,29 @@ impl GeneratorProcessor for LifemodelProcessor {
 
             if grow {
                 grow_raw(
-                    gen,
+                    &mut gen.root_generator,
                     &self.growth_method,
                     self.variance,
                     &self.keep_param,
                     &self.durations,
                 );
-                //println!("lm grow {:?}", gen.generator.alphabet);
+                //println!("lm grow {:?}", gen.root_generator.generator.alphabet);
                 something_happened = true;
             } else if self.autophagia {
                 // remove random symbol to allow further growth
                 // in the future ...
-                if gen.generator.alphabet.len() > 1 || !self.dont_let_die {
+                if gen.root_generator.generator.alphabet.len() > 1 || !self.dont_let_die {
                     // if there's something left to prune ...
-                    if let Some(random_symbol) =
-                        gen.generator.alphabet.choose(&mut rand::thread_rng())
+                    if let Some(random_symbol) = gen
+                        .root_generator
+                        .generator
+                        .alphabet
+                        .choose(&mut rand::thread_rng())
                     {
-                        //println!("lm auto {} {:?}", random_symbol, gen.generator.alphabet);
+                        //println!("lm auto {} {:?}", random_symbol, gen.root_generator.generator.alphabet);
                         // don't rebalance yet ...
                         let r2 = *random_symbol; // sometimes the borrow checker makes you do really strange things ...
-                        shrink_raw(gen, r2, false);
+                        shrink_raw(&mut gen.root_generator, r2, false);
 
                         if self.global_contrib {
                             if let ConfigParameter::Numeric(global_resources) = global_parameters
@@ -170,10 +171,11 @@ impl GeneratorProcessor for LifemodelProcessor {
         }
         // now check if the current symbol is ready to make room for new ones ..
         // well, first, check if we need to do that ...
-        if self.apoptosis && (gen.generator.alphabet.len() > 1 || !self.dont_let_die) {
+        if self.apoptosis && (gen.root_generator.generator.alphabet.len() > 1 || !self.dont_let_die)
+        {
             // NOW check if we have a symbol
             let mut sym = None;
-            if let Some(res) = &gen.last_transition {
+            if let Some(res) = &gen.root_generator.last_transition {
                 // helper to add some variance to the age ...
                 let add_var = |orig: f32, var: f32| -> usize {
                     let mut rng = rand::thread_rng();
@@ -183,7 +185,7 @@ impl GeneratorProcessor for LifemodelProcessor {
 
                 // sometimes the growth/shrink processed might have invalidated or deleted
                 // the last symbol, so let's check just in case ...
-                if let Some(age) = gen.symbol_ages.get(&res.last_symbol) {
+                if let Some(age) = gen.root_generator.symbol_ages.get(&res.last_symbol) {
                     let relevant_age = add_var(*age as f32, self.node_lifespan_variance);
                     if relevant_age >= self.node_lifespan {
                         sym = Some(res.last_symbol)
@@ -192,8 +194,8 @@ impl GeneratorProcessor for LifemodelProcessor {
             };
 
             if let Some(symbol_to_remove) = sym {
-                //println!("lm apop {} {:?}", symbol_to_remove, gen.generator.alphabet);
-                shrink_raw(gen, symbol_to_remove, false);
+                //println!("lm apop {} {:?}", symbol_to_remove, gen.root_generator.generator.alphabet);
+                shrink_raw(&mut gen.root_generator, symbol_to_remove, false);
                 if self.global_contrib {
                     if let ConfigParameter::Numeric(global_resources) = global_parameters
                         .entry(BuiltinGlobalParameters::LifemodelGlobalResources)
@@ -216,18 +218,19 @@ impl GeneratorProcessor for LifemodelProcessor {
             let mut rng = rand::thread_rng();
             let rand = rng.gen_range(0.0..1000.0) / 1000.0;
             if rand < self.solidify_chance {
-                gen.generator.solidify(self.solidify_len);
+                gen.root_generator.generator.solidify(self.solidify_len);
             }
         }
 
         if something_happened && self.rnd_chance > 0.0 {
-            gen.generator
+            gen.root_generator
+                .generator
                 .randomize_edges(self.rnd_chance, self.rnd_chance);
         }
 
         // now rebalance
         if something_happened {
-            gen.generator.rebalance();
+            gen.root_generator.generator.rebalance();
         }
 
         self.step_count += 1;
