@@ -19,6 +19,8 @@ use crate::parser::FunctionMap;
 use crate::real_time_streaming;
 use crate::sample_set::SampleSet;
 use crate::session::*;
+use chrono::Local;
+use directories_next::ProjectDirs;
 use std::sync::atomic::Ordering;
 
 pub fn freeze_buffer<const BUFSIZE: usize, const NCHAN: usize>(
@@ -199,12 +201,28 @@ pub fn start_recording<const BUFSIZE: usize, const NCHAN: usize>(
         } else {
             let maybe_catch = rec_ctrl.catch.take();
             if let Some(catch) = maybe_catch {
-                rec_ctrl.catch_handle = Some(real_time_streaming::start_writer_thread(
-                    catch,
-                    rec_ctrl.samplerate,
-                    "megra_foo.wav".to_string(),
-                ));
-                rec_ctrl.is_recording.store(true, Ordering::SeqCst);
+                // place in recordings folder
+                if let Some(proj_dirs) = ProjectDirs::from("de", "parkellipsen", "megra") {
+                    let id = format!(
+                        "megra_recording_{}.wav",
+                        Local::now().format("%Y%m%d_%H%M_%S")
+                    );
+                    let recordings_path = proj_dirs.config_dir().join("recordings");
+
+                    let file_path = if recordings_path.exists() {
+                        let path = recordings_path.join(id).into_os_string().into_string();
+                        path.unwrap()
+                    } else {
+                        id
+                    };
+
+                    rec_ctrl.catch_handle = Some(real_time_streaming::start_writer_thread(
+                        catch,
+                        rec_ctrl.samplerate,
+                        file_path,
+                    ));
+                    rec_ctrl.is_recording.store(true, Ordering::SeqCst);
+                }
             }
         }
         session.lock().rec_control = Some(rec_ctrl);

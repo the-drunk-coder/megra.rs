@@ -624,29 +624,34 @@ where
     let stdlib = sync::Arc::new(Mutex::new(define_standard_library()));
     let controls_arc = sync::Arc::new(controls);
 
-    // load the default sample set ...
-    if load_samples {
-        if let Some(proj_dirs) = ProjectDirs::from("de", "parkellipsen", "megra") {
-            if !proj_dirs.config_dir().exists() {
-                println!(
-                    "create megra resource directory {:?}",
-                    proj_dirs.config_dir()
-                );
-                std::fs::create_dir_all(proj_dirs.config_dir().to_str().unwrap())?;
-            }
+    if let Some(proj_dirs) = ProjectDirs::from("de", "parkellipsen", "megra") {
+        if !proj_dirs.config_dir().exists() {
+            println!(
+                "create megra resource directory {:?}",
+                proj_dirs.config_dir()
+            );
+            std::fs::create_dir_all(proj_dirs.config_dir().to_str().unwrap())?;
+        }
 
-            let samples_path = proj_dirs.config_dir().join("samples");
-            if !samples_path.exists() {
-                println!("create megra samples directory {:?}", samples_path);
-                std::fs::create_dir_all(samples_path.to_str().unwrap())?;
-            }
+        let samples_path = proj_dirs.config_dir().join("samples");
+        if !samples_path.exists() {
+            println!("create megra samples directory {:?}", samples_path);
+            std::fs::create_dir_all(samples_path.to_str().unwrap())?;
+        }
 
-            let sketchbook_path = proj_dirs.config_dir().join("sketchbook");
-            if !sketchbook_path.exists() {
-                println!("create megra sketchbook directory {:?}", sketchbook_path);
-                std::fs::create_dir_all(sketchbook_path.to_str().unwrap())?;
-            }
+        let sketchbook_path = proj_dirs.config_dir().join("sketchbook");
+        if !sketchbook_path.exists() {
+            println!("create megra sketchbook directory {:?}", sketchbook_path);
+            std::fs::create_dir_all(sketchbook_path.to_str().unwrap())?;
+        }
 
+        let recordings_path = proj_dirs.config_dir().join("recordings");
+        if !recordings_path.exists() {
+            println!("create megra recordings directory {:?}", recordings_path);
+            std::fs::create_dir_all(recordings_path.to_str().unwrap())?;
+        }
+        // load the default sample set ...
+        if load_samples {
             println!("load samples from path: {:?}", samples_path);
             let controls_arc2 = sync::Arc::clone(&controls_arc);
             let sample_set2 = sync::Arc::clone(&sample_set);
