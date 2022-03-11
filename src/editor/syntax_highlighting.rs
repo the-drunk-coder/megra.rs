@@ -30,6 +30,8 @@ enum TokenType {
     Boolean,
     StringLiteral,
     Function,
+    Command,
+    GenMod,
     Whitespace,
 }
 
@@ -67,15 +69,17 @@ impl CodeTheme {
         use egui::{Color32, TextFormat};
         Self {
             formats: enum_map::enum_map![
-                    TokenType::Comment => TextFormat::simple(text_style.clone(), Color32::from_gray(120)),
-            TokenType::Normal => TextFormat::simple(text_style.clone(), Color32::from_gray(200)),
-            TokenType::Boolean => TextFormat::simple(text_style.clone(), Color32::from_rgb(0, 200, 100)),
-                    TokenType::Keyword => TextFormat::simple(text_style.clone(), Color32::from_rgb(200, 20, 200)),
-                    TokenType::StringLiteral => TextFormat::simple(text_style.clone(), egui::Color32::from_rgb(200, 200, 10)),
+                        TokenType::Comment => TextFormat::simple(text_style.clone(), Color32::from_gray(120)),
+                TokenType::Normal => TextFormat::simple(text_style.clone(), Color32::from_gray(200)),
+                TokenType::Boolean => TextFormat::simple(text_style.clone(), Color32::from_rgb(0, 200, 100)),
+                        TokenType::Keyword => TextFormat::simple(text_style.clone(), Color32::from_rgb(200, 20, 200)),
+                        TokenType::StringLiteral => TextFormat::simple(text_style.clone(), egui::Color32::from_rgb(200, 200, 10)),
                     TokenType::Function => TextFormat::simple(text_style.clone(), Color32::from_rgb(220, 20, 100)),
-                    TokenType::Whitespace => TextFormat::simple(text_style.clone(), Color32::TRANSPARENT),
-            TokenType::Linebreak => TextFormat::simple(text_style.clone(), Color32::TRANSPARENT),
-                ],
+            TokenType::Command => TextFormat::simple(text_style.clone(), Color32::from_rgb(100, 220, 110)),
+            TokenType::GenMod => TextFormat::simple(text_style.clone(), Color32::from_rgb(190, 190, 140)),
+                        TokenType::Whitespace => TextFormat::simple(text_style.clone(), Color32::TRANSPARENT),
+                TokenType::Linebreak => TextFormat::simple(text_style.clone(), Color32::TRANSPARENT),
+                    ],
         }
     }
 }
@@ -123,6 +127,10 @@ impl Highlighter {
                 let word = &text[..end];
                 let tt = if is_function(word) {
                     TokenType::Function
+                } else if is_command(word) {
+                    TokenType::Command
+                } else if is_genmod(word) {
+                    TokenType::GenMod
                 } else {
                     TokenType::Normal
                 };
@@ -154,20 +162,11 @@ fn is_function(word: &str) -> bool {
     matches!(
         word,
         "apple"
-            | "export-dot"
-            | "step-part"
             | "friendship"
-            | "tmod"
-            | "latency"
-            | "global-resources"
             | "learn"
-            | "delay"
-            | "reverb"
             | "pear"
             | "nuc"
             | "fully"
-            | "default-duration"
-            | "bpm"
             | "flower"
             | "sx"
             | "cyc"
@@ -177,21 +176,54 @@ fn is_function(word: &str) -> bool {
             | "lin"
             | "loop"
             | "ls"
+            | "list"
             | "every"
-            | "defpart"
             | "infer"
-            | "clear"
             | "once"
-            | "cub"
             | "cmp"
             | "chop"
-            | "rnd"
-            | "rep"
             | "inh"
             | "exh"
             | "inexh"
             | "stages"
+    )
+}
+
+fn is_command(word: &str) -> bool {
+    matches!(
+        word,
+        "apple"
+            | "export-dot"
+            | "step-part"
+            | "tmod"
+            | "latency"
+            | "global-resources"
+            | "delay"
+            | "reverb"
+            | "default-duration"
+            | "bpm"
+            | "defpart"
+            | "clear"
             | "rec"
             | "stop-rec"
+    )
+}
+
+fn is_genmod(word: &str) -> bool {
+    matches!(
+        word,
+        "haste"
+            | "shrink"
+            | "grow"
+            | "keep"
+            | "rep"
+            | "rnd"
+            | "relax"
+            | "blur"
+            | "sharpen"
+            | "skip"
+            | "rewind"
+            | "reverse"
+            | "solidify"
     )
 }
