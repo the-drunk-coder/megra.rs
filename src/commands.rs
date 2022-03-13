@@ -198,18 +198,19 @@ pub fn start_recording<const BUFSIZE: usize, const NCHAN: usize>(
 ) {
     let maybe_rec_ctrl = session.lock().rec_control.take();
     if let Some(mut rec_ctrl) = maybe_rec_ctrl {
+        // OUTPUT RECORDING
         if rec_ctrl.is_recording_output.load(Ordering::SeqCst) {
             println!("there's already a recording in progress, please stop first !");
         } else {
             let maybe_catch = rec_ctrl.catch_out.take();
-            if let Some(catch) = maybe_catch {
+            if let Some(catch_out) = maybe_catch {
                 // place in recordings folder
                 if let Some(proj_dirs) = ProjectDirs::from("de", "parkellipsen", "megra") {
                     let id = if let Some(p) = prefix.clone() {
                         format!("{}_{}_output.wav", p, Local::now().format("%Y%m%d_%H%M_%S"))
                     } else {
                         format!(
-                            "megra_recording_output{}.wav",
+                            "megra_recording_{}_output.wav",
                             Local::now().format("%Y%m%d_%H%M_%S")
                         )
                     };
@@ -224,7 +225,7 @@ pub fn start_recording<const BUFSIZE: usize, const NCHAN: usize>(
                     };
 
                     rec_ctrl.catch_out_handle = Some(real_time_streaming::start_writer_thread(
-                        catch,
+                        catch_out,
                         rec_ctrl.samplerate,
                         file_path,
                     ));
@@ -232,17 +233,18 @@ pub fn start_recording<const BUFSIZE: usize, const NCHAN: usize>(
                 }
             }
         }
+        // INPUT RECORDING
         // record input if desired ...
         if rec_input && !rec_ctrl.is_recording_input.load(Ordering::SeqCst) {
             let maybe_catch = rec_ctrl.catch_in.take();
-            if let Some(catch) = maybe_catch {
+            if let Some(catch_in) = maybe_catch {
                 // place in recordings folder
                 if let Some(proj_dirs) = ProjectDirs::from("de", "parkellipsen", "megra") {
                     let id = if let Some(p) = prefix {
-                        format!("{}_{}_output.wav", p, Local::now().format("%Y%m%d_%H%M_%S"))
+                        format!("{}_{}_input.wav", p, Local::now().format("%Y%m%d_%H%M_%S"))
                     } else {
                         format!(
-                            "megra_recording_output{}.wav",
+                            "megra_recording_{}_input.wav",
                             Local::now().format("%Y%m%d_%H%M_%S")
                         )
                     };
@@ -257,7 +259,7 @@ pub fn start_recording<const BUFSIZE: usize, const NCHAN: usize>(
                     };
 
                     rec_ctrl.catch_in_handle = Some(real_time_streaming::start_writer_thread(
-                        catch,
+                        catch_in,
                         rec_ctrl.samplerate,
                         file_path,
                     ));

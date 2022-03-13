@@ -435,24 +435,26 @@ where
 
     // write real time stream 4 times a sec ...
     #[cfg(not(feature = "ringbuffer"))]
+    // OUTPUT RECORDING
     let (throw_out, catch_out) = real_time_streaming::init_real_time_stream::<512, NCHAN>(
         (512.0 / sample_rate) as f64,
         0.25,
     );
-
-    #[cfg(feature = "ringbuffer")]
-    let (throw_out, catch_out) = real_time_streaming::init_real_time_stream::<128, NCHAN>(
-        (128.0 / sample_rate) as f64,
-        0.25,
-    );
-
     // write real time stream 4 times a sec ...
+    // INPUT MONITOR RECORDING
     #[cfg(not(feature = "ringbuffer"))]
     let (throw_in, catch_in) = real_time_streaming::init_real_time_stream::<512, NCHAN>(
         (512.0 / sample_rate) as f64,
         0.25,
     );
 
+    // SAME AS ABOVE, but with the ringbuffer feature ...
+    // not sure if this is working with variable block sizes ...
+    #[cfg(feature = "ringbuffer")]
+    let (throw_out, catch_out) = real_time_streaming::init_real_time_stream::<128, NCHAN>(
+        (128.0 / sample_rate) as f64,
+        0.25,
+    );
     #[cfg(feature = "ringbuffer")] // not really sure which values to use here ...
     let (throw_in, catch_in) = real_time_streaming::init_real_time_stream::<2000, NCHAN>(
         (1000.0 / sample_rate) as f64,

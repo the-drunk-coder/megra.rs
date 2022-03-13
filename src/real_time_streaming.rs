@@ -88,7 +88,8 @@ pub fn start_writer_thread<const MAX: usize, const NCHAN: usize>(
     let running2 = running.clone();
 
     // create the writer thread
-    let builder = thread::Builder::new().name("disk_writer_thread".into());
+    let thread_name = format!("dwt_{}", path);
+    let builder = thread::Builder::new().name(thread_name);
 
     let handle = Some(
         builder
