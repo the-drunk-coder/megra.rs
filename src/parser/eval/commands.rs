@@ -472,8 +472,20 @@ pub fn start_recording(
         None
     };
 
+    let mut rec_input = false;
+    while let Some(c) = tail_drain.next() {
+        if let EvaluatedExpr::Keyword(k) = c {
+            if k.as_str() == "input" {
+                // default is zero ...
+                if let Some(EvaluatedExpr::Boolean(b)) = tail_drain.next() {
+                    rec_input = b;
+                }
+            }
+        }
+    }
+
     Some(EvaluatedExpr::BuiltIn(BuiltIn::Command(
-        Command::StartRecording(prefix),
+        Command::StartRecording(prefix, rec_input),
     )))
 }
 

@@ -54,8 +54,8 @@ pub enum Command {
     ExportDotPart((String, String)),                   // filename, part name
     Once((Vec<StaticEvent>, Vec<ControlEvent>)),       // execute event(s) once
     ConnectVisualizer,                                 // connect visualizer
-    StartRecording(Option<String>),
-    StopRecording,
+    StartRecording(Option<String>, bool),              // start recording, prefix, input
+    StopRecording,                                     // stop recording ...
 }
 
 #[derive(Clone)]

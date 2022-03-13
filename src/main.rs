@@ -433,6 +433,45 @@ where
         10,
     );
 
+    // write real time stream 4 times a sec ...
+    #[cfg(not(feature = "ringbuffer"))]
+    let (throw_out, catch_out) = real_time_streaming::init_real_time_stream::<512, NCHAN>(
+        (512.0 / sample_rate) as f64,
+        0.25,
+    );
+
+    #[cfg(feature = "ringbuffer")]
+    let (throw_out, catch_out) = real_time_streaming::init_real_time_stream::<128, NCHAN>(
+        (128.0 / sample_rate) as f64,
+        0.25,
+    );
+
+    // write real time stream 4 times a sec ...
+    #[cfg(not(feature = "ringbuffer"))]
+    let (throw_in, catch_in) = real_time_streaming::init_real_time_stream::<512, NCHAN>(
+        (512.0 / sample_rate) as f64,
+        0.25,
+    );
+
+    #[cfg(feature = "ringbuffer")] // not really sure which values to use here ...
+    let (throw_in, catch_in) = real_time_streaming::init_real_time_stream::<2000, NCHAN>(
+        (1000.0 / sample_rate) as f64,
+        0.25,
+    );
+
+    let is_recording_output = sync::Arc::new(AtomicBool::new(false));
+    let is_recording_input = sync::Arc::new(AtomicBool::new(false));
+
+    let rec_control = real_time_streaming::RecordingControl {
+        is_recording_output: sync::Arc::clone(&is_recording_output),
+        is_recording_input: sync::Arc::clone(&is_recording_input),
+        catch_out: Some(catch_out),
+        catch_out_handle: None,
+        catch_in: Some(catch_in),
+        catch_in_handle: None,
+        samplerate: sample_rate as u32,
+    };
+
     let playhead_out = sync::Arc::new(Mutex::new(playhead)); // the one for the audio thread (out stream)...
     let playhead_in = sync::Arc::clone(&playhead_out); // the one for the audio thread (in stream)...
     let in_stream = input_device.build_input_stream(
@@ -449,38 +488,28 @@ where
             // Unless I run into trouble, this might just stay the way it is for now.
             let mut ruff = playhead_in.lock();
 
-            // there might be a faster way to de-interleave here ...
-            // only use first input channel
-            for (_, frame) in data.chunks(in_channels).enumerate() {
-                for (ch, s) in frame.iter().enumerate() {
-                    ruff.write_sample_to_live_buffer(ch, *s);
+            if is_recording_input.load(Ordering::SeqCst) {
+                let mut stream_item = throw_in.prep_next().unwrap();
+                // there might be a faster way to de-interleave here ...
+                for (f, frame) in data.chunks(in_channels).enumerate() {
+                    for (ch, s) in frame.iter().enumerate() {
+                        ruff.write_sample_to_live_buffer(ch, *s);
+                        stream_item.buffer[ch][f] = *s;
+                    }
+                    stream_item.size += 1; // increment once per frame
+                }
+                throw_in.throw_next(stream_item);
+            } else {
+                // there might be a faster way to de-interleave here ...
+                for (_, frame) in data.chunks(in_channels).enumerate() {
+                    for (ch, s) in frame.iter().enumerate() {
+                        ruff.write_sample_to_live_buffer(ch, *s);
+                    }
                 }
             }
         },
         err_fn,
     )?;
-
-    // write real time stream 4 times a sec ...
-    #[cfg(not(feature = "ringbuffer"))]
-    let (throw, catch) = real_time_streaming::init_real_time_stream::<512, NCHAN>(
-        (512.0 / sample_rate) as f64,
-        0.25,
-    );
-
-    #[cfg(feature = "ringbuffer")]
-    let (throw, catch) = real_time_streaming::init_real_time_stream::<128, NCHAN>(
-        (128.0 / sample_rate) as f64,
-        0.25,
-    );
-
-    let is_recording = sync::Arc::new(AtomicBool::new(false));
-
-    let rec_control = real_time_streaming::RecordingControl {
-        is_recording: sync::Arc::clone(&is_recording),
-        catch: Some(catch),
-        catch_handle: None,
-        samplerate: sample_rate as u32,
-    };
 
     // main audio callback (plain)
     // the plain audio callback for platforms where the blocksize
@@ -497,8 +526,8 @@ where
             // ruffbox handles it's own logical time ...
             let ruff_out = ruff.process(0.0, true);
 
-            if is_recording.load(Ordering::SeqCst) {
-                throw.write_samples(&ruff_out, 512);
+            if is_recording_output.load(Ordering::SeqCst) {
+                throw_out.write_samples(&ruff_out, 512);
             }
 
             // there might be a faster way to de-interleave here ...
@@ -554,7 +583,7 @@ where
                 while samples_actually_needed > 0 {
                     let ruff_out = ruff.process(0.0, true);
 
-                    if is_recording.load(Ordering::SeqCst) {
+                    if is_recording_output.load(Ordering::SeqCst) {
                         throw.write_samples(&ruff_out, 128);
                     }
 

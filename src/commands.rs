@@ -190,25 +190,26 @@ pub fn load_part(parts_store: &sync::Arc<Mutex<PartsStore>>, name: String, part:
     ps.insert(name, part);
 }
 
-/// start a recording
+/// start a recording of the output
 pub fn start_recording<const BUFSIZE: usize, const NCHAN: usize>(
     session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
     prefix: Option<String>,
+    rec_input: bool,
 ) {
     let maybe_rec_ctrl = session.lock().rec_control.take();
     if let Some(mut rec_ctrl) = maybe_rec_ctrl {
-        if rec_ctrl.is_recording.load(Ordering::SeqCst) {
+        if rec_ctrl.is_recording_output.load(Ordering::SeqCst) {
             println!("there's already a recording in progress, please stop first !");
         } else {
-            let maybe_catch = rec_ctrl.catch.take();
+            let maybe_catch = rec_ctrl.catch_out.take();
             if let Some(catch) = maybe_catch {
                 // place in recordings folder
                 if let Some(proj_dirs) = ProjectDirs::from("de", "parkellipsen", "megra") {
-                    let id = if let Some(p) = prefix {
-                        format!("{}_{}.wav", p, Local::now().format("%Y%m%d_%H%M_%S"))
+                    let id = if let Some(p) = prefix.clone() {
+                        format!("{}_{}_output.wav", p, Local::now().format("%Y%m%d_%H%M_%S"))
                     } else {
                         format!(
-                            "megra_recording_{}.wav",
+                            "megra_recording_output{}.wav",
                             Local::now().format("%Y%m%d_%H%M_%S")
                         )
                     };
@@ -222,12 +223,45 @@ pub fn start_recording<const BUFSIZE: usize, const NCHAN: usize>(
                         id
                     };
 
-                    rec_ctrl.catch_handle = Some(real_time_streaming::start_writer_thread(
+                    rec_ctrl.catch_out_handle = Some(real_time_streaming::start_writer_thread(
                         catch,
                         rec_ctrl.samplerate,
                         file_path,
                     ));
-                    rec_ctrl.is_recording.store(true, Ordering::SeqCst);
+                    rec_ctrl.is_recording_output.store(true, Ordering::SeqCst);
+                }
+            }
+        }
+        // record input if desired ...
+        if rec_input && !rec_ctrl.is_recording_input.load(Ordering::SeqCst) {
+            let maybe_catch = rec_ctrl.catch_in.take();
+            if let Some(catch) = maybe_catch {
+                // place in recordings folder
+                if let Some(proj_dirs) = ProjectDirs::from("de", "parkellipsen", "megra") {
+                    let id = if let Some(p) = prefix {
+                        format!("{}_{}_output.wav", p, Local::now().format("%Y%m%d_%H%M_%S"))
+                    } else {
+                        format!(
+                            "megra_recording_output{}.wav",
+                            Local::now().format("%Y%m%d_%H%M_%S")
+                        )
+                    };
+
+                    let recordings_path = proj_dirs.config_dir().join("recordings");
+
+                    let file_path = if recordings_path.exists() {
+                        let path = recordings_path.join(id).into_os_string().into_string();
+                        path.unwrap()
+                    } else {
+                        id
+                    };
+
+                    rec_ctrl.catch_in_handle = Some(real_time_streaming::start_writer_thread(
+                        catch,
+                        rec_ctrl.samplerate,
+                        file_path,
+                    ));
+                    rec_ctrl.is_recording_input.store(true, Ordering::SeqCst);
                 }
             }
         }
@@ -241,14 +275,23 @@ pub fn stop_recording<const BUFSIZE: usize, const NCHAN: usize>(
 ) {
     let maybe_rec_ctrl = session.lock().rec_control.take();
     if let Some(mut rec_ctrl) = maybe_rec_ctrl {
-        if rec_ctrl.is_recording.load(Ordering::SeqCst) {
-            let maybe_catch_handle = rec_ctrl.catch_handle.take();
+        if rec_ctrl.is_recording_output.load(Ordering::SeqCst) {
+            let maybe_catch_handle = rec_ctrl.catch_out_handle.take();
             if let Some(catch_handle) = maybe_catch_handle {
-                rec_ctrl.is_recording.store(false, Ordering::SeqCst);
+                rec_ctrl.is_recording_output.store(false, Ordering::SeqCst);
                 real_time_streaming::stop_writer_thread(catch_handle);
             }
         } else {
-            println!("can't stop recording that isn't running !");
+            println!("can't stop output recording that isn't running !");
+        }
+        if rec_ctrl.is_recording_input.load(Ordering::SeqCst) {
+            let maybe_catch_handle = rec_ctrl.catch_in_handle.take();
+            if let Some(catch_handle) = maybe_catch_handle {
+                rec_ctrl.is_recording_input.store(false, Ordering::SeqCst);
+                real_time_streaming::stop_writer_thread(catch_handle);
+            }
+        } else {
+            println!("can't stop input recording that isn't running !");
         }
         session.lock().rec_control = Some(rec_ctrl);
     }

@@ -5,9 +5,9 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::{Duration, Instant};
 use std::{sync, thread};
 
-struct StreamItem<const MAX: usize, const NCHAN: usize> {
-    buffer: [[f32; MAX]; NCHAN],
-    size: usize,
+pub struct StreamItem<const MAX: usize, const NCHAN: usize> {
+    pub buffer: [[f32; MAX]; NCHAN],
+    pub size: usize,
 }
 
 pub struct Throw<const MAX: usize, const NCHAN: usize> {
@@ -32,6 +32,24 @@ impl<const MAX: usize, const NCHAN: usize> Throw<MAX, NCHAN> {
             }
         }
     }
+    // use with individual sample writing
+    pub fn prep_next(&self) -> Option<StreamItem<MAX, NCHAN>> {
+        if let Ok(mut stream_item) = self.return_q.try_recv() {
+            stream_item.size = 0;
+            Some(stream_item)
+        } else {
+            None
+        }
+    }
+
+    pub fn throw_next(&self, item: StreamItem<MAX, NCHAN>) {
+        match self.throw_q.send(item) {
+            Ok(_) => {}
+            Err(_) => {
+                println!("couldn't send streamitem");
+            }
+        }
+    }
 }
 
 pub struct Catch<const MAX: usize, const NCHAN: usize> {
@@ -46,10 +64,13 @@ pub struct CatchHandle {
 }
 
 pub struct RecordingControl<const MAX: usize, const NCHAN: usize> {
-    pub is_recording: sync::Arc<AtomicBool>, // communicate with the other thread
-    pub catch: Option<Catch<MAX, NCHAN>>,
-    pub catch_handle: Option<CatchHandle>,
-    pub samplerate: u32,
+    pub is_recording_output: sync::Arc<AtomicBool>, // communicate with the other thread
+    pub is_recording_input: sync::Arc<AtomicBool>,  // communicate with the other thread
+    pub catch_out: Option<Catch<MAX, NCHAN>>,
+    pub catch_out_handle: Option<CatchHandle>,
+    pub catch_in: Option<Catch<MAX, NCHAN>>,
+    pub catch_in_handle: Option<CatchHandle>,
+    pub samplerate: u32, // assume output and input have the same samplerate
 }
 
 pub fn stop_writer_thread(handle: CatchHandle) {
