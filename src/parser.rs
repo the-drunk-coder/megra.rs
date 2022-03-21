@@ -11,11 +11,11 @@ use nom::{
     character::complete::{char, multispace0, multispace1},
     character::{is_alphanumeric, is_newline, is_space},
     combinator::{cut, map, map_res, recognize},
-    error::{context, VerboseError},
+    error::{context, ErrorKind, VerboseError, VerboseErrorKind},
     multi::many0,
     number::complete::float,
     sequence::{delimited, preceded, tuple},
-    IResult, Parser,
+    Err, IResult, Parser,
 };
 use parking_lot::Mutex;
 use regex::Regex;
@@ -200,9 +200,17 @@ fn parse_function(i: &str) -> IResult<&str, Atom, VerboseError<&str>> {
 
 /// floating point numbers ... all numbers currently are ...
 pub fn parse_float(i: &str) -> IResult<&str, Atom, VerboseError<&str>> {
-    map_res(recognize(float), |digit_str: &str| {
-        digit_str.parse::<f32>().map(Atom::Float)
-    })(i)
+    // manually disallowing "infinity" because it doesn't make much sense here
+    // and clashes with "infer", which led to an error ...
+    if i.starts_with("inf") {
+        Err(Err::Error(VerboseError {
+            errors: vec![("lads", VerboseErrorKind::Nom(ErrorKind::Float))],
+        }))
+    } else {
+        map_res(recognize(float), |digit_str: &str| {
+            digit_str.parse::<f32>().map(Atom::Float)
+        })(i)
+    }
 }
 
 /// parse all the atoms
