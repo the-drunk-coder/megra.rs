@@ -22,7 +22,7 @@ pub fn chop(
 ) -> Option<EvaluatedExpr> {
     // ignore function name in this case
     let mut tail_drain = tail.drain(..).skip(1);
-    
+
     // name is the first symbol
     let name = if let Some(EvaluatedExpr::Symbol(n)) = tail_drain.next() {
         n

@@ -457,7 +457,7 @@ where
     );
     #[cfg(feature = "ringbuffer")] // not really sure which values to use here ...
     let (throw_in, catch_in) = real_time_streaming::init_real_time_stream::<128, NCHAN>(
-        (1000.0 / sample_rate) as f64,
+        (128.0 / sample_rate) as f64,
         0.25,
     );
 
@@ -476,6 +476,8 @@ where
 
     let playhead_out = sync::Arc::new(Mutex::new(playhead)); // the one for the audio thread (out stream)...
     let playhead_in = sync::Arc::clone(&playhead_out); // the one for the audio thread (in stream)...
+
+    #[cfg(not(feature = "ringbuffer"))]
     let in_stream = input_device.build_input_stream(
         in_config,
         move |data: &[f32], _: &cpal::InputCallbackInfo| {
@@ -507,6 +509,67 @@ where
                     for (ch, s) in frame.iter().enumerate() {
                         ruff.write_sample_to_live_buffer(ch, *s);
                     }
+                }
+            }
+        },
+        err_fn,
+    )?;
+
+    #[cfg(feature = "ringbuffer")]
+    let in_stream = input_device.build_input_stream(
+        in_config,
+        move |data: &[f32], _: &cpal::InputCallbackInfo| {
+            // these are the only two locks that are left.
+            // Maybe, in the future, I could get around them using
+            // some interior mutability pattern in the ruffbox playhead,
+            // but given that the only other point where the lock \
+            // is called is the output callback, and they have to be called in
+            // sequence anyway (or at least in a deterministic fashion, i hope),
+            // the lock here shouldn't hurt much (in fact it worked nicely even before
+            // it was possible to call the controls without a lock).
+            // Unless I run into trouble, this might just stay the way it is for now.
+            let mut ruff = playhead_in.lock();
+
+            if is_recording_input.load(Ordering::SeqCst) {
+                let current_blocksize = data.len() / in_channels;
+                let num_blocks = current_blocksize / 128;
+                let leftover = current_blocksize - (num_blocks * 128);
+
+                for i in 0..num_blocks {
+                    let mut stream_item = throw_in.prep_next().unwrap();
+                    // there might be a faster way to de-interleave here ...
+                    for (f, frame) in data[i * 128 * in_channels..(i + 1) * 128 * in_channels]
+                        .chunks(in_channels)
+                        .enumerate()
+                    {
+                        for (ch, s) in frame.iter().enumerate() {
+                            stream_item.buffer[ch][f] = *s;
+                        }
+                        stream_item.size += 1; // increment once per frame
+                    }
+
+                    throw_in.throw_next(stream_item);
+                }
+                if leftover > 0 {
+                    let mut stream_item = throw_in.prep_next().unwrap();
+                    // there might be a faster way to de-interleave here ...
+                    for (f, frame) in data[num_blocks * 128 * in_channels..]
+                        .chunks(in_channels)
+                        .enumerate()
+                    {
+                        for (ch, s) in frame.iter().enumerate() {
+                            stream_item.buffer[ch][f] = *s;
+                        }
+                        stream_item.size += 1; // increment once per frame
+                    }
+                    throw_in.throw_next(stream_item);
+                }
+            }
+
+            // there might be a faster way to de-interleave here ...
+            for (_, frame) in data.chunks(in_channels).enumerate() {
+                for (ch, s) in frame.iter().enumerate() {
+                    ruff.write_sample_to_live_buffer(ch, *s);
                 }
             }
         },
