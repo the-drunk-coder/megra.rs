@@ -25,7 +25,7 @@ pub fn define_standard_library() -> FunctionMap {
     standard_library.fmap.insert("stages".to_string(), eval::constructors::stages::stages);
 
     // commands
-    standard_library.fmap.insert("load-part".to_string(), eval::commands::load_part);
+    standard_library.fmap.insert("defpart".to_string(), eval::commands::load_part);
     standard_library.fmap.insert("freeze".to_string(), eval::commands::freeze_buffer);
     standard_library.fmap.insert("load-sample".to_string(), eval::commands::load_sample);
     standard_library.fmap.insert("load-sample-sets".to_string(), eval::commands::load_sample_sets);

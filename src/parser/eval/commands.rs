@@ -23,7 +23,7 @@ pub fn load_part(
     let mut gens = Vec::new();
     let mut proxies = Vec::new();
 
-    let name: String = if let Some(EvaluatedExpr::String(s)) = tail_drain.next() {
+    let name: String = if let Some(EvaluatedExpr::Symbol(s)) = tail_drain.next() {
         s
     } else {
         return None;
