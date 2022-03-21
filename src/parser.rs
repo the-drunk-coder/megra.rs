@@ -18,6 +18,7 @@ use nom::{
     IResult, Parser,
 };
 use parking_lot::Mutex;
+use regex::Regex;
 use std::collections::HashMap;
 use std::fmt;
 use std::sync;
@@ -40,7 +41,6 @@ pub enum Atom {
 /// Expression Type
 #[derive(Debug)]
 pub enum Expr {
-    Comment,
     Constant(Atom),
     Application(Box<Expr>, Vec<Expr>),
 }
@@ -93,7 +93,6 @@ pub enum EvaluatedExpr {
     Boolean(bool),
     FunctionName(String),
     BuiltIn(BuiltIn),
-    Comment,
 }
 
 impl fmt::Debug for EvaluatedExpr {
@@ -106,7 +105,6 @@ impl fmt::Debug for EvaluatedExpr {
             EvaluatedExpr::Boolean(b) => write!(f, "EvaluatedExpr::Boolean({})", b),
             EvaluatedExpr::FunctionName(fna) => write!(f, "EvaluatedExpr::FunctionName({})", fna),
             EvaluatedExpr::BuiltIn(b) => write!(f, "EvaluatedExpr::BuiltIn({:?})", b),
-            EvaluatedExpr::Comment => write!(f, "EvaluatedExpr::Comment"),
         }
     }
 }
@@ -251,7 +249,6 @@ fn parse_application(i: &str) -> IResult<&str, Expr, VerboseError<&str>> {
             many0(alt((
                 preceded(multispace0, parse_application), // applications can follow one another without whitespace
                 preceded(multispace1, parse_constant), // constants are delimited by at least one whitespace
-                preceded(multispace0, parse_comment),  // comments can follow without whitespace
             ))),
         )),
         |(head, tail)| Expr::Application(Box::new(head), tail),
@@ -260,16 +257,10 @@ fn parse_application(i: &str) -> IResult<&str, Expr, VerboseError<&str>> {
     s_exp(application_inner)(i)
 }
 
-fn parse_comment(i: &str) -> IResult<&str, Expr, VerboseError<&str>> {
-    map(preceded(tag(";"), take_while(|ch| ch != '\n')), |_| {
-        Expr::Comment
-    })(i)
-}
-
 /// We tie them all together again, making a top-level expression parser!
 /// This one generates the abstract syntax tree
 pub fn parse_expr(i: &str) -> IResult<&str, Expr, VerboseError<&str>> {
-    alt((parse_comment, parse_application, parse_constant))(i)
+    alt((parse_application, parse_constant))(i)
 }
 
 /// This one reduces the abstract syntax tree ...
@@ -281,7 +272,6 @@ pub fn eval_expression(
     out_mode: OutputMode,
 ) -> Option<EvaluatedExpr> {
     match e {
-        Expr::Comment => Some(EvaluatedExpr::Comment),
         Expr::Constant(c) => Some(match c {
             Atom::Float(f) => EvaluatedExpr::Float(*f),
             Atom::Symbol(s) => EvaluatedExpr::Symbol(s.to_string()),
@@ -320,10 +310,12 @@ pub fn eval_from_str(
     sample_set: &sync::Arc<Mutex<SampleSet>>,
     out_mode: OutputMode,
 ) -> Result<EvaluatedExpr, String> {
-    parse_expr(src)
+    // preprocessing - remove all comments ...
+    let re = Regex::new(r";[^\n]+\n").unwrap();
+    let src_nocomment = re.replace_all(src, "\n");
+    parse_expr(&src_nocomment)
         .map_err(|e: nom::Err<VerboseError<&str>>| format!("{:#?}", e))
         .and_then(|(_, exp)| {
-            //println!("{:?}", exp);
             eval_expression(&exp, functions, globals, sample_set, out_mode)
                 .ok_or_else(|| "eval failed".to_string())
         })
