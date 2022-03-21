@@ -204,7 +204,10 @@ pub fn parse_float(i: &str) -> IResult<&str, Atom, VerboseError<&str>> {
     // and clashes with "infer", which led to an error ...
     if i.starts_with("inf") {
         Err(Err::Error(VerboseError {
-            errors: vec![("infinity disallowed", VerboseErrorKind::Nom(ErrorKind::Float))],
+            errors: vec![(
+                "infinity disallowed",
+                VerboseErrorKind::Nom(ErrorKind::Float),
+            )],
         }))
     } else {
         map_res(recognize(float), |digit_str: &str| {

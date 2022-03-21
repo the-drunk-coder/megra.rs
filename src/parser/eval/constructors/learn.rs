@@ -88,7 +88,7 @@ pub fn learn(
         match c {
             EvaluatedExpr::Keyword(k) => match k.as_str() {
                 "sample" => {
-                    if let EvaluatedExpr::String(desc) = tail_drain.next().unwrap() {
+                    if let Some(EvaluatedExpr::String(desc)) = tail_drain.next() {
                         sample = desc.to_string();
                         sample.retain(|c| !c.is_whitespace());
                     }
@@ -107,22 +107,22 @@ pub fn learn(
                     _ => {}
                 },
                 "bound" => {
-                    if let EvaluatedExpr::Float(n) = tail_drain.next().unwrap() {
+                    if let Some(EvaluatedExpr::Float(n)) = tail_drain.next() {
                         bound = n as usize;
                     }
                 }
                 "epsilon" => {
-                    if let EvaluatedExpr::Float(n) = tail_drain.next().unwrap() {
+                    if let Some(EvaluatedExpr::Float(n)) = tail_drain.next() {
                         epsilon = n;
                     }
                 }
                 "size" => {
-                    if let EvaluatedExpr::Float(n) = tail_drain.next().unwrap() {
+                    if let Some(EvaluatedExpr::Float(n)) = tail_drain.next() {
                         pfa_size = n as usize;
                     }
                 }
                 "autosilence" => {
-                    if let EvaluatedExpr::Boolean(b) = tail_drain.next().unwrap() {
+                    if let Some(EvaluatedExpr::Boolean(b)) = tail_drain.next() {
                         autosilence = b;
                     }
                 }
