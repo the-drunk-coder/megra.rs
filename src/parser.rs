@@ -7,7 +7,7 @@ use crate::{Command, GeneratorProcessorOrModifier, GlobalParameters, PartProxy};
 use crate::{OutputMode, SampleSet};
 use nom::{
     branch::alt,
-    bytes::complete::{tag, take_while},
+    bytes::complete::{tag, take_while, take_while1},
     character::complete::{char, multispace0, multispace1},
     character::{is_alphanumeric, is_newline, is_space},
     combinator::{cut, map, map_res, recognize},
@@ -61,6 +61,30 @@ pub enum BuiltIn {
     SyncContext(SyncContext),
 }
 
+impl fmt::Debug for BuiltIn {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            BuiltIn::Rule(_) => write!(f, "BuiltIn::Rule(..)"),
+            BuiltIn::Command(_) => write!(f, "BuiltIn::Command(..)"),
+            BuiltIn::PartProxy(_) => write!(f, "BuiltIn::PartProxy(..)"),
+            BuiltIn::ProxyList(_) => write!(f, "BuiltIn::ProxyList(..)"),
+            BuiltIn::Generator(g) => write!(f, "BuiltIn::Generator({:?})", g.id_tags),
+            BuiltIn::GeneratorList(_) => write!(f, "BuiltIn::GeneratorList(..)"),
+            BuiltIn::GeneratorProcessorOrModifier(_) => {
+                write!(f, "BuiltIn::GeneratorProcessorOrModifier(..)")
+            }
+            BuiltIn::GeneratorProcessorOrModifierList(_) => {
+                write!(f, "BuiltIn::GeneratorProcessorOrModifierList(..)")
+            }
+            BuiltIn::GeneratorModifierList(_) => write!(f, "BuiltIn::GeneratorModifierList(..)"),
+            BuiltIn::SoundEvent(_) => write!(f, "BuiltIn::SoundEvent(..)"),
+            BuiltIn::Parameter(_) => write!(f, "BuiltIn::Parameter(..)"),
+            BuiltIn::ControlEvent(_) => write!(f, "BuiltIn::ControlEvent(..)"),
+            BuiltIn::SyncContext(_) => write!(f, "BuiltIn::SyncContext(..)"),
+        }
+    }
+}
+
 pub enum EvaluatedExpr {
     Float(f32),
     Symbol(String),
@@ -81,7 +105,7 @@ impl fmt::Debug for EvaluatedExpr {
             EvaluatedExpr::String(s) => write!(f, "EvaluatedExpr::String({})", s),
             EvaluatedExpr::Boolean(b) => write!(f, "EvaluatedExpr::Boolean({})", b),
             EvaluatedExpr::FunctionName(fna) => write!(f, "EvaluatedExpr::FunctionName({})", fna),
-            EvaluatedExpr::BuiltIn(_) => write!(f, "EvaluatedExpr::BuiltIn(..)"),
+            EvaluatedExpr::BuiltIn(b) => write!(f, "EvaluatedExpr::BuiltIn({:?})", b),
             EvaluatedExpr::Comment => write!(f, "EvaluatedExpr::Comment"),
         }
     }
@@ -168,10 +192,10 @@ pub fn parse_symbol(i: &str) -> IResult<&str, Atom, VerboseError<&str>> {
     )(i)
 }
 
-/// keywords are language constructs that start with a single quote
+/// function names are language constructs that contain allowed function name chars
 fn parse_function(i: &str) -> IResult<&str, Atom, VerboseError<&str>> {
     map(
-        context("function", take_while(valid_function_name_char)),
+        context("function", take_while1(valid_function_name_char)),
         |sym_str: &str| Atom::Function(sym_str.to_string()),
     )(i)
 }
@@ -299,6 +323,7 @@ pub fn eval_from_str(
     parse_expr(src)
         .map_err(|e: nom::Err<VerboseError<&str>>| format!("{:#?}", e))
         .and_then(|(_, exp)| {
+            //println!("{:?}", exp);
             eval_expression(&exp, functions, globals, sample_set, out_mode)
                 .ok_or_else(|| "eval failed".to_string())
         })

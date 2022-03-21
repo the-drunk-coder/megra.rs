@@ -153,7 +153,7 @@ pub fn eval_multiplyer(
                 gen_proc_list_list.push(gpl);
             }
             _ => {
-                println!("can't multiply {:?}", c);
+                println!("can't multiply {:?} {:?}", c, last);
             }
         }
     }
