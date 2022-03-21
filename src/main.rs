@@ -456,7 +456,7 @@ where
         0.25,
     );
     #[cfg(feature = "ringbuffer")] // not really sure which values to use here ...
-    let (throw_in, catch_in) = real_time_streaming::init_real_time_stream::<2000, NCHAN>(
+    let (throw_in, catch_in) = real_time_streaming::init_real_time_stream::<128, NCHAN>(
         (1000.0 / sample_rate) as f64,
         0.25,
     );
@@ -586,7 +586,7 @@ where
                     let ruff_out = ruff.process(0.0, true);
 
                     if is_recording_output.load(Ordering::SeqCst) {
-                        throw.write_samples(&ruff_out, 128);
+                        throw_out.write_samples(&ruff_out, 128);
                     }
 
                     //produced += BLOCKSIZE;
