@@ -20,11 +20,9 @@ pub fn chop(
     _: &sync::Arc<Mutex<SampleSet>>,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
-    let mut tail_drain = tail.drain(..);
-
     // ignore function name in this case
-    tail_drain.next();
-
+    let mut tail_drain = tail.drain(..).skip(1);
+    
     // name is the first symbol
     let name = if let Some(EvaluatedExpr::Symbol(n)) = tail_drain.next() {
         n
@@ -71,17 +69,17 @@ pub fn chop(
                     _ => {}
                 },
                 "rep" => {
-                    if let EvaluatedExpr::Float(n) = tail_drain.next().unwrap() {
+                    if let Some(EvaluatedExpr::Float(n)) = tail_drain.next() {
                         repetition_chance = n;
                     }
                 }
                 "rnd" => {
-                    if let EvaluatedExpr::Float(n) = tail_drain.next().unwrap() {
+                    if let Some(EvaluatedExpr::Float(n)) = tail_drain.next() {
                         randomize_chance = n;
                     }
                 }
                 "max-rep" => {
-                    if let EvaluatedExpr::Float(n) = tail_drain.next().unwrap() {
+                    if let Some(EvaluatedExpr::Float(n)) = tail_drain.next() {
                         max_repetitions = n;
                     }
                 }
