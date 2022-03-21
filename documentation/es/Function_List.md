@@ -30,6 +30,7 @@ Los modificadores de generadores modifican la estructura, los pesos o el orden /
 * [encourage - Consolidate Generator](#encourage---consolidate-generator)
 * [grow - Enlarge Generator](#grow---enlarge-generator)
 * [haste - speed up evaluation](#haste---speed-up-evaluation)
+* [keep - Persistence](#keep---persistent-generator)
 * [life - Manipulate Generator](#life---manipulate-generator)
 * [relax - Slow Down Generator](#relax---slow-down-generator)
 * [rewind - Rewind Generator](#rewind---rewind-generator)
@@ -76,6 +77,8 @@ Ayudantes, gestión de sesiones, etc.
 * [export-dot - Export to DOT File](#export-dot---export-to-dot-file)
 * [defpart - Define Parts](#defpart---define-parts)
 * [step-part - Evaluate Parts Step by Step](#step-part---evaluate-parts-step-by-step)
+* [rec - Record](#rec---record-session)
+* [stop-rec - stop recording](#rec---record-session)
 
 Lista de Funciones Alfabéticas
 =============================

@@ -30,6 +30,7 @@ Generator Modifiers modify structure, weights or evaluation order/speed of basic
 * [encourage - Consolidate Generator](#encourage---consolidate-generator)
 * [grow - Enlarge Generator](#grow---enlarge-generator)
 * [haste - speed up evaluation](#haste---speed-up-evaluation)
+* [keep - Persistence](#keep---persistent-generator)
 * [life - Manipulate Generator](#life---manipulate-generator)
 * [relax - Slow Down Generator](#relax---slow-down-generator)
 * [rewind - Rewind Generator](#rewind---rewind-generator)
@@ -38,7 +39,7 @@ Generator Modifiers modify structure, weights or evaluation order/speed of basic
 * [skip - Skip Events](#skip---skip-events)
 * [solidify - Solidify Generator](#solidify---solidify-generator)
 * [reverse - Reverse generator](#reverse---reverse-generator)
-
+  
 **Generator Multipliers**:
 
 Generator Multipliers duplicate basic generators, eventually applying modifiers (generator or event stream modifiers).
@@ -77,6 +78,9 @@ Helpers, session management, etc.
 * [export-dot - Export to DOT File](#export-dot---export-to-dot-file)
 * [defpart - Define Parts](#defpart---define-parts)
 * [step-part - Evaluate Parts Step by Step](#step-part---evaluate-parts-step-by-step)
+* [rec - Record](#rec---record-session)
+* [stop-rec - stop recording](#rec---record-session)
+
 
 Alphabetical Function List
 ==========================
@@ -930,6 +934,36 @@ Appl-ys and Pears (don't ask me why it's named like this, I like good pears and 
 		(pear :p 20 (rev 0.2)) ;; <- with a probability of 20%, apply reverb
 		(pear :for 'sqr :p 20 (freq-mul 1.7)) ;; <- only for sqr events, apply a multiplicator with a chance of 20%
 	    (cyc 'ta "saw:150 ~ sqr:100 ~ saw:150 ~ sqr:100")))
+```
+
+## `rec` - Record Session
+
+Allows you to record your session directly from Megra.
+The file will end up in the recordings folder that lies
+next to the sketchbook folder.
+
+Only one recording can be running at a time.
+
+As a current limitation, the number of inputs can't be bigger 
+than the number of outputs.
+
+Also, even if there's only one input, the input recording file will have 
+the same amount of channels as the output file.
+
+Recording format is 32-bit float WAV.
+
+### Example
+
+```lisp
+
+;; record with prefix, record input
+(rec "pref" :input #t)
+
+;; use default prefix, don't record input
+(rec)
+
+;; stop recording
+(stop-rec)
 ```
 
 ## `relax` - Slow Down Generator
