@@ -20,7 +20,7 @@ pub fn rule(
     _: &sync::Arc<Mutex<SampleSet>>,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
-    let mut tail_drain = tail.drain(..);
+    let mut tail_drain = tail.drain(..).skip(1);
 
     let source_vec: Vec<char> = if let Some(EvaluatedExpr::Symbol(s)) = tail_drain.next() {
         s.chars().collect()
