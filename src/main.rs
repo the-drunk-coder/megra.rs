@@ -207,7 +207,10 @@ fn main() -> Result<(), anyhow::Error> {
 
     if matches.opt_present("l") {
         for dev in host.output_devices()? {
-            println!("{:?}", dev.name());
+            println!("out {:?}", dev.name());
+        }
+        for dev in host.input_devices()? {
+            println!("in {:?}", dev.name());
         }
         return Ok(());
     }
