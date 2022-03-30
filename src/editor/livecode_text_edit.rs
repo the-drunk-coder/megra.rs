@@ -145,7 +145,7 @@ impl<'t> LivecodeTextEdit<'t> {
     /// - monospaced font
     /// - focus lock
     pub fn code_editor(self) -> Self {
-        self.font(FontId::monospace(13.0)).lock_focus(true)
+        self.font(FontId::monospace(15.0)).lock_focus(true)
     }
 
     pub fn eval_callback(mut self, callback: &Arc<Mutex<dyn FnMut(&String)>>) -> Self {

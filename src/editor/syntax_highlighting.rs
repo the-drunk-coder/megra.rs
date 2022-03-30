@@ -65,7 +65,7 @@ impl CodeTheme {
 
 impl CodeTheme {
     pub fn dark() -> Self {
-        let text_style = FontId::monospace(13.0);
+        let text_style = FontId::monospace(15.0);
         use egui::{Color32, TextFormat};
         Self {
             formats: enum_map::enum_map![

@@ -215,7 +215,7 @@ impl epi::App for MegraEditor {
             ui.horizontal(|ui| {
                 ui.add(
                     egui::Label::new(
-                        egui::RichText::new("Mégra Editor").font(FontId::monospace(13.0)),
+                        egui::RichText::new("Mégra Editor").font(FontId::monospace(15.0)),
                     )
                     .wrap(false),
                 );
@@ -303,7 +303,7 @@ impl epi::App for MegraEditor {
                     }
 
                     let ln = egui::Label::new(
-                        egui::RichText::new(linenums).font(FontId::monospace(13.0)),
+                        egui::RichText::new(linenums).font(FontId::monospace(15.0)),
                     );
 
                     ui.horizontal(|ui| {
