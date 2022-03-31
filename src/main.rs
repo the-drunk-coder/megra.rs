@@ -117,7 +117,7 @@ fn main() -> Result<(), anyhow::Error> {
     };
 
     if matches.opt_present("v") {
-        println!("0.0.4");
+        println!("0.0.5");
         return Ok(());
     }
 
