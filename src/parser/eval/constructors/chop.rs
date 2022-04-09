@@ -6,7 +6,7 @@ use crate::parameter::*;
 use crate::parser::{BuiltIn, EvaluatedExpr, FunctionMap};
 use crate::{OutputMode, SampleSet};
 
-use ruffbox_synth::ruffbox::synth::SynthParameter;
+use ruffbox_synth::ruffbox::synth::SynthParameterLabel;
 use std::collections::{BTreeSet, HashMap};
 use std::sync;
 use vom_rs::pfa::{Pfa, Rule};
@@ -106,18 +106,18 @@ pub fn chop(
             for ev in events.iter() {
                 let mut slice_event = ev.clone();
                 slice_event.params.insert(
-                    SynthParameter::PlaybackStart,
+                    SynthParameterLabel::PlaybackStart,
                     Box::new(Parameter::with_value(s as f32 * (1.0 / slices as f32))),
                 );
 
-                let sus = if let Some(old_sus) = slice_event.params.get(&SynthParameter::Sustain) {
+                let sus = if let Some(old_sus) = slice_event.params.get(&SynthParameterLabel::Sustain) {
                     old_sus.static_val / slices as f32
                 } else {
                     dur.clone().static_val
                 };
 
                 slice_event.params.insert(
-                    SynthParameter::Sustain,
+                    SynthParameterLabel::Sustain,
                     Box::new(Parameter::with_value(sus)),
                 );
 
@@ -141,7 +141,7 @@ pub fn chop(
             let mut dur_ev = Event::with_name("transition".to_string());
             dur_ev
                 .params
-                .insert(SynthParameter::Duration, Box::new(dur.clone()));
+                .insert(SynthParameterLabel::Duration, Box::new(dur.clone()));
             duration_mapping.insert((last_char, next_char), dur_ev);
 
             if count < num_events - 1 {
@@ -194,7 +194,7 @@ pub fn chop(
             let mut dur_ev = Event::with_name("transition".to_string());
             dur_ev
                 .params
-                .insert(SynthParameter::Duration, Box::new(dur.clone()));
+                .insert(SynthParameterLabel::Duration, Box::new(dur.clone()));
             duration_mapping.insert((last_char, first_char), dur_ev);
 
             rules.push(Rule {

@@ -7,7 +7,7 @@ use std::{
 };
 use vom_rs::pfa;
 
-use ruffbox_synth::ruffbox::{synth::SynthParameter, RuffboxControls};
+use ruffbox_synth::ruffbox::{synth::SynthParameterLabel, synth::SynthParameterValue, RuffboxControls};
 
 use crate::builtin_types::*;
 use crate::event::*;
@@ -369,10 +369,10 @@ pub fn set_global_lifemodel_resources(global_parameters: &sync::Arc<GlobalParame
 
 pub fn set_global_ruffbox_parameters<const BUFSIZE: usize, const NCHAN: usize>(
     ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
-    params: &HashMap<SynthParameter, f32>,
+    params: &HashMap<SynthParameterLabel, f32>,
 ) {
     for (k, v) in params.iter() {
-        ruffbox.set_master_parameter(*k, *v);
+        ruffbox.set_master_parameter(*k, SynthParameterValue::ScalarF32(*v));
     }
 }
 
@@ -475,7 +475,7 @@ pub fn once<const BUFSIZE: usize, const NCHAN: usize>(
         }
 
         let mut bufnum: usize = 0;
-        if let Some(b) = s.params.get(&SynthParameter::SampleBufferNumber) {
+        if let Some(b) = s.params.get(&SynthParameterLabel::SampleBufferNumber) {
             bufnum = *b as usize;
         }
 
@@ -485,20 +485,20 @@ pub fn once<const BUFSIZE: usize, const NCHAN: usize>(
             for (k, v) in s.params.iter() {
                 // special handling for stereo param
                 match k {
-                    SynthParameter::ChannelPosition => {
+                    SynthParameterLabel::ChannelPosition => {
                         if output_mode == OutputMode::Stereo {
                             let pos = (*v + 1.0) * 0.5;
-                            inst.set_instance_parameter(*k, pos);
+                            inst.set_instance_parameter(*k, SynthParameterValue::ScalarF32(pos));
                         } else {
-                            inst.set_instance_parameter(*k, *v);
+                            inst.set_instance_parameter(*k, SynthParameterValue::ScalarF32(*v));
                         }
                     }
                     // convert milliseconds to seconds
-                    SynthParameter::Duration => inst.set_instance_parameter(*k, *v * 0.001),
-                    SynthParameter::Attack => inst.set_instance_parameter(*k, *v * 0.001),
-                    SynthParameter::Sustain => inst.set_instance_parameter(*k, *v * 0.001),
-                    SynthParameter::Release => inst.set_instance_parameter(*k, *v * 0.001),
-                    _ => inst.set_instance_parameter(*k, *v),
+                    SynthParameterLabel::Duration => inst.set_instance_parameter(*k, SynthParameterValue::ScalarF32(*v * 0.001)),
+                    SynthParameterLabel::Attack => inst.set_instance_parameter(*k, SynthParameterValue::ScalarF32(*v * 0.001)),
+                    SynthParameterLabel::Sustain => inst.set_instance_parameter(*k, SynthParameterValue::ScalarF32(*v * 0.001)),
+                    SynthParameterLabel::Release => inst.set_instance_parameter(*k, SynthParameterValue::ScalarF32(*v * 0.001)),
+                    _ => inst.set_instance_parameter(*k, SynthParameterValue::ScalarF32(*v)),
                 }
             }
             ruffbox.trigger(inst);

@@ -4,7 +4,7 @@ use crate::parameter::Parameter;
 use crate::parser::{BuiltIn, EvaluatedExpr, FunctionMap};
 use crate::{GlobalParameters, OutputMode, SampleSet};
 use parking_lot::Mutex;
-use ruffbox_synth::ruffbox::synth::SynthParameter;
+use ruffbox_synth::ruffbox::synth::SynthParameterLabel;
 use std::sync;
 
 pub fn parameter(
@@ -34,28 +34,28 @@ pub fn parameter(
             };
 
             let param_key = match parts[0] {
-                "freq " => SynthParameter::PitchFrequency,
-                "pitch " => SynthParameter::PitchFrequency,
-                "atk" => SynthParameter::Attack,
-                "rel" => SynthParameter::Release,
-                "sus" => SynthParameter::Sustain,
-                "pos" => SynthParameter::ChannelPosition,
-                "lvl" => SynthParameter::Level,
-                "dur" => SynthParameter::Duration,
-                "rev" => SynthParameter::ReverbMix,
-                "del" => SynthParameter::DelayMix,
-                "lpf" => SynthParameter::LowpassCutoffFrequency,
-                "lpq" => SynthParameter::LowpassQFactor,
-                "lpd" => SynthParameter::LowpassFilterDistortion,
-                "hpf" => SynthParameter::HighpassCutoffFrequency,
-                "hpq" => SynthParameter::HighpassQFactor,
-                "pff" => SynthParameter::PeakFrequency,
-                "pfq" => SynthParameter::PeakQFactor,
-                "pfg" => SynthParameter::PeakGain,
-                "pw" => SynthParameter::Pulsewidth,
-                "start" => SynthParameter::PlaybackStart,
-                "rate" => SynthParameter::PlaybackRate,
-                _ => SynthParameter::PitchFrequency,
+                "freq " => SynthParameterLabel::PitchFrequency,
+                "pitch " => SynthParameterLabel::PitchFrequency,
+                "atk" => SynthParameterLabel::Attack,
+                "rel" => SynthParameterLabel::Release,
+                "sus" => SynthParameterLabel::Sustain,
+                "pos" => SynthParameterLabel::ChannelPosition,
+                "lvl" => SynthParameterLabel::Level,
+                "dur" => SynthParameterLabel::Duration,
+                "rev" => SynthParameterLabel::ReverbMix,
+                "del" => SynthParameterLabel::DelayMix,
+                "lpf" => SynthParameterLabel::LowpassCutoffFrequency,
+                "lpq" => SynthParameterLabel::LowpassQFactor,
+                "lpd" => SynthParameterLabel::LowpassFilterDistortion,
+                "hpf" => SynthParameterLabel::HighpassCutoffFrequency,
+                "hpq" => SynthParameterLabel::HighpassQFactor,
+                "pff" => SynthParameterLabel::PeakFrequency,
+                "pfq" => SynthParameterLabel::PeakQFactor,
+                "pfg" => SynthParameterLabel::PeakGain,
+                "pw" => SynthParameterLabel::Pulsewidth,
+                "start" => SynthParameterLabel::PlaybackStart,
+                "rate" => SynthParameterLabel::PlaybackRate,
+                _ => SynthParameterLabel::PitchFrequency,
             };
 
             if let Some(p) = tail_drain.next() {
@@ -66,10 +66,10 @@ pub fn parameter(
                         EvaluatedExpr::Float(n) => Parameter::with_value(n),
                         EvaluatedExpr::BuiltIn(BuiltIn::Parameter(pl)) => pl,
                         EvaluatedExpr::Symbol(s)
-                            if param_key == SynthParameter::PitchFrequency
-                                || param_key == SynthParameter::LowpassCutoffFrequency
-                                || param_key == SynthParameter::HighpassCutoffFrequency
-                                || param_key == SynthParameter::PeakFrequency =>
+                            if param_key == SynthParameterLabel::PitchFrequency
+                                || param_key == SynthParameterLabel::LowpassCutoffFrequency
+                                || param_key == SynthParameterLabel::HighpassCutoffFrequency
+                                || param_key == SynthParameterLabel::PeakFrequency =>
                         {
                             Parameter::with_value(music_theory::to_freq(
                                 music_theory::from_string(&s),

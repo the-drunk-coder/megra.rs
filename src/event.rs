@@ -1,4 +1,4 @@
-use ruffbox_synth::ruffbox::synth::SynthParameter;
+use ruffbox_synth::ruffbox::synth::SynthParameterLabel;
 use std::boxed::Box;
 use std::collections::{BTreeSet, HashMap, HashSet};
 use std::fmt::*;
@@ -21,7 +21,7 @@ pub enum EventOperation {
 #[derive(Clone)]
 pub struct Event {
     pub name: String,
-    pub params: HashMap<SynthParameter, Box<Parameter>>,
+    pub params: HashMap<SynthParameterLabel, Box<Parameter>>,
     pub tags: BTreeSet<String>,
     pub op: EventOperation,
 }
@@ -40,7 +40,7 @@ impl Debug for Event {
 #[derive(Clone)]
 pub struct StaticEvent {
     pub name: String,
-    pub params: HashMap<SynthParameter, f32>,
+    pub params: HashMap<SynthParameterLabel, f32>,
     pub tags: BTreeSet<String>,
     pub op: EventOperation,
 }
@@ -139,7 +139,7 @@ impl Event {
         }
     }
 
-    pub fn evaluate_parameters(&mut self) -> HashMap<SynthParameter, f32> {
+    pub fn evaluate_parameters(&mut self) -> HashMap<SynthParameterLabel, f32> {
         let mut map = HashMap::new();
 
         for (k, v) in self.params.iter_mut() {
@@ -149,9 +149,9 @@ impl Event {
         map
     }
 
-    pub fn shake(&mut self, factor: f32, keep: &HashSet<SynthParameter>) {
+    pub fn shake(&mut self, factor: f32, keep: &HashSet<SynthParameterLabel>) {
         for (k, v) in self.params.iter_mut() {
-            if !keep.contains(k) && *k != SynthParameter::SampleBufferNumber {
+            if !keep.contains(k) && *k != SynthParameterLabel::SampleBufferNumber {
                 v.shake(factor);
             }
         }

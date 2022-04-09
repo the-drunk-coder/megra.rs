@@ -5,7 +5,7 @@ use crate::parameter::Parameter;
 use crate::parser::{BuiltIn, EvaluatedExpr, FunctionMap};
 use crate::{GlobalParameters, OutputMode, SampleSet};
 use parking_lot::Mutex;
-use ruffbox_synth::ruffbox::synth::SynthParameter;
+use ruffbox_synth::ruffbox::synth::SynthParameterLabel;
 use std::collections::HashSet;
 use std::sync;
 
@@ -15,7 +15,7 @@ fn get_pitch_param(
 ) {
     // first arg is always freq ...
     ev.params.insert(
-        SynthParameter::PitchFrequency,
+        SynthParameterLabel::PitchFrequency,
         Box::new(match tail_drain.next() {
             Some(EvaluatedExpr::Float(n)) => Parameter::with_value(n),
             Some(EvaluatedExpr::BuiltIn(BuiltIn::Parameter(pl))) => pl,
@@ -34,7 +34,7 @@ fn get_bufnum_param(
     tail_drain: &mut std::iter::Peekable<std::vec::Drain<EvaluatedExpr>>,
 ) {
     ev.params.insert(
-        SynthParameter::SampleBufferNumber,
+        SynthParameterLabel::SampleBufferNumber,
         Box::new(match tail_drain.peek() {
             Some(EvaluatedExpr::Float(n)) => {
                 let nn = *n;
@@ -58,19 +58,19 @@ fn get_bufnum_param(
 fn synth_defaults(ev: &mut Event) {
     // set some defaults 2
     ev.params
-        .insert(SynthParameter::Level, Box::new(Parameter::with_value(0.4)));
+        .insert(SynthParameterLabel::Level, Box::new(Parameter::with_value(0.4)));
     ev.params
-        .insert(SynthParameter::Attack, Box::new(Parameter::with_value(1.0)));
+        .insert(SynthParameterLabel::Attack, Box::new(Parameter::with_value(1.0)));
     ev.params.insert(
-        SynthParameter::Sustain,
+        SynthParameterLabel::Sustain,
         Box::new(Parameter::with_value(48.0)),
     );
     ev.params.insert(
-        SynthParameter::Release,
+        SynthParameterLabel::Release,
         Box::new(Parameter::with_value(100.0)),
     );
     ev.params.insert(
-        SynthParameter::ChannelPosition,
+        SynthParameterLabel::ChannelPosition,
         Box::new(Parameter::with_value(0.00)),
     );
 }
@@ -78,27 +78,27 @@ fn synth_defaults(ev: &mut Event) {
 fn sample_defaults(ev: &mut Event) {
     // set some defaults
     ev.params
-        .insert(SynthParameter::Level, Box::new(Parameter::with_value(0.4)));
+        .insert(SynthParameterLabel::Level, Box::new(Parameter::with_value(0.4)));
     ev.params
-        .insert(SynthParameter::Attack, Box::new(Parameter::with_value(1.0)));
+        .insert(SynthParameterLabel::Attack, Box::new(Parameter::with_value(1.0)));
     ev.params.insert(
-        SynthParameter::Release,
+        SynthParameterLabel::Release,
         Box::new(Parameter::with_value(1.0)),
     );
     ev.params.insert(
-        SynthParameter::ChannelPosition,
+        SynthParameterLabel::ChannelPosition,
         Box::new(Parameter::with_value(0.00)),
     );
     ev.params.insert(
-        SynthParameter::PlaybackRate,
+        SynthParameterLabel::PlaybackRate,
         Box::new(Parameter::with_value(1.0)),
     );
     ev.params.insert(
-        SynthParameter::LowpassFilterDistortion,
+        SynthParameterLabel::LowpassFilterDistortion,
         Box::new(Parameter::with_value(0.0)),
     );
     ev.params.insert(
-        SynthParameter::PlaybackStart,
+        SynthParameterLabel::PlaybackStart,
         Box::new(Parameter::with_value(0.0)),
     );
 }
@@ -220,11 +220,11 @@ pub fn sound(
                 }
 
                 ev.params.insert(
-                    SynthParameter::SampleBufferNumber,
+                    SynthParameterLabel::SampleBufferNumber,
                     Box::new(Parameter::with_value(sample_info.bufnum as f32)),
                 );
                 ev.params.insert(
-                    SynthParameter::Sustain,
+                    SynthParameterLabel::Sustain,
                     Box::new(Parameter::with_value((sample_info.duration - 2) as f32)),
                 );
                 sample_defaults(&mut ev);

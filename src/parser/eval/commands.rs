@@ -5,7 +5,7 @@ use crate::parameter::*;
 
 use std::collections::BTreeSet;
 
-use ruffbox_synth::ruffbox::synth::SynthParameter;
+use ruffbox_synth::ruffbox::synth::SynthParameterLabel;
 
 use crate::parser::{BuiltIn, EvaluatedExpr, FunctionMap};
 use crate::{OutputMode, SampleSet};
@@ -271,17 +271,17 @@ pub fn reverb(
             EvaluatedExpr::Keyword(k) => match k.as_str() {
                 "damp" => {
                     if let Some(EvaluatedExpr::Float(f)) = tail_drain.next() {
-                        param_map.insert(SynthParameter::ReverbDampening, f);
+                        param_map.insert(SynthParameterLabel::ReverbDampening, f);
                     }
                 }
                 "mix" => {
                     if let Some(EvaluatedExpr::Float(f)) = tail_drain.next() {
-                        param_map.insert(SynthParameter::ReverbMix, f.clamp(0.01, 0.99));
+                        param_map.insert(SynthParameterLabel::ReverbMix, f.clamp(0.01, 0.99));
                     }
                 }
                 "roomsize" => {
                     if let Some(EvaluatedExpr::Float(f)) = tail_drain.next() {
-                        param_map.insert(SynthParameter::ReverbRoomsize, f.clamp(0.01, 0.99));
+                        param_map.insert(SynthParameterLabel::ReverbRoomsize, f.clamp(0.01, 0.99));
                     }
                 }
 
@@ -312,24 +312,24 @@ pub fn delay(
                 "damp-freq" => {
                     if let Some(EvaluatedExpr::Float(f)) = tail_drain.next() {
                         param_map.insert(
-                            SynthParameter::DelayDampeningFrequency,
+                            SynthParameterLabel::DelayDampeningFrequency,
                             f.clamp(20.0, 18000.0),
                         );
                     }
                 }
                 "feedback" => {
                     if let Some(EvaluatedExpr::Float(f)) = tail_drain.next() {
-                        param_map.insert(SynthParameter::DelayFeedback, f.clamp(0.01, 0.99));
+                        param_map.insert(SynthParameterLabel::DelayFeedback, f.clamp(0.01, 0.99));
                     }
                 }
                 "mix" => {
                     if let Some(EvaluatedExpr::Float(f)) = tail_drain.next() {
-                        param_map.insert(SynthParameter::DelayMix, f.clamp(0.01, 0.99));
+                        param_map.insert(SynthParameterLabel::DelayMix, f.clamp(0.01, 0.99));
                     }
                 }
                 "time" => {
                     if let Some(EvaluatedExpr::Float(f)) = tail_drain.next() {
-                        param_map.insert(SynthParameter::DelayTime, (f / 1000.0).clamp(0.01, 1.99));
+                        param_map.insert(SynthParameterLabel::DelayTime, (f / 1000.0).clamp(0.01, 1.99));
                     }
                 }
 

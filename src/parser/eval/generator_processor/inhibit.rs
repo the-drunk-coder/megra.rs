@@ -1,4 +1,4 @@
-use ruffbox_synth::ruffbox::synth::SynthParameter;
+use ruffbox_synth::ruffbox::synth::SynthParameterLabel;
 use std::collections::HashMap;
 
 use crate::event::*;
@@ -19,7 +19,7 @@ pub fn collect_inhibit(tail: &mut Vec<EvaluatedExpr>) -> Box<dyn GeneratorProces
     let mut silencer = Event::with_name("silencer".to_string());
     silencer
         .params
-        .insert(SynthParameter::Level, Box::new(Parameter::with_value(0.0)));
+        .insert(SynthParameterLabel::Level, Box::new(Parameter::with_value(0.0)));
     evs.push(silencer);
 
     let mut collect_filters = false;

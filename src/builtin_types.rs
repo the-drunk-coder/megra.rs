@@ -5,7 +5,7 @@ use crate::parameter::*;
 use dashmap::DashMap;
 use std::collections::{BTreeSet, HashMap};
 
-use ruffbox_synth::ruffbox::synth::SynthParameter;
+use ruffbox_synth::ruffbox::synth::SynthParameterLabel;
 
 #[derive(Clone)]
 pub enum Part {
@@ -42,7 +42,7 @@ pub enum Command {
     Bpm(f32),                                          // set default tempo in bpm
     DefaultDuration(f32),                              // set default duration in milliseconds
     GlobRes(f32),                                      // global resources for lifemodel algorithm
-    GlobalRuffboxParams(HashMap<SynthParameter, f32>), // global ruffbox params
+    GlobalRuffboxParams(HashMap<SynthParameterLabel, f32>), // global ruffbox params
     LoadSample((String, Vec<String>, String)),         // set (events), keyword, path
     LoadSampleSet(String),                             // set path
     LoadSampleSets(String),                            // top level sets set path

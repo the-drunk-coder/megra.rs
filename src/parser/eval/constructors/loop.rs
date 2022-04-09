@@ -4,7 +4,7 @@ use crate::generator::Generator;
 use crate::markov_sequence_generator::MarkovSequenceGenerator;
 use crate::parameter::*;
 
-use ruffbox_synth::ruffbox::synth::SynthParameter;
+use ruffbox_synth::ruffbox::synth::SynthParameterLabel;
 use std::collections::{BTreeSet, HashMap};
 use std::sync;
 use vom_rs::pfa::{Pfa, Rule};
@@ -96,7 +96,7 @@ pub fn a_loop(
                 let mut dur_ev = Event::with_name("transition".to_string());
                 dur_ev
                     .params
-                    .insert(SynthParameter::Duration, Box::new(dur_vec[count].clone()));
+                    .insert(SynthParameterLabel::Duration, Box::new(dur_vec[count].clone()));
 
                 rules.push(Rule {
                     source: vec![last_char],
@@ -112,7 +112,7 @@ pub fn a_loop(
 
         let mut dur_ev = Event::with_name("transition".to_string());
         dur_ev.params.insert(
-            SynthParameter::Duration,
+            SynthParameterLabel::Duration,
             Box::new(if let Some(ldur) = dur_vec.last() {
                 ldur.clone()
             } else {

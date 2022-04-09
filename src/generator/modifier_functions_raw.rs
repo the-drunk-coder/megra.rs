@@ -7,7 +7,7 @@ use crate::{
     pfa_reverse::*,
 };
 use rand::seq::SliceRandom;
-use ruffbox_synth::ruffbox::synth::SynthParameter;
+use ruffbox_synth::ruffbox::synth::SynthParameterLabel;
 use std::collections::{HashMap, HashSet};
 
 pub fn haste_raw(time_mods: &mut Vec<TimeMod>, v: f32, n: usize) {
@@ -38,7 +38,7 @@ pub fn grow_raw(
     gen: &mut MarkovSequenceGenerator,
     m: &str, // method
     variance: f32,
-    keep: &HashSet<SynthParameter>,
+    keep: &HashSet<SynthParameterLabel>,
     durations: &[Parameter],
 ) {
     if let Some(result) = match m {
@@ -83,7 +83,7 @@ pub fn grow_raw(
                         //println!("add from stash {} {} {}", sym, added_sym, dur_val.static_val);
                         dur_ev
                             .params
-                            .insert(SynthParameter::Duration, Box::new(dur_val));
+                            .insert(SynthParameterLabel::Duration, Box::new(dur_val));
                         dur_mapping_to_add.insert((*sym, added_sym), dur_ev);
                     } else {
                         //println!("add from prev {} {}", sym, added_sym);
@@ -98,7 +98,7 @@ pub fn grow_raw(
                         //println!("add from stash {} {} {}", added_sym, sym, dur_val.static_val);
                         dur_ev
                             .params
-                            .insert(SynthParameter::Duration, Box::new(dur_val));
+                            .insert(SynthParameterLabel::Duration, Box::new(dur_val));
                         dur_mapping_to_add.insert((added_sym, *sym), dur_ev);
                     } else {
                         //println!("add from prev {} {}", added_sym, sym);
@@ -118,7 +118,7 @@ pub fn grow_raw(
                             //println!("add from stash {} {} {}", src, dest, dur_val.static_val);
                             dur_ev
                                 .params
-                                .insert(SynthParameter::Duration, Box::new(dur_val));
+                                .insert(SynthParameterLabel::Duration, Box::new(dur_val));
                             dur_mapping_to_add.insert((*src, *dest), dur_ev);
                         }
                     }
@@ -126,7 +126,7 @@ pub fn grow_raw(
             }
 
             for (k, v) in dur_mapping_to_add.drain() {
-                //println!("add dur map {:?} {}", k, v.params[&SynthParameter::Duration].static_val);
+                //println!("add dur map {:?} {}", k, v.params[&SynthParameterLabel::Duration].static_val);
                 gen.duration_mapping.insert(k, v);
             }
         }
@@ -157,7 +157,7 @@ pub fn sharpen_raw(gen: &mut MarkovSequenceGenerator, factor: f32) {
     gen.set_modified();
 }
 
-pub fn shake_raw(gen: &mut MarkovSequenceGenerator, keep: &HashSet<SynthParameter>, factor: f32) {
+pub fn shake_raw(gen: &mut MarkovSequenceGenerator, keep: &HashSet<SynthParameterLabel>, factor: f32) {
     gen.generator.blur(factor);
     for (_, evs) in gen.event_mapping.iter_mut() {
         for ev in evs {

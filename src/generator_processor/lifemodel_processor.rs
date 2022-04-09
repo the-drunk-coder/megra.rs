@@ -2,7 +2,7 @@ use rand::seq::SliceRandom;
 use rand::Rng;
 use std::{collections::HashSet, sync::*};
 
-use ruffbox_synth::ruffbox::synth::SynthParameter;
+use ruffbox_synth::ruffbox::synth::SynthParameterLabel;
 
 use crate::{
     builtin_types::{BuiltinGlobalParameters, GlobalParameters},
@@ -48,7 +48,7 @@ pub struct LifemodelProcessor {
     pub autophagia_regain: f32,
     pub durations: Vec<Parameter>,
     pub dont_let_die: bool,
-    pub keep_param: HashSet<SynthParameter>,
+    pub keep_param: HashSet<SynthParameterLabel>,
     pub global_contrib: bool,
     pub solidify_chance: f32,
     pub solidify_len: usize,

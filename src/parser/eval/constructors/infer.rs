@@ -4,7 +4,7 @@ use crate::generator::Generator;
 use crate::markov_sequence_generator::{MarkovSequenceGenerator, Rule};
 use crate::parameter::*;
 
-use ruffbox_synth::ruffbox::synth::SynthParameter;
+use ruffbox_synth::ruffbox::synth::SynthParameterLabel;
 use std::collections::{BTreeSet, HashMap};
 use std::sync;
 use vom_rs::pfa;
@@ -138,7 +138,7 @@ pub fn infer(
             if let EvaluatedExpr::BuiltIn(BuiltIn::Rule(s)) = c {
                 let mut dur_ev = Event::with_name("transition".to_string());
                 dur_ev.params.insert(
-                    SynthParameter::Duration,
+                    SynthParameterLabel::Duration,
                     Box::new(Parameter::with_value(s.duration as f32)),
                 );
                 duration_mapping.insert((*s.source.last().unwrap(), s.symbol), dur_ev);

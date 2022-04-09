@@ -1,5 +1,5 @@
 use crate::event::{Event, InterpretableEvent, SourceEvent, StaticEvent};
-use ruffbox_synth::ruffbox::synth::SynthParameter;
+use ruffbox_synth::ruffbox::synth::SynthParameterLabel;
 use std::collections::HashMap;
 use vom_rs::pfa;
 
@@ -94,7 +94,7 @@ impl MarkovSequenceGenerator {
             } else {
                 let mut t = Event::with_name("transition".to_string()).get_static();
                 t.params
-                    .insert(SynthParameter::Duration, self.default_duration as f32);
+                    .insert(SynthParameterLabel::Duration, self.default_duration as f32);
                 t
             }
         } else {
@@ -102,7 +102,7 @@ impl MarkovSequenceGenerator {
             // these double else blocks doing the same thing sometimes make rust ugly
             let mut t = Event::with_name("transition".to_string()).get_static();
             t.params
-                .insert(SynthParameter::Duration, self.default_duration as f32);
+                .insert(SynthParameterLabel::Duration, self.default_duration as f32);
             t
         }
     }

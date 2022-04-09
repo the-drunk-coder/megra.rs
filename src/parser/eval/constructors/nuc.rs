@@ -4,7 +4,7 @@ use crate::generator::Generator;
 use crate::markov_sequence_generator::MarkovSequenceGenerator;
 use crate::parameter::*;
 
-use ruffbox_synth::ruffbox::synth::SynthParameter;
+use ruffbox_synth::ruffbox::synth::SynthParameterLabel;
 use std::collections::{BTreeSet, HashMap};
 use std::sync;
 use vom_rs::pfa::{Pfa, Rule};
@@ -83,7 +83,7 @@ pub fn nuc(
         let mut dur_ev = Event::with_name("transition".to_string());
         dur_ev
             .params
-            .insert(SynthParameter::Duration, Box::new(dur.clone()));
+            .insert(SynthParameterLabel::Duration, Box::new(dur.clone()));
         duration_mapping.insert(('a', 'a'), dur_ev);
         // one rule to rule them all
         rules.push(Rule {

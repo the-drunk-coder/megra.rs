@@ -4,7 +4,7 @@ use crate::generator::Generator;
 use crate::markov_sequence_generator::MarkovSequenceGenerator;
 use crate::parameter::*;
 
-use ruffbox_synth::ruffbox::synth::SynthParameter;
+use ruffbox_synth::ruffbox::synth::SynthParameterLabel;
 use std::collections::{BTreeSet, HashMap};
 use std::sync;
 use vom_rs::pfa::{Pfa, Rule};
@@ -218,7 +218,7 @@ pub fn flower(
         let mut dur_ev = Event::with_name("transition".to_string());
         dur_ev
             .params
-            .insert(SynthParameter::Duration, Box::new(dur.clone()));
+            .insert(SynthParameterLabel::Duration, Box::new(dur.clone()));
 
         // convert repetition chance
         if repetition_chance > 0.0 {

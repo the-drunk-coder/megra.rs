@@ -1,5 +1,5 @@
 use ruffbox_synth::ruffbox::synth::SourceType;
-use ruffbox_synth::ruffbox::synth::SynthParameter;
+use ruffbox_synth::ruffbox::synth::SynthParameterLabel;
 
 pub fn map_name(name: &str) -> SourceType {
     match name {
@@ -16,31 +16,31 @@ pub fn map_name(name: &str) -> SourceType {
     }
 }
 
-pub fn map_parameter(name: &str) -> SynthParameter {
+pub fn map_parameter(name: &str) -> SynthParameterLabel {
     match name {
-        "freq" => SynthParameter::PitchFrequency,
-        "note" => SynthParameter::PitchNote,
-        "atk" => SynthParameter::Attack,
-        "rel" => SynthParameter::Release,
-        "sus" => SynthParameter::Sustain,
-        "pos" => SynthParameter::ChannelPosition,
-        "lvl" => SynthParameter::Level,
-        "dur" => SynthParameter::Duration,
-        "lpf" => SynthParameter::LowpassCutoffFrequency,
-        "lpd" => SynthParameter::LowpassFilterDistortion,
-        "lpq" => SynthParameter::LowpassQFactor,
-        "hpf" => SynthParameter::HighpassCutoffFrequency,
-        "hpq" => SynthParameter::HighpassQFactor,
-        "pff" => SynthParameter::PeakFrequency,
-        "pfq" => SynthParameter::PeakQFactor,
-        "pfg" => SynthParameter::PeakGain,
-        "pw" => SynthParameter::Pulsewidth,
-        "rate" => SynthParameter::PlaybackRate,
-        "start" => SynthParameter::PlaybackStart,
-        "loop" => SynthParameter::PlaybackLoop,
-        "bufnum" => SynthParameter::SampleBufferNumber,
-        "rev" => SynthParameter::ReverbMix,
-        "del" => SynthParameter::DelayMix,
-        _ => SynthParameter::PitchFrequency,
+        "freq" => SynthParameterLabel::PitchFrequency,
+        "note" => SynthParameterLabel::PitchNote,
+        "atk" => SynthParameterLabel::Attack,
+        "rel" => SynthParameterLabel::Release,
+        "sus" => SynthParameterLabel::Sustain,
+        "pos" => SynthParameterLabel::ChannelPosition,
+        "lvl" => SynthParameterLabel::Level,
+        "dur" => SynthParameterLabel::Duration,
+        "lpf" => SynthParameterLabel::LowpassCutoffFrequency,
+        "lpd" => SynthParameterLabel::LowpassFilterDistortion,
+        "lpq" => SynthParameterLabel::LowpassQFactor,
+        "hpf" => SynthParameterLabel::HighpassCutoffFrequency,
+        "hpq" => SynthParameterLabel::HighpassQFactor,
+        "pff" => SynthParameterLabel::PeakFrequency,
+        "pfq" => SynthParameterLabel::PeakQFactor,
+        "pfg" => SynthParameterLabel::PeakGain,
+        "pw" => SynthParameterLabel::Pulsewidth,
+        "rate" => SynthParameterLabel::PlaybackRate,
+        "start" => SynthParameterLabel::PlaybackStart,
+        "loop" => SynthParameterLabel::PlaybackLoop,
+        "bufnum" => SynthParameterLabel::SampleBufferNumber,
+        "rev" => SynthParameterLabel::ReverbMix,
+        "del" => SynthParameterLabel::DelayMix,
+        _ => SynthParameterLabel::PitchFrequency,
     }
 }

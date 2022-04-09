@@ -1,4 +1,4 @@
-use ruffbox_synth::ruffbox::synth::SynthParameter;
+use ruffbox_synth::ruffbox::synth::SynthParameterLabel;
 use std::collections::{BTreeSet, HashMap};
 use std::sync;
 
@@ -59,7 +59,7 @@ fn spread_gens(gens: &mut Vec<Generator>, out_mode: &OutputMode) {
         let mut p = PearProcessor::new();
         let mut ev = Event::with_name_and_operation("pos".to_string(), EventOperation::Replace);
         ev.params.insert(
-            SynthParameter::ChannelPosition,
+            SynthParameterLabel::ChannelPosition,
             Box::new(Parameter::with_value(positions[i])),
         );
         let mut filtered_events = HashMap::new();
@@ -114,7 +114,7 @@ fn spread_proxies(proxies: &mut Vec<PartProxy>, out_mode: &OutputMode) {
         let mut p = PearProcessor::new();
         let mut ev = Event::with_name_and_operation("pos".to_string(), EventOperation::Replace);
         ev.params.insert(
-            SynthParameter::ChannelPosition,
+            SynthParameterLabel::ChannelPosition,
             Box::new(Parameter::with_value(positions[i])),
         );
         let mut filtered_events = HashMap::new();

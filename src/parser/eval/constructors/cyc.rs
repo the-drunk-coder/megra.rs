@@ -6,7 +6,7 @@ use crate::markov_sequence_generator::MarkovSequenceGenerator;
 use crate::parameter::*;
 use crate::sample_set::SampleSet;
 use crate::session::OutputMode;
-use ruffbox_synth::ruffbox::synth::SynthParameter;
+use ruffbox_synth::ruffbox::synth::SynthParameterLabel;
 use std::collections::{BTreeSet, HashMap};
 use std::sync;
 use vom_rs::pfa::{Pfa, Rule};
@@ -216,7 +216,7 @@ pub fn cyc(
             let mut dur_ev = Event::with_name("transition".to_string());
             dur_ev
                 .params
-                .insert(SynthParameter::Duration, Box::new(dur_vec[count].clone()));
+                .insert(SynthParameterLabel::Duration, Box::new(dur_vec[count].clone()));
             duration_mapping.insert((last_char, next_char), dur_ev);
 
             if count < num_events {
@@ -290,7 +290,7 @@ pub fn cyc(
             // create duration event (otherwise not needed ...)
             let mut dur_ev = Event::with_name("transition".to_string());
             dur_ev.params.insert(
-                SynthParameter::Duration,
+                SynthParameterLabel::Duration,
                 Box::new(dur_vec.last().unwrap().clone()),
             );
             duration_mapping.insert((last_char, first_char), dur_ev);

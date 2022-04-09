@@ -2,7 +2,7 @@ use parking_lot::Mutex;
 use std::collections::{BTreeSet, HashMap};
 use std::{sync, thread};
 
-use ruffbox_synth::ruffbox::synth::SynthParameter;
+use ruffbox_synth::ruffbox::synth::{SynthParameterLabel, SynthParameterValue};
 use ruffbox_synth::ruffbox::RuffboxControls;
 
 use crate::builtin_types::{
@@ -160,7 +160,7 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
     let time = (data // sym, dur
         .generator
         .current_transition(&data.global_parameters)
-        .params[&SynthParameter::Duration] as f64
+        .params[&SynthParameterLabel::Duration] as f64
         * 0.001
         * tmod) as f64;
 
@@ -214,7 +214,7 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
                 }
 
                 let mut bufnum: usize = 0;
-                if let Some(b) = s.params.get(&SynthParameter::SampleBufferNumber) {
+                if let Some(b) = s.params.get(&SynthParameterLabel::SampleBufferNumber) {
                     bufnum = *b as usize;
                 }
 
@@ -227,20 +227,20 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
                     for (k, v) in s.params.iter() {
                         // special handling for stereo param
                         match k {
-                            SynthParameter::ChannelPosition => {
+                            SynthParameterLabel::ChannelPosition => {
                                 if data.output_mode == OutputMode::Stereo {
                                     let pos = (*v + 1.0) * 0.5;
-                                    inst.set_instance_parameter(*k, pos);
+                                    inst.set_instance_parameter(*k, SynthParameterValue::ScalarF32(pos));
                                 } else {
-                                    inst.set_instance_parameter(*k, *v);
+                                    inst.set_instance_parameter(*k, SynthParameterValue::ScalarF32(*v));
                                 }
                             }
                             // convert milliseconds to seconds
-                            SynthParameter::Duration => inst.set_instance_parameter(*k, *v * 0.001),
-                            SynthParameter::Attack => inst.set_instance_parameter(*k, *v * 0.001),
-                            SynthParameter::Sustain => inst.set_instance_parameter(*k, *v * 0.001),
-                            SynthParameter::Release => inst.set_instance_parameter(*k, *v * 0.001),
-                            _ => inst.set_instance_parameter(*k, *v),
+                            SynthParameterLabel::Duration => inst.set_instance_parameter(*k, SynthParameterValue::ScalarF32(*v * 0.001)),
+                            SynthParameterLabel::Attack => inst.set_instance_parameter(*k, SynthParameterValue::ScalarF32(*v * 0.001)),
+                            SynthParameterLabel::Sustain => inst.set_instance_parameter(*k, SynthParameterValue::ScalarF32(*v * 0.001)),
+                            SynthParameterLabel::Release => inst.set_instance_parameter(*k, SynthParameterValue::ScalarF32(*v * 0.001)),
+                            _ => inst.set_instance_parameter(*k, SynthParameterValue::ScalarF32(*v)),
                         }
                     }
                     data.ruffbox.trigger(inst);
