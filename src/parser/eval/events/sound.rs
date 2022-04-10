@@ -57,10 +57,14 @@ fn get_bufnum_param(
 
 fn synth_defaults(ev: &mut Event) {
     // set some defaults 2
-    ev.params
-        .insert(SynthParameterLabel::Level, Box::new(Parameter::with_value(0.4)));
-    ev.params
-        .insert(SynthParameterLabel::Attack, Box::new(Parameter::with_value(1.0)));
+    ev.params.insert(
+        SynthParameterLabel::Level,
+        Box::new(Parameter::with_value(0.4)),
+    );
+    ev.params.insert(
+        SynthParameterLabel::Attack,
+        Box::new(Parameter::with_value(1.0)),
+    );
     ev.params.insert(
         SynthParameterLabel::Sustain,
         Box::new(Parameter::with_value(48.0)),
@@ -77,10 +81,14 @@ fn synth_defaults(ev: &mut Event) {
 
 fn sample_defaults(ev: &mut Event) {
     // set some defaults
-    ev.params
-        .insert(SynthParameterLabel::Level, Box::new(Parameter::with_value(0.4)));
-    ev.params
-        .insert(SynthParameterLabel::Attack, Box::new(Parameter::with_value(1.0)));
+    ev.params.insert(
+        SynthParameterLabel::Level,
+        Box::new(Parameter::with_value(0.4)),
+    );
+    ev.params.insert(
+        SynthParameterLabel::Attack,
+        Box::new(Parameter::with_value(1.0)),
+    );
     ev.params.insert(
         SynthParameterLabel::Release,
         Box::new(Parameter::with_value(1.0)),

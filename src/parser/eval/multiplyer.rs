@@ -12,10 +12,10 @@ use crate::parser::{BuiltIn, EvaluatedExpr, FunctionMap};
 use crate::{OutputMode, SampleSet};
 use parking_lot::Mutex;
 
-pub type GenSpreader = fn(&mut Vec<Generator>, &OutputMode);
-pub type ProxySpreader = fn(&mut Vec<PartProxy>, &OutputMode);
+pub type GenSpreader = fn(&mut [Generator], &OutputMode);
+pub type ProxySpreader = fn(&mut [PartProxy], &OutputMode);
 
-fn spread_gens(gens: &mut Vec<Generator>, out_mode: &OutputMode) {
+fn spread_gens(gens: &mut [Generator], out_mode: &OutputMode) {
     let positions = match out_mode {
         OutputMode::Stereo => {
             if gens.len() == 1 {
@@ -70,7 +70,7 @@ fn spread_gens(gens: &mut Vec<Generator>, out_mode: &OutputMode) {
     }
 }
 
-fn spread_proxies(proxies: &mut Vec<PartProxy>, out_mode: &OutputMode) {
+fn spread_proxies(proxies: &mut [PartProxy], out_mode: &OutputMode) {
     let positions = match out_mode {
         OutputMode::Stereo => {
             if proxies.len() == 1 {

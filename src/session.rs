@@ -230,17 +230,37 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
                             SynthParameterLabel::ChannelPosition => {
                                 if data.output_mode == OutputMode::Stereo {
                                     let pos = (*v + 1.0) * 0.5;
-                                    inst.set_instance_parameter(*k, SynthParameterValue::ScalarF32(pos));
+                                    inst.set_instance_parameter(
+                                        *k,
+                                        &SynthParameterValue::ScalarF32(pos),
+                                    );
                                 } else {
-                                    inst.set_instance_parameter(*k, SynthParameterValue::ScalarF32(*v));
+                                    inst.set_instance_parameter(
+                                        *k,
+                                        &SynthParameterValue::ScalarF32(*v),
+                                    );
                                 }
                             }
                             // convert milliseconds to seconds
-                            SynthParameterLabel::Duration => inst.set_instance_parameter(*k, SynthParameterValue::ScalarF32(*v * 0.001)),
-                            SynthParameterLabel::Attack => inst.set_instance_parameter(*k, SynthParameterValue::ScalarF32(*v * 0.001)),
-                            SynthParameterLabel::Sustain => inst.set_instance_parameter(*k, SynthParameterValue::ScalarF32(*v * 0.001)),
-                            SynthParameterLabel::Release => inst.set_instance_parameter(*k, SynthParameterValue::ScalarF32(*v * 0.001)),
-                            _ => inst.set_instance_parameter(*k, SynthParameterValue::ScalarF32(*v)),
+                            SynthParameterLabel::Duration => inst.set_instance_parameter(
+                                *k,
+                                &SynthParameterValue::ScalarF32(*v * 0.001),
+                            ),
+                            SynthParameterLabel::Attack => inst.set_instance_parameter(
+                                *k,
+                                &SynthParameterValue::ScalarF32(*v * 0.001),
+                            ),
+                            SynthParameterLabel::Sustain => inst.set_instance_parameter(
+                                *k,
+                                &SynthParameterValue::ScalarF32(*v * 0.001),
+                            ),
+                            SynthParameterLabel::Release => inst.set_instance_parameter(
+                                *k,
+                                &SynthParameterValue::ScalarF32(*v * 0.001),
+                            ),
+                            _ => {
+                                inst.set_instance_parameter(*k, &SynthParameterValue::ScalarF32(*v))
+                            }
                         }
                     }
                     data.ruffbox.trigger(inst);

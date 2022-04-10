@@ -7,7 +7,9 @@ use std::{
 };
 use vom_rs::pfa;
 
-use ruffbox_synth::ruffbox::{synth::SynthParameterLabel, synth::SynthParameterValue, RuffboxControls};
+use ruffbox_synth::ruffbox::{
+    synth::SynthParameterLabel, synth::SynthParameterValue, RuffboxControls,
+};
 
 use crate::builtin_types::*;
 use crate::event::*;
@@ -449,8 +451,8 @@ pub fn once<const BUFSIZE: usize, const NCHAN: usize>(
     parts_store: &sync::Arc<Mutex<PartsStore>>,
     global_parameters: &sync::Arc<GlobalParameters>,
     session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
-    sound_events: &mut Vec<StaticEvent>,
-    control_events: &mut Vec<ControlEvent>,
+    sound_events: &mut [StaticEvent],
+    control_events: &mut [ControlEvent],
     output_mode: OutputMode,
 ) {
     for cev in control_events.iter() {
@@ -488,17 +490,25 @@ pub fn once<const BUFSIZE: usize, const NCHAN: usize>(
                     SynthParameterLabel::ChannelPosition => {
                         if output_mode == OutputMode::Stereo {
                             let pos = (*v + 1.0) * 0.5;
-                            inst.set_instance_parameter(*k, SynthParameterValue::ScalarF32(pos));
+                            inst.set_instance_parameter(*k, &SynthParameterValue::ScalarF32(pos));
                         } else {
-                            inst.set_instance_parameter(*k, SynthParameterValue::ScalarF32(*v));
+                            inst.set_instance_parameter(*k, &SynthParameterValue::ScalarF32(*v));
                         }
                     }
                     // convert milliseconds to seconds
-                    SynthParameterLabel::Duration => inst.set_instance_parameter(*k, SynthParameterValue::ScalarF32(*v * 0.001)),
-                    SynthParameterLabel::Attack => inst.set_instance_parameter(*k, SynthParameterValue::ScalarF32(*v * 0.001)),
-                    SynthParameterLabel::Sustain => inst.set_instance_parameter(*k, SynthParameterValue::ScalarF32(*v * 0.001)),
-                    SynthParameterLabel::Release => inst.set_instance_parameter(*k, SynthParameterValue::ScalarF32(*v * 0.001)),
-                    _ => inst.set_instance_parameter(*k, SynthParameterValue::ScalarF32(*v)),
+                    SynthParameterLabel::Duration => {
+                        inst.set_instance_parameter(*k, &SynthParameterValue::ScalarF32(*v * 0.001))
+                    }
+                    SynthParameterLabel::Attack => {
+                        inst.set_instance_parameter(*k, &SynthParameterValue::ScalarF32(*v * 0.001))
+                    }
+                    SynthParameterLabel::Sustain => {
+                        inst.set_instance_parameter(*k, &SynthParameterValue::ScalarF32(*v * 0.001))
+                    }
+                    SynthParameterLabel::Release => {
+                        inst.set_instance_parameter(*k, &SynthParameterValue::ScalarF32(*v * 0.001))
+                    }
+                    _ => inst.set_instance_parameter(*k, &SynthParameterValue::ScalarF32(*v)),
                 }
             }
             ruffbox.trigger(inst);

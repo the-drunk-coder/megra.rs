@@ -110,11 +110,12 @@ pub fn chop(
                     Box::new(Parameter::with_value(s as f32 * (1.0 / slices as f32))),
                 );
 
-                let sus = if let Some(old_sus) = slice_event.params.get(&SynthParameterLabel::Sustain) {
-                    old_sus.static_val / slices as f32
-                } else {
-                    dur.clone().static_val
-                };
+                let sus =
+                    if let Some(old_sus) = slice_event.params.get(&SynthParameterLabel::Sustain) {
+                        old_sus.static_val / slices as f32
+                    } else {
+                        dur.clone().static_val
+                    };
 
                 slice_event.params.insert(
                     SynthParameterLabel::Sustain,

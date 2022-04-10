@@ -81,9 +81,10 @@ pub fn linear(
             let next_char: char = std::char::from_u32(last_char as u32 + 1).unwrap();
 
             let mut dur_ev = Event::with_name("transition".to_string());
-            dur_ev
-                .params
-                .insert(SynthParameterLabel::Duration, Box::new(dur_vec[count].clone()));
+            dur_ev.params.insert(
+                SynthParameterLabel::Duration,
+                Box::new(dur_vec[count].clone()),
+            );
 
             rules.push(Rule {
                 source: vec![last_char],

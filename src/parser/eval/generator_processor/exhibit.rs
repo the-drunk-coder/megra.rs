@@ -17,9 +17,10 @@ pub fn collect_exhibit(tail: &mut Vec<EvaluatedExpr>) -> Box<dyn GeneratorProces
 
     let mut evs = Vec::new();
     let mut silencer = Event::with_name("silencer".to_string());
-    silencer
-        .params
-        .insert(SynthParameterLabel::Level, Box::new(Parameter::with_value(0.0)));
+    silencer.params.insert(
+        SynthParameterLabel::Level,
+        Box::new(Parameter::with_value(0.0)),
+    );
     evs.push(silencer);
 
     let mut collect_filters = false;

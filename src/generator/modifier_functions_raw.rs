@@ -157,7 +157,11 @@ pub fn sharpen_raw(gen: &mut MarkovSequenceGenerator, factor: f32) {
     gen.set_modified();
 }
 
-pub fn shake_raw(gen: &mut MarkovSequenceGenerator, keep: &HashSet<SynthParameterLabel>, factor: f32) {
+pub fn shake_raw(
+    gen: &mut MarkovSequenceGenerator,
+    keep: &HashSet<SynthParameterLabel>,
+    factor: f32,
+) {
     gen.generator.blur(factor);
     for (_, evs) in gen.event_mapping.iter_mut() {
         for ev in evs {

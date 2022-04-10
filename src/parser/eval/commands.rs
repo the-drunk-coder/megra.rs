@@ -329,7 +329,10 @@ pub fn delay(
                 }
                 "time" => {
                     if let Some(EvaluatedExpr::Float(f)) = tail_drain.next() {
-                        param_map.insert(SynthParameterLabel::DelayTime, (f / 1000.0).clamp(0.01, 1.99));
+                        param_map.insert(
+                            SynthParameterLabel::DelayTime,
+                            (f / 1000.0).clamp(0.01, 1.99),
+                        );
                     }
                 }
 

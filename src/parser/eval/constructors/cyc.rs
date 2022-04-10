@@ -214,9 +214,10 @@ pub fn cyc(
             event_mapping.insert(last_char, ev);
 
             let mut dur_ev = Event::with_name("transition".to_string());
-            dur_ev
-                .params
-                .insert(SynthParameterLabel::Duration, Box::new(dur_vec[count].clone()));
+            dur_ev.params.insert(
+                SynthParameterLabel::Duration,
+                Box::new(dur_vec[count].clone()),
+            );
             duration_mapping.insert((last_char, next_char), dur_ev);
 
             if count < num_events {
