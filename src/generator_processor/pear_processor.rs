@@ -39,8 +39,8 @@ impl GeneratorProcessor for PearProcessor {
         // event count is usually very small ...
         for (prob, filtered_events) in self.events_to_be_applied.iter_mut() {
             let mut stat_evs = HashMap::new();
-            let cur_prob: usize = (prob.evaluate() as usize) % 101; // make sure prob is always between 0 and 100
-                                                                    //println!("cur p {}", cur_prob);
+            let cur_prob: usize = (prob.evaluate_numerical() as usize) % 101; // make sure prob is always between 0 and 100
+                                                                              //println!("cur p {}", cur_prob);
             for (filter, (mode, evs)) in filtered_events.iter_mut() {
                 let mut evs_static = Vec::new();
                 for ev in evs.iter_mut() {

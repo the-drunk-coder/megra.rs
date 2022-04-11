@@ -5,6 +5,8 @@ use rand::Rng;
 use std::boxed::Box;
 use std::fmt::*;
 
+use ruffbox_synth::ruffbox::synth::SynthParameterValue;
+
 #[derive(Clone)]
 pub struct Parameter {
     pub val: f32,
@@ -30,7 +32,25 @@ impl Parameter {
         }
     }
 
-    pub fn evaluate(&mut self) -> f32 {
+    pub fn evaluate_val_f32(&mut self) -> SynthParameterValue {
+        SynthParameterValue::ScalarF32(if let Some(m) = &mut self.modifier {
+            self.static_val = m.evaluate(self.val);
+            self.static_val
+        } else {
+            self.val
+        })
+    }
+
+    pub fn evaluate_val_usize(&mut self) -> SynthParameterValue {
+        SynthParameterValue::ScalarUsize(if let Some(m) = &mut self.modifier {
+            self.static_val = m.evaluate(self.val);
+            self.static_val as usize
+        } else {
+            self.val as usize
+        })
+    }
+
+    pub fn evaluate_numerical(&mut self) -> f32 {
         if let Some(m) = &mut self.modifier {
             self.static_val = m.evaluate(self.val);
             self.static_val
@@ -62,10 +82,10 @@ mod tests {
         for _ in 0..20 {
             let mut a = Parameter::with_value(1000.0);
             a.shake(0.5);
-            println!("val after shake: {}", a.evaluate());
-            assert!(a.evaluate() != 1000.0);
-            assert!(a.evaluate() >= 500.0);
-            assert!(a.evaluate() <= 1500.0);
+            println!("val after shake: {}", a.evaluate_numerical());
+            assert!(a.evaluate_numerical() != 1000.0);
+            assert!(a.evaluate_numerical() >= 500.0);
+            assert!(a.evaluate_numerical() <= 1500.0);
         }
     }
 }

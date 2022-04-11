@@ -1,4 +1,4 @@
-use ruffbox_synth::ruffbox::synth::SynthParameterLabel;
+use ruffbox_synth::ruffbox::synth::{SynthParameterLabel, SynthParameterValue};
 use std::boxed::Box;
 use std::collections::{BTreeSet, HashMap, HashSet};
 use std::fmt::*;
@@ -40,7 +40,7 @@ impl Debug for Event {
 #[derive(Clone)]
 pub struct StaticEvent {
     pub name: String,
-    pub params: HashMap<SynthParameterLabel, f32>,
+    pub params: HashMap<SynthParameterLabel, SynthParameterValue>,
     pub tags: BTreeSet<String>,
     pub op: EventOperation,
 }
@@ -90,27 +90,43 @@ impl StaticEvent {
             if self.params.contains_key(k) {
                 match other.op {
                     EventOperation::Replace => {
-                        self.params.insert(*k, *v);
+                        self.params.insert(*k, v.clone());
                     }
                     EventOperation::Add => {
-                        let new_val = self.params[k] + *v;
-                        self.params.insert(*k, new_val);
+                        if let SynthParameterValue::ScalarF32(new_val) = self.params[k] {
+                            if let SynthParameterValue::ScalarF32(old_val) = v {
+                                self.params
+                                    .insert(*k, SynthParameterValue::ScalarF32(old_val + new_val));
+                            };
+                        }
                     }
                     EventOperation::Subtract => {
-                        let new_val = self.params[k] - *v;
-                        self.params.insert(*k, new_val);
+                        if let SynthParameterValue::ScalarF32(new_val) = self.params[k] {
+                            if let SynthParameterValue::ScalarF32(old_val) = v {
+                                self.params
+                                    .insert(*k, SynthParameterValue::ScalarF32(old_val - new_val));
+                            };
+                        }
                     }
                     EventOperation::Multiply => {
-                        let new_val = self.params[k] * *v;
-                        self.params.insert(*k, new_val);
+                        if let SynthParameterValue::ScalarF32(new_val) = self.params[k] {
+                            if let SynthParameterValue::ScalarF32(old_val) = v {
+                                self.params
+                                    .insert(*k, SynthParameterValue::ScalarF32(old_val * new_val));
+                            };
+                        }
                     }
                     EventOperation::Divide => {
-                        let new_val = self.params[k] / *v;
-                        self.params.insert(*k, new_val);
+                        if let SynthParameterValue::ScalarF32(new_val) = self.params[k] {
+                            if let SynthParameterValue::ScalarF32(old_val) = v {
+                                self.params
+                                    .insert(*k, SynthParameterValue::ScalarF32(old_val / new_val));
+                            };
+                        }
                     }
                 }
             } else {
-                self.params.insert(*k, *v);
+                self.params.insert(*k, v.clone());
             }
         }
     }
@@ -139,11 +155,15 @@ impl Event {
         }
     }
 
-    pub fn evaluate_parameters(&mut self) -> HashMap<SynthParameterLabel, f32> {
+    pub fn evaluate_parameters(&mut self) -> HashMap<SynthParameterLabel, SynthParameterValue> {
         let mut map = HashMap::new();
 
         for (k, v) in self.params.iter_mut() {
-            map.insert(*k, v.evaluate());
+            if *k == SynthParameterLabel::SampleBufferNumber {
+                map.insert(*k, v.evaluate_val_usize());
+            } else {
+                map.insert(*k, v.evaluate_val_f32());
+            }
         }
 
         map

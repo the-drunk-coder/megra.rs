@@ -31,7 +31,7 @@ impl GeneratorProcessor for EveryProcessor {
         self.last_static.clear();
         for (step, filtered_events, _) in self.things_to_be_applied.iter_mut() {
             // genmodfuns not needed here ...
-            let cur_step: usize = (step.evaluate() as usize) % 101; // make sure prob is always between 0 and 100
+            let cur_step: usize = (step.evaluate_numerical() as usize) % 101; // make sure prob is always between 0 and 100
             if self.step_count % cur_step == 0 {
                 let mut stat_evs = HashMap::new();
                 for (filter, (mode, evs)) in filtered_events.iter_mut() {

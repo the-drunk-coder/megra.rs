@@ -11,10 +11,10 @@ pub struct BounceModifier {
 
 impl Modifier for BounceModifier {
     fn evaluate(&mut self, _: f32) -> f32 {
-        let steps_raw: f32 = self.steps.evaluate();
+        let steps_raw: f32 = self.steps.evaluate_numerical();
         let dec_inc: f32 = 360.0 / steps_raw;
-        let min_raw: f32 = self.min.evaluate();
-        let max_raw: f32 = self.max.evaluate();
+        let min_raw: f32 = self.min.evaluate_numerical();
+        let max_raw: f32 = self.max.evaluate_numerical();
         let range_raw: f32 = max_raw - min_raw;
 
         let degree: f32 = (dec_inc * (self.step_count % steps_raw)) % 360.0;

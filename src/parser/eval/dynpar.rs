@@ -110,9 +110,9 @@ pub fn brownian(
     let current = find_keyword_param(
         &keyword_params,
         "start",
-        max.clone().evaluate() - min.clone().evaluate() / 2.0,
+        max.clone().evaluate_numerical() - min.clone().evaluate_numerical() / 2.0,
     )
-    .evaluate();
+    .evaluate_numerical();
     let step_size = find_keyword_param(&keyword_params, "step", 0.1);
     let wrap = find_keyword_bool(&keyword_params, "wrap", true);
 

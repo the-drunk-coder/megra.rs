@@ -477,8 +477,10 @@ pub fn once<const BUFSIZE: usize, const NCHAN: usize>(
         }
 
         let mut bufnum: usize = 0;
-        if let Some(b) = s.params.get(&SynthParameterLabel::SampleBufferNumber) {
-            bufnum = *b as usize;
+        if let Some(SynthParameterValue::ScalarUsize(b)) =
+            s.params.get(&SynthParameterLabel::SampleBufferNumber)
+        {
+            bufnum = *b;
         }
 
         // latency 0.05, should be made configurable later ...
@@ -488,27 +490,55 @@ pub fn once<const BUFSIZE: usize, const NCHAN: usize>(
                 // special handling for stereo param
                 match k {
                     SynthParameterLabel::ChannelPosition => {
-                        if output_mode == OutputMode::Stereo {
-                            let pos = (*v + 1.0) * 0.5;
-                            inst.set_instance_parameter(*k, &SynthParameterValue::ScalarF32(pos));
-                        } else {
-                            inst.set_instance_parameter(*k, &SynthParameterValue::ScalarF32(*v));
+                        if let SynthParameterValue::ScalarF32(val) = v {
+                            if output_mode == OutputMode::Stereo {
+                                let pos = (*val + 1.0) * 0.5;
+                                inst.set_instance_parameter(
+                                    *k,
+                                    &SynthParameterValue::ScalarF32(pos),
+                                );
+                            } else {
+                                inst.set_instance_parameter(
+                                    *k,
+                                    &SynthParameterValue::ScalarF32(*val),
+                                );
+                            }
                         }
                     }
                     // convert milliseconds to seconds
                     SynthParameterLabel::Duration => {
-                        inst.set_instance_parameter(*k, &SynthParameterValue::ScalarF32(*v * 0.001))
+                        if let SynthParameterValue::ScalarF32(val) = v {
+                            inst.set_instance_parameter(
+                                *k,
+                                &SynthParameterValue::ScalarF32(*val * 0.001),
+                            )
+                        }
                     }
                     SynthParameterLabel::Attack => {
-                        inst.set_instance_parameter(*k, &SynthParameterValue::ScalarF32(*v * 0.001))
+                        if let SynthParameterValue::ScalarF32(val) = v {
+                            inst.set_instance_parameter(
+                                *k,
+                                &SynthParameterValue::ScalarF32(*val * 0.001),
+                            )
+                        }
                     }
                     SynthParameterLabel::Sustain => {
-                        inst.set_instance_parameter(*k, &SynthParameterValue::ScalarF32(*v * 0.001))
+                        if let SynthParameterValue::ScalarF32(val) = v {
+                            inst.set_instance_parameter(
+                                *k,
+                                &SynthParameterValue::ScalarF32(*val * 0.001),
+                            )
+                        }
                     }
                     SynthParameterLabel::Release => {
-                        inst.set_instance_parameter(*k, &SynthParameterValue::ScalarF32(*v * 0.001))
+                        if let SynthParameterValue::ScalarF32(val) = v {
+                            inst.set_instance_parameter(
+                                *k,
+                                &SynthParameterValue::ScalarF32(*val * 0.001),
+                            )
+                        }
                     }
-                    _ => inst.set_instance_parameter(*k, &SynthParameterValue::ScalarF32(*v)),
+                    _ => inst.set_instance_parameter(*k, v),
                 }
             }
             ruffbox.trigger(inst);

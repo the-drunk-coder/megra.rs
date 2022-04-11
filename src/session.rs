@@ -134,7 +134,7 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
         .or_insert(ConfigParameter::Dynamic(Parameter::with_value(1.0))) // init on first attempt
         .value_mut()
     {
-        tmod = global_tmod.evaluate() as f64;
+        tmod = global_tmod.evaluate_numerical() as f64;
     }
 
     if let ConfigParameter::Dynamic(global_latency) = data
@@ -143,7 +143,7 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
         .or_insert(ConfigParameter::Dynamic(Parameter::with_value(0.05))) // init on first attempt
         .value_mut()
     {
-        latency = global_latency.evaluate() as f64;
+        latency = global_latency.evaluate_numerical() as f64;
     }
 
     if let Some(vc) = &data.visualizer_client {
@@ -157,12 +157,15 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
         }
     }
 
-    let time = (data // sym, dur
+    let time = if let SynthParameterValue::ScalarF32(t) = data
         .generator
         .current_transition(&data.global_parameters)
-        .params[&SynthParameterLabel::Duration] as f64
-        * 0.001
-        * tmod) as f64;
+        .params[&SynthParameterLabel::Duration]
+    {
+        (t * 0.001) as f64 * tmod
+    } else {
+        0.2
+    };
 
     // retrieve the current events
     let events = data.generator.current_events(&data.global_parameters);
@@ -214,8 +217,10 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
                 }
 
                 let mut bufnum: usize = 0;
-                if let Some(b) = s.params.get(&SynthParameterLabel::SampleBufferNumber) {
-                    bufnum = *b as usize;
+                if let Some(SynthParameterValue::ScalarUsize(b)) =
+                    s.params.get(&SynthParameterLabel::SampleBufferNumber)
+                {
+                    bufnum = *b;
                 }
 
                 if let Some(mut inst) = data.ruffbox.prepare_instance(
@@ -226,41 +231,58 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
                     // set parameters and trigger instance
                     for (k, v) in s.params.iter() {
                         // special handling for stereo param
+
                         match k {
                             SynthParameterLabel::ChannelPosition => {
-                                if data.output_mode == OutputMode::Stereo {
-                                    let pos = (*v + 1.0) * 0.5;
-                                    inst.set_instance_parameter(
-                                        *k,
-                                        &SynthParameterValue::ScalarF32(pos),
-                                    );
-                                } else {
-                                    inst.set_instance_parameter(
-                                        *k,
-                                        &SynthParameterValue::ScalarF32(*v),
-                                    );
+                                if let SynthParameterValue::ScalarF32(val) = v {
+                                    if data.output_mode == OutputMode::Stereo {
+                                        let pos = (*val + 1.0) * 0.5;
+                                        inst.set_instance_parameter(
+                                            *k,
+                                            &SynthParameterValue::ScalarF32(pos),
+                                        );
+                                    } else {
+                                        inst.set_instance_parameter(
+                                            *k,
+                                            &SynthParameterValue::ScalarF32(*val),
+                                        );
+                                    }
                                 }
                             }
                             // convert milliseconds to seconds
-                            SynthParameterLabel::Duration => inst.set_instance_parameter(
-                                *k,
-                                &SynthParameterValue::ScalarF32(*v * 0.001),
-                            ),
-                            SynthParameterLabel::Attack => inst.set_instance_parameter(
-                                *k,
-                                &SynthParameterValue::ScalarF32(*v * 0.001),
-                            ),
-                            SynthParameterLabel::Sustain => inst.set_instance_parameter(
-                                *k,
-                                &SynthParameterValue::ScalarF32(*v * 0.001),
-                            ),
-                            SynthParameterLabel::Release => inst.set_instance_parameter(
-                                *k,
-                                &SynthParameterValue::ScalarF32(*v * 0.001),
-                            ),
-                            _ => {
-                                inst.set_instance_parameter(*k, &SynthParameterValue::ScalarF32(*v))
+                            SynthParameterLabel::Duration => {
+                                if let SynthParameterValue::ScalarF32(val) = v {
+                                    inst.set_instance_parameter(
+                                        *k,
+                                        &SynthParameterValue::ScalarF32(*val * 0.001),
+                                    )
+                                }
                             }
+                            SynthParameterLabel::Attack => {
+                                if let SynthParameterValue::ScalarF32(val) = v {
+                                    inst.set_instance_parameter(
+                                        *k,
+                                        &SynthParameterValue::ScalarF32(*val * 0.001),
+                                    )
+                                }
+                            }
+                            SynthParameterLabel::Sustain => {
+                                if let SynthParameterValue::ScalarF32(val) = v {
+                                    inst.set_instance_parameter(
+                                        *k,
+                                        &SynthParameterValue::ScalarF32(*val * 0.001),
+                                    )
+                                }
+                            }
+                            SynthParameterLabel::Release => {
+                                if let SynthParameterValue::ScalarF32(val) = v {
+                                    inst.set_instance_parameter(
+                                        *k,
+                                        &SynthParameterValue::ScalarF32(*val * 0.001),
+                                    )
+                                }
+                            }
+                            _ => inst.set_instance_parameter(*k, v),
                         }
                     }
                     data.ruffbox.trigger(inst);

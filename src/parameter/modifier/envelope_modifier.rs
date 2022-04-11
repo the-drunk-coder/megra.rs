@@ -31,19 +31,19 @@ impl EnvelopeModifier {
         };
 
         if let Some(cur_step) = env.steps.get_mut(0) {
-            env.current_steps = cur_step.evaluate() as usize;
+            env.current_steps = cur_step.evaluate_numerical() as usize;
         } else {
             env.done = true;
         }
 
         if let Some(cur_from) = env.values.get_mut(0) {
-            env.current_from = cur_from.evaluate();
+            env.current_from = cur_from.evaluate_numerical();
         } else {
             env.done = true;
         }
 
         if let Some(cur_to) = env.values.get_mut(1) {
-            env.current_to = cur_to.evaluate();
+            env.current_to = cur_to.evaluate_numerical();
         } else {
             env.done = true;
         }
@@ -56,11 +56,11 @@ impl Modifier for EnvelopeModifier {
     fn evaluate(&mut self, _: f32) -> f32 {
         if self.step_count >= self.current_steps {
             if let Some(cur_step) = self.steps.get_mut(self.steps_idx) {
-                self.current_steps = cur_step.evaluate() as usize;
+                self.current_steps = cur_step.evaluate_numerical() as usize;
                 self.steps_idx += 1;
             } else if self.repeat {
                 if let Some(cur_step) = self.steps.get_mut(0) {
-                    self.current_steps = cur_step.evaluate() as usize;
+                    self.current_steps = cur_step.evaluate_numerical() as usize;
                     self.steps_idx = 1;
                 } else {
                     self.done = true;
@@ -70,11 +70,11 @@ impl Modifier for EnvelopeModifier {
             }
 
             if let Some(cur_from) = self.values.get_mut(self.value_idx) {
-                self.current_from = cur_from.evaluate();
+                self.current_from = cur_from.evaluate_numerical();
                 self.value_idx += 1;
             } else if self.repeat {
                 if let Some(cur_from) = self.values.get_mut(0) {
-                    self.current_from = cur_from.evaluate();
+                    self.current_from = cur_from.evaluate_numerical();
                 } else {
                     self.done = true;
                 }
@@ -83,10 +83,10 @@ impl Modifier for EnvelopeModifier {
             }
 
             if let Some(cur_to) = self.values.get_mut(self.value_idx) {
-                self.current_to = cur_to.evaluate();
+                self.current_to = cur_to.evaluate_numerical();
             } else if self.repeat {
                 if let Some(cur_to) = self.values.get_mut(0) {
-                    self.current_to = cur_to.evaluate();
+                    self.current_to = cur_to.evaluate_numerical();
                     self.value_idx = 0;
                 } else {
                     self.done = true;
@@ -145,31 +145,31 @@ mod tests {
         let mut env = EnvelopeModifier::from_data(&values, &steps, false);
 
         let mut count = 0;
-        let mut val = env.evaluate(0.0);
+        let mut val = env.evaluate()(0.0);
         println!("count: {} val: {}", count, val);
         assert_approx_eq::assert_approx_eq!(val, 0.0, 0.00001);
         count += 1;
         for _ in 0..9 {
-            println!("count: {} val: {}", count, env.evaluate(0.0));
+            println!("count: {} val: {}", count, env.evaluate()(0.0));
             count += 1;
         }
-        val = env.evaluate(0.0);
+        val = env.evaluate()(0.0);
         println!("count: {} val: {}", count, val);
         assert_approx_eq::assert_approx_eq!(val, 10.0, 0.00001);
         count += 1;
         for _ in 0..9 {
-            println!("count: {} val: {}", count, env.evaluate(0.0));
+            println!("count: {} val: {}", count, env.evaluate()(0.0));
             count += 1;
         }
-        val = env.evaluate(0.0);
+        val = env.evaluate()(0.0);
         println!("count: {} val: {}", count, val);
         assert_approx_eq::assert_approx_eq!(val, 0.0, 0.00001);
         count += 1;
         for _ in 0..9 {
-            println!("count: {} val: {}", count, env.evaluate(0.0));
+            println!("count: {} val: {}", count, env.evaluate()(0.0));
             count += 1;
         }
-        assert_approx_eq::assert_approx_eq!(env.evaluate(0.0), 0.0, 0.00001);
+        assert_approx_eq::assert_approx_eq!(env.evaluate()(0.0), 0.0, 0.00001);
     }
 
     #[test]
@@ -188,30 +188,30 @@ mod tests {
         let mut env = EnvelopeModifier::from_data(&values, &steps, true);
 
         let mut count = 0;
-        let mut val = env.evaluate(0.0);
+        let mut val = env.evaluate()(0.0);
         println!("count: {} val: {}", count, val);
         assert_approx_eq::assert_approx_eq!(val, 0.0, 0.00001);
         count += 1;
         for _ in 0..9 {
-            println!("count: {} val: {}", count, env.evaluate(0.0));
+            println!("count: {} val: {}", count, env.evaluate()(0.0));
             count += 1;
         }
-        val = env.evaluate(0.0);
+        val = env.evaluate()(0.0);
         println!("count: {} val: {}", count, val);
         assert_approx_eq::assert_approx_eq!(val, 10.0, 0.00001);
         count += 1;
         for _ in 0..4 {
-            println!("count: {} val: {}", count, env.evaluate(0.0));
+            println!("count: {} val: {}", count, env.evaluate()(0.0));
             count += 1;
         }
-        val = env.evaluate(0.0);
+        val = env.evaluate()(0.0);
         println!("count: {} val: {}", count, val);
         assert_approx_eq::assert_approx_eq!(val, 5.0, 0.00001);
         count += 1;
         for _ in 0..9 {
-            println!("count: {} val: {}", count, env.evaluate(0.0));
+            println!("count: {} val: {}", count, env.evaluate()(0.0));
             count += 1;
         }
-        assert_approx_eq::assert_approx_eq!(env.evaluate(0.0), 0.0, 0.00001);
+        assert_approx_eq::assert_approx_eq!(env.evaluate()(0.0), 0.0, 0.00001);
     }
 }

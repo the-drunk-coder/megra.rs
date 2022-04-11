@@ -4,7 +4,7 @@ use crate::{
     generator_processor::GeneratorProcessor,
     markov_sequence_generator::MarkovSequenceGenerator,
 };
-use ruffbox_synth::ruffbox::synth::SynthParameterLabel;
+use ruffbox_synth::ruffbox::synth::{SynthParameterLabel, SynthParameterValue};
 use std::boxed::Box;
 use std::collections::BTreeSet;
 use std::sync::*;
@@ -18,15 +18,19 @@ pub struct TimeMod {
 
 impl TimeMod {
     fn apply_to(&self, ev: &mut StaticEvent) {
-        let old_val = ev.params[&SynthParameterLabel::Duration];
-        let new_val = match self.op {
-            EventOperation::Multiply => old_val * self.val,
-            EventOperation::Divide => old_val / self.val,
-            EventOperation::Add => old_val + self.val,
-            EventOperation::Subtract => old_val - self.val,
-            EventOperation::Replace => self.val,
-        };
-        ev.params.insert(SynthParameterLabel::Duration, new_val);
+        if let SynthParameterValue::ScalarF32(old_val) = ev.params[&SynthParameterLabel::Duration] {
+            let new_val = match self.op {
+                EventOperation::Multiply => old_val * self.val,
+                EventOperation::Divide => old_val / self.val,
+                EventOperation::Add => old_val + self.val,
+                EventOperation::Subtract => old_val - self.val,
+                EventOperation::Replace => self.val,
+            };
+            ev.params.insert(
+                SynthParameterLabel::Duration,
+                SynthParameterValue::ScalarF32(new_val),
+            );
+        }
     }
 }
 

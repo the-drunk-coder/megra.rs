@@ -16,8 +16,8 @@ impl RandRangeModifier {
 
 impl Modifier for RandRangeModifier {
     fn evaluate(&mut self, _: f32) -> f32 {
-        let min = self.min.evaluate();
-        let max = self.max.evaluate();
+        let min = self.min.evaluate_numerical();
+        let max = self.max.evaluate_numerical();
         let mut rng = rand::thread_rng();
         if (min - max).abs() < f32::EPSILON {
             // min == max
