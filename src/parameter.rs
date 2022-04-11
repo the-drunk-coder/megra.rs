@@ -8,6 +8,11 @@ use std::fmt::*;
 use ruffbox_synth::ruffbox::synth::SynthParameterValue;
 
 #[derive(Clone)]
+pub enum ParameterType {
+    Scalar
+}
+
+#[derive(Clone)]
 pub struct Parameter {
     pub val: f32,
     pub static_val: f32,
