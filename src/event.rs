@@ -4,7 +4,7 @@ use std::collections::{BTreeSet, HashMap, HashSet};
 use std::fmt::*;
 
 use crate::builtin_types::Command;
-use crate::parameter::Parameter;
+use crate::parameter::{ParameterType, Parameter};
 use crate::session::SyncContext;
 
 /// Events can represent arithmetic operations.
@@ -21,7 +21,7 @@ pub enum EventOperation {
 #[derive(Clone)]
 pub struct Event {
     pub name: String,
-    pub params: HashMap<SynthParameterLabel, Box<Parameter>>,
+    pub params: HashMap<SynthParameterLabel, (ParameterType, Vec<Box<Parameter>>)>,
     pub tags: BTreeSet<String>,
     pub op: EventOperation,
 }
