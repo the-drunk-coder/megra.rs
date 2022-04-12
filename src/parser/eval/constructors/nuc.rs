@@ -81,9 +81,10 @@ pub fn nuc(
         event_mapping.insert('a', ev_vec);
 
         let mut dur_ev = Event::with_name("transition".to_string());
-        dur_ev
-            .params
-            .insert(SynthParameterLabel::Duration, Box::new(dur.clone()));
+        dur_ev.params.insert(
+            SynthParameterLabel::Duration,
+            ParameterValue::Scalar(dur.clone()),
+        );
         duration_mapping.insert(('a', 'a'), dur_ev);
         // one rule to rule them all
         rules.push(Rule {

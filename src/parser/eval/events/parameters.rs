@@ -1,6 +1,6 @@
 use crate::event::{Event, EventOperation};
 use crate::music_theory;
-use crate::parameter::Parameter;
+use crate::parameter::{Parameter, ParameterValue};
 use crate::parser::{BuiltIn, EvaluatedExpr, FunctionMap};
 use crate::{GlobalParameters, OutputMode, SampleSet};
 use parking_lot::Mutex;
@@ -62,7 +62,7 @@ pub fn parameter(
                 let mut ev = Event::with_name_and_operation(parts[0].to_string(), op);
                 ev.params.insert(
                     param_key,
-                    Box::new(match p {
+                    ParameterValue::Scalar(match p {
                         EvaluatedExpr::Float(n) => Parameter::with_value(n),
                         EvaluatedExpr::BuiltIn(BuiltIn::Parameter(pl)) => pl,
                         EvaluatedExpr::Symbol(s)

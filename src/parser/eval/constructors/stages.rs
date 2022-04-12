@@ -120,9 +120,10 @@ pub fn stages(
         // rules to collect ...
         let mut rules = Vec::new();
         let mut dur_ev = Event::with_name("transition".to_string());
-        dur_ev
-            .params
-            .insert(SynthParameterLabel::Duration, Box::new(dur.clone()));
+        dur_ev.params.insert(
+            SynthParameterLabel::Duration,
+            ParameterValue::Scalar(dur.clone()),
+        );
 
         if labels.len() == 1 {
             rules.push(Rule {

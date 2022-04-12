@@ -216,9 +216,10 @@ pub fn flower(
         // rules to collect ...
         let mut rules = Vec::new();
         let mut dur_ev = Event::with_name("transition".to_string());
-        dur_ev
-            .params
-            .insert(SynthParameterLabel::Duration, Box::new(dur.clone()));
+        dur_ev.params.insert(
+            SynthParameterLabel::Duration,
+            ParameterValue::Scalar(dur.clone()),
+        );
 
         // convert repetition chance
         if repetition_chance > 0.0 {

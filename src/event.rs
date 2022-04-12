@@ -1,10 +1,9 @@
 use ruffbox_synth::ruffbox::synth::{SynthParameterLabel, SynthParameterValue};
-use std::boxed::Box;
 use std::collections::{BTreeSet, HashMap, HashSet};
 use std::fmt::*;
 
 use crate::builtin_types::Command;
-use crate::parameter::{ParameterType, Parameter};
+use crate::parameter::ParameterValue;
 use crate::session::SyncContext;
 
 /// Events can represent arithmetic operations.
@@ -21,7 +20,7 @@ pub enum EventOperation {
 #[derive(Clone)]
 pub struct Event {
     pub name: String,
-    pub params: HashMap<SynthParameterLabel, (ParameterType, Vec<Box<Parameter>>)>,
+    pub params: HashMap<SynthParameterLabel, ParameterValue>,
     pub tags: BTreeSet<String>,
     pub op: EventOperation,
 }
@@ -158,11 +157,13 @@ impl Event {
     pub fn evaluate_parameters(&mut self) -> HashMap<SynthParameterLabel, SynthParameterValue> {
         let mut map = HashMap::new();
 
-        for (k, v) in self.params.iter_mut() {
-            if *k == SynthParameterLabel::SampleBufferNumber {
-                map.insert(*k, v.evaluate_val_usize());
-            } else {
-                map.insert(*k, v.evaluate_val_f32());
+        for (k, val) in self.params.iter_mut() {
+            if let ParameterValue::Scalar(v) = val {
+                if *k == SynthParameterLabel::SampleBufferNumber {
+                    map.insert(*k, v.evaluate_val_usize());
+                } else {
+                    map.insert(*k, v.evaluate_val_f32());
+                }
             }
         }
 
@@ -170,9 +171,11 @@ impl Event {
     }
 
     pub fn shake(&mut self, factor: f32, keep: &HashSet<SynthParameterLabel>) {
-        for (k, v) in self.params.iter_mut() {
+        for (k, val) in self.params.iter_mut() {
             if !keep.contains(k) && *k != SynthParameterLabel::SampleBufferNumber {
-                v.shake(factor);
+                if let ParameterValue::Scalar(v) = val {
+                    v.shake(factor);
+                }
             }
         }
     }

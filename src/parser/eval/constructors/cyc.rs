@@ -216,7 +216,7 @@ pub fn cyc(
             let mut dur_ev = Event::with_name("transition".to_string());
             dur_ev.params.insert(
                 SynthParameterLabel::Duration,
-                Box::new(dur_vec[count].clone()),
+                ParameterValue::Scalar(dur_vec[count].clone()),
             );
             duration_mapping.insert((last_char, next_char), dur_ev);
 
@@ -292,7 +292,7 @@ pub fn cyc(
             let mut dur_ev = Event::with_name("transition".to_string());
             dur_ev.params.insert(
                 SynthParameterLabel::Duration,
-                Box::new(dur_vec.last().unwrap().clone()),
+                ParameterValue::Scalar(dur_vec.last().unwrap().clone()),
             );
             duration_mapping.insert((last_char, first_char), dur_ev);
         }

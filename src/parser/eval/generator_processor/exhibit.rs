@@ -3,7 +3,7 @@ use std::collections::HashMap;
 
 use crate::event::*;
 use crate::generator_processor::*;
-use crate::parameter::Parameter;
+use crate::parameter::{Parameter, ParameterValue};
 use crate::parser::{BuiltIn, EvaluatedExpr};
 
 // this is basically a shorthand for a pear processor
@@ -19,7 +19,7 @@ pub fn collect_exhibit(tail: &mut Vec<EvaluatedExpr>) -> Box<dyn GeneratorProces
     let mut silencer = Event::with_name("silencer".to_string());
     silencer.params.insert(
         SynthParameterLabel::Level,
-        Box::new(Parameter::with_value(0.0)),
+        ParameterValue::Scalar(Parameter::with_value(0.0)),
     );
     evs.push(silencer);
 

@@ -1,7 +1,7 @@
 use crate::event::{Event, EventOperation};
 use crate::event_helpers::map_parameter;
 use crate::music_theory;
-use crate::parameter::Parameter;
+use crate::parameter::{Parameter, ParameterValue};
 use crate::parser::{BuiltIn, EvaluatedExpr, FunctionMap};
 use crate::{GlobalParameters, OutputMode, SampleSet};
 use parking_lot::Mutex;
@@ -16,7 +16,7 @@ fn get_pitch_param(
     // first arg is always freq ...
     ev.params.insert(
         SynthParameterLabel::PitchFrequency,
-        Box::new(match tail_drain.next() {
+        ParameterValue::Scalar(match tail_drain.next() {
             Some(EvaluatedExpr::Float(n)) => Parameter::with_value(n),
             Some(EvaluatedExpr::BuiltIn(BuiltIn::Parameter(pl))) => pl,
             Some(EvaluatedExpr::Symbol(s)) => Parameter::with_value(music_theory::to_freq(
@@ -35,7 +35,7 @@ fn get_bufnum_param(
 ) {
     ev.params.insert(
         SynthParameterLabel::SampleBufferNumber,
-        Box::new(match tail_drain.peek() {
+        ParameterValue::Scalar(match tail_drain.peek() {
             Some(EvaluatedExpr::Float(n)) => {
                 let nn = *n;
                 tail_drain.next();
@@ -59,23 +59,23 @@ fn synth_defaults(ev: &mut Event) {
     // set some defaults 2
     ev.params.insert(
         SynthParameterLabel::Level,
-        Box::new(Parameter::with_value(0.4)),
+        ParameterValue::Scalar(Parameter::with_value(0.4)),
     );
     ev.params.insert(
         SynthParameterLabel::Attack,
-        Box::new(Parameter::with_value(1.0)),
+        ParameterValue::Scalar(Parameter::with_value(1.0)),
     );
     ev.params.insert(
         SynthParameterLabel::Sustain,
-        Box::new(Parameter::with_value(48.0)),
+        ParameterValue::Scalar(Parameter::with_value(48.0)),
     );
     ev.params.insert(
         SynthParameterLabel::Release,
-        Box::new(Parameter::with_value(100.0)),
+        ParameterValue::Scalar(Parameter::with_value(100.0)),
     );
     ev.params.insert(
         SynthParameterLabel::ChannelPosition,
-        Box::new(Parameter::with_value(0.00)),
+        ParameterValue::Scalar(Parameter::with_value(0.00)),
     );
 }
 
@@ -83,31 +83,31 @@ fn sample_defaults(ev: &mut Event) {
     // set some defaults
     ev.params.insert(
         SynthParameterLabel::Level,
-        Box::new(Parameter::with_value(0.4)),
+        ParameterValue::Scalar(Parameter::with_value(0.4)),
     );
     ev.params.insert(
         SynthParameterLabel::Attack,
-        Box::new(Parameter::with_value(1.0)),
+        ParameterValue::Scalar(Parameter::with_value(1.0)),
     );
     ev.params.insert(
         SynthParameterLabel::Release,
-        Box::new(Parameter::with_value(1.0)),
+        ParameterValue::Scalar(Parameter::with_value(1.0)),
     );
     ev.params.insert(
         SynthParameterLabel::ChannelPosition,
-        Box::new(Parameter::with_value(0.00)),
+        ParameterValue::Scalar(Parameter::with_value(0.00)),
     );
     ev.params.insert(
         SynthParameterLabel::PlaybackRate,
-        Box::new(Parameter::with_value(1.0)),
+        ParameterValue::Scalar(Parameter::with_value(1.0)),
     );
     ev.params.insert(
         SynthParameterLabel::LowpassFilterDistortion,
-        Box::new(Parameter::with_value(0.0)),
+        ParameterValue::Scalar(Parameter::with_value(0.0)),
     );
     ev.params.insert(
         SynthParameterLabel::PlaybackStart,
-        Box::new(Parameter::with_value(0.0)),
+        ParameterValue::Scalar(Parameter::with_value(0.0)),
     );
 }
 
@@ -229,11 +229,13 @@ pub fn sound(
 
                 ev.params.insert(
                     SynthParameterLabel::SampleBufferNumber,
-                    Box::new(Parameter::with_value(sample_info.bufnum as f32)),
+                    ParameterValue::Scalar(Parameter::with_value(sample_info.bufnum as f32)),
                 );
                 ev.params.insert(
                     SynthParameterLabel::Sustain,
-                    Box::new(Parameter::with_value((sample_info.duration - 2) as f32)),
+                    ParameterValue::Scalar(Parameter::with_value(
+                        (sample_info.duration - 2) as f32,
+                    )),
                 );
                 sample_defaults(&mut ev);
 
@@ -253,7 +255,7 @@ pub fn sound(
         } else {
             ev.params.insert(
                 map_parameter(&k),
-                Box::new(match tail_drain.next() {
+                ParameterValue::Scalar(match tail_drain.next() {
                     Some(EvaluatedExpr::Float(n)) => Parameter::with_value(n),
                     Some(EvaluatedExpr::BuiltIn(BuiltIn::Parameter(pl))) => pl,
                     _ => Parameter::with_value(0.0),

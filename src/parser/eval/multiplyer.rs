@@ -6,7 +6,7 @@ use crate::builtin_types::*;
 use crate::event::{Event, EventOperation};
 use crate::generator::Generator;
 use crate::generator_processor::PearProcessor;
-use crate::parameter::Parameter;
+use crate::parameter::{Parameter, ParameterValue};
 
 use crate::parser::{BuiltIn, EvaluatedExpr, FunctionMap};
 use crate::{OutputMode, SampleSet};
@@ -60,7 +60,7 @@ fn spread_gens(gens: &mut [Generator], out_mode: &OutputMode) {
         let mut ev = Event::with_name_and_operation("pos".to_string(), EventOperation::Replace);
         ev.params.insert(
             SynthParameterLabel::ChannelPosition,
-            Box::new(Parameter::with_value(positions[i])),
+            ParameterValue::Scalar(Parameter::with_value(positions[i])),
         );
         let mut filtered_events = HashMap::new();
         filtered_events.insert(vec!["".to_string()], (true, vec![ev]));
@@ -115,7 +115,7 @@ fn spread_proxies(proxies: &mut [PartProxy], out_mode: &OutputMode) {
         let mut ev = Event::with_name_and_operation("pos".to_string(), EventOperation::Replace);
         ev.params.insert(
             SynthParameterLabel::ChannelPosition,
-            Box::new(Parameter::with_value(positions[i])),
+            ParameterValue::Scalar(Parameter::with_value(positions[i])),
         );
         let mut filtered_events = HashMap::new();
         filtered_events.insert(vec!["".to_string()], (true, vec![ev]));

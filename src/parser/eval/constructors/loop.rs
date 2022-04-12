@@ -96,7 +96,7 @@ pub fn a_loop(
                 let mut dur_ev = Event::with_name("transition".to_string());
                 dur_ev.params.insert(
                     SynthParameterLabel::Duration,
-                    Box::new(dur_vec[count].clone()),
+                    ParameterValue::Scalar(dur_vec[count].clone()),
                 );
 
                 rules.push(Rule {
@@ -114,7 +114,7 @@ pub fn a_loop(
         let mut dur_ev = Event::with_name("transition".to_string());
         dur_ev.params.insert(
             SynthParameterLabel::Duration,
-            Box::new(if let Some(ldur) = dur_vec.last() {
+            ParameterValue::Scalar(if let Some(ldur) = dur_vec.last() {
                 ldur.clone()
             } else {
                 dur.clone()

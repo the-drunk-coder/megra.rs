@@ -107,19 +107,20 @@ pub fn chop(
                 let mut slice_event = ev.clone();
                 slice_event.params.insert(
                     SynthParameterLabel::PlaybackStart,
-                    Box::new(Parameter::with_value(s as f32 * (1.0 / slices as f32))),
+                    ParameterValue::Scalar(Parameter::with_value(s as f32 * (1.0 / slices as f32))),
                 );
 
-                let sus =
-                    if let Some(old_sus) = slice_event.params.get(&SynthParameterLabel::Sustain) {
-                        old_sus.static_val / slices as f32
-                    } else {
-                        dur.clone().static_val
-                    };
+                let sus = if let Some(ParameterValue::Scalar(old_sus)) =
+                    slice_event.params.get(&SynthParameterLabel::Sustain)
+                {
+                    old_sus.static_val / slices as f32
+                } else {
+                    dur.clone().static_val
+                };
 
                 slice_event.params.insert(
                     SynthParameterLabel::Sustain,
-                    Box::new(Parameter::with_value(sus)),
+                    ParameterValue::Scalar(Parameter::with_value(sus)),
                 );
 
                 slice_events.push(SourceEvent::Sound(slice_event));
@@ -140,9 +141,10 @@ pub fn chop(
             event_mapping.insert(last_char, ev);
 
             let mut dur_ev = Event::with_name("transition".to_string());
-            dur_ev
-                .params
-                .insert(SynthParameterLabel::Duration, Box::new(dur.clone()));
+            dur_ev.params.insert(
+                SynthParameterLabel::Duration,
+                ParameterValue::Scalar(dur.clone()),
+            );
             duration_mapping.insert((last_char, next_char), dur_ev);
 
             if count < num_events - 1 {
@@ -193,9 +195,10 @@ pub fn chop(
         if count != 0 {
             // close the cycle
             let mut dur_ev = Event::with_name("transition".to_string());
-            dur_ev
-                .params
-                .insert(SynthParameterLabel::Duration, Box::new(dur.clone()));
+            dur_ev.params.insert(
+                SynthParameterLabel::Duration,
+                ParameterValue::Scalar(dur.clone()),
+            );
             duration_mapping.insert((last_char, first_char), dur_ev);
 
             rules.push(Rule {

@@ -8,8 +8,9 @@ use std::fmt::*;
 use ruffbox_synth::ruffbox::synth::SynthParameterValue;
 
 #[derive(Clone)]
-pub enum ParameterType {
-    Scalar
+pub enum ParameterValue {
+    Scalar(Parameter),
+    Vector(Vec<Parameter>),
 }
 
 #[derive(Clone)]

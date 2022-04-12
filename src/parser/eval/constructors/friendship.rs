@@ -213,9 +213,10 @@ pub fn friendship(
         // rules to collect ...
         let mut rules = Vec::new();
         let mut dur_ev = Event::with_name("transition".to_string());
-        dur_ev
-            .params
-            .insert(SynthParameterLabel::Duration, Box::new(dur.clone()));
+        dur_ev.params.insert(
+            SynthParameterLabel::Duration,
+            ParameterValue::Scalar(dur.clone()),
+        );
 
         let mut friends_iter = friends_labels.iter();
 

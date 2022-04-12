@@ -2,7 +2,7 @@ use crate::{
     event::{Event, EventOperation, SourceEvent},
     generator::TimeMod,
     markov_sequence_generator::MarkovSequenceGenerator,
-    parameter::Parameter,
+    parameter::{Parameter, ParameterValue},
     pfa_growth::*,
     pfa_reverse::*,
 };
@@ -81,9 +81,10 @@ pub fn grow_raw(
                         let mut dur_ev = Event::with_name("transition".to_string());
                         let dur_val = durations.choose(&mut rand::thread_rng()).unwrap().clone();
                         //println!("add from stash {} {} {}", sym, added_sym, dur_val.static_val);
-                        dur_ev
-                            .params
-                            .insert(SynthParameterLabel::Duration, Box::new(dur_val));
+                        dur_ev.params.insert(
+                            SynthParameterLabel::Duration,
+                            ParameterValue::Scalar(dur_val),
+                        );
                         dur_mapping_to_add.insert((*sym, added_sym), dur_ev);
                     } else {
                         //println!("add from prev {} {}", sym, added_sym);
@@ -96,9 +97,10 @@ pub fn grow_raw(
                         let mut dur_ev = Event::with_name("transition".to_string());
                         let dur_val = durations.choose(&mut rand::thread_rng()).unwrap().clone();
                         //println!("add from stash {} {} {}", added_sym, sym, dur_val.static_val);
-                        dur_ev
-                            .params
-                            .insert(SynthParameterLabel::Duration, Box::new(dur_val));
+                        dur_ev.params.insert(
+                            SynthParameterLabel::Duration,
+                            ParameterValue::Scalar(dur_val),
+                        );
                         dur_mapping_to_add.insert((added_sym, *sym), dur_ev);
                     } else {
                         //println!("add from prev {} {}", added_sym, sym);
@@ -116,9 +118,10 @@ pub fn grow_raw(
                             let dur_val =
                                 durations.choose(&mut rand::thread_rng()).unwrap().clone();
                             //println!("add from stash {} {} {}", src, dest, dur_val.static_val);
-                            dur_ev
-                                .params
-                                .insert(SynthParameterLabel::Duration, Box::new(dur_val));
+                            dur_ev.params.insert(
+                                SynthParameterLabel::Duration,
+                                ParameterValue::Scalar(dur_val),
+                            );
                             dur_mapping_to_add.insert((*src, *dest), dur_ev);
                         }
                     }

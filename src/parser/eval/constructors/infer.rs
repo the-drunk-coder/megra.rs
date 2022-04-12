@@ -139,7 +139,7 @@ pub fn infer(
                 let mut dur_ev = Event::with_name("transition".to_string());
                 dur_ev.params.insert(
                     SynthParameterLabel::Duration,
-                    Box::new(Parameter::with_value(s.duration as f32)),
+                    ParameterValue::Scalar(Parameter::with_value(s.duration as f32)),
                 );
                 duration_mapping.insert((*s.source.last().unwrap(), s.symbol), dur_ev);
                 rules.push(s.to_pfa_rule());
