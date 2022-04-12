@@ -157,12 +157,21 @@ impl Event {
     pub fn evaluate_parameters(&mut self) -> HashMap<SynthParameterLabel, SynthParameterValue> {
         let mut map = HashMap::new();
 
-        for (k, val) in self.params.iter_mut() {
-            if let ParameterValue::Scalar(v) = val {
-                if *k == SynthParameterLabel::SampleBufferNumber {
-                    map.insert(*k, v.evaluate_val_usize());
-                } else {
-                    map.insert(*k, v.evaluate_val_f32());
+        for (k, v) in self.params.iter_mut() {
+            match v {
+                ParameterValue::Scalar(val) => {
+                    if *k == SynthParameterLabel::SampleBufferNumber {
+                        map.insert(*k, val.evaluate_val_usize());
+                    } else {
+                        map.insert(*k, val.evaluate_val_f32());
+                    }
+                }
+                ParameterValue::Vector(vals) => {
+                    let mut static_vals: Vec<f32> = Vec::new();
+                    for val in vals.iter_mut() {
+                        static_vals.push(val.evaluate_numerical());
+                    }
+                    map.insert(*k, SynthParameterValue::VecF32(static_vals));
                 }
             }
         }
@@ -171,10 +180,17 @@ impl Event {
     }
 
     pub fn shake(&mut self, factor: f32, keep: &HashSet<SynthParameterLabel>) {
-        for (k, val) in self.params.iter_mut() {
+        for (k, v) in self.params.iter_mut() {
             if !keep.contains(k) && *k != SynthParameterLabel::SampleBufferNumber {
-                if let ParameterValue::Scalar(v) = val {
-                    v.shake(factor);
+                match v {
+                    ParameterValue::Scalar(val) => {
+                        val.shake(factor);
+                    }
+                    ParameterValue::Vector(vals) => {
+                        for val in vals.iter_mut() {
+                            val.shake(factor);
+                        }
+                    }
                 }
             }
         }
