@@ -60,6 +60,7 @@ pub fn define_standard_library() -> FunctionMap {
     standard_library.fmap.insert("silence".to_string(), eval::events::sound::sound);
     standard_library.fmap.insert("feedr".to_string(), eval::events::sound::sound);
     standard_library.fmap.insert("freezr".to_string(), eval::events::sound::sound);
+    standard_library.fmap.insert("wtab".to_string(), eval::events::sound::sound);
     
     // parameter events
     standard_library.fmap.insert("pitch".to_string(), eval::events::parameters::parameter);
