@@ -9,6 +9,35 @@ use ruffbox_synth::ruffbox::synth::SynthParameterLabel;
 use std::collections::HashSet;
 use std::sync;
 
+fn collect_param_value(
+    tail_drain: &mut std::iter::Peekable<std::vec::Drain<EvaluatedExpr>>,
+) -> ParameterValue {
+    let mut par_vec = Vec::new();
+    while let Some(e) = tail_drain.peek() {
+        match e {
+            EvaluatedExpr::Float(f) => {
+                par_vec.push(Parameter::with_value(*f));
+                tail_drain.next();
+            }
+            EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p)) => {
+                // this is an annoying clone, really ...
+                par_vec.push(p.clone());
+                tail_drain.next();
+            }
+            _ => {
+                break;
+            }
+        }
+    }
+    if par_vec.is_empty() {
+        ParameterValue::Scalar(Parameter::with_value(0.0))
+    } else if par_vec.len() == 1 {
+        ParameterValue::Scalar(par_vec[0].clone())
+    } else {
+        ParameterValue::Vector(par_vec)
+    }
+}
+
 fn get_pitch_param(
     ev: &mut Event,
     tail_drain: &mut std::iter::Peekable<std::vec::Drain<EvaluatedExpr>>,
@@ -249,18 +278,13 @@ pub fn sound(
     // collect keyword params
     while let Some(EvaluatedExpr::Keyword(k)) = tail_drain.next() {
         if k == "tags" {
-            while let Some(EvaluatedExpr::Symbol(s)) = tail_drain.next() {
-                ev.tags.insert(s);
+            while let Some(EvaluatedExpr::Symbol(s)) = tail_drain.peek() {
+                ev.tags.insert(s.clone());
+                tail_drain.next();
             }
         } else {
-            ev.params.insert(
-                map_parameter(&k),
-                ParameterValue::Scalar(match tail_drain.next() {
-                    Some(EvaluatedExpr::Float(n)) => Parameter::with_value(n),
-                    Some(EvaluatedExpr::BuiltIn(BuiltIn::Parameter(pl))) => pl,
-                    _ => Parameter::with_value(0.0),
-                }),
-            );
+            ev.params
+                .insert(map_parameter(&k), collect_param_value(&mut tail_drain));
         }
     }
 

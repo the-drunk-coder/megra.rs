@@ -85,6 +85,7 @@ impl StaticEvent {
             return;
         }
 
+        // TODO: handle vector values here ...
         for (k, v) in other.params.iter() {
             if self.params.contains_key(k) {
                 match other.op {
