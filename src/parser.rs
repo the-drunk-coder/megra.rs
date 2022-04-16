@@ -1,7 +1,7 @@
 use crate::event::{ControlEvent, Event};
 use crate::generator::Generator;
 use crate::markov_sequence_generator::Rule;
-use crate::parameter::Parameter;
+use crate::parameter::{Parameter, ParameterValue};
 use crate::session::SyncContext;
 use crate::{Command, GeneratorProcessorOrModifier, GlobalParameters, PartProxy};
 use crate::{OutputMode, SampleSet};
@@ -57,6 +57,7 @@ pub enum BuiltIn {
     GeneratorModifierList(Vec<GeneratorProcessorOrModifier>),
     SoundEvent(Event),
     Parameter(Parameter),
+    Modulator(ParameterValue),
     ControlEvent(ControlEvent),
     SyncContext(SyncContext),
 }
@@ -79,6 +80,7 @@ impl fmt::Debug for BuiltIn {
             BuiltIn::GeneratorModifierList(_) => write!(f, "BuiltIn::GeneratorModifierList(..)"),
             BuiltIn::SoundEvent(_) => write!(f, "BuiltIn::SoundEvent(..)"),
             BuiltIn::Parameter(_) => write!(f, "BuiltIn::Parameter(..)"),
+	    BuiltIn::Modulator(_) => write!(f, "BuiltIn::Modulator(..)"),
             BuiltIn::ControlEvent(_) => write!(f, "BuiltIn::ControlEvent(..)"),
             BuiltIn::SyncContext(_) => write!(f, "BuiltIn::SyncContext(..)"),
         }

@@ -174,6 +174,9 @@ impl Event {
                     }
                     map.insert(*k, SynthParameterValue::VecF32(static_vals));
                 }
+		ParameterValue::Lfo(freq, range, op) => {
+		    map.insert(*k, SynthParameterValue::Lfo(freq.evaluate_numerical(), range.evaluate_numerical(), *op));
+		}
             }
         }
 
@@ -192,6 +195,10 @@ impl Event {
                             val.shake(factor);
                         }
                     }
+		    ParameterValue::Lfo(freq, range, _) => {
+			freq.shake(factor);
+			range.shake(factor);
+		    }
                 }
             }
         }

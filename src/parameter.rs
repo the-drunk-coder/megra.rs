@@ -5,12 +5,13 @@ use rand::Rng;
 use std::boxed::Box;
 use std::fmt::*;
 
-use ruffbox_synth::building_blocks::SynthParameterValue;
+use ruffbox_synth::building_blocks::{SynthParameterValue, ValOp};
 
 #[derive(Clone)]
 pub enum ParameterValue {
     Scalar(Parameter),
     Vector(Vec<Parameter>),
+    Lfo(Parameter, Parameter, ValOp),
 }
 
 #[derive(Clone)]

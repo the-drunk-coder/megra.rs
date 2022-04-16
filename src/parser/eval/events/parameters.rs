@@ -34,8 +34,8 @@ pub fn parameter(
             };
 
             let param_key = match parts[0] {
-                "freq " => SynthParameterLabel::PitchFrequency,
-                "pitch " => SynthParameterLabel::PitchFrequency,
+                "freq" => SynthParameterLabel::PitchFrequency,
+                "pitch" => SynthParameterLabel::PitchFrequency,
                 "atk" => SynthParameterLabel::Attack,
                 "rel" => SynthParameterLabel::Release,
                 "sus" => SynthParameterLabel::Sustain,
