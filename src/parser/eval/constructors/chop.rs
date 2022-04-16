@@ -6,7 +6,7 @@ use crate::parameter::*;
 use crate::parser::{BuiltIn, EvaluatedExpr, FunctionMap};
 use crate::{OutputMode, SampleSet};
 
-use ruffbox_synth::ruffbox::synth::SynthParameterLabel;
+use ruffbox_synth::building_blocks::SynthParameterLabel;
 use std::collections::{BTreeSet, HashMap};
 use std::sync;
 use vom_rs::pfa::{Pfa, Rule};

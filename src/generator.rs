@@ -4,7 +4,7 @@ use crate::{
     generator_processor::GeneratorProcessor,
     markov_sequence_generator::MarkovSequenceGenerator,
 };
-use ruffbox_synth::ruffbox::synth::{SynthParameterLabel, SynthParameterValue};
+use ruffbox_synth::building_blocks::{SynthParameterLabel, SynthParameterValue};
 use std::boxed::Box;
 use std::collections::BTreeSet;
 use std::sync::*;

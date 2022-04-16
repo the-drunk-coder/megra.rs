@@ -3,7 +3,7 @@ use crate::event::*;
 use crate::generator::Generator;
 use crate::markov_sequence_generator::MarkovSequenceGenerator;
 use crate::parameter::*;
-use ruffbox_synth::ruffbox::synth::SynthParameterLabel;
+use ruffbox_synth::building_blocks::SynthParameterLabel;
 use std::collections::{BTreeSet, HashMap};
 use std::sync;
 use vom_rs::pfa::{Pfa, Rule};

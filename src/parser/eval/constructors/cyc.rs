@@ -6,7 +6,7 @@ use crate::markov_sequence_generator::MarkovSequenceGenerator;
 use crate::parameter::*;
 use crate::sample_set::SampleSet;
 use crate::session::OutputMode;
-use ruffbox_synth::ruffbox::synth::SynthParameterLabel;
+use ruffbox_synth::building_blocks::SynthParameterLabel;
 use std::collections::{BTreeSet, HashMap};
 use std::sync;
 use vom_rs::pfa::{Pfa, Rule};

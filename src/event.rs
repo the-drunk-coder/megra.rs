@@ -1,4 +1,4 @@
-use ruffbox_synth::ruffbox::synth::{SynthParameterLabel, SynthParameterValue};
+use ruffbox_synth::building_blocks::{SynthParameterLabel, SynthParameterValue};
 use std::collections::{BTreeSet, HashMap, HashSet};
 use std::fmt::*;
 

@@ -7,8 +7,9 @@ use std::{
 };
 use vom_rs::pfa;
 
-use ruffbox_synth::ruffbox::{
-    synth::SynthParameterLabel, synth::SynthParameterValue, RuffboxControls,
+use ruffbox_synth::{
+    building_blocks::SynthParameterLabel, building_blocks::SynthParameterValue,
+    ruffbox::RuffboxControls,
 };
 
 use crate::builtin_types::*;

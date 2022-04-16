@@ -5,7 +5,7 @@ use rand::Rng;
 use std::boxed::Box;
 use std::fmt::*;
 
-use ruffbox_synth::ruffbox::synth::SynthParameterValue;
+use ruffbox_synth::building_blocks::SynthParameterValue;
 
 #[derive(Clone)]
 pub enum ParameterValue {

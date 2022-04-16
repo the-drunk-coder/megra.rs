@@ -7,7 +7,7 @@ use crate::{
     pfa_reverse::*,
 };
 use rand::seq::SliceRandom;
-use ruffbox_synth::ruffbox::synth::SynthParameterLabel;
+use ruffbox_synth::building_blocks::SynthParameterLabel;
 use std::collections::{HashMap, HashSet};
 
 pub fn haste_raw(time_mods: &mut Vec<TimeMod>, v: f32, n: usize) {

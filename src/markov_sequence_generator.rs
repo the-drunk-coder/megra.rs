@@ -1,5 +1,5 @@
 use crate::event::{Event, InterpretableEvent, SourceEvent, StaticEvent};
-use ruffbox_synth::ruffbox::synth::{SynthParameterLabel, SynthParameterValue};
+use ruffbox_synth::building_blocks::{SynthParameterLabel, SynthParameterValue};
 use std::collections::HashMap;
 use vom_rs::pfa;
 

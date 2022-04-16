@@ -2,7 +2,7 @@ use rand::seq::SliceRandom;
 use rand::Rng;
 use std::{collections::HashSet, sync::*};
 
-use ruffbox_synth::ruffbox::synth::SynthParameterLabel;
+use ruffbox_synth::building_blocks::SynthParameterLabel;
 
 use crate::{
     builtin_types::{BuiltinGlobalParameters, GlobalParameters},

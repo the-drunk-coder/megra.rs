@@ -5,7 +5,7 @@ use crate::parameter::{Parameter, ParameterValue};
 use crate::parser::{BuiltIn, EvaluatedExpr, FunctionMap};
 use crate::{GlobalParameters, OutputMode, SampleSet};
 use parking_lot::Mutex;
-use ruffbox_synth::ruffbox::synth::SynthParameterLabel;
+use ruffbox_synth::building_blocks::SynthParameterLabel;
 use std::collections::HashSet;
 use std::sync;
 

@@ -1,4 +1,4 @@
-use ruffbox_synth::ruffbox::synth::SynthParameterLabel;
+use ruffbox_synth::building_blocks::SynthParameterLabel;
 use std::collections::HashMap;
 
 use crate::event::*;

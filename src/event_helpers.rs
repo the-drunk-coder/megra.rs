@@ -1,19 +1,19 @@
-use ruffbox_synth::ruffbox::synth::SourceType;
-use ruffbox_synth::ruffbox::synth::SynthParameterLabel;
+use ruffbox_synth::building_blocks::SynthParameterLabel;
+use ruffbox_synth::building_blocks::SynthType;
 
-pub fn map_name(name: &str) -> SourceType {
+pub fn map_name(name: &str) -> SynthType {
     match name {
-        "sine" => SourceType::SineSynth,
-        "tri" => SourceType::LFTriangleSynth,
-        "saw" => SourceType::LFSawSynth,
-        "sqr" => SourceType::LFSquareSynth,
-        "cub" => SourceType::LFCubSynth,
-        "risset" => SourceType::RissetBell,
-        "sampler" => SourceType::Sampler,
-        "livesampler" => SourceType::LiveSampler,
-        "frozensampler" => SourceType::FrozenSampler,
-        "wavetable" => SourceType::Wavetable,
-        _ => SourceType::SineSynth,
+        "sine" => SynthType::SineSynth,
+        "tri" => SynthType::LFTriangleSynth,
+        "saw" => SynthType::LFSawSynth,
+        "sqr" => SynthType::LFSquareSynth,
+        "cub" => SynthType::LFCubSynth,
+        "risset" => SynthType::RissetBell,
+        "sampler" => SynthType::Sampler,
+        "livesampler" => SynthType::LiveSampler,
+        "frozensampler" => SynthType::FrozenSampler,
+        "wavetable" => SynthType::Wavetable,
+        _ => SynthType::SineSynth,
     }
 }
 

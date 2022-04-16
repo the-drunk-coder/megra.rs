@@ -5,7 +5,7 @@ use crate::parameter::*;
 
 use std::collections::BTreeSet;
 
-use ruffbox_synth::ruffbox::synth::SynthParameterLabel;
+use ruffbox_synth::building_blocks::SynthParameterLabel;
 
 use crate::parser::{BuiltIn, EvaluatedExpr, FunctionMap};
 use crate::{OutputMode, SampleSet};

@@ -5,7 +5,7 @@ use crate::parameter::*;
 use dashmap::DashMap;
 use std::collections::{BTreeSet, HashMap};
 
-use ruffbox_synth::ruffbox::synth::SynthParameterLabel;
+use ruffbox_synth::building_blocks::SynthParameterLabel;
 
 #[derive(Clone)]
 pub enum Part {

@@ -2,7 +2,7 @@ use parking_lot::Mutex;
 use std::collections::{BTreeSet, HashMap};
 use std::{sync, thread};
 
-use ruffbox_synth::ruffbox::synth::{SynthParameterLabel, SynthParameterValue};
+use ruffbox_synth::building_blocks::{SynthParameterLabel, SynthParameterValue};
 use ruffbox_synth::ruffbox::RuffboxControls;
 
 use crate::builtin_types::{
