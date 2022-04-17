@@ -14,6 +14,12 @@ pub fn lfo_modulator(
 ) -> Option<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..).skip(1);
 
+    let init = if let Some(EvaluatedExpr::Float(f)) = tail_drain.next() {
+        f
+    } else {
+        1.0
+    };
+    
     let freq = if let Some(EvaluatedExpr::Float(f)) = tail_drain.next() {
         f
     } else {
@@ -41,6 +47,7 @@ pub fn lfo_modulator(
 
     Some(EvaluatedExpr::BuiltIn(BuiltIn::Modulator(
         ParameterValue::Lfo(
+	    Parameter::with_value(init),
             Parameter::with_value(freq),
             Parameter::with_value(range),
             op,
