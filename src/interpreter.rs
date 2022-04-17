@@ -33,7 +33,7 @@ pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
         EvaluatedExpr::BuiltIn(BuiltIn::Parameter(_)) => {
             println!("a parameter");
         }
-	EvaluatedExpr::BuiltIn(BuiltIn::Modulator(_)) => {
+        EvaluatedExpr::BuiltIn(BuiltIn::Modulator(_)) => {
             println!("a modulator");
         }
         EvaluatedExpr::BuiltIn(BuiltIn::SoundEvent(_)) => {

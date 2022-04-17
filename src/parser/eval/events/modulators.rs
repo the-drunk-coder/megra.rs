@@ -15,29 +15,35 @@ pub fn lfo_modulator(
     let mut tail_drain = tail.drain(..).skip(1);
 
     let freq = if let Some(EvaluatedExpr::Float(f)) = tail_drain.next() {
-	f
+        f
     } else {
-	5.0
+        5.0
     };
 
     let range = if let Some(EvaluatedExpr::Float(r)) = tail_drain.next() {
-	r
+        r
     } else {
-	2.0
+        2.0
     };
 
     let op = if let Some(EvaluatedExpr::Symbol(s)) = tail_drain.next() {
-	//println!("{}", s);
-	match s.as_str() {
-	    "add" => ValOp::Add,
-	    "sub" => ValOp::Subtract,
-	    "div" => ValOp::Divide,
-	    "mul" => ValOp::Multiply,
-	    _ => ValOp::Replace,
-	}
+        //println!("{}", s);
+        match s.as_str() {
+            "add" => ValOp::Add,
+            "sub" => ValOp::Subtract,
+            "div" => ValOp::Divide,
+            "mul" => ValOp::Multiply,
+            _ => ValOp::Replace,
+        }
     } else {
-	ValOp::Replace
+        ValOp::Replace
     };
 
-    Some(EvaluatedExpr::BuiltIn(BuiltIn::Modulator(ParameterValue::Lfo(Parameter::with_value(freq), Parameter::with_value(range), op))))
+    Some(EvaluatedExpr::BuiltIn(BuiltIn::Modulator(
+        ParameterValue::Lfo(
+            Parameter::with_value(freq),
+            Parameter::with_value(range),
+            op,
+        ),
+    )))
 }

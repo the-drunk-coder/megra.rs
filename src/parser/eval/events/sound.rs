@@ -23,9 +23,10 @@ fn collect_param_value(
                 // this is an annoying clone, really ...
                 par_vec.push(p.clone());
                 tail_drain.next();
-            } EvaluatedExpr::BuiltIn(BuiltIn::Modulator(m)) => {
-		return m.clone();
-	    }		
+            }
+            EvaluatedExpr::BuiltIn(BuiltIn::Modulator(m)) => {
+                return m.clone();
+            }
             _ => {
                 break;
             }
@@ -48,15 +49,17 @@ fn get_pitch_param(
     ev.params.insert(
         SynthParameterLabel::PitchFrequency,
         match tail_drain.next() {
-	    Some(EvaluatedExpr::BuiltIn(BuiltIn::Modulator(m))) => m,
+            Some(EvaluatedExpr::BuiltIn(BuiltIn::Modulator(m))) => m,
             Some(EvaluatedExpr::Float(n)) => ParameterValue::Scalar(Parameter::with_value(n)),
             Some(EvaluatedExpr::BuiltIn(BuiltIn::Parameter(pl))) => ParameterValue::Scalar(pl),
-            Some(EvaluatedExpr::Symbol(s)) => ParameterValue::Scalar(Parameter::with_value(music_theory::to_freq(
-                music_theory::from_string(&s),
-                music_theory::Tuning::EqualTemperament,
-            ))),
+            Some(EvaluatedExpr::Symbol(s)) => {
+                ParameterValue::Scalar(Parameter::with_value(music_theory::to_freq(
+                    music_theory::from_string(&s),
+                    music_theory::Tuning::EqualTemperament,
+                )))
+            }
             _ => ParameterValue::Scalar(Parameter::with_value(100.0)),
-        }
+        },
     );
 }
 
