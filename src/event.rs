@@ -178,7 +178,7 @@ impl Event {
                     map.insert(
                         *k,
                         SynthParameterValue::Lfo(
-			    init.evaluate_numerical(),
+                            init.evaluate_numerical(),
                             freq.evaluate_numerical(),
                             range.evaluate_numerical(),
                             *op,
@@ -204,7 +204,7 @@ impl Event {
                         }
                     }
                     ParameterValue::Lfo(init, freq, range, _) => {
-			init.shake(factor);
+                        init.shake(factor);
                         freq.shake(factor);
                         range.shake(factor);
                     }

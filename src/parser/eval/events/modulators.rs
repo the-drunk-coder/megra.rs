@@ -14,43 +14,58 @@ pub fn lfo_modulator(
 ) -> Option<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..).skip(1);
 
-    let init = if let Some(EvaluatedExpr::Float(f)) = tail_drain.next() {
-        f
-    } else {
-        1.0
-    };
-    
-    let freq = if let Some(EvaluatedExpr::Float(f)) = tail_drain.next() {
-        f
-    } else {
-        5.0
-    };
+    let mut init = Parameter::with_value(1.0);
+    let mut freq = Parameter::with_value(1.0);
+    let mut range = Parameter::with_value(1.0);
+    let mut op = ValOp::Replace;
 
-    let range = if let Some(EvaluatedExpr::Float(r)) = tail_drain.next() {
-        r
-    } else {
-        2.0
-    };
-
-    let op = if let Some(EvaluatedExpr::Symbol(s)) = tail_drain.next() {
-        //println!("{}", s);
-        match s.as_str() {
-            "add" => ValOp::Add,
-            "sub" => ValOp::Subtract,
-            "div" => ValOp::Divide,
-            "mul" => ValOp::Multiply,
-            _ => ValOp::Replace,
+    while let Some(e) = tail_drain.next() {
+        if let EvaluatedExpr::Keyword(k) = e {
+            match k.as_str() {
+                "init" => {
+                    if let Some(p) = tail_drain.next() {
+                        match p {
+                            EvaluatedExpr::Float(f) => init = Parameter::with_value(f),
+                            EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p)) => init = p,
+                            _ => {}
+                        }
+                    }
+                }
+                "freq" => {
+                    if let Some(p) = tail_drain.next() {
+                        match p {
+                            EvaluatedExpr::Float(f) => freq = Parameter::with_value(f),
+                            EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p)) => freq = p,
+                            _ => {}
+                        }
+                    }
+                }
+                "range" => {
+                    if let Some(p) = tail_drain.next() {
+                        match p {
+                            EvaluatedExpr::Float(f) => range = Parameter::with_value(f),
+                            EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p)) => range = p,
+                            _ => {}
+                        }
+                    }
+                }
+                "op" => {
+                    if let Some(EvaluatedExpr::Symbol(s)) = tail_drain.next() {
+                        match s.as_str() {
+                            "add" => op = ValOp::Add,
+                            "sub" => op = ValOp::Subtract,
+                            "div" => op = ValOp::Divide,
+                            "mul" => op = ValOp::Multiply,
+                            _ => op = ValOp::Replace,
+                        }
+                    }
+                }
+                _ => {}
+            }
         }
-    } else {
-        ValOp::Replace
-    };
+    }
 
     Some(EvaluatedExpr::BuiltIn(BuiltIn::Modulator(
-        ParameterValue::Lfo(
-	    Parameter::with_value(init),
-            Parameter::with_value(freq),
-            Parameter::with_value(range),
-            op,
-        ),
+        ParameterValue::Lfo(init, freq, range, op),
     )))
 }
