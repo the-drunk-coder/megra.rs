@@ -25,7 +25,9 @@ fn collect_param_value(
                 tail_drain.next();
             }
             EvaluatedExpr::BuiltIn(BuiltIn::Modulator(m)) => {
-                return m.clone();
+                let mc = m.clone();
+                tail_drain.next();
+                return mc;
             }
             _ => {
                 break;
