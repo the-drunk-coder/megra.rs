@@ -490,10 +490,10 @@ pub fn once<const BUFSIZE: usize, const NCHAN: usize>(
             for (k, v) in s.params.iter() {
                 // special handling for stereo param
                 match k {
-                    SynthParameterLabel::ChannelPosition => {
-                        if let SynthParameterValue::ScalarF32(val) = v {
+                    SynthParameterLabel::ChannelPosition => match v {
+                        SynthParameterValue::ScalarF32(p) => {
                             if output_mode == OutputMode::Stereo {
-                                let pos = (*val + 1.0) * 0.5;
+                                let pos = (*p + 1.0) * 0.5;
                                 inst.set_instance_parameter(
                                     *k,
                                     &SynthParameterValue::ScalarF32(pos),
@@ -501,11 +501,26 @@ pub fn once<const BUFSIZE: usize, const NCHAN: usize>(
                             } else {
                                 inst.set_instance_parameter(
                                     *k,
-                                    &SynthParameterValue::ScalarF32(*val),
+                                    &SynthParameterValue::ScalarF32(*p),
                                 );
                             }
                         }
-                    }
+                        SynthParameterValue::Lfo(init, freq, range, op) => {
+                            if output_mode == OutputMode::Stereo {
+                                let pos = (*init + 1.0) * 0.5;
+                                inst.set_instance_parameter(
+                                    *k,
+                                    &SynthParameterValue::Lfo(pos, *freq, *range, *op),
+                                );
+                            } else {
+                                inst.set_instance_parameter(
+                                    *k,
+                                    &SynthParameterValue::Lfo(*init, *freq, *range, *op),
+                                );
+                            }
+                        }
+                        _ => {}
+                    },
                     // convert milliseconds to seconds
                     SynthParameterLabel::Duration => {
                         if let SynthParameterValue::ScalarF32(val) = v {
