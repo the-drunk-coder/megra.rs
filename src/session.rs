@@ -231,11 +231,11 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
                     // set parameters and trigger instance
                     for (k, v) in s.params.iter() {
                         // special handling for stereo param
-                        println!("{:?}", k);
+                        //println!("{:?}", k);
                         match k {
                             SynthParameterLabel::ChannelPosition => match v {
                                 SynthParameterValue::ScalarF32(p) => {
-                                    println!("hello");
+                                    //println!("hello");
                                     if data.output_mode == OutputMode::Stereo {
                                         let pos = (*p + 1.0) * 0.5;
                                         inst.set_instance_parameter(
@@ -250,7 +250,7 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
                                     }
                                 }
                                 SynthParameterValue::Lfo(init, freq, range, op) => {
-                                    println!("hello {}", init);
+                                    //println!("hello {}", init);
                                     if data.output_mode == OutputMode::Stereo {
                                         let pos = (*init + 1.0) * 0.5;
                                         inst.set_instance_parameter(
