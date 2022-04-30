@@ -79,7 +79,7 @@ pub fn bounce(
     let keyword_params = get_keyword_params(&mut tail_drain);
     let steps = find_keyword_param(&keyword_params, "steps", 128.0);
 
-    println!("{:?} {:?} {:?}", min, max, steps);
+    //println!("{:?} {:?} {:?}", min, max, steps);
 
     Some(EvaluatedExpr::BuiltIn(BuiltIn::Parameter(Parameter {
         val: 0.0,
