@@ -13,6 +13,7 @@ pub fn map_name(name: &str) -> SynthType {
         "livesampler" => SynthType::LiveSampler,
         "frozensampler" => SynthType::FrozenSampler,
         "wavetable" => SynthType::Wavetable,
+	"wavematrix" => SynthType::Wavematrix,
         _ => SynthType::SineSynth,
     }
 }
@@ -42,7 +43,8 @@ pub fn map_parameter(name: &str) -> SynthParameterLabel {
         "bufnum" => SynthParameterLabel::SampleBufferNumber,
         "rev" => SynthParameterLabel::ReverbMix,
         "del" => SynthParameterLabel::DelayMix,
-        "wt" => SynthParameterLabel::Wavetable,
+        "wt" | "wavetable" => SynthParameterLabel::Wavetable,
+	"wm" | "wavematrix" => SynthParameterLabel::Wavematrix,
         _ => SynthParameterLabel::PitchFrequency,
     }
 }
