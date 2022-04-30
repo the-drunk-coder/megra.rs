@@ -45,6 +45,7 @@ pub fn map_parameter(name: &str) -> SynthParameterLabel {
         "del" => SynthParameterLabel::DelayMix,
         "wt" | "wavetable" => SynthParameterLabel::Wavetable,
         "wm" | "wavematrix" => SynthParameterLabel::Wavematrix,
+        "ti" | "tableindex" => SynthParameterLabel::WavematrixTableIndex,
         _ => SynthParameterLabel::PitchFrequency,
     }
 }

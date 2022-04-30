@@ -178,14 +178,14 @@ impl Event {
                     let mut static_vals: Vec<Vec<f32>> = Vec::new();
                     let mut rows = 0;
                     let mut cols = 0;
-                    for row in mat.iter_mut() {
+                    for (r, row) in mat.iter_mut().enumerate() {
                         static_vals.push(Vec::new());
                         rows += 1;
                         if row.len() > cols {
                             cols = row.len();
                         }
-                        for (c, col) in row.iter_mut().enumerate() {
-                            static_vals[c].push(col.evaluate_numerical());
+                        for col in row.iter_mut() {
+                            static_vals[r].push(col.evaluate_numerical());
                         }
                     }
 

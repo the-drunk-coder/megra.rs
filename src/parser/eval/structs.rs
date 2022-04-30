@@ -68,6 +68,10 @@ pub fn mat(
         }
     }
 
+    if !row.is_empty() {
+        pmat.push(row.clone());
+    }
+
     Some(EvaluatedExpr::BuiltIn(BuiltIn::Matrix(
         ParameterValue::Matrix(pmat),
     )))
