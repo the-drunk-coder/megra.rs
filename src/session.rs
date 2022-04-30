@@ -342,8 +342,8 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
                                     v,
                                 );
                             }
-                            Command::GlobalRuffboxParams(m) => {
-                                commands::set_global_ruffbox_parameters(&data.ruffbox, &m);
+                            Command::GlobalRuffboxParams(mut m) => {
+                                commands::set_global_ruffbox_parameters(&data.ruffbox, &mut m);
                             }
                             Command::Clear => {
                                 let session2 = sync::Arc::clone(&data.session);

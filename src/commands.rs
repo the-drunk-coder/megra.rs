@@ -372,10 +372,26 @@ pub fn set_global_lifemodel_resources(global_parameters: &sync::Arc<GlobalParame
 
 pub fn set_global_ruffbox_parameters<const BUFSIZE: usize, const NCHAN: usize>(
     ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
-    params: &HashMap<SynthParameterLabel, f32>,
+    params: &mut HashMap<SynthParameterLabel, ParameterValue>,
 ) {
-    for (k, v) in params.iter() {
-        ruffbox.set_master_parameter(*k, SynthParameterValue::ScalarF32(*v));
+    for (k, v) in params.iter_mut() {
+        match v {
+            ParameterValue::Scalar(p) => {
+                ruffbox.set_master_parameter(*k, p.evaluate_val_f32());
+            }
+            ParameterValue::Lfo(init, freq, range, op) => {
+                ruffbox.set_master_parameter(
+                    *k,
+                    SynthParameterValue::Lfo(
+                        init.evaluate_numerical(),
+                        freq.evaluate_numerical(),
+                        range.evaluate_numerical(),
+                        *op,
+                    ),
+                );
+            }
+            _ => {}
+        }
     }
 }
 

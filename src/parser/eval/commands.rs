@@ -271,17 +271,26 @@ pub fn reverb(
             EvaluatedExpr::Keyword(k) => match k.as_str() {
                 "damp" => {
                     if let Some(EvaluatedExpr::Float(f)) = tail_drain.next() {
-                        param_map.insert(SynthParameterLabel::ReverbDampening, f);
+                        param_map.insert(
+                            SynthParameterLabel::ReverbDampening,
+                            ParameterValue::Scalar(Parameter::with_value(f)),
+                        );
                     }
                 }
                 "mix" => {
                     if let Some(EvaluatedExpr::Float(f)) = tail_drain.next() {
-                        param_map.insert(SynthParameterLabel::ReverbMix, f.clamp(0.01, 0.99));
+                        param_map.insert(
+                            SynthParameterLabel::ReverbMix,
+                            ParameterValue::Scalar(Parameter::with_value(f.clamp(0.01, 0.99))),
+                        );
                     }
                 }
                 "roomsize" => {
                     if let Some(EvaluatedExpr::Float(f)) = tail_drain.next() {
-                        param_map.insert(SynthParameterLabel::ReverbRoomsize, f.clamp(0.01, 0.99));
+                        param_map.insert(
+                            SynthParameterLabel::ReverbRoomsize,
+                            ParameterValue::Scalar(Parameter::with_value(f.clamp(0.01, 0.99))),
+                        );
                     }
                 }
 
@@ -309,33 +318,84 @@ pub fn delay(
     while let Some(c) = tail_drain.next() {
         match c {
             EvaluatedExpr::Keyword(k) => match k.as_str() {
-                "damp-freq" => {
-                    if let Some(EvaluatedExpr::Float(f)) = tail_drain.next() {
+                "damp-freq" => match tail_drain.next() {
+                    Some(EvaluatedExpr::Float(f)) => {
                         param_map.insert(
                             SynthParameterLabel::DelayDampeningFrequency,
-                            f.clamp(20.0, 18000.0),
+                            ParameterValue::Scalar(Parameter::with_value(f.clamp(20.0, 18000.0))),
                         );
                     }
-                }
-                "feedback" => {
-                    if let Some(EvaluatedExpr::Float(f)) = tail_drain.next() {
-                        param_map.insert(SynthParameterLabel::DelayFeedback, f.clamp(0.01, 0.99));
+                    Some(EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p))) => {
+                        param_map.insert(
+                            SynthParameterLabel::DelayDampeningFrequency,
+                            ParameterValue::Scalar(p),
+                        );
                     }
-                }
+                    Some(EvaluatedExpr::BuiltIn(BuiltIn::Modulator(m))) => {
+                        param_map.insert(SynthParameterLabel::DelayDampeningFrequency, m);
+                    }
+                    _ => {}
+                },
+                "feedback" | "fb" => match tail_drain.next() {
+                    Some(EvaluatedExpr::Float(f)) => {
+                        param_map.insert(
+                            SynthParameterLabel::DelayFeedback,
+                            ParameterValue::Scalar(Parameter::with_value(f.clamp(0.01, 0.99))),
+                        );
+                    }
+                    Some(EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p))) => {
+                        param_map.insert(
+                            SynthParameterLabel::DelayFeedback,
+                            ParameterValue::Scalar(p),
+                        );
+                    }
+                    Some(EvaluatedExpr::BuiltIn(BuiltIn::Modulator(m))) => {
+                        param_map.insert(SynthParameterLabel::DelayFeedback, m);
+                    }
+                    _ => {}
+                },
                 "mix" => {
                     if let Some(EvaluatedExpr::Float(f)) = tail_drain.next() {
-                        param_map.insert(SynthParameterLabel::DelayMix, f.clamp(0.01, 0.99));
-                    }
-                }
-                "time" => {
-                    if let Some(EvaluatedExpr::Float(f)) = tail_drain.next() {
                         param_map.insert(
-                            SynthParameterLabel::DelayTime,
-                            (f / 1000.0).clamp(0.01, 1.99),
+                            SynthParameterLabel::DelayMix,
+                            ParameterValue::Scalar(Parameter::with_value(f.clamp(0.01, 0.99))),
                         );
                     }
                 }
-
+                "time" | "t" => match tail_drain.next() {
+                    Some(EvaluatedExpr::Float(f)) => {
+                        param_map.insert(
+                            SynthParameterLabel::DelayTime,
+                            ParameterValue::Scalar(Parameter::with_value(
+                                (f / 1000.0).clamp(0.01, 1.99),
+                            )),
+                        );
+                    }
+                    Some(EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p))) => {
+                        param_map.insert(SynthParameterLabel::DelayTime, ParameterValue::Scalar(p));
+                    }
+                    Some(EvaluatedExpr::BuiltIn(BuiltIn::Modulator(m))) => {
+                        param_map.insert(SynthParameterLabel::DelayTime, m);
+                    }
+                    _ => {}
+                },
+                "rate" | "r" => match tail_drain.next() {
+                    Some(EvaluatedExpr::Float(f)) => {
+                        param_map.insert(
+                            SynthParameterLabel::DelayRate,
+                            ParameterValue::Scalar(Parameter::with_value(
+                                (f / 1000.0).clamp(0.01, 1.99),
+                            )),
+                        );
+                    }
+                    Some(EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p))) => {
+                        param_map.insert(SynthParameterLabel::DelayRate, ParameterValue::Scalar(p));
+                    }
+                    Some(EvaluatedExpr::BuiltIn(BuiltIn::Modulator(m))) => {
+                        param_map.insert(SynthParameterLabel::DelayRate, m);
+                    }
+                    _ => {}
+                },
                 _ => println!("{}", k),
             },
             _ => println! {"ignored"},
