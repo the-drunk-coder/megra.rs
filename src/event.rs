@@ -174,6 +174,33 @@ impl Event {
                     }
                     map.insert(*k, SynthParameterValue::VecF32(static_vals));
                 }
+                ParameterValue::Matrix(mat) => {
+                    let mut static_vals: Vec<Vec<f32>> = Vec::new();
+                    let mut rows = 0;
+                    let mut cols = 0;
+                    for row in mat.iter_mut() {
+                        static_vals.push(Vec::new());
+                        rows += 1;
+                        if row.len() > cols {
+                            cols = row.len();
+                        }
+                        for (c, col) in row.iter_mut().enumerate() {
+                            static_vals[c].push(col.evaluate_numerical());
+                        }
+                    }
+
+                    // make sure all rows have the same lenght
+                    for row in static_vals.iter_mut() {
+                        if row.len() < cols {
+                            row.append(&mut vec![0.0; cols - row.len()])
+                        }
+                    }
+
+                    map.insert(
+                        *k,
+                        SynthParameterValue::MatrixF32((rows, cols), static_vals),
+                    );
+                }
                 ParameterValue::Lfo(init, freq, range, op) => {
                     map.insert(
                         *k,
@@ -201,6 +228,13 @@ impl Event {
                     ParameterValue::Vector(vals) => {
                         for val in vals.iter_mut() {
                             val.shake(factor);
+                        }
+                    }
+                    ParameterValue::Matrix(mat) => {
+                        for row in mat.iter_mut() {
+                            for col in row.iter_mut() {
+                                col.shake(factor);
+                            }
                         }
                     }
                     ParameterValue::Lfo(init, freq, range, _) => {

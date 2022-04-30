@@ -29,6 +29,16 @@ fn collect_param_value(
                 tail_drain.next();
                 return mc;
             }
+            EvaluatedExpr::BuiltIn(BuiltIn::Vector(v)) => {
+                let vc = v.clone();
+                tail_drain.next();
+                return vc;
+            }
+            EvaluatedExpr::BuiltIn(BuiltIn::Matrix(m)) => {
+                let mc = m.clone();
+                tail_drain.next();
+                return mc;
+            }
             _ => {
                 break;
             }
@@ -214,7 +224,7 @@ pub fn sound(
             synth_defaults(&mut ev);
             ev
         }
-	"wmat" => {
+        "wmat" => {
             let mut ev =
                 Event::with_name_and_operation("wavematrix".to_string(), EventOperation::Replace);
             get_pitch_param(&mut ev, &mut tail_drain);

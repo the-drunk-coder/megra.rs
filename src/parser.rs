@@ -58,6 +58,8 @@ pub enum BuiltIn {
     SoundEvent(Event),
     Parameter(Parameter),
     Modulator(ParameterValue),
+    Matrix(ParameterValue),
+    Vector(ParameterValue),
     ControlEvent(ControlEvent),
     SyncContext(SyncContext),
 }
@@ -81,6 +83,8 @@ impl fmt::Debug for BuiltIn {
             BuiltIn::SoundEvent(_) => write!(f, "BuiltIn::SoundEvent(..)"),
             BuiltIn::Parameter(_) => write!(f, "BuiltIn::Parameter(..)"),
             BuiltIn::Modulator(_) => write!(f, "BuiltIn::Modulator(..)"),
+            BuiltIn::Vector(_) => write!(f, "BuiltIn::Vector(..)"),
+            BuiltIn::Matrix(_) => write!(f, "BuiltIn::Matrix(..)"),
             BuiltIn::ControlEvent(_) => write!(f, "BuiltIn::ControlEvent(..)"),
             BuiltIn::SyncContext(_) => write!(f, "BuiltIn::SyncContext(..)"),
         }

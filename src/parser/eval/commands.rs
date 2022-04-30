@@ -43,7 +43,6 @@ pub fn load_part(
         (name, Part::Combined(gens, proxies)),
     ))))
 }
-
 pub fn freeze_buffer(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,

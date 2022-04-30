@@ -11,7 +11,8 @@ use ruffbox_synth::building_blocks::{SynthParameterValue, ValOp};
 pub enum ParameterValue {
     Scalar(Parameter),
     Vector(Vec<Parameter>),
-    Lfo(Parameter, Parameter, Parameter, ValOp),
+    Matrix(Vec<Vec<Parameter>>),
+    Lfo(Parameter, Parameter, Parameter, ValOp), // init, freq, range, op
 }
 
 #[derive(Clone)]
