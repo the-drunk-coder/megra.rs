@@ -51,7 +51,7 @@ pub fn define_standard_library() -> FunctionMap {
 
     // parameter structs
     standard_library.fmap.insert("vec".to_string(), eval::structs::vec);
-    standard_library.fmap.insert("matrix".to_string(), eval::structs::vec);
+    standard_library.fmap.insert("mat".to_string(), eval::structs::vec);
     
     // sound events (sample events are added as needed)
     standard_library.fmap.insert("risset".to_string(), eval::events::sound::sound);
