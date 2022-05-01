@@ -5,7 +5,7 @@ use std::sync;
 use crate::builtin_types::*;
 use crate::event::{Event, EventOperation};
 use crate::generator::Generator;
-use crate::generator_processor::PearProcessor;
+use crate::generator_processor::{GeneratorWrapperProcessor, PearProcessor};
 use crate::parameter::{Parameter, ParameterValue};
 
 use crate::parser::{BuiltIn, EvaluatedExpr, FunctionMap};
@@ -151,6 +151,11 @@ pub fn eval_multiplyer(
             EvaluatedExpr::BuiltIn(BuiltIn::GeneratorProcessorOrModifier(gp)) => {
                 let gpl = vec![gp];
                 gen_proc_list_list.push(gpl);
+            }
+            EvaluatedExpr::BuiltIn(BuiltIn::Generator(g)) => {
+                gen_proc_list_list.push(vec![GeneratorProcessorOrModifier::GeneratorProcessor(
+                    Box::new(GeneratorWrapperProcessor::with_generator(g)),
+                )]);
             }
             _ => {
                 println!("can't multiply {:?} {:?}", c, last);
