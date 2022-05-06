@@ -1,7 +1,7 @@
 use crate::builtin_types::*;
 use crate::event::*;
 use crate::parser::*;
-use crate::sample_set::SampleSet;
+use crate::sample_set::SampleAndWavematrixSet;
 use crate::session::OutputMode;
 
 use parking_lot::Mutex;
@@ -170,7 +170,7 @@ fn parse_cyc<'a>(i: &'a str) -> IResult<&'a str, Vec<Vec<CycleItem>>, VerboseErr
 pub fn eval_cyc_from_str(
     src: &str,
     functions: &FunctionMap,
-    sample_set: &sync::Arc<Mutex<SampleSet>>,
+    sample_set: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     out_mode: OutputMode,
     template_events: &[String],
     event_mappings: &HashMap<String, Vec<SourceEvent>>,
@@ -515,7 +515,7 @@ mod tests {
 
     #[test]
     fn test_basic_cyc2_eval_noparam() {
-        let sample_set = sync::Arc::new(Mutex::new(SampleSet::new()));
+        let sample_set = sync::Arc::new(Mutex::new(SampleAndWavematrixSet::new()));
 
         // mock sample
         let mut keys = HashSet::new();

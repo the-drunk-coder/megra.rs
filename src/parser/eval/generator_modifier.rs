@@ -4,7 +4,7 @@ use std::collections::HashMap;
 use std::sync;
 
 use crate::parser::{BuiltIn, EvaluatedExpr, FunctionMap};
-use crate::{OutputMode, SampleSet};
+use crate::{OutputMode, SampleAndWavematrixSet};
 use parking_lot::Mutex;
 
 /// Helper function to collect arguments
@@ -37,7 +37,7 @@ pub fn eval_haste(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<GlobalParameters>,
-    _: &sync::Arc<Mutex<SampleSet>>,
+    _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
     eval_generator_modifier(haste, tail)
@@ -47,7 +47,7 @@ pub fn eval_keep(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<GlobalParameters>,
-    _: &sync::Arc<Mutex<SampleSet>>,
+    _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
     eval_generator_modifier(keep, tail)
@@ -57,7 +57,7 @@ pub fn eval_relax(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<GlobalParameters>,
-    _: &sync::Arc<Mutex<SampleSet>>,
+    _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
     eval_generator_modifier(relax, tail)
@@ -67,7 +67,7 @@ pub fn eval_blur(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<GlobalParameters>,
-    _: &sync::Arc<Mutex<SampleSet>>,
+    _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
     eval_generator_modifier(blur, tail)
@@ -77,7 +77,7 @@ pub fn eval_sharpen(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<GlobalParameters>,
-    _: &sync::Arc<Mutex<SampleSet>>,
+    _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
     eval_generator_modifier(sharpen, tail)
@@ -87,7 +87,7 @@ pub fn eval_solidify(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<GlobalParameters>,
-    _: &sync::Arc<Mutex<SampleSet>>,
+    _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
     eval_generator_modifier(solidify, tail)
@@ -97,7 +97,7 @@ pub fn eval_rep(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<GlobalParameters>,
-    _: &sync::Arc<Mutex<SampleSet>>,
+    _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
     eval_generator_modifier(rep, tail)
@@ -107,7 +107,7 @@ pub fn eval_shake(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<GlobalParameters>,
-    _: &sync::Arc<Mutex<SampleSet>>,
+    _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
     eval_generator_modifier(shake, tail)
@@ -117,7 +117,7 @@ pub fn eval_skip(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<GlobalParameters>,
-    _: &sync::Arc<Mutex<SampleSet>>,
+    _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
     eval_generator_modifier(skip, tail)
@@ -127,7 +127,7 @@ pub fn eval_rewind(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<GlobalParameters>,
-    _: &sync::Arc<Mutex<SampleSet>>,
+    _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
     eval_generator_modifier(rewind, tail)
@@ -137,7 +137,7 @@ pub fn eval_rnd(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<GlobalParameters>,
-    _: &sync::Arc<Mutex<SampleSet>>,
+    _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
     eval_generator_modifier(rnd, tail)
@@ -147,7 +147,7 @@ pub fn eval_grow(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<GlobalParameters>,
-    _: &sync::Arc<Mutex<SampleSet>>,
+    _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
     eval_generator_modifier(grow, tail)
@@ -157,7 +157,7 @@ pub fn eval_shrink(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<GlobalParameters>,
-    _: &sync::Arc<Mutex<SampleSet>>,
+    _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
     eval_generator_modifier(shrink, tail)
@@ -167,7 +167,7 @@ pub fn eval_reverse(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<GlobalParameters>,
-    _: &sync::Arc<Mutex<SampleSet>>,
+    _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
     eval_generator_modifier(reverse, tail)

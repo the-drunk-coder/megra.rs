@@ -4,7 +4,7 @@ use crate::markov_sequence_generator::Rule;
 use crate::parameter::{Parameter, ParameterValue};
 use crate::session::SyncContext;
 use crate::{Command, GeneratorProcessorOrModifier, GlobalParameters, PartProxy};
-use crate::{OutputMode, SampleSet};
+use crate::{OutputMode, SampleAndWavematrixSet};
 use nom::{
     branch::alt,
     bytes::complete::{tag, take_while, take_while1},
@@ -122,7 +122,7 @@ pub struct FunctionMap {
             &FunctionMap,
             &mut Vec<EvaluatedExpr>,
             &sync::Arc<GlobalParameters>,
-            &sync::Arc<Mutex<SampleSet>>,
+            &sync::Arc<Mutex<SampleAndWavematrixSet>>,
             OutputMode,
         ) -> Option<EvaluatedExpr>,
     >,
@@ -285,7 +285,7 @@ pub fn eval_expression(
     e: &Expr,
     functions: &FunctionMap,
     globals: &sync::Arc<GlobalParameters>,
-    sample_set: &sync::Arc<Mutex<SampleSet>>,
+    sample_set: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     out_mode: OutputMode,
 ) -> Option<EvaluatedExpr> {
     match e {
@@ -324,7 +324,7 @@ pub fn eval_from_str(
     src: &str,
     functions: &FunctionMap,
     globals: &sync::Arc<GlobalParameters>,
-    sample_set: &sync::Arc<Mutex<SampleSet>>,
+    sample_set: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     out_mode: OutputMode,
 ) -> Result<EvaluatedExpr, String> {
     // preprocessing - remove all comments ...
@@ -349,7 +349,7 @@ mod tests {
 
         let mut functions = FunctionMap::new();
         let globals = sync::Arc::new(GlobalParameters::new());
-        let sample_set = sync::Arc::new(Mutex::new(SampleSet::new()));
+        let sample_set = sync::Arc::new(Mutex::new(SampleAndWavematrixSet::new()));
 
         functions
             .fmap

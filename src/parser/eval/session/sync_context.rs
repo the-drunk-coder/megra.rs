@@ -2,7 +2,7 @@ use crate::builtin_types::*;
 use crate::generator::Generator;
 use crate::parser::{BuiltIn, EvaluatedExpr, FunctionMap};
 use crate::session::SyncContext;
-use crate::{OutputMode, SampleSet};
+use crate::{OutputMode, SampleAndWavematrixSet};
 use parking_lot::Mutex;
 use std::collections::BTreeSet;
 use std::sync;
@@ -11,7 +11,7 @@ pub fn sync_context(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<GlobalParameters>,
-    _: &sync::Arc<Mutex<SampleSet>>,
+    _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..);
@@ -145,7 +145,7 @@ mod tests {
     fn test_eval_sx() {
         let snippet = "(sx 'ga #t (nuc 'da (bd)))";
         let mut functions = FunctionMap::new();
-        let sample_set = sync::Arc::new(Mutex::new(SampleSet::new()));
+        let sample_set = sync::Arc::new(Mutex::new(SampleAndWavematrixSet::new()));
 
         functions
             .fmap

@@ -1,6 +1,6 @@
 use crate::event::*;
 use crate::parser::{BuiltIn, EvaluatedExpr, FunctionMap};
-use crate::{GlobalParameters, OutputMode, SampleSet};
+use crate::{GlobalParameters, OutputMode, SampleAndWavematrixSet};
 use parking_lot::Mutex;
 use std::collections::BTreeSet;
 use std::sync;
@@ -9,7 +9,7 @@ pub fn control(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<GlobalParameters>,
-    _: &sync::Arc<Mutex<SampleSet>>,
+    _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
     let mut sync_contexts = Vec::new();
@@ -54,7 +54,7 @@ mod tests {
     fn test_eval_ctrl() {
         let snippet = "(ctrl (sx 'ba #t (nuc 'ad (saw 200))))";
         let mut functions = FunctionMap::new();
-        let sample_set = sync::Arc::new(Mutex::new(SampleSet::new()));
+        let sample_set = sync::Arc::new(Mutex::new(SampleAndWavematrixSet::new()));
 
         functions
             .fmap

@@ -2,7 +2,7 @@ use crate::event::{Event, EventOperation};
 use crate::music_theory;
 use crate::parameter::{Parameter, ParameterValue};
 use crate::parser::{BuiltIn, EvaluatedExpr, FunctionMap};
-use crate::{GlobalParameters, OutputMode, SampleSet};
+use crate::{GlobalParameters, OutputMode, SampleAndWavematrixSet};
 use parking_lot::Mutex;
 use ruffbox_synth::building_blocks::SynthParameterLabel;
 use std::sync;
@@ -11,7 +11,7 @@ pub fn parameter(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<GlobalParameters>,
-    _: &sync::Arc<Mutex<SampleSet>>,
+    _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..);

@@ -10,14 +10,14 @@ use std::sync;
 use vom_rs::pfa::{Pfa, Rule};
 
 use crate::parser::{BuiltIn, EvaluatedExpr, FunctionMap};
-use crate::{OutputMode, SampleSet};
+use crate::{OutputMode, SampleAndWavematrixSet};
 use parking_lot::Mutex;
 
 pub fn nuc(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     global_parameters: &sync::Arc<GlobalParameters>,
-    _: &sync::Arc<Mutex<SampleSet>>,
+    _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..);
@@ -130,7 +130,7 @@ mod tests {
     fn test_eval_nuc() {
         let snippet = "(nuc 'da (bd))";
         let mut functions = FunctionMap::new();
-        let sample_set = sync::Arc::new(Mutex::new(SampleSet::new()));
+        let sample_set = sync::Arc::new(Mutex::new(SampleAndWavematrixSet::new()));
 
         functions
             .fmap

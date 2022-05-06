@@ -1,3 +1,4 @@
+use crate::parameter::Parameter;
 use rand::seq::SliceRandom;
 use std::collections::{HashMap, HashSet};
 
@@ -15,21 +16,35 @@ impl SampleInfo {
 }
 
 /// maps an event type (like "bd") to a mapping between keywords and buffer number ...
-pub struct SampleSet {
+/// also contains wavematrices (for now) ... it's a bit inconsistent given that
+/// wavematrices are handled on the "megra-size", while buffers are stored at the
+/// "ruffbox-size", but that gives me more possibilities to play with the wavematrices
+/// on this size, so I suppose that's ok for the moment ...
+pub struct SampleAndWavematrixSet {
     subsets: HashMap<String, Vec<SampleInfo>>,
+    wavematrices: HashMap<String, Vec<Vec<Parameter>>>,
 }
 
-impl Default for SampleSet {
+impl Default for SampleAndWavematrixSet {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl SampleSet {
+impl SampleAndWavematrixSet {
     pub fn new() -> Self {
-        SampleSet {
+        SampleAndWavematrixSet {
             subsets: HashMap::new(),
+            wavematrices: HashMap::new(),
         }
+    }
+
+    pub fn insert_wavematrix(&mut self, key: String, table: Vec<Vec<Parameter>>) {
+        self.wavematrices.insert(key, table);
+    }
+
+    pub fn get_wavematrix(&self, key: &String) -> Option<&Vec<Vec<Parameter>>> {
+        self.wavematrices.get(key)
     }
 
     pub fn insert(&mut self, set: String, keyword_set: HashSet<String>, bufnum: usize, dur: usize) {

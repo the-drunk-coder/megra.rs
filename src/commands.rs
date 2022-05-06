@@ -9,7 +9,7 @@ use vom_rs::pfa;
 
 use ruffbox_synth::{
     building_blocks::SynthParameterLabel, building_blocks::SynthParameterValue,
-    ruffbox::RuffboxControls,
+    helpers::wavetableize::*, ruffbox::RuffboxControls,
 };
 
 use crate::builtin_types::*;
@@ -20,7 +20,7 @@ use crate::parameter::*;
 use crate::parser::eval;
 use crate::parser::FunctionMap;
 use crate::real_time_streaming;
-use crate::sample_set::SampleSet;
+use crate::sample_set::SampleAndWavematrixSet;
 use crate::session::*;
 use chrono::Local;
 use directories_next::ProjectDirs;
@@ -34,10 +34,42 @@ pub fn freeze_buffer<const BUFSIZE: usize, const NCHAN: usize>(
     ruffbox.freeze_buffer(freezbuf, inbuf);
 }
 
+pub fn load_sample_as_wavematrix(
+    sample_set: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
+    key: String,
+    path: String,
+    matrix_size: (usize, usize),
+    start: f32,
+) {
+    let mut sample_buffer: Vec<f32> = Vec::new();
+    let mut reader = claxon::FlacReader::open(path).unwrap();
+
+    // decode to f32
+    let max_val = (i32::MAX >> (32 - reader.streaminfo().bits_per_sample)) as f32;
+    for sample in reader.samples() {
+        let s = sample.unwrap() as f32 / max_val;
+        sample_buffer.push(s);
+    }
+
+    let wavematrix_raw = wavetableize_zerocrossing(&sample_buffer, matrix_size, start);
+
+    let mut wavematrix = Vec::new();
+
+    // turn into parameters
+    for x in 0..wavematrix_raw.len() {
+        wavematrix.push(Vec::new());
+        for y in 0..wavematrix_raw[x].len() {
+            wavematrix[x].push(Parameter::with_value(wavematrix_raw[x][y]));
+        }
+    }
+
+    sample_set.lock().insert_wavematrix(key, wavematrix);
+}
+
 pub fn load_sample<const BUFSIZE: usize, const NCHAN: usize>(
     function_map: &sync::Arc<Mutex<FunctionMap>>,
     ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
-    sample_set: &sync::Arc<Mutex<SampleSet>>,
+    sample_set: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     set: String,
     keywords: &mut Vec<String>,
     path: String,
@@ -116,7 +148,7 @@ pub fn load_sample<const BUFSIZE: usize, const NCHAN: usize>(
 pub fn load_sample_set<const BUFSIZE: usize, const NCHAN: usize>(
     function_map: &sync::Arc<Mutex<FunctionMap>>,
     ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
-    sample_set: &sync::Arc<Mutex<SampleSet>>,
+    sample_set: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     samples_path: &Path,
 ) {
     // determine set name or use default
@@ -155,7 +187,7 @@ pub fn load_sample_set<const BUFSIZE: usize, const NCHAN: usize>(
 pub fn load_sample_set_string<const BUFSIZE: usize, const NCHAN: usize>(
     function_map: &sync::Arc<Mutex<FunctionMap>>,
     ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
-    sample_set: &sync::Arc<Mutex<SampleSet>>,
+    sample_set: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     samples_path: String,
 ) {
     let path = Path::new(&samples_path);
@@ -165,7 +197,7 @@ pub fn load_sample_set_string<const BUFSIZE: usize, const NCHAN: usize>(
 pub fn load_sample_sets<const BUFSIZE: usize, const NCHAN: usize>(
     function_map: &sync::Arc<Mutex<FunctionMap>>,
     ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
-    sample_set: &sync::Arc<Mutex<SampleSet>>,
+    sample_set: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     folder_path: String,
 ) {
     let root_path = Path::new(&folder_path);
@@ -175,7 +207,7 @@ pub fn load_sample_sets<const BUFSIZE: usize, const NCHAN: usize>(
 pub fn load_sample_sets_path<const BUFSIZE: usize, const NCHAN: usize>(
     function_map: &sync::Arc<Mutex<FunctionMap>>,
     ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
-    sample_set: &sync::Arc<Mutex<SampleSet>>,
+    sample_set: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     root_path: &Path,
 ) {
     if let Ok(entries) = fs::read_dir(root_path) {

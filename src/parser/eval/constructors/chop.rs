@@ -4,7 +4,7 @@ use crate::generator::Generator;
 use crate::markov_sequence_generator::MarkovSequenceGenerator;
 use crate::parameter::*;
 use crate::parser::{BuiltIn, EvaluatedExpr, FunctionMap};
-use crate::{OutputMode, SampleSet};
+use crate::{OutputMode, SampleAndWavematrixSet};
 
 use ruffbox_synth::building_blocks::SynthParameterLabel;
 use std::collections::{BTreeSet, HashMap};
@@ -17,7 +17,7 @@ pub fn chop(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     global_parameters: &sync::Arc<GlobalParameters>,
-    _: &sync::Arc<Mutex<SampleSet>>,
+    _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
     // ignore function name in this case

@@ -7,7 +7,7 @@ use ruffbox_synth::ruffbox::RuffboxControls;
 use crate::builtin_types::*;
 use crate::commands;
 use crate::parser::{BuiltIn, EvaluatedExpr, FunctionMap};
-use crate::sample_set::SampleSet;
+use crate::sample_set::SampleAndWavematrixSet;
 use crate::session::{OutputMode, Session};
 use crate::visualizer_client::VisualizerClient;
 
@@ -18,7 +18,7 @@ pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
     session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
     ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
     global_parameters: &sync::Arc<GlobalParameters>,
-    sample_set: &sync::Arc<Mutex<SampleSet>>,
+    sample_set: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     parts_store: &sync::Arc<Mutex<PartsStore>>,
     output_mode: OutputMode,
 ) {
@@ -114,6 +114,19 @@ pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
                             path,
                         );
                         println!("a command (load sample)");
+                    });
+                }
+                Command::LoadSampleAsWavematrix(key, path, matrix_size, start) => {
+                    let sample_set2 = sync::Arc::clone(sample_set);
+                    thread::spawn(move || {
+                        commands::load_sample_as_wavematrix(
+                            &sample_set2,
+                            key,
+                            path,
+                            matrix_size,
+                            start,
+                        );
+                        println!("a command (load wavematrix)");
                     });
                 }
                 Command::LoadSampleSets(path) => {

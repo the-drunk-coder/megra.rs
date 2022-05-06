@@ -4,7 +4,7 @@ use crate::event::*;
 use crate::generator::Generator;
 use crate::markov_sequence_generator::MarkovSequenceGenerator;
 use crate::parameter::*;
-use crate::sample_set::SampleSet;
+use crate::sample_set::SampleAndWavematrixSet;
 use crate::session::OutputMode;
 use ruffbox_synth::building_blocks::SynthParameterLabel;
 use std::collections::{BTreeSet, HashMap};
@@ -19,7 +19,7 @@ pub fn cyc(
     functions: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     global_parameters: &sync::Arc<GlobalParameters>,
-    sample_set: &sync::Arc<Mutex<SampleSet>>,
+    sample_set: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     out_mode: OutputMode,
 ) -> Option<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..);

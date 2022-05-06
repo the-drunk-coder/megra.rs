@@ -2,7 +2,7 @@ use crate::builtin_types::*;
 use crate::generator_processor::GeneratorWrapperProcessor;
 
 use crate::parser::{BuiltIn, EvaluatedExpr, FunctionMap};
-use crate::{OutputMode, SampleSet};
+use crate::{OutputMode, SampleAndWavematrixSet};
 use parking_lot::Mutex;
 use std::sync;
 
@@ -34,7 +34,7 @@ pub fn compose(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<GlobalParameters>,
-    _: &sync::Arc<Mutex<SampleSet>>,
+    _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
     let last = tail.pop();

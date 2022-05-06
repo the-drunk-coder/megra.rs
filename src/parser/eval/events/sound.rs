@@ -3,7 +3,7 @@ use crate::event_helpers::map_parameter;
 use crate::music_theory;
 use crate::parameter::{Parameter, ParameterValue};
 use crate::parser::{BuiltIn, EvaluatedExpr, FunctionMap};
-use crate::{GlobalParameters, OutputMode, SampleSet};
+use crate::{GlobalParameters, OutputMode, SampleAndWavematrixSet};
 use parking_lot::Mutex;
 use ruffbox_synth::building_blocks::SynthParameterLabel;
 use std::collections::HashSet;
@@ -162,7 +162,7 @@ pub fn sound(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<GlobalParameters>,
-    sample_set_sync: &sync::Arc<Mutex<SampleSet>>,
+    sample_set_sync: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..).peekable();
@@ -314,6 +314,23 @@ pub fn sound(
                 ev.tags.insert(s.clone());
                 tail_drain.next();
             }
+        } else if k == "wm" {
+            // wavematrix lookup
+            if let Some(EvaluatedExpr::Symbol(s)) = tail_drain.peek() {
+                if let Some(wavematrix) = sample_set_sync.lock().get_wavematrix(s) {
+                    //println!("found wavematrix {}", s);
+                    ev.params.insert(
+                        map_parameter(&k),
+                        ParameterValue::Matrix(wavematrix.clone()),
+                    );
+                    tail_drain.next();
+                } else {
+                    println!("couldn't find wavematrix {}", s)
+                }
+            } else {
+                ev.params
+                    .insert(map_parameter(&k), collect_param_value(&mut tail_drain));
+            }
         } else {
             ev.params
                 .insert(map_parameter(&k), collect_param_value(&mut tail_drain));
@@ -333,7 +350,7 @@ mod tests {
     fn test_eval_sound() {
         let snippet = "(risset 4000 :lvl 1.0)";
         let mut functions = FunctionMap::new();
-        let sample_set = sync::Arc::new(Mutex::new(SampleSet::new()));
+        let sample_set = sync::Arc::new(Mutex::new(SampleAndWavematrixSet::new()));
 
         functions
             .fmap

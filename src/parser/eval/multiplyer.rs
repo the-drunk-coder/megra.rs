@@ -9,7 +9,7 @@ use crate::generator_processor::{GeneratorWrapperProcessor, PearProcessor};
 use crate::parameter::{Parameter, ParameterValue};
 
 use crate::parser::{BuiltIn, EvaluatedExpr, FunctionMap};
-use crate::{OutputMode, SampleSet};
+use crate::{OutputMode, SampleAndWavematrixSet};
 use parking_lot::Mutex;
 
 pub type GenSpreader = fn(&mut [Generator], &OutputMode);
@@ -299,7 +299,7 @@ pub fn eval_xspread(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<GlobalParameters>,
-    _: &sync::Arc<Mutex<SampleSet>>,
+    _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     out_mode: OutputMode,
 ) -> Option<EvaluatedExpr> {
     eval_multiplyer(spread_gens, spread_proxies, tail, out_mode)
@@ -309,7 +309,7 @@ pub fn eval_xdup(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<GlobalParameters>,
-    _: &sync::Arc<Mutex<SampleSet>>,
+    _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     out_mode: OutputMode,
 ) -> Option<EvaluatedExpr> {
     eval_multiplyer(|_, _| {}, |_, _| {}, tail, out_mode)

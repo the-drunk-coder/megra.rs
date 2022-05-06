@@ -31,7 +31,7 @@ mod standard_library;
 mod visualizer_client;
 
 use crate::builtin_types::*;
-use crate::sample_set::SampleSet;
+use crate::sample_set::SampleAndWavematrixSet;
 use crate::session::{OutputMode, Session};
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use directories_next::ProjectDirs;
@@ -715,7 +715,7 @@ where
     let session = sync::Arc::new(Mutex::new(raw_session));
 
     let global_parameters = sync::Arc::new(GlobalParameters::with_capacity(1));
-    let sample_set = sync::Arc::new(Mutex::new(SampleSet::new()));
+    let sample_set = sync::Arc::new(Mutex::new(SampleAndWavematrixSet::new()));
     let parts_store = sync::Arc::new(Mutex::new(PartsStore::new()));
     // define the "standard library"
     let stdlib = sync::Arc::new(Mutex::new(define_standard_library()));

@@ -13,7 +13,7 @@ use crate::builtin_types::*;
 use crate::interpreter;
 use crate::parser;
 use crate::parser::FunctionMap;
-use crate::sample_set::SampleSet;
+use crate::sample_set::SampleAndWavematrixSet;
 use crate::session::{OutputMode, Session};
 
 #[allow(clippy::too_many_arguments)]
@@ -22,7 +22,7 @@ pub fn run_editor<const BUFSIZE: usize, const NCHAN: usize>(
     session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
     ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
     global_parameters: &sync::Arc<GlobalParameters>,
-    sample_set: &sync::Arc<Mutex<SampleSet>>,
+    sample_set: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     parts_store: &sync::Arc<Mutex<PartsStore>>,
     mode: OutputMode,
     font: Option<&str>,

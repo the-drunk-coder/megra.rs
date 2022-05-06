@@ -43,6 +43,7 @@ pub enum Command {
     DefaultDuration(f32), // set default duration in milliseconds
     GlobRes(f32),         // global resources for lifemodel algorithm
     GlobalRuffboxParams(HashMap<SynthParameterLabel, ParameterValue>), // global ruffbox params
+    LoadSampleAsWavematrix(String, String, (usize, usize), f32), // key, path, matrix size, start
     LoadSample((String, Vec<String>, String)), // set (events), keyword, path
     LoadSampleSet(String), // set path
     LoadSampleSets(String), // top level sets set path
