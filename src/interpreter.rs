@@ -116,13 +116,14 @@ pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
                         println!("a command (load sample)");
                     });
                 }
-                Command::LoadSampleAsWavematrix(key, path, matrix_size, start) => {
+                Command::LoadSampleAsWavematrix(key, path, method, matrix_size, start) => {
                     let sample_set2 = sync::Arc::clone(sample_set);
                     thread::spawn(move || {
                         commands::load_sample_as_wavematrix(
                             &sample_set2,
                             key,
                             path,
+                            &method,
                             matrix_size,
                             start,
                         );

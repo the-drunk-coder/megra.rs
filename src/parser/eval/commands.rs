@@ -56,6 +56,7 @@ pub fn load_sample_as_wavematrix(
 
     let mut key: Option<String> = None;
     let mut path: Option<String> = None;
+    let mut method: Option<String> = Some("zerocrossing_fixed_stretch_inverse".to_string());
     let mut matrix_size: Option<(usize, usize)> = None;
     let mut start: Option<f32> = Some(0.0);
 
@@ -79,6 +80,12 @@ pub fn load_sample_as_wavematrix(
                     path = Some(s);
                 }
             }
+            if k.as_str() == "method" {
+                // default is zero ...
+                if let Some(EvaluatedExpr::Symbol(s)) = tail_drain.next() {
+                    method = Some(s);
+                }
+            }
             if k.as_str() == "size" {
                 // default is zero ...
                 if let Some(EvaluatedExpr::Float(x)) = tail_drain.next() {
@@ -94,6 +101,7 @@ pub fn load_sample_as_wavematrix(
             Command::LoadSampleAsWavematrix(
                 key.unwrap(),
                 path.unwrap(),
+                method.unwrap(),
                 matrix_size.unwrap(),
                 start.unwrap(),
             ),

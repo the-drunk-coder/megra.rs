@@ -38,6 +38,7 @@ pub fn load_sample_as_wavematrix(
     sample_set: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     key: String,
     path: String,
+    method: &str,
     matrix_size: (usize, usize),
     start: f32,
 ) {
@@ -51,7 +52,21 @@ pub fn load_sample_as_wavematrix(
         sample_buffer.push(s);
     }
 
-    let wavematrix_raw = wavetableize_zerocrossing(&sample_buffer, matrix_size, start);
+    let wavematrix_raw = match method {
+        "raw" => wavetableize(&sample_buffer, matrix_size, start, WavetableizeMethod::Raw),
+        "zerocrossing_fixed_stretch_inverse" => wavetableize(
+            &sample_buffer,
+            matrix_size,
+            start,
+            WavetableizeMethod::ZerocrossingFixedRangeStretchInverse,
+        ),
+        _ => wavetableize(
+            &sample_buffer,
+            matrix_size,
+            start,
+            WavetableizeMethod::ZerocrossingFixedRangeStretchInverse,
+        ),
+    };
 
     let mut wavematrix = Vec::new();
 

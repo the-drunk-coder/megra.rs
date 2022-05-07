@@ -36,27 +36,27 @@ pub type GlobalParameters = DashMap<BuiltinGlobalParameters, ConfigParameter>;
 
 #[derive(Clone)]
 pub enum Command {
-    Clear,                                                             // clear the entire session
+    Clear,                                                               // clear the entire session
     Tmod(Parameter),      // set global time mod parameter
     Latency(Parameter),   // set global latency parameter
     Bpm(f32),             // set default tempo in bpm
     DefaultDuration(f32), // set default duration in milliseconds
     GlobRes(f32),         // global resources for lifemodel algorithm
     GlobalRuffboxParams(HashMap<SynthParameterLabel, ParameterValue>), // global ruffbox params
-    LoadSampleAsWavematrix(String, String, (usize, usize), f32), // key, path, matrix size, start
+    LoadSampleAsWavematrix(String, String, String, (usize, usize), f32), // key, path, method, matrix size, start
     LoadSample((String, Vec<String>, String)), // set (events), keyword, path
-    LoadSampleSet(String), // set path
-    LoadSampleSets(String), // top level sets set path
-    LoadPart((String, Part)), // set (events), keyword, path
-    StepPart(String),     // step through specified path
-    FreezeBuffer(usize, usize), // freeze live buffer
-    ExportDotStatic((String, Generator)), // filename, generator
+    LoadSampleSet(String),                     // set path
+    LoadSampleSets(String),                    // top level sets set path
+    LoadPart((String, Part)),                  // set (events), keyword, path
+    StepPart(String),                          // step through specified path
+    FreezeBuffer(usize, usize),                // freeze live buffer
+    ExportDotStatic((String, Generator)),      // filename, generator
     ExportDotRunning((String, BTreeSet<String>)), // filename, generator id
-    ExportDotPart((String, String)), // filename, part name
+    ExportDotPart((String, String)),           // filename, part name
     Once((Vec<StaticEvent>, Vec<ControlEvent>)), // execute event(s) once
-    ConnectVisualizer,    // connect visualizer
-    StartRecording(Option<String>, bool), // start recording, prefix, input
-    StopRecording,        // stop recording ...
+    ConnectVisualizer,                         // connect visualizer
+    StartRecording(Option<String>, bool),      // start recording, prefix, input
+    StopRecording,                             // stop recording ...
 }
 
 #[derive(Clone)]
