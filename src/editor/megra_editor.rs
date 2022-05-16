@@ -36,6 +36,8 @@ pub struct MegraEditor {
     sketch_number: usize,
     #[serde(skip)]
     font: Option<EditorFont>,
+    #[serde(skip)]
+    font_size: f32,
 }
 
 impl Default for MegraEditor {
@@ -48,6 +50,7 @@ impl Default for MegraEditor {
             current_sketch: "".to_string(),
             sketch_number: 0,
             font: None,
+            font_size: 15.0,
         }
     }
 }
@@ -55,6 +58,10 @@ impl Default for MegraEditor {
 impl MegraEditor {
     pub fn set_font(&mut self, font: EditorFont) {
         self.font = Some(font);
+    }
+
+    pub fn set_font_size(&mut self, font_size: Arc<f32>) {
+        self.font_size = *font_size;
     }
 
     pub fn set_callback(&mut self, callback: Arc<Mutex<dyn FnMut(&String)>>) {
@@ -121,22 +128,7 @@ impl MegraEditor {
         }
 
         cc.egui_ctx.set_fonts(fonts);
-
-        // make sure callback is carried over after loading
-        //let callback = ed
-        //    .callback
-        //    .as_ref()
-        //    .map(|tmp_callback| Arc::clone(tmp_callback));
-
-        /*
-        if let Some(s) = storage {
-            *self = epi::get_value(s, epi::APP_KEY).unwrap_or_default();
-        }
-
-        if let Some(tmp_callback) = callback {
-            self.set_callback(&tmp_callback);
-        }*/
-
+	        
         ed.content = format!(
             ";; Created {}",
             Local::now().format("%A, %F, %H:%M:%S ... good luck!")
@@ -178,30 +170,6 @@ impl MegraEditor {
 }
 
 impl eframe::App for MegraEditor {
-    /*
-    fn name(&self) -> &str {
-        "Mégra Editor"
-    }
-
-    fn auto_save_interval(&self) -> std::time::Duration {
-        std::time::Duration::from_secs(5)
-    }*/
-
-    /*
-    fn save(&mut self, storage: &mut dyn epi::Storage) {
-        if !self.current_sketch.is_empty() {
-            let p = path::Path::new(&self.current_sketch);
-            match fs::write(p, &self.content.as_bytes()) {
-                Ok(_) => {}
-                Err(e) => {
-                    println!("couldn't save sketch {}", e);
-                }
-            }
-        }
-
-        epi::set_value(storage, epi::APP_KEY, self);
-    }*/
-
     /// Called each time the UI needs repainting, which may be many times per second.
     /// Put your widgets into a `SidePanel`, `TopPanel`, `CentralPanel`, `Window` or `Area`.
     fn update(&mut self, ctx: &egui::Context, _: &mut eframe::Frame) {
@@ -215,7 +183,7 @@ impl eframe::App for MegraEditor {
             ui.horizontal(|ui| {
                 ui.add(
                     egui::Label::new(
-                        egui::RichText::new("Mégra Editor").font(FontId::monospace(15.0)),
+                        egui::RichText::new("Mégra Editor").font(FontId::monospace(self.font_size)),
                     )
                     .wrap(false),
                 );
@@ -274,7 +242,7 @@ impl eframe::App for MegraEditor {
                 .show(ui, |ui| {
                     let num_lines = self.content.lines().count() + 1;
 
-                    let theme = CodeTheme::from_memory(ui.ctx());
+                    let theme = CodeTheme::dark(self.font_size);
                     let mut layouter = |ui: &egui::Ui, string: &str, _wrap_width: f32| {
                         let layout_job = highlight(ui.ctx(), &theme, string);
                         ui.fonts().layout_job(layout_job)
@@ -303,7 +271,7 @@ impl eframe::App for MegraEditor {
                     }
 
                     let ln = egui::Label::new(
-                        egui::RichText::new(linenums).font(FontId::monospace(15.0)),
+                        egui::RichText::new(linenums).font(FontId::monospace(self.font_size)),
                     );
 
                     ui.horizontal(|ui| {

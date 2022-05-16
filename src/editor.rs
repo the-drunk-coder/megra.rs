@@ -26,6 +26,7 @@ pub fn run_editor<const BUFSIZE: usize, const NCHAN: usize>(
     parts_store: &sync::Arc<Mutex<PartsStore>>,
     mode: OutputMode,
     font: Option<&str>,
+    font_size: f32,
 ) {
     // Restore editor from file, or create new editor:
 
@@ -72,13 +73,18 @@ pub fn run_editor<const BUFSIZE: usize, const NCHAN: usize>(
         Some(path) => EditorFont::Custom(path.to_string()),
         _ => EditorFont::Mononoki,
     };
-    //egui_glow::run(Box::new(app), &epi::NativeOptions::default());
+
+    // this is super awkward but I need to get around the
+    // static lifetime somehow ...
+    let fs = sync::Arc::new(font_size);
+
     let native_options = eframe::NativeOptions::default();
     eframe::run_native(
         "Mégra Editor",
         native_options,
         Box::new(|cc| {
             let mut inner_app = MegraEditor::new(cc);
+            inner_app.set_font_size(fs);
             inner_app.set_font(ifont);
             inner_app.set_callback(callback_ref);
             Box::new(inner_app)

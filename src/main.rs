@@ -108,6 +108,8 @@ fn main() -> Result<(), anyhow::Error> {
         "3.0",
     );
 
+    opts.optopt("", "font-size", "editor font size", "15.0");
+
     let matches = match opts.parse(argv) {
         Ok(m) => m,
         Err(e) => {
@@ -192,6 +194,16 @@ fn main() -> Result<(), anyhow::Error> {
         3.0
     };
 
+    let font_size: f32 = if let Some(s) = matches.opt_str("font-size") {
+        if let Ok(f) = s.parse() {
+            f
+        } else {
+            15.0
+        }
+    } else {
+        15.0
+    };
+
     println!("using a live buffer time of: {}", live_buffer_time);
 
     #[cfg(any(target_os = "linux", target_os = "dragonfly", target_os = "freebsd"))]
@@ -264,6 +276,7 @@ fn main() -> Result<(), anyhow::Error> {
                     load_samples,
                     &reverb_mode,
                     matches.opt_str("font").as_deref(),
+                    font_size,
                 )?,
                 cpal::SampleFormat::I16 => run::<i16, 2>(
                     &input_device,
@@ -277,6 +290,7 @@ fn main() -> Result<(), anyhow::Error> {
                     load_samples,
                     &reverb_mode,
                     matches.opt_str("font").as_deref(),
+                    font_size,
                 )?,
                 cpal::SampleFormat::U16 => run::<u16, 2>(
                     &input_device,
@@ -290,6 +304,7 @@ fn main() -> Result<(), anyhow::Error> {
                     load_samples,
                     &reverb_mode,
                     matches.opt_str("font").as_deref(),
+                    font_size,
                 )?,
             }
         }
@@ -311,6 +326,7 @@ fn main() -> Result<(), anyhow::Error> {
                     load_samples,
                     &reverb_mode,
                     matches.opt_str("font").as_deref(),
+                    font_size,
                 )?,
                 cpal::SampleFormat::I16 => run::<i16, 4>(
                     &input_device,
@@ -324,6 +340,7 @@ fn main() -> Result<(), anyhow::Error> {
                     load_samples,
                     &reverb_mode,
                     matches.opt_str("font").as_deref(),
+                    font_size,
                 )?,
                 cpal::SampleFormat::U16 => run::<u16, 4>(
                     &input_device,
@@ -337,6 +354,7 @@ fn main() -> Result<(), anyhow::Error> {
                     load_samples,
                     &reverb_mode,
                     matches.opt_str("font").as_deref(),
+                    font_size,
                 )?,
             }
         }
@@ -358,6 +376,7 @@ fn main() -> Result<(), anyhow::Error> {
                     load_samples,
                     &reverb_mode,
                     matches.opt_str("font").as_deref(),
+                    font_size,
                 )?,
                 cpal::SampleFormat::I16 => run::<i16, 8>(
                     &input_device,
@@ -371,6 +390,7 @@ fn main() -> Result<(), anyhow::Error> {
                     load_samples,
                     &reverb_mode,
                     matches.opt_str("font").as_deref(),
+                    font_size,
                 )?,
                 cpal::SampleFormat::U16 => run::<u16, 8>(
                     &input_device,
@@ -384,6 +404,7 @@ fn main() -> Result<(), anyhow::Error> {
                     load_samples,
                     &reverb_mode,
                     matches.opt_str("font").as_deref(),
+                    font_size,
                 )?,
             }
         }
@@ -405,6 +426,7 @@ fn run<T, const NCHAN: usize>(
     load_samples: bool,
     reverb_mode: &ReverbMode,
     font: Option<&str>,
+    font_size: f32,
 ) -> Result<(), anyhow::Error>
 where
     T: cpal::Sample,
@@ -775,6 +797,7 @@ where
             &parts_store,
             mode,
             font,
+            font_size,
         );
         Ok(())
     } else {

@@ -44,28 +44,13 @@ pub struct CodeTheme {
 
 impl Default for CodeTheme {
     fn default() -> Self {
-        Self::dark()
+        Self::dark(15.0)
     }
 }
 
 impl CodeTheme {
-    pub fn from_memory(ctx: &egui::Context) -> Self {
-        ctx.memory()
-            .data
-            .get_persisted(egui::Id::new("dark"))
-            .unwrap_or_else(CodeTheme::dark)
-    }
-
-    //pub fn store_in_memory(&self, ctx: &egui::Context) {
-    //    ctx.memory()
-    //        .data
-    //        .insert_persisted(egui::Id::new("dark"), *self);
-    //}
-}
-
-impl CodeTheme {
-    pub fn dark() -> Self {
-        let text_style = FontId::monospace(15.0);
+    pub fn dark(font_size: f32) -> Self {
+        let text_style = FontId::monospace(font_size);
         use egui::{Color32, TextFormat};
         Self {
             formats: enum_map::enum_map![
