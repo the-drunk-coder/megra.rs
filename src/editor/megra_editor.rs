@@ -57,26 +57,12 @@ impl MegraEditor {
         self.font = Some(font);
     }
 
-    pub fn set_callback(&mut self, callback: &Arc<Mutex<dyn FnMut(&String)>>) {
-        self.callback = Some(Arc::clone(callback));
-    }
-}
-
-impl epi::App for MegraEditor {
-    fn name(&self) -> &str {
-        "Mégra Editor"
+    pub fn set_callback(&mut self, callback: Arc<Mutex<dyn FnMut(&String)>>) {
+        self.callback = Some(callback);
     }
 
-    fn auto_save_interval(&self) -> std::time::Duration {
-        std::time::Duration::from_secs(5)
-    }
-
-    fn setup(
-        &mut self,
-        ctx: &egui::Context,
-        _frame: &epi::Frame,
-        storage: Option<&dyn epi::Storage>,
-    ) {
+    pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
+        let mut ed = Self::default();
         let mut fonts = FontDefinitions::default();
 
         // Two built-in options ...
@@ -90,7 +76,7 @@ impl epi::App for MegraEditor {
             FontData::from_static(include_bytes!("../../fonts/ComicMono.ttf")),
         );
 
-        match &self.font {
+        match &ed.font {
             Some(EditorFont::ComicMono) => {
                 fonts
                     .families
@@ -134,23 +120,24 @@ impl epi::App for MegraEditor {
             }
         }
 
-        ctx.set_fonts(fonts);
+        cc.egui_ctx.set_fonts(fonts);
 
         // make sure callback is carried over after loading
-        let callback = self
-            .callback
-            .as_ref()
-            .map(|tmp_callback| Arc::clone(tmp_callback));
+        //let callback = ed
+        //    .callback
+        //    .as_ref()
+        //    .map(|tmp_callback| Arc::clone(tmp_callback));
 
+        /*
         if let Some(s) = storage {
             *self = epi::get_value(s, epi::APP_KEY).unwrap_or_default();
         }
 
         if let Some(tmp_callback) = callback {
             self.set_callback(&tmp_callback);
-        }
+        }*/
 
-        self.content = format!(
+        ed.content = format!(
             ";; Created {}",
             Local::now().format("%A, %F, %H:%M:%S ... good luck!")
         );
@@ -162,9 +149,9 @@ impl epi::App for MegraEditor {
                 // prepare sketch marked with date
                 let id = format!("sketch_{}.megra3", Local::now().format("%Y%m%d_%H%M_%S"));
                 let file_path = sketchbook_path.join(id);
-                self.current_sketch = file_path.to_str().unwrap().to_string();
+                ed.current_sketch = file_path.to_str().unwrap().to_string();
                 // push current sketch so it'll be the one visible
-                self.sketch_list.push(self.current_sketch.clone());
+                ed.sketch_list.push(ed.current_sketch.clone());
 
                 if let Ok(entries) = fs::read_dir(sketchbook_path) {
                     let mut disk_sketches = Vec::new();
@@ -182,12 +169,25 @@ impl epi::App for MegraEditor {
 
                     disk_sketches.sort();
                     // sort sketch list so it's easier to find the sketches
-                    self.sketch_list.append(&mut disk_sketches);
+                    ed.sketch_list.append(&mut disk_sketches);
                 }
             }
         }
+        ed
+    }
+}
+
+impl eframe::App for MegraEditor {
+    /*
+    fn name(&self) -> &str {
+        "Mégra Editor"
     }
 
+    fn auto_save_interval(&self) -> std::time::Duration {
+        std::time::Duration::from_secs(5)
+    }*/
+
+    /*
     fn save(&mut self, storage: &mut dyn epi::Storage) {
         if !self.current_sketch.is_empty() {
             let p = path::Path::new(&self.current_sketch);
@@ -200,15 +200,15 @@ impl epi::App for MegraEditor {
         }
 
         epi::set_value(storage, epi::APP_KEY, self);
-    }
+    }*/
 
     /// Called each time the UI needs repainting, which may be many times per second.
     /// Put your widgets into a `SidePanel`, `TopPanel`, `CentralPanel`, `Window` or `Area`.
-    fn update(&mut self, ctx: &egui::Context, _: &epi::Frame) {
+    fn update(&mut self, ctx: &egui::Context, _: &mut eframe::Frame) {
         // some frame options ...
         let mut frame = egui::Frame::none();
         frame.fill = egui::Color32::BLACK;
-        frame.margin = Margin::symmetric(3.0, 3.0);
+        frame.inner_margin = Margin::symmetric(3.0, 3.0);
         egui::CentralPanel::default().frame(frame).show(ctx, |ui| {
             let mut sketch_number = SketchNumber::Num(self.sketch_number);
 

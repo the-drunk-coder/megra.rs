@@ -28,19 +28,8 @@ pub fn run_editor<const BUFSIZE: usize, const NCHAN: usize>(
     font: Option<&str>,
 ) {
     // Restore editor from file, or create new editor:
-    let mut app: MegraEditor = MegraEditor::default();
-    match font {
-        Some("mononoki") => {
-            app.set_font(EditorFont::Mononoki);
-        }
-        Some("ComicMono") => {
-            app.set_font(EditorFont::ComicMono);
-        }
-        Some(path) => {
-            app.set_font(EditorFont::Custom(path.to_string()));
-        }
-        _ => {}
-    }
+
+    //let mut app: MegraEditor = MegraEditor::default();
 
     let session2 = sync::Arc::clone(session);
     let function_map2 = sync::Arc::clone(function_map);
@@ -77,7 +66,22 @@ pub fn run_editor<const BUFSIZE: usize, const NCHAN: usize>(
             }
         }));
 
-    app.set_callback(&callback_ref);
-
-    egui_glow::run(Box::new(app), &epi::NativeOptions::default());
+    let ifont = match font {
+        Some("mononoki") => EditorFont::Mononoki,
+        Some("ComicMono") => EditorFont::ComicMono,
+        Some(path) => EditorFont::Custom(path.to_string()),
+        _ => EditorFont::Mononoki,
+    };
+    //egui_glow::run(Box::new(app), &epi::NativeOptions::default());
+    let native_options = eframe::NativeOptions::default();
+    eframe::run_native(
+        "Mégra Editor",
+        native_options,
+        Box::new(|cc| {
+            let mut inner_app = MegraEditor::new(cc);
+            inner_app.set_font(ifont);
+            inner_app.set_callback(callback_ref);
+            Box::new(inner_app)
+        }),
+    );
 }
