@@ -110,7 +110,7 @@ fn synth_defaults(ev: &mut Event) {
     );
     ev.params.insert(
         SynthParameterLabel::OscillatorLevel,
-        ParameterValue::Scalar(Parameter::with_value(1.0)),
+        ParameterValue::Scalar(Parameter::with_value(0.9)),
     );
     ev.params.insert(
         SynthParameterLabel::Attack,
@@ -138,7 +138,7 @@ fn sample_defaults(ev: &mut Event) {
     );
     ev.params.insert(
         SynthParameterLabel::OscillatorLevel,
-        ParameterValue::Scalar(Parameter::with_value(1.0)),
+        ParameterValue::Scalar(Parameter::with_value(0.9)),
     );
     ev.params.insert(
         SynthParameterLabel::Attack,
