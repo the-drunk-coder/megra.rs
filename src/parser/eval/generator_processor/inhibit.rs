@@ -18,7 +18,7 @@ pub fn collect_inhibit(tail: &mut Vec<EvaluatedExpr>) -> Box<dyn GeneratorProces
     let mut evs = Vec::new();
     let mut silencer = Event::with_name("silencer".to_string());
     silencer.params.insert(
-        SynthParameterLabel::Level,
+        SynthParameterLabel::EnvelopeLevel,
         ParameterValue::Scalar(Parameter::with_value(0.0)),
     );
     evs.push(silencer);

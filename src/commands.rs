@@ -54,7 +54,6 @@ pub fn load_sample_as_wavematrix(
 
     let wavematrix_raw = match method {
         "raw" => wavetableize(&sample_buffer, matrix_size, start, WavetableizeMethod::Raw),
-
         "smooth" => wavetableize(
             &sample_buffer,
             matrix_size,
