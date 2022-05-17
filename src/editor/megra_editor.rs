@@ -128,7 +128,7 @@ impl MegraEditor {
         }
 
         cc.egui_ctx.set_fonts(fonts);
-	        
+
         ed.content = format!(
             ";; Created {}",
             Local::now().format("%A, %F, %H:%M:%S ... good luck!")
@@ -283,20 +283,20 @@ impl eframe::App for MegraEditor {
     }
 
     fn auto_save_interval(&self) -> std::time::Duration {
-       std::time::Duration::from_secs(5)
+        std::time::Duration::from_secs(5)
     }
-    
+
     fn save(&mut self, storage: &mut dyn eframe::Storage) {
         if !self.current_sketch.is_empty() {
             let p = path::Path::new(&self.current_sketch);
-	    match fs::write(p, &self.content.as_bytes()) {
+            match fs::write(p, &self.content.as_bytes()) {
                 Ok(_) => {}
                 Err(e) => {
                     println!("couldn't save sketch {}", e);
                 }
             }
         }
- 
+
         eframe::set_value(storage, eframe::APP_KEY, self);
     }
 }

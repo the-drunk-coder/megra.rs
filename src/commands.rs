@@ -54,17 +54,24 @@ pub fn load_sample_as_wavematrix(
 
     let wavematrix_raw = match method {
         "raw" => wavetableize(&sample_buffer, matrix_size, start, WavetableizeMethod::Raw),
-        "zerocrossing_fixed_stretch_inverse" => wavetableize(
+
+        "smooth" => wavetableize(
             &sample_buffer,
             matrix_size,
             start,
-            WavetableizeMethod::ZerocrossingFixedRangeStretchInverse,
+            WavetableizeMethod::Smooth,
+        ),
+        "supersmooth" => wavetableize(
+            &sample_buffer,
+            matrix_size,
+            start,
+            WavetableizeMethod::Supersmooth,
         ),
         _ => wavetableize(
             &sample_buffer,
             matrix_size,
             start,
-            WavetableizeMethod::ZerocrossingFixedRangeStretchInverse,
+            WavetableizeMethod::Supersmooth,
         ),
     };
 
