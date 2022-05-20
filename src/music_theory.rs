@@ -14,10 +14,15 @@ pub fn from_string(string: &str) -> Note {
             pitch.push(c);
         }
     }
-    Note::new(
-        PitchClass::from_str(&pitch).unwrap(),
-        oct.parse::<u8>().unwrap(),
-    )
+    if let Some(n) = PitchClass::from_str(&pitch) {
+        if let Ok(o) = oct.parse::<u8>() {
+            Note::new(n, o)
+        } else {
+            Note::new(PitchClass::from_str("a").unwrap(), 4)
+        }
+    } else {
+        Note::new(PitchClass::from_str("a").unwrap(), 4)
+    }
 }
 
 pub fn from_note_nr(nr: u8) -> Note {
