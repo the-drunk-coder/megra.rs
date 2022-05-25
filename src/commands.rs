@@ -16,6 +16,7 @@ use crate::builtin_types::*;
 use crate::event::*;
 use crate::event_helpers::*;
 use crate::generator::*;
+use crate::load_audio_file;
 use crate::parameter::*;
 use crate::parser::eval;
 use crate::parser::FunctionMap;
@@ -95,36 +96,16 @@ pub fn load_sample<const BUFSIZE: usize, const NCHAN: usize>(
     keywords: &mut Vec<String>,
     path: String,
 ) {
-    let mut sample_buffer: Vec<f32> = Vec::new();
-    let mut reader = claxon::FlacReader::open(path.clone()).unwrap();
-
-    let mut duration = if let Some(samples) = reader.streaminfo().samples {
-        let tmp_dur = 1000.0
-            * ((samples as f32 / reader.streaminfo().channels as f32)
-                / reader.streaminfo().sample_rate as f32);
-        tmp_dur as usize
-    } else {
-        200
-    };
+    let (mut duration, samplerate, channels, mut sample_buffer) =
+        load_audio_file::load_flac(&path, ruffbox.samplerate);
 
     // max ten seconds
     if duration > 10000 {
         duration = 10000;
     }
 
-    // decode to f32
-    let max_val = (i32::MAX >> (32 - reader.streaminfo().bits_per_sample)) as f32;
-    for sample in reader.samples() {
-        let s = sample.unwrap() as f32 / max_val;
-        sample_buffer.push(s);
-    }
-
     // adds interpolation samples to sample buffer, don't use afterwards
-    let bufnum = ruffbox.load_sample(
-        &mut sample_buffer,
-        true,
-        reader.streaminfo().sample_rate as f32,
-    );
+    let bufnum = ruffbox.load_sample(&mut sample_buffer, true, samplerate);
 
     let mut keyword_set = HashSet::new();
     for k in keywords.drain(..) {
@@ -141,20 +122,14 @@ pub fn load_sample<const BUFSIZE: usize, const NCHAN: usize>(
         }
     }
 
-    if reader.streaminfo().sample_rate != ruffbox.samplerate as u32 {
-        println!("adapt duration");
-        duration = (duration as f32 * (reader.streaminfo().sample_rate as f32 / ruffbox.samplerate))
-            as usize;
-    }
-
     println!(
         "sample path: {} channels: {} dur: {} orig sr: {} ruf sr: {} resampled: {}",
         path,
-        reader.streaminfo().channels,
+        channels,
         duration,
-        reader.streaminfo().sample_rate,
+        samplerate,
         ruffbox.samplerate,
-        reader.streaminfo().sample_rate != ruffbox.samplerate as u32
+        samplerate != ruffbox.samplerate
     );
 
     sample_set

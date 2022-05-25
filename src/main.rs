@@ -13,6 +13,7 @@ pub mod event_helpers;
 pub mod generator;
 pub mod generator_processor;
 pub mod interpreter;
+pub mod load_audio_file;
 pub mod markov_sequence_generator;
 pub mod music_theory;
 pub mod parameter;
