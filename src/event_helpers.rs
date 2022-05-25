@@ -1,5 +1,5 @@
 use ruffbox_synth::building_blocks::SynthParameterLabel;
-use ruffbox_synth::building_blocks::SynthType;
+use ruffbox_synth::synths::SynthType;
 
 pub fn map_name(name: &str) -> SynthType {
     match name {

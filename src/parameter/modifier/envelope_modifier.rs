@@ -145,31 +145,31 @@ mod tests {
         let mut env = EnvelopeModifier::from_data(&values, &steps, false);
 
         let mut count = 0;
-        let mut val = env.evaluate()(0.0);
+        let mut val = env.evaluate(0.0);
         println!("count: {} val: {}", count, val);
         assert_approx_eq::assert_approx_eq!(val, 0.0, 0.00001);
         count += 1;
         for _ in 0..9 {
-            println!("count: {} val: {}", count, env.evaluate()(0.0));
+            println!("count: {} val: {}", count, env.evaluate(0.0));
             count += 1;
         }
-        val = env.evaluate()(0.0);
+        val = env.evaluate(0.0);
         println!("count: {} val: {}", count, val);
         assert_approx_eq::assert_approx_eq!(val, 10.0, 0.00001);
         count += 1;
         for _ in 0..9 {
-            println!("count: {} val: {}", count, env.evaluate()(0.0));
+            println!("count: {} val: {}", count, env.evaluate(0.0));
             count += 1;
         }
-        val = env.evaluate()(0.0);
+        val = env.evaluate(0.0);
         println!("count: {} val: {}", count, val);
         assert_approx_eq::assert_approx_eq!(val, 0.0, 0.00001);
         count += 1;
         for _ in 0..9 {
-            println!("count: {} val: {}", count, env.evaluate()(0.0));
+            println!("count: {} val: {}", count, env.evaluate(0.0));
             count += 1;
         }
-        assert_approx_eq::assert_approx_eq!(env.evaluate()(0.0), 0.0, 0.00001);
+        assert_approx_eq::assert_approx_eq!(env.evaluate(0.0), 0.0, 0.00001);
     }
 
     #[test]
@@ -188,30 +188,30 @@ mod tests {
         let mut env = EnvelopeModifier::from_data(&values, &steps, true);
 
         let mut count = 0;
-        let mut val = env.evaluate()(0.0);
+        let mut val = env.evaluate(0.0);
         println!("count: {} val: {}", count, val);
         assert_approx_eq::assert_approx_eq!(val, 0.0, 0.00001);
         count += 1;
         for _ in 0..9 {
-            println!("count: {} val: {}", count, env.evaluate()(0.0));
+            println!("count: {} val: {}", count, env.evaluate(0.0));
             count += 1;
         }
-        val = env.evaluate()(0.0);
+        val = env.evaluate(0.0);
         println!("count: {} val: {}", count, val);
         assert_approx_eq::assert_approx_eq!(val, 10.0, 0.00001);
         count += 1;
         for _ in 0..4 {
-            println!("count: {} val: {}", count, env.evaluate()(0.0));
+            println!("count: {} val: {}", count, env.evaluate(0.0));
             count += 1;
         }
-        val = env.evaluate()(0.0);
+        val = env.evaluate(0.0);
         println!("count: {} val: {}", count, val);
         assert_approx_eq::assert_approx_eq!(val, 5.0, 0.00001);
         count += 1;
         for _ in 0..9 {
-            println!("count: {} val: {}", count, env.evaluate()(0.0));
+            println!("count: {} val: {}", count, env.evaluate(0.0));
             count += 1;
         }
-        assert_approx_eq::assert_approx_eq!(env.evaluate()(0.0), 0.0, 0.00001);
+        assert_approx_eq::assert_approx_eq!(env.evaluate(0.0), 0.0, 0.00001);
     }
 }
