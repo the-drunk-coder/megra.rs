@@ -63,22 +63,25 @@ pub fn parameter(
                 let mut ev = Event::with_name_and_operation(parts[0].to_string(), op);
                 ev.params.insert(
                     param_key,
-                    ParameterValue::Scalar(match p {
-                        EvaluatedExpr::Float(n) => Parameter::with_value(n),
-                        EvaluatedExpr::BuiltIn(BuiltIn::Parameter(pl)) => pl,
+                    match p {
+                        EvaluatedExpr::Float(n) => ParameterValue::Scalar(Parameter::with_value(n)),
+                        EvaluatedExpr::BuiltIn(BuiltIn::Parameter(pl)) => {
+                            ParameterValue::Scalar(pl)
+                        }
+                        EvaluatedExpr::BuiltIn(BuiltIn::Modulator(m)) => m,
                         EvaluatedExpr::Symbol(s)
                             if param_key == SynthParameterLabel::PitchFrequency
                                 || param_key == SynthParameterLabel::LowpassCutoffFrequency
                                 || param_key == SynthParameterLabel::HighpassCutoffFrequency
                                 || param_key == SynthParameterLabel::PeakFrequency =>
                         {
-                            Parameter::with_value(music_theory::to_freq(
+                            ParameterValue::Scalar(Parameter::with_value(music_theory::to_freq(
                                 music_theory::from_string(&s),
                                 music_theory::Tuning::EqualTemperament,
-                            ))
+                            )))
                         }
-                        _ => Parameter::with_value(0.5), // should be save ...
-                    }),
+                        _ => ParameterValue::Scalar(Parameter::with_value(0.5)), // should be save ...
+                    },
                 );
                 //println!("{:?}", ev);
                 Some(EvaluatedExpr::BuiltIn(BuiltIn::SoundEvent(ev)))
