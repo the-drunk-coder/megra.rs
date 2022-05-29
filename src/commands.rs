@@ -407,13 +407,51 @@ pub fn set_global_ruffbox_parameters<const BUFSIZE: usize, const NCHAN: usize>(
             ParameterValue::Scalar(p) => {
                 ruffbox.set_master_parameter(*k, p.evaluate_val_f32());
             }
-            ParameterValue::Lfo(init, freq, range, op) => {
+            ParameterValue::Lfo(init, freq, amp, add, op) => {
                 ruffbox.set_master_parameter(
                     *k,
                     SynthParameterValue::Lfo(
                         init.evaluate_numerical(),
                         freq.evaluate_numerical(),
-                        range.evaluate_numerical(),
+                        amp.evaluate_numerical(),
+			add.evaluate_numerical(),
+                        *op,
+                    ),
+                );
+            }
+	    ParameterValue::LFSaw(init, freq, amp, add, op) => {
+                ruffbox.set_master_parameter(
+                    *k,
+                    SynthParameterValue::LFSaw(
+                        init.evaluate_numerical(),
+                        freq.evaluate_numerical(),
+                        amp.evaluate_numerical(),
+			add.evaluate_numerical(),
+                        *op,
+                    ),
+                );
+            }
+	    ParameterValue::LFTri(init, freq, amp, add, op) => {
+                ruffbox.set_master_parameter(
+                    *k,
+                    SynthParameterValue::LFTri(
+                        init.evaluate_numerical(),
+                        freq.evaluate_numerical(),
+                        amp.evaluate_numerical(),
+			add.evaluate_numerical(),
+                        *op,
+                    ),
+                );
+            }
+	    ParameterValue::LFSquare(init, freq, pw, amp, add, op) => {
+                ruffbox.set_master_parameter(
+                    *k,
+                    SynthParameterValue::LFSquare(
+                        init.evaluate_numerical(),
+                        freq.evaluate_numerical(),
+			pw.evaluate_numerical(),
+                        amp.evaluate_numerical(),
+			add.evaluate_numerical(),
                         *op,
                     ),
                 );
@@ -549,17 +587,59 @@ pub fn once<const BUFSIZE: usize, const NCHAN: usize>(
                                 );
                             }
                         }
-                        SynthParameterValue::Lfo(init, freq, range, op) => {
+                        SynthParameterValue::Lfo(init, freq, amp, add, op) => {
                             if output_mode == OutputMode::Stereo {
                                 let pos = (*init + 1.0) * 0.5;
                                 inst.set_instance_parameter(
                                     *k,
-                                    &SynthParameterValue::Lfo(pos, *freq, *range, *op),
+                                    &SynthParameterValue::Lfo(pos, *freq, *amp, *add, *op),
                                 );
                             } else {
                                 inst.set_instance_parameter(
                                     *k,
-                                    &SynthParameterValue::Lfo(*init, *freq, *range, *op),
+                                    &SynthParameterValue::Lfo(*init, *freq, *amp, *add, *op),
+                                );
+                            }
+                        }
+			SynthParameterValue::LFSaw(init, freq, amp, add, op) => {
+                            if output_mode == OutputMode::Stereo {
+                                let pos = (*init + 1.0) * 0.5;
+                                inst.set_instance_parameter(
+                                    *k,
+                                    &SynthParameterValue::LFSaw(pos, *freq, *amp, *add, *op),
+                                );
+                            } else {
+                                inst.set_instance_parameter(
+                                    *k,
+                                    &SynthParameterValue::LFSaw(*init, *freq, *amp, *add, *op),
+                                );
+                            }
+                        }
+			SynthParameterValue::LFTri(init, freq, amp, add, op) => {
+                            if output_mode == OutputMode::Stereo {
+                                let pos = (*init + 1.0) * 0.5;
+                                inst.set_instance_parameter(
+                                    *k,
+                                    &SynthParameterValue::LFTri(pos, *freq, *amp, *add, *op),
+                                );
+                            } else {
+                                inst.set_instance_parameter(
+                                    *k,
+                                    &SynthParameterValue::LFTri(*init, *freq, *amp, *add, *op),
+                                );
+                            }
+                        }
+			SynthParameterValue::LFSquare(init, freq, pw, amp, add, op) => {
+                            if output_mode == OutputMode::Stereo {
+                                let pos = (*init + 1.0) * 0.5;
+                                inst.set_instance_parameter(
+                                    *k,
+                                    &SynthParameterValue::LFSquare(pos, *freq, *pw, *amp, *add, *op),
+                                );
+                            } else {
+                                inst.set_instance_parameter(
+                                    *k,
+                                    &SynthParameterValue::LFSquare(*init, *freq, *pw, *amp, *add, *op),
                                 );
                             }
                         }

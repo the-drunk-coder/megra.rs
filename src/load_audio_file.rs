@@ -31,3 +31,8 @@ pub fn load_flac(path: &str, samplerate: f32) -> (usize, f32, u32, Vec<f32>) {
         sample_buffer,
     )
 }
+
+//pub fn load_wav(path: &str, samplerate: f32) {
+//    let mut reader = hound::WavReader::open(path).unwrap();
+//    let sam = reader.samples::<f32>()
+//}

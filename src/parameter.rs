@@ -12,7 +12,10 @@ pub enum ParameterValue {
     Scalar(Parameter),
     Vector(Vec<Parameter>),
     Matrix(Vec<Vec<Parameter>>),
-    Lfo(Parameter, Parameter, Parameter, ValOp), // init, freq, range, op
+    Lfo(Parameter, Parameter, Parameter, Parameter, ValOp), // init, freq, amp, add, op
+    LFSaw(Parameter, Parameter, Parameter, Parameter, ValOp), // init, freq, amp, add, op
+    LFTri(Parameter, Parameter, Parameter, Parameter, ValOp), // init, freq, amp, add, op
+    LFSquare(Parameter, Parameter, Parameter, Parameter, Parameter, ValOp), // init, freq, pw, amp, add, op
 }
 
 #[derive(Clone)]

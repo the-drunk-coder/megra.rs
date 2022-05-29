@@ -201,13 +201,51 @@ impl Event {
                         SynthParameterValue::MatrixF32((rows, cols), static_vals),
                     );
                 }
-                ParameterValue::Lfo(init, freq, range, op) => {
+                ParameterValue::Lfo(init, freq, amp, add, op) => {
                     map.insert(
                         *k,
                         SynthParameterValue::Lfo(
                             init.evaluate_numerical(),
                             freq.evaluate_numerical(),
-                            range.evaluate_numerical(),
+                            amp.evaluate_numerical(),
+			    add.evaluate_numerical(),
+                            *op,
+                        ),
+                    );
+                }
+		ParameterValue::LFSaw(init, freq, amp, add, op) => {
+                    map.insert(
+                        *k,
+                        SynthParameterValue::LFSaw(
+                            init.evaluate_numerical(),
+                            freq.evaluate_numerical(),
+                            amp.evaluate_numerical(),
+			    add.evaluate_numerical(),
+                            *op,
+                        ),
+                    );
+                }
+		ParameterValue::LFTri(init, freq, amp, add, op) => {
+                    map.insert(
+                        *k,
+                        SynthParameterValue::LFTri(
+                            init.evaluate_numerical(),
+                            freq.evaluate_numerical(),
+                            amp.evaluate_numerical(),
+			    add.evaluate_numerical(),
+                            *op,
+                        ),
+                    );
+                }
+		ParameterValue::LFSquare(init, freq, pw, amp, add, op) => {
+                    map.insert(
+                        *k,
+                        SynthParameterValue::LFSquare(
+                            init.evaluate_numerical(),
+                            freq.evaluate_numerical(),
+			    pw.evaluate_numerical(),
+                            amp.evaluate_numerical(),
+			    add.evaluate_numerical(),
                             *op,
                         ),
                     );
@@ -237,10 +275,30 @@ impl Event {
                             }
                         }
                     }
-                    ParameterValue::Lfo(init, freq, range, _) => {
+                    ParameterValue::Lfo(init, freq, amp, add, _) => {
                         init.shake(factor);
                         freq.shake(factor);
-                        range.shake(factor);
+                        amp.shake(factor);
+			add.shake(factor);
+                    }
+		    ParameterValue::LFSaw(init, freq, amp, add, _) => {
+                        init.shake(factor);
+                        freq.shake(factor);
+                        amp.shake(factor);
+			add.shake(factor);
+                    }
+		    ParameterValue::LFTri(init, freq, amp, add, _) => {
+                        init.shake(factor);
+                        freq.shake(factor);
+                        amp.shake(factor);
+			add.shake(factor);
+                    }
+		    ParameterValue::LFSquare(init, freq, pw, amp, add, _) => {
+                        init.shake(factor);
+                        freq.shake(factor);
+			pw.shake(factor);
+                        amp.shake(factor);
+			add.shake(factor);
                     }
                 }
             }
