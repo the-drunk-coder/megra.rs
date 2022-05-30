@@ -70,6 +70,9 @@ pub fn define_standard_library() -> FunctionMap {
 
     // modulators
     standard_library.fmap.insert("lfo~".to_string(), eval::events::modulators::lfo_modulator);
+    standard_library.fmap.insert("lfsaw~".to_string(), eval::events::modulators::lfsaw_modulator);
+    standard_library.fmap.insert("lfsqr~".to_string(), eval::events::modulators::lfsquare_modulator);
+    standard_library.fmap.insert("lftri~".to_string(), eval::events::modulators::lftri_modulator);
     
     // parameter events
     standard_library.fmap.insert("pitch".to_string(), eval::events::parameters::parameter);

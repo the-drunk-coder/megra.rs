@@ -50,7 +50,7 @@ pub fn lfo_modulator(
                         }
                     }
                 }
-		"add" => {
+                "add" => {
                     if let Some(p) = tail_drain.next() {
                         match p {
                             EvaluatedExpr::Float(f) => add = Parameter::with_value(f),
@@ -125,7 +125,7 @@ pub fn lfsaw_modulator(
                         }
                     }
                 }
-		"add" => {
+                "add" => {
                     if let Some(p) = tail_drain.next() {
                         match p {
                             EvaluatedExpr::Float(f) => add = Parameter::with_value(f),
@@ -200,7 +200,7 @@ pub fn lftri_modulator(
                         }
                     }
                 }
-		"add" => {
+                "add" => {
                     if let Some(p) = tail_drain.next() {
                         match p {
                             EvaluatedExpr::Float(f) => add = Parameter::with_value(f),
@@ -267,7 +267,7 @@ pub fn lfsquare_modulator(
                         }
                     }
                 }
-		"pw" => {
+                "pw" => {
                     if let Some(p) = tail_drain.next() {
                         match p {
                             EvaluatedExpr::Float(p) => pw = Parameter::with_value(p),
@@ -285,7 +285,7 @@ pub fn lfsquare_modulator(
                         }
                     }
                 }
-		"add" => {
+                "add" => {
                     if let Some(p) = tail_drain.next() {
                         match p {
                             EvaluatedExpr::Float(f) => add = Parameter::with_value(f),

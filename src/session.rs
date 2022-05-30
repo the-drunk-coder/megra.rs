@@ -260,52 +260,66 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
                                     } else {
                                         inst.set_instance_parameter(
                                             *k,
-                                            &SynthParameterValue::Lfo(*init, *freq, *amp, *add, *op),
+                                            &SynthParameterValue::Lfo(
+                                                *init, *freq, *amp, *add, *op,
+                                            ),
                                         );
                                     }
                                 }
-				SynthParameterValue::LFSaw(init, freq, amp, add, op) => {
+                                SynthParameterValue::LFSaw(init, freq, amp, add, op) => {
                                     //println!("hello {}", init);
                                     if data.output_mode == OutputMode::Stereo {
                                         let pos = (*init + 1.0) * 0.5;
                                         inst.set_instance_parameter(
                                             *k,
-                                            &SynthParameterValue::LFSaw(pos, *freq, *amp, *add, *op),
+                                            &SynthParameterValue::LFSaw(
+                                                pos, *freq, *amp, *add, *op,
+                                            ),
                                         );
                                     } else {
                                         inst.set_instance_parameter(
                                             *k,
-                                            &SynthParameterValue::LFSaw(*init, *freq, *amp, *add, *op),
+                                            &SynthParameterValue::LFSaw(
+                                                *init, *freq, *amp, *add, *op,
+                                            ),
                                         );
                                     }
                                 }
-				SynthParameterValue::LFTri(init, freq, amp, add, op) => {
+                                SynthParameterValue::LFTri(init, freq, amp, add, op) => {
                                     //println!("hello {}", init);
                                     if data.output_mode == OutputMode::Stereo {
                                         let pos = (*init + 1.0) * 0.5;
                                         inst.set_instance_parameter(
                                             *k,
-                                            &SynthParameterValue::LFTri(pos, *freq, *amp, *add, *op),
+                                            &SynthParameterValue::LFTri(
+                                                pos, *freq, *amp, *add, *op,
+                                            ),
                                         );
                                     } else {
                                         inst.set_instance_parameter(
                                             *k,
-                                            &SynthParameterValue::LFTri(*init, *freq, *amp, *add, *op),
+                                            &SynthParameterValue::LFTri(
+                                                *init, *freq, *amp, *add, *op,
+                                            ),
                                         );
                                     }
                                 }
-				SynthParameterValue::LFSquare(init, freq, pw, amp, add, op) => {
+                                SynthParameterValue::LFSquare(init, freq, pw, amp, add, op) => {
                                     //println!("hello {}", init);
                                     if data.output_mode == OutputMode::Stereo {
                                         let pos = (*init + 1.0) * 0.5;
                                         inst.set_instance_parameter(
                                             *k,
-                                            &SynthParameterValue::LFSquare(pos, *freq, *pw, *amp, *add, *op),
+                                            &SynthParameterValue::LFSquare(
+                                                pos, *freq, *pw, *amp, *add, *op,
+                                            ),
                                         );
                                     } else {
                                         inst.set_instance_parameter(
                                             *k,
-                                            &SynthParameterValue::LFSquare(*init, *freq,*pw,  *amp, *add, *op),
+                                            &SynthParameterValue::LFSquare(
+                                                *init, *freq, *pw, *amp, *add, *op,
+                                            ),
                                         );
                                     }
                                 }

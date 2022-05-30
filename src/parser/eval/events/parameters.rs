@@ -41,7 +41,7 @@ pub fn parameter(
                 "sus" => SynthParameterLabel::Sustain,
                 "pos" => SynthParameterLabel::ChannelPosition,
                 "lvl" => SynthParameterLabel::EnvelopeLevel,
-                "gain" => SynthParameterLabel::OscillatorLevel,
+                "gain" => SynthParameterLabel::OscillatorAmplitude,
                 "dur" => SynthParameterLabel::Duration,
                 "rev" => SynthParameterLabel::ReverbMix,
                 "del" => SynthParameterLabel::DelayMix,

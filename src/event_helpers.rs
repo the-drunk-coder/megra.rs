@@ -27,7 +27,7 @@ pub fn map_parameter(name: &str) -> SynthParameterLabel {
         "sus" => SynthParameterLabel::Sustain,
         "pos" => SynthParameterLabel::ChannelPosition,
         "lvl" => SynthParameterLabel::EnvelopeLevel,
-        "gain" => SynthParameterLabel::OscillatorLevel,
+        "amp" => SynthParameterLabel::OscillatorAmplitude,
         "dur" => SynthParameterLabel::Duration,
         "lpf" => SynthParameterLabel::LowpassCutoffFrequency,
         "lpd" => SynthParameterLabel::LowpassFilterDistortion,
