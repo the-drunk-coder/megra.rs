@@ -21,6 +21,11 @@ pub fn lfo_modulator(
     let mut add = Parameter::with_value(0.0);
     let mut op = ValOp::Replace;
 
+    // make sure range/phase calc is always consistent
+    let mut phase_set = false;
+    //let mut range_set = false;
+    //let mut range = (0,0);
+
     while let Some(e) = tail_drain.next() {
         if let EvaluatedExpr::Keyword(k) = e {
             match k.as_str() {
@@ -45,9 +50,34 @@ pub fn lfo_modulator(
                 "phase" | "p" => {
                     if let Some(p) = tail_drain.next() {
                         match p {
-                            EvaluatedExpr::Float(f) => eff_phase = Parameter::with_value(f),
-                            EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p)) => eff_phase = p,
+                            EvaluatedExpr::Float(f) => {
+                                eff_phase = Parameter::with_value(f);
+                                phase_set = true;
+                            }
+                            EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p)) => {
+                                eff_phase = p;
+                                phase_set = true;
+                            }
                             _ => {}
+                        }
+                    }
+                }
+                "range" | "r" => {
+                    if let Some(EvaluatedExpr::Float(f1)) = tail_drain.next() {
+                        let a = f1;
+                        if let Some(EvaluatedExpr::Float(f2)) = tail_drain.next() {
+                            let b = f2;
+                            let lamp = (a - b).abs() / 2.0;
+                            let ladd = f32::min(a, b) + lamp;
+
+                            // don't overwrite phase if it has been set
+                            if !phase_set {
+                                eff_phase = Parameter::with_value(a);
+                            }
+
+                            amp = Parameter::with_value(lamp);
+                            add = Parameter::with_value(ladd);
+                            //range = (a,b);
                         }
                     }
                 }
