@@ -201,12 +201,13 @@ impl Event {
                         SynthParameterValue::MatrixF32((rows, cols), static_vals),
                     );
                 }
-                ParameterValue::Lfo(init, freq, amp, add, op) => {
+                ParameterValue::Lfo(init, freq, eff_phase, amp, add, op) => {
                     map.insert(
                         *k,
                         SynthParameterValue::Lfo(
                             init.evaluate_numerical(),
                             freq.evaluate_numerical(),
+                            eff_phase.evaluate_numerical(),
                             amp.evaluate_numerical(),
                             add.evaluate_numerical(),
                             *op,
@@ -275,9 +276,10 @@ impl Event {
                             }
                         }
                     }
-                    ParameterValue::Lfo(init, freq, amp, add, _) => {
+                    ParameterValue::Lfo(init, freq, eff_phase, amp, add, _) => {
                         init.shake(factor);
                         freq.shake(factor);
+                        eff_phase.shake(factor);
                         amp.shake(factor);
                         add.shake(factor);
                     }

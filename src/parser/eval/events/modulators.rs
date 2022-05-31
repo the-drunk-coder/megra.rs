@@ -16,6 +16,7 @@ pub fn lfo_modulator(
 
     let mut init = Parameter::with_value(1.0);
     let mut freq = Parameter::with_value(1.0);
+    let mut eff_phase = Parameter::with_value(0.0);
     let mut amp = Parameter::with_value(1.0);
     let mut add = Parameter::with_value(0.0);
     let mut op = ValOp::Replace;
@@ -37,6 +38,15 @@ pub fn lfo_modulator(
                         match p {
                             EvaluatedExpr::Float(f) => freq = Parameter::with_value(f),
                             EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p)) => freq = p,
+                            _ => {}
+                        }
+                    }
+                }
+                "phase" | "p" => {
+                    if let Some(p) = tail_drain.next() {
+                        match p {
+                            EvaluatedExpr::Float(f) => eff_phase = Parameter::with_value(f),
+                            EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p)) => eff_phase = p,
                             _ => {}
                         }
                     }
@@ -76,7 +86,7 @@ pub fn lfo_modulator(
     }
 
     Some(EvaluatedExpr::BuiltIn(BuiltIn::Modulator(
-        ParameterValue::Lfo(init, freq, amp, add, op),
+        ParameterValue::Lfo(init, freq, eff_phase, amp, add, op),
     )))
 }
 

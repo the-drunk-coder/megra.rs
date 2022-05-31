@@ -249,19 +249,21 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
                                         );
                                     }
                                 }
-                                SynthParameterValue::Lfo(init, freq, amp, add, op) => {
+                                SynthParameterValue::Lfo(init, freq, eff_phase, amp, add, op) => {
                                     //println!("hello {}", init);
                                     if data.output_mode == OutputMode::Stereo {
                                         let pos = (*init + 1.0) * 0.5;
                                         inst.set_instance_parameter(
                                             *k,
-                                            &SynthParameterValue::Lfo(pos, *freq, *amp, *add, *op),
+                                            &SynthParameterValue::Lfo(
+                                                pos, *freq, *eff_phase, *amp, *add, *op,
+                                            ),
                                         );
                                     } else {
                                         inst.set_instance_parameter(
                                             *k,
                                             &SynthParameterValue::Lfo(
-                                                *init, *freq, *amp, *add, *op,
+                                                *init, *freq, *eff_phase, *amp, *add, *op,
                                             ),
                                         );
                                     }

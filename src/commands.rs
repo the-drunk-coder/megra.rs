@@ -407,12 +407,13 @@ pub fn set_global_ruffbox_parameters<const BUFSIZE: usize, const NCHAN: usize>(
             ParameterValue::Scalar(p) => {
                 ruffbox.set_master_parameter(*k, p.evaluate_val_f32());
             }
-            ParameterValue::Lfo(init, freq, amp, add, op) => {
+            ParameterValue::Lfo(init, freq, eff_phase, amp, add, op) => {
                 ruffbox.set_master_parameter(
                     *k,
                     SynthParameterValue::Lfo(
                         init.evaluate_numerical(),
                         freq.evaluate_numerical(),
+                        eff_phase.evaluate_numerical(),
                         amp.evaluate_numerical(),
                         add.evaluate_numerical(),
                         *op,
@@ -587,17 +588,21 @@ pub fn once<const BUFSIZE: usize, const NCHAN: usize>(
                                 );
                             }
                         }
-                        SynthParameterValue::Lfo(init, freq, amp, add, op) => {
+                        SynthParameterValue::Lfo(init, freq, eff_phase, amp, add, op) => {
                             if output_mode == OutputMode::Stereo {
                                 let pos = (*init + 1.0) * 0.5;
                                 inst.set_instance_parameter(
                                     *k,
-                                    &SynthParameterValue::Lfo(pos, *freq, *amp, *add, *op),
+                                    &SynthParameterValue::Lfo(
+                                        pos, *freq, *eff_phase, *amp, *add, *op,
+                                    ),
                                 );
                             } else {
                                 inst.set_instance_parameter(
                                     *k,
-                                    &SynthParameterValue::Lfo(*init, *freq, *amp, *add, *op),
+                                    &SynthParameterValue::Lfo(
+                                        *init, *freq, *eff_phase, *amp, *add, *op,
+                                    ),
                                 );
                             }
                         }
