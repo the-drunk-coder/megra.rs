@@ -420,24 +420,26 @@ pub fn set_global_ruffbox_parameters<const BUFSIZE: usize, const NCHAN: usize>(
                     ),
                 );
             }
-            ParameterValue::LFSaw(init, freq, amp, add, op) => {
+            ParameterValue::LFSaw(init, freq, eff_phase, amp, add, op) => {
                 ruffbox.set_master_parameter(
                     *k,
                     SynthParameterValue::LFSaw(
                         init.evaluate_numerical(),
                         freq.evaluate_numerical(),
+                        eff_phase.evaluate_numerical(),
                         amp.evaluate_numerical(),
                         add.evaluate_numerical(),
                         *op,
                     ),
                 );
             }
-            ParameterValue::LFTri(init, freq, amp, add, op) => {
+            ParameterValue::LFTri(init, freq, eff_phase, amp, add, op) => {
                 ruffbox.set_master_parameter(
                     *k,
                     SynthParameterValue::LFTri(
                         init.evaluate_numerical(),
                         freq.evaluate_numerical(),
+                        eff_phase.evaluate_numerical(),
                         amp.evaluate_numerical(),
                         add.evaluate_numerical(),
                         *op,
@@ -606,31 +608,39 @@ pub fn once<const BUFSIZE: usize, const NCHAN: usize>(
                                 );
                             }
                         }
-                        SynthParameterValue::LFSaw(init, freq, amp, add, op) => {
+                        SynthParameterValue::LFSaw(init, freq, eff_phase, amp, add, op) => {
                             if output_mode == OutputMode::Stereo {
                                 let pos = (*init + 1.0) * 0.5;
                                 inst.set_instance_parameter(
                                     *k,
-                                    &SynthParameterValue::LFSaw(pos, *freq, *amp, *add, *op),
+                                    &SynthParameterValue::LFSaw(
+                                        pos, *freq, *eff_phase, *amp, *add, *op,
+                                    ),
                                 );
                             } else {
                                 inst.set_instance_parameter(
                                     *k,
-                                    &SynthParameterValue::LFSaw(*init, *freq, *amp, *add, *op),
+                                    &SynthParameterValue::LFSaw(
+                                        *init, *freq, *eff_phase, *amp, *add, *op,
+                                    ),
                                 );
                             }
                         }
-                        SynthParameterValue::LFTri(init, freq, amp, add, op) => {
+                        SynthParameterValue::LFTri(init, freq, eff_phase, amp, add, op) => {
                             if output_mode == OutputMode::Stereo {
                                 let pos = (*init + 1.0) * 0.5;
                                 inst.set_instance_parameter(
                                     *k,
-                                    &SynthParameterValue::LFTri(pos, *freq, *amp, *add, *op),
+                                    &SynthParameterValue::LFTri(
+                                        pos, *freq, *eff_phase, *amp, *add, *op,
+                                    ),
                                 );
                             } else {
                                 inst.set_instance_parameter(
                                     *k,
-                                    &SynthParameterValue::LFTri(*init, *freq, *amp, *add, *op),
+                                    &SynthParameterValue::LFTri(
+                                        *init, *freq, *eff_phase, *amp, *add, *op,
+                                    ),
                                 );
                             }
                         }

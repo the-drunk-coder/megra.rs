@@ -214,24 +214,26 @@ impl Event {
                         ),
                     );
                 }
-                ParameterValue::LFSaw(init, freq, amp, add, op) => {
+                ParameterValue::LFSaw(init, freq, eff_phase, amp, add, op) => {
                     map.insert(
                         *k,
                         SynthParameterValue::LFSaw(
                             init.evaluate_numerical(),
                             freq.evaluate_numerical(),
+                            eff_phase.evaluate_numerical(),
                             amp.evaluate_numerical(),
                             add.evaluate_numerical(),
                             *op,
                         ),
                     );
                 }
-                ParameterValue::LFTri(init, freq, amp, add, op) => {
+                ParameterValue::LFTri(init, freq, eff_phase, amp, add, op) => {
                     map.insert(
                         *k,
                         SynthParameterValue::LFTri(
                             init.evaluate_numerical(),
                             freq.evaluate_numerical(),
+                            eff_phase.evaluate_numerical(),
                             amp.evaluate_numerical(),
                             add.evaluate_numerical(),
                             *op,
@@ -283,15 +285,17 @@ impl Event {
                         amp.shake(factor);
                         add.shake(factor);
                     }
-                    ParameterValue::LFSaw(init, freq, amp, add, _) => {
+                    ParameterValue::LFSaw(init, freq, eff_phase, amp, add, _) => {
                         init.shake(factor);
                         freq.shake(factor);
+                        eff_phase.shake(factor);
                         amp.shake(factor);
                         add.shake(factor);
                     }
-                    ParameterValue::LFTri(init, freq, amp, add, _) => {
+                    ParameterValue::LFTri(init, freq, eff_phase, amp, add, _) => {
                         init.shake(factor);
                         freq.shake(factor);
+                        eff_phase.shake(factor);
                         amp.shake(factor);
                         add.shake(factor);
                     }
