@@ -73,9 +73,9 @@ pub fn lfo_modulator(
                                 eff_phase = Parameter::with_value(a);
                             }
 
+                            //println!("{} {} {} {}", a, b, lamp, ladd);
                             amp = Parameter::with_value(lamp);
                             add = Parameter::with_value(ladd);
-                            //range = (a,b);
                         }
                     }
                 }

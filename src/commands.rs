@@ -433,6 +433,19 @@ pub fn set_global_ruffbox_parameters<const BUFSIZE: usize, const NCHAN: usize>(
                     ),
                 );
             }
+            ParameterValue::LFRSaw(init, freq, eff_phase, amp, add, op) => {
+                ruffbox.set_master_parameter(
+                    *k,
+                    SynthParameterValue::LFRSaw(
+                        init.evaluate_numerical(),
+                        freq.evaluate_numerical(),
+                        eff_phase.evaluate_numerical(),
+                        amp.evaluate_numerical(),
+                        add.evaluate_numerical(),
+                        *op,
+                    ),
+                );
+            }
             ParameterValue::LFTri(init, freq, eff_phase, amp, add, op) => {
                 ruffbox.set_master_parameter(
                     *k,
@@ -609,6 +622,24 @@ pub fn once<const BUFSIZE: usize, const NCHAN: usize>(
                             }
                         }
                         SynthParameterValue::LFSaw(init, freq, eff_phase, amp, add, op) => {
+                            if output_mode == OutputMode::Stereo {
+                                let pos = (*init + 1.0) * 0.5;
+                                inst.set_instance_parameter(
+                                    *k,
+                                    &SynthParameterValue::LFSaw(
+                                        pos, *freq, *eff_phase, *amp, *add, *op,
+                                    ),
+                                );
+                            } else {
+                                inst.set_instance_parameter(
+                                    *k,
+                                    &SynthParameterValue::LFSaw(
+                                        *init, *freq, *eff_phase, *amp, *add, *op,
+                                    ),
+                                );
+                            }
+                        }
+                        SynthParameterValue::LFRSaw(init, freq, eff_phase, amp, add, op) => {
                             if output_mode == OutputMode::Stereo {
                                 let pos = (*init + 1.0) * 0.5;
                                 inst.set_instance_parameter(

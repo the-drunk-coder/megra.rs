@@ -14,6 +14,7 @@ pub enum ParameterValue {
     Matrix(Vec<Vec<Parameter>>),
     Lfo(Parameter, Parameter, Parameter, Parameter, Parameter, ValOp), // init, freq, phase, amp, add, op
     LFSaw(Parameter, Parameter, Parameter, Parameter, Parameter, ValOp), // init, freq, phase, amp, add, op
+    LFRSaw(Parameter, Parameter, Parameter, Parameter, Parameter, ValOp), // init, freq, phase, amp, add, op
     LFTri(Parameter, Parameter, Parameter, Parameter, Parameter, ValOp), // init, freq, phase, amp, add, op
     LFSquare(Parameter, Parameter, Parameter, Parameter, Parameter, ValOp), // init, freq, phase, pw, amp, add, op
 }

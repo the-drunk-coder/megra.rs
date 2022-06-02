@@ -227,6 +227,19 @@ impl Event {
                         ),
                     );
                 }
+                ParameterValue::LFRSaw(init, freq, eff_phase, amp, add, op) => {
+                    map.insert(
+                        *k,
+                        SynthParameterValue::LFRSaw(
+                            init.evaluate_numerical(),
+                            freq.evaluate_numerical(),
+                            eff_phase.evaluate_numerical(),
+                            amp.evaluate_numerical(),
+                            add.evaluate_numerical(),
+                            *op,
+                        ),
+                    );
+                }
                 ParameterValue::LFTri(init, freq, eff_phase, amp, add, op) => {
                     map.insert(
                         *k,
@@ -286,6 +299,13 @@ impl Event {
                         add.shake(factor);
                     }
                     ParameterValue::LFSaw(init, freq, eff_phase, amp, add, _) => {
+                        init.shake(factor);
+                        freq.shake(factor);
+                        eff_phase.shake(factor);
+                        amp.shake(factor);
+                        add.shake(factor);
+                    }
+                    ParameterValue::LFRSaw(init, freq, eff_phase, amp, add, _) => {
                         init.shake(factor);
                         freq.shake(factor);
                         eff_phase.shake(factor);
