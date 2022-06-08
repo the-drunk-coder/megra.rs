@@ -606,11 +606,13 @@ pub fn once<const BUFSIZE: usize, const NCHAN: usize>(
                         SynthParameterValue::Lfo(init, freq, eff_phase, amp, add, op) => {
                             if output_mode == OutputMode::Stereo {
                                 let pos = (*init + 1.0) * 0.5;
+                                let amps = (*amp + 1.0) * 0.25;
+                                let adds = (*add + 1.0) * 0.5;
+                                let phases = (*eff_phase + 1.0) * 0.5;
+                                //println!("translated {} {} {} {}", pos, amps, adds, phases);
                                 inst.set_instance_parameter(
                                     *k,
-                                    &SynthParameterValue::Lfo(
-                                        pos, *freq, *eff_phase, *amp, *add, *op,
-                                    ),
+                                    &SynthParameterValue::Lfo(pos, *freq, phases, amps, adds, *op),
                                 );
                             } else {
                                 inst.set_instance_parameter(
@@ -624,10 +626,13 @@ pub fn once<const BUFSIZE: usize, const NCHAN: usize>(
                         SynthParameterValue::LFSaw(init, freq, eff_phase, amp, add, op) => {
                             if output_mode == OutputMode::Stereo {
                                 let pos = (*init + 1.0) * 0.5;
+                                let amps = (*amp + 1.0) * 0.25;
+                                let adds = (*add + 1.0) * 0.5;
+                                let phases = (*eff_phase + 1.0) * 0.5;
                                 inst.set_instance_parameter(
                                     *k,
                                     &SynthParameterValue::LFSaw(
-                                        pos, *freq, *eff_phase, *amp, *add, *op,
+                                        pos, *freq, phases, amps, adds, *op,
                                     ),
                                 );
                             } else {
@@ -642,16 +647,19 @@ pub fn once<const BUFSIZE: usize, const NCHAN: usize>(
                         SynthParameterValue::LFRSaw(init, freq, eff_phase, amp, add, op) => {
                             if output_mode == OutputMode::Stereo {
                                 let pos = (*init + 1.0) * 0.5;
+                                let amps = (*amp + 1.0) * 0.25;
+                                let adds = (*add + 1.0) * 0.5;
+                                let phases = (*eff_phase + 1.0) * 0.5;
                                 inst.set_instance_parameter(
                                     *k,
-                                    &SynthParameterValue::LFSaw(
-                                        pos, *freq, *eff_phase, *amp, *add, *op,
+                                    &SynthParameterValue::LFRSaw(
+                                        pos, *freq, phases, amps, adds, *op,
                                     ),
                                 );
                             } else {
                                 inst.set_instance_parameter(
                                     *k,
-                                    &SynthParameterValue::LFSaw(
+                                    &SynthParameterValue::LFRSaw(
                                         *init, *freq, *eff_phase, *amp, *add, *op,
                                     ),
                                 );
@@ -660,10 +668,13 @@ pub fn once<const BUFSIZE: usize, const NCHAN: usize>(
                         SynthParameterValue::LFTri(init, freq, eff_phase, amp, add, op) => {
                             if output_mode == OutputMode::Stereo {
                                 let pos = (*init + 1.0) * 0.5;
+                                let amps = (*amp + 1.0) * 0.25;
+                                let adds = (*add + 1.0) * 0.5;
+                                let phases = (*eff_phase + 1.0) * 0.5;
                                 inst.set_instance_parameter(
                                     *k,
                                     &SynthParameterValue::LFTri(
-                                        pos, *freq, *eff_phase, *amp, *add, *op,
+                                        pos, *freq, phases, amps, adds, *op,
                                     ),
                                 );
                             } else {
@@ -678,10 +689,12 @@ pub fn once<const BUFSIZE: usize, const NCHAN: usize>(
                         SynthParameterValue::LFSquare(init, freq, pw, amp, add, op) => {
                             if output_mode == OutputMode::Stereo {
                                 let pos = (*init + 1.0) * 0.5;
+                                let amps = (*amp + 1.0) * 0.25;
+                                let adds = (*add + 1.0) * 0.5;
                                 inst.set_instance_parameter(
                                     *k,
                                     &SynthParameterValue::LFSquare(
-                                        pos, *freq, *pw, *amp, *add, *op,
+                                        pos, *freq, *pw, amps, adds, *op,
                                     ),
                                 );
                             } else {
