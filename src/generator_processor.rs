@@ -12,6 +12,12 @@ use crate::{
     parameter::Parameter,
 };
 
+pub enum GeneratorProcessorState {
+    Count(usize),
+    WrappedGenerator(Generator),
+    None,
+}
+
 pub trait GeneratorProcessor: GeneratorProcessorClone {
     fn process_events(
         &mut self,
@@ -28,6 +34,10 @@ pub trait GeneratorProcessor: GeneratorProcessorClone {
         transition: &mut StaticEvent,
         global_parameters: &Arc<GlobalParameters>,
     );
+
+    fn get_state(&self) -> GeneratorProcessorState;
+    fn set_state(&mut self, state: GeneratorProcessorState);
+
     fn visualize_if_possible(&mut self, vis_client: &sync::Arc<VisualizerClient>);
     fn clear_visualization(&self, vis_client: &sync::Arc<VisualizerClient>);
 }

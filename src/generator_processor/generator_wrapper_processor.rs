@@ -27,6 +27,16 @@ impl GeneratorWrapperProcessor {
 
 // zip mode etc seem to be outdated ... going for any mode for now
 impl GeneratorProcessor for GeneratorWrapperProcessor {
+    fn set_state(&mut self, other: GeneratorProcessorState) {
+        if let GeneratorProcessorState::WrappedGenerator(g) = other {
+            self.wrapped_generator.transfer_state(&g);
+        }
+    }
+
+    fn get_state(&self) -> GeneratorProcessorState {
+        GeneratorProcessorState::WrappedGenerator(self.wrapped_generator.clone())
+    }
+
     fn process_generator(&mut self, _: &mut Generator, _: &Arc<GlobalParameters>) {
         /* pass */
     }

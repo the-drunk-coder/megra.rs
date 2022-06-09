@@ -26,6 +26,16 @@ impl EveryProcessor {
 }
 
 impl GeneratorProcessor for EveryProcessor {
+    fn set_state(&mut self, other: GeneratorProcessorState) {
+        if let GeneratorProcessorState::Count(c) = other {
+            self.step_count = c;
+        }
+    }
+
+    fn get_state(&self) -> GeneratorProcessorState {
+        GeneratorProcessorState::Count(self.step_count)
+    }
+
     // this one
     fn process_events(&mut self, events: &mut Vec<InterpretableEvent>, _: &Arc<GlobalParameters>) {
         self.last_static.clear();

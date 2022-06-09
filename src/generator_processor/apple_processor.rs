@@ -24,6 +24,12 @@ impl AppleProcessor {
 }
 
 impl GeneratorProcessor for AppleProcessor {
+    fn set_state(&mut self, _: GeneratorProcessorState) {}
+
+    fn get_state(&self) -> GeneratorProcessorState {
+        GeneratorProcessorState::None
+    }
+
     fn process_events(&mut self, _: &mut Vec<InterpretableEvent>, _: &Arc<GlobalParameters>) {
         /* pass */
     }

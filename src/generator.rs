@@ -46,7 +46,13 @@ pub struct Generator {
 impl Generator {
     pub fn transfer_state(&mut self, other: &Generator) {
         self.root_generator.transfer_state(&other.root_generator);
-        // genprocs follow later ...
+        // this will only work if the generators remain in the same order,
+        // but it'll still be helpful I think ..
+        for (idx, gp) in self.processors.iter_mut().enumerate() {
+            if let Some(g) = other.processors.get(idx) {
+                gp.set_state(g.get_state());
+            }
+        }
     }
 
     pub fn reached_end_state(&self) -> bool {

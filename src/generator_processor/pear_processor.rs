@@ -28,6 +28,12 @@ impl PearProcessor {
 
 // zip mode etc seem to be outdated ... going for any mode for now
 impl GeneratorProcessor for PearProcessor {
+    fn set_state(&mut self, _: GeneratorProcessorState) {}
+
+    fn get_state(&self) -> GeneratorProcessorState {
+        GeneratorProcessorState::None
+    }
+
     fn process_generator(&mut self, _: &mut Generator, _: &Arc<GlobalParameters>) {
         /* pass */
     }
