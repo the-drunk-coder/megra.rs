@@ -5,6 +5,7 @@ use rand::Rng;
 use std::boxed::Box;
 use std::fmt::*;
 
+use ruffbox_synth::building_blocks::mod_env::SegmentType;
 use ruffbox_synth::building_blocks::{SynthParameterValue, ValOp};
 
 #[derive(Clone)]
@@ -17,6 +18,16 @@ pub enum ParameterValue {
     LFRSaw(Parameter, Parameter, Parameter, Parameter, Parameter, ValOp), // init, freq, phase, amp, add, op
     LFTri(Parameter, Parameter, Parameter, Parameter, Parameter, ValOp), // init, freq, phase, amp, add, op
     LFSquare(Parameter, Parameter, Parameter, Parameter, Parameter, ValOp), // init, freq, phase, pw, amp, add, op
+    LinRamp(Parameter, Parameter, Parameter, ValOp),                        // from, to, time, op
+    LogRamp(Parameter, Parameter, Parameter, ValOp),                        // from, to, time, op
+    ExpRamp(Parameter, Parameter, Parameter, ValOp),                        // from, to, time, op
+    MultiPointEnvelope(
+        Vec<Parameter>,
+        Vec<Parameter>,
+        Vec<SegmentType>,
+        bool,
+        ValOp,
+    ), // levels, times, loop, op
 }
 
 #[derive(Clone)]

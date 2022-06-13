@@ -74,6 +74,10 @@ pub fn define_standard_library() -> FunctionMap {
     standard_library.fmap.insert("lfrsaw~".to_string(), eval::events::modulators::lfrsaw_modulator);
     standard_library.fmap.insert("lfsqr~".to_string(), eval::events::modulators::lfsquare_modulator);
     standard_library.fmap.insert("lftri~".to_string(), eval::events::modulators::lftri_modulator);
+    standard_library.fmap.insert("linramp~".to_string(), eval::events::modulators::lin_ramp_modulator);
+    standard_library.fmap.insert("logramp~".to_string(), eval::events::modulators::log_ramp_modulator);
+    standard_library.fmap.insert("expramp~".to_string(), eval::events::modulators::exp_ramp_modulator);
+    standard_library.fmap.insert("env~".to_string(), eval::events::modulators::multi_point_envelope_modulator);
     
     // parameter events
     standard_library.fmap.insert("pitch".to_string(), eval::events::parameters::parameter);

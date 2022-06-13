@@ -1,3 +1,4 @@
+use ruffbox_synth::building_blocks::mod_env::{SegmentInfo, SegmentType};
 use ruffbox_synth::building_blocks::{SynthParameterLabel, SynthParameterValue};
 use std::collections::{BTreeSet, HashMap, HashSet};
 use std::fmt::*;
@@ -266,6 +267,98 @@ impl Event {
                         ),
                     );
                 }
+                ParameterValue::LinRamp(from, to, time, op) => {
+                    map.insert(
+                        *k,
+                        SynthParameterValue::LinRamp(
+                            from.evaluate_numerical(),
+                            to.evaluate_numerical(),
+                            time.evaluate_numerical(),
+                            *op,
+                        ),
+                    );
+                }
+                ParameterValue::LogRamp(from, to, time, op) => {
+                    map.insert(
+                        *k,
+                        SynthParameterValue::LogRamp(
+                            from.evaluate_numerical(),
+                            to.evaluate_numerical(),
+                            time.evaluate_numerical(),
+                            *op,
+                        ),
+                    );
+                }
+                ParameterValue::ExpRamp(from, to, time, op) => {
+                    map.insert(
+                        *k,
+                        SynthParameterValue::ExpRamp(
+                            from.evaluate_numerical(),
+                            to.evaluate_numerical(),
+                            time.evaluate_numerical(),
+                            *op,
+                        ),
+                    );
+                }
+                ParameterValue::MultiPointEnvelope(levels, times, types, loop_env, op) => {
+                    if levels.len() == 1 {
+                        map.insert(
+                            *k,
+                            SynthParameterValue::ScalarF32(levels[0].evaluate_numerical()),
+                        );
+                    } else if !levels.is_empty() {
+                        let mut segments = Vec::new();
+
+                        let mut levels_evaluated = Vec::new();
+                        let mut times_evaluated = Vec::new();
+
+                        for lvl in levels.iter_mut() {
+                            levels_evaluated.push(lvl.evaluate_numerical());
+                        }
+
+                        for time in times.iter_mut() {
+                            times_evaluated.push(time.evaluate_numerical());
+                        }
+
+                        let mut time = if let Some(t) = times_evaluated.get(0) {
+                            *t
+                        } else {
+                            0.2
+                        };
+                        let mut segment_type = if let Some(t) = types.get(0) {
+                            *t
+                        } else {
+                            SegmentType::Lin
+                        };
+
+                        for i in 0..levels_evaluated.len() {
+                            let from = levels_evaluated[i];
+                            if let Some(to) = levels_evaluated.get(i + 1) {
+                                segments.push(SegmentInfo {
+                                    from,
+                                    to: *to,
+                                    time,
+                                    segment_type,
+                                });
+
+                                time = if let Some(t) = times_evaluated.get(i + 1) {
+                                    *t
+                                } else {
+                                    time
+                                };
+                                segment_type = if let Some(t) = types.get(i + 1) {
+                                    *t
+                                } else {
+                                    segment_type
+                                };
+                            }
+                        }
+                        map.insert(
+                            *k,
+                            SynthParameterValue::MultiPointEnvelope(segments, *loop_env, *op),
+                        );
+                    }
+                }
             }
         }
 
@@ -325,6 +418,29 @@ impl Event {
                         pw.shake(factor);
                         amp.shake(factor);
                         add.shake(factor);
+                    }
+                    ParameterValue::LinRamp(from, to, time, _) => {
+                        from.shake(factor);
+                        to.shake(factor);
+                        time.shake(factor);
+                    }
+                    ParameterValue::LogRamp(from, to, time, _) => {
+                        from.shake(factor);
+                        to.shake(factor);
+                        time.shake(factor);
+                    }
+                    ParameterValue::ExpRamp(from, to, time, _) => {
+                        from.shake(factor);
+                        to.shake(factor);
+                        time.shake(factor);
+                    }
+                    ParameterValue::MultiPointEnvelope(levels, times, _, _, _) => {
+                        for lvl in levels.iter_mut() {
+                            lvl.shake(factor);
+                        }
+                        for time in times.iter_mut() {
+                            time.shake(factor);
+                        }
                     }
                 }
             }
