@@ -11,18 +11,18 @@ use ruffbox_synth::building_blocks::{SynthParameterLabel, SynthParameterValue, V
 #[derive(Clone)]
 #[rustfmt::skip]
 pub enum ParameterValue {
-    Scalar(Parameter),
-    Vector(Vec<Parameter>),
-    Matrix(Vec<Vec<Parameter>>),
-    Lfo(Parameter, Parameter, Parameter, Parameter, Parameter, ValOp), // init, freq, phase, amp, add, op
-    LFSaw(Parameter, Parameter, Parameter, Parameter, Parameter, ValOp), // init, freq, phase, amp, add, op
-    LFRSaw(Parameter, Parameter, Parameter, Parameter, Parameter, ValOp), // init, freq, phase, amp, add, op
-    LFTri(Parameter, Parameter, Parameter, Parameter, Parameter, ValOp), // init, freq, phase, amp, add, op
-    LFSquare(Parameter, Parameter, Parameter, Parameter, Parameter, ValOp), // init, freq, phase, pw, amp, add, op
-    LinRamp(Parameter, Parameter, Parameter, ValOp),                        // from, to, time, op
-    LogRamp(Parameter, Parameter, Parameter, ValOp),                        // from, to, time, op
-    ExpRamp(Parameter, Parameter, Parameter, ValOp),                        // from, to, time, op
-    MultiPointEnvelope(Vec<Parameter>, Vec<Parameter>, Vec<SegmentType>, bool, ValOp), // levels, times, loop, op
+    Scalar(DynVal),
+    Vector(Vec<DynVal>),
+    Matrix(Vec<Vec<DynVal>>),
+    Lfo(DynVal, DynVal, DynVal, DynVal, DynVal, ValOp), // init, freq, phase, amp, add, op
+    LFSaw(DynVal, DynVal, DynVal, DynVal, DynVal, ValOp), // init, freq, phase, amp, add, op
+    LFRSaw(DynVal, DynVal, DynVal, DynVal, DynVal, ValOp), // init, freq, phase, amp, add, op
+    LFTri(DynVal, DynVal, DynVal, DynVal, DynVal, ValOp), // init, freq, phase, amp, add, op
+    LFSquare(DynVal, DynVal, DynVal, DynVal, DynVal, ValOp), // init, freq, phase, pw, amp, add, op
+    LinRamp(DynVal, DynVal, DynVal, ValOp),                        // from, to, time, op
+    LogRamp(DynVal, DynVal, DynVal, ValOp),                        // from, to, time, op
+    ExpRamp(DynVal, DynVal, DynVal, ValOp),                        // from, to, time, op
+    MultiPointEnvelope(Vec<DynVal>, Vec<DynVal>, Vec<SegmentType>, bool, ValOp), // levels, times, loop, op
 }
 
 pub fn translate_stereo(val: SynthParameterValue) -> SynthParameterValue {
@@ -274,13 +274,13 @@ pub fn resolve_parameter(k: SynthParameterLabel, v: &mut ParameterValue) -> Synt
 }
 
 #[derive(Clone)]
-pub struct Parameter {
+pub struct DynVal {
     pub val: f32,
     pub static_val: f32,
     pub modifier: Option<Box<dyn Modifier + Send + Sync>>,
 }
 
-impl Debug for Parameter {
+impl Debug for DynVal {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         f.debug_struct("Parameter")
             .field("current", &self.val)
@@ -289,9 +289,9 @@ impl Debug for Parameter {
     }
 }
 
-impl Parameter {
+impl DynVal {
     pub fn with_value(val: f32) -> Self {
-        Parameter {
+        DynVal {
             val,
             static_val: val,
             modifier: None,
@@ -346,7 +346,7 @@ mod tests {
     #[test]
     fn test_shake() {
         for _ in 0..20 {
-            let mut a = Parameter::with_value(1000.0);
+            let mut a = DynVal::with_value(1000.0);
             a.shake(0.5);
             println!("val after shake: {}", a.evaluate_numerical());
             assert!(a.evaluate_numerical() != 1000.0);

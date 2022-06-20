@@ -252,8 +252,8 @@ pub fn tmod(
     Some(EvaluatedExpr::BuiltIn(BuiltIn::Command(Command::Tmod(
         match tail_drain.next() {
             Some(EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p))) => p,
-            Some(EvaluatedExpr::Float(f)) => Parameter::with_value(f),
-            _ => Parameter::with_value(1.0),
+            Some(EvaluatedExpr::Float(f)) => DynVal::with_value(f),
+            _ => DynVal::with_value(1.0),
         },
     ))))
 }
@@ -269,8 +269,8 @@ pub fn latency(
     Some(EvaluatedExpr::BuiltIn(BuiltIn::Command(Command::Latency(
         match tail_drain.next() {
             Some(EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p))) => p,
-            Some(EvaluatedExpr::Float(f)) => Parameter::with_value(f),
-            _ => Parameter::with_value(0.05),
+            Some(EvaluatedExpr::Float(f)) => DynVal::with_value(f),
+            _ => DynVal::with_value(0.05),
         },
     ))))
 }
@@ -340,7 +340,7 @@ pub fn reverb(
                     if let Some(EvaluatedExpr::Float(f)) = tail_drain.next() {
                         param_map.insert(
                             SynthParameterLabel::ReverbDampening,
-                            ParameterValue::Scalar(Parameter::with_value(f)),
+                            ParameterValue::Scalar(DynVal::with_value(f)),
                         );
                     }
                 }
@@ -348,7 +348,7 @@ pub fn reverb(
                     if let Some(EvaluatedExpr::Float(f)) = tail_drain.next() {
                         param_map.insert(
                             SynthParameterLabel::ReverbMix,
-                            ParameterValue::Scalar(Parameter::with_value(f.clamp(0.01, 0.99))),
+                            ParameterValue::Scalar(DynVal::with_value(f.clamp(0.01, 0.99))),
                         );
                     }
                 }
@@ -356,7 +356,7 @@ pub fn reverb(
                     if let Some(EvaluatedExpr::Float(f)) = tail_drain.next() {
                         param_map.insert(
                             SynthParameterLabel::ReverbRoomsize,
-                            ParameterValue::Scalar(Parameter::with_value(f.clamp(0.01, 0.99))),
+                            ParameterValue::Scalar(DynVal::with_value(f.clamp(0.01, 0.99))),
                         );
                     }
                 }
@@ -389,7 +389,7 @@ pub fn delay(
                     Some(EvaluatedExpr::Float(f)) => {
                         param_map.insert(
                             SynthParameterLabel::DelayDampeningFrequency,
-                            ParameterValue::Scalar(Parameter::with_value(f.clamp(20.0, 18000.0))),
+                            ParameterValue::Scalar(DynVal::with_value(f.clamp(20.0, 18000.0))),
                         );
                     }
                     Some(EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p))) => {
@@ -407,7 +407,7 @@ pub fn delay(
                     Some(EvaluatedExpr::Float(f)) => {
                         param_map.insert(
                             SynthParameterLabel::DelayFeedback,
-                            ParameterValue::Scalar(Parameter::with_value(f.clamp(0.01, 0.99))),
+                            ParameterValue::Scalar(DynVal::with_value(f.clamp(0.01, 0.99))),
                         );
                     }
                     Some(EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p))) => {
@@ -425,7 +425,7 @@ pub fn delay(
                     if let Some(EvaluatedExpr::Float(f)) = tail_drain.next() {
                         param_map.insert(
                             SynthParameterLabel::DelayMix,
-                            ParameterValue::Scalar(Parameter::with_value(f.clamp(0.01, 0.99))),
+                            ParameterValue::Scalar(DynVal::with_value(f.clamp(0.01, 0.99))),
                         );
                     }
                 }
@@ -433,7 +433,7 @@ pub fn delay(
                     Some(EvaluatedExpr::Float(f)) => {
                         param_map.insert(
                             SynthParameterLabel::DelayTime,
-                            ParameterValue::Scalar(Parameter::with_value(
+                            ParameterValue::Scalar(DynVal::with_value(
                                 (f / 1000.0).clamp(0.01, 1.99),
                             )),
                         );
@@ -450,7 +450,7 @@ pub fn delay(
                     Some(EvaluatedExpr::Float(f)) => {
                         param_map.insert(
                             SynthParameterLabel::DelayRate,
-                            ParameterValue::Scalar(Parameter::with_value(
+                            ParameterValue::Scalar(DynVal::with_value(
                                 (f / 1000.0).clamp(0.01, 1.99),
                             )),
                         );

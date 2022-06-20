@@ -2,7 +2,7 @@ use crate::{
     event::{Event, EventOperation, SourceEvent},
     generator::TimeMod,
     markov_sequence_generator::MarkovSequenceGenerator,
-    parameter::{Parameter, ParameterValue},
+    parameter::{DynVal, ParameterValue},
     pfa_growth::*,
     pfa_reverse::*,
 };
@@ -39,7 +39,7 @@ pub fn grow_raw(
     m: &str, // method
     variance: f32,
     keep: &HashSet<SynthParameterLabel>,
-    durations: &[Parameter],
+    durations: &[DynVal],
 ) {
     if let Some(result) = match m {
         "flower" => grow_flower(&mut gen.generator),

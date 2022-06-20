@@ -1,7 +1,7 @@
 use crate::event::{ControlEvent, Event};
 use crate::generator::Generator;
 use crate::markov_sequence_generator::Rule;
-use crate::parameter::{Parameter, ParameterValue};
+use crate::parameter::{DynVal, ParameterValue};
 use crate::session::SyncContext;
 use crate::{Command, GeneratorProcessorOrModifier, GlobalParameters, PartProxy};
 use crate::{OutputMode, SampleAndWavematrixSet};
@@ -56,7 +56,7 @@ pub enum BuiltIn {
     GeneratorProcessorOrModifierList(Vec<GeneratorProcessorOrModifier>),
     GeneratorModifierList(Vec<GeneratorProcessorOrModifier>),
     SoundEvent(Event),
-    Parameter(Parameter),
+    Parameter(DynVal),
     Modulator(ParameterValue),
     Matrix(ParameterValue),
     Vector(ParameterValue),

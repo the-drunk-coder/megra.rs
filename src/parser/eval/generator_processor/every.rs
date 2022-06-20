@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use crate::builtin_types::*;
 use crate::generator_processor::*;
-use crate::parameter::Parameter;
+use crate::parameter::DynVal;
 use crate::parser::{BuiltIn, EvaluatedExpr};
 
 pub fn collect_every(tail: &mut Vec<EvaluatedExpr>) -> Box<dyn GeneratorProcessor + Send> {
@@ -13,7 +13,7 @@ pub fn collect_every(tail: &mut Vec<EvaluatedExpr>) -> Box<dyn GeneratorProcesso
 
     let mut last_filters = Vec::new();
 
-    let mut cur_step = Parameter::with_value(1.0); // if nothing is specified, it's always applied
+    let mut cur_step = DynVal::with_value(1.0); // if nothing is specified, it's always applied
     let mut gen_mod_funs = Vec::new();
     let mut events = Vec::new();
     let mut collect_filters = false;
@@ -94,9 +94,9 @@ pub fn collect_every(tail: &mut Vec<EvaluatedExpr>) -> Box<dyn GeneratorProcesso
                         }
                         // grab new probability
                         cur_step = match tail_drain.next() {
-                            Some(EvaluatedExpr::Float(f)) => Parameter::with_value(f),
+                            Some(EvaluatedExpr::Float(f)) => DynVal::with_value(f),
                             Some(EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p))) => p,
-                            _ => Parameter::with_value(1.0),
+                            _ => DynVal::with_value(1.0),
                         };
 
                         collect_filters = false;

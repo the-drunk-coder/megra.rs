@@ -1,11 +1,11 @@
 use crate::parameter::modifier::Modifier;
-use crate::parameter::Parameter;
+use crate::parameter::DynVal;
 
 #[derive(Clone)]
 pub struct BounceModifier {
-    pub min: Parameter,
-    pub max: Parameter,
-    pub steps: Parameter,
+    pub min: DynVal,
+    pub max: DynVal,
+    pub steps: DynVal,
     pub step_count: f32,
 }
 

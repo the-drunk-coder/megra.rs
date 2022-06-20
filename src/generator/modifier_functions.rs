@@ -3,7 +3,7 @@ use std::collections::{HashMap, HashSet};
 
 use crate::{
     builtin_types::ConfigParameter, generator::modifier_functions_raw::*, generator::Generator,
-    parameter::Parameter,
+    parameter::DynVal,
 };
 
 pub type GenModFun = fn(&mut Generator, &[ConfigParameter], &HashMap<String, ConfigParameter>);
@@ -55,7 +55,7 @@ pub fn grow(
             &m,
             *f,
             &HashSet::new(),
-            &Vec::<Parameter>::new(),
+            &Vec::<DynVal>::new(),
         );
     }
 }

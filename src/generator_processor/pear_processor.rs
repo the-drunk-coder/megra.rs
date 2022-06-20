@@ -7,13 +7,13 @@ use crate::{
     event::{InterpretableEvent, StaticEvent},
     generator::Generator,
     generator_processor::*,
-    parameter::Parameter,
+    parameter::DynVal,
 };
 
 /// Apple-ys events to the throughcoming ones
 #[derive(Clone)]
 pub struct PearProcessor {
-    pub events_to_be_applied: Vec<(Parameter, EventsAndFilters)>,
+    pub events_to_be_applied: Vec<(DynVal, EventsAndFilters)>,
     pub last_static: Vec<(usize, StaticEventsAndFilters)>,
 }
 

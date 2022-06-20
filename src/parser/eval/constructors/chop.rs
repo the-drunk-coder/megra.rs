@@ -37,12 +37,12 @@ pub fn chop(
         8
     };
 
-    let mut dur: Parameter = if let ConfigParameter::Numeric(d) = global_parameters
+    let mut dur: DynVal = if let ConfigParameter::Numeric(d) = global_parameters
         .entry(BuiltinGlobalParameters::DefaultDuration)
         .or_insert(ConfigParameter::Numeric(200.0))
         .value()
     {
-        Parameter::with_value(*d)
+        DynVal::with_value(*d)
     } else {
         unreachable!()
     };
@@ -61,7 +61,7 @@ pub fn chop(
             EvaluatedExpr::Keyword(k) => match k.as_str() {
                 "dur" => match tail_drain.next() {
                     Some(EvaluatedExpr::Float(n)) => {
-                        dur = Parameter::with_value(n);
+                        dur = DynVal::with_value(n);
                     }
                     Some(EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p))) => {
                         dur = p;
@@ -107,7 +107,7 @@ pub fn chop(
                 let mut slice_event = ev.clone();
                 slice_event.params.insert(
                     SynthParameterLabel::PlaybackStart,
-                    ParameterValue::Scalar(Parameter::with_value(s as f32 * (1.0 / slices as f32))),
+                    ParameterValue::Scalar(DynVal::with_value(s as f32 * (1.0 / slices as f32))),
                 );
 
                 let sus = if let Some(ParameterValue::Scalar(old_sus)) =
@@ -120,7 +120,7 @@ pub fn chop(
 
                 slice_event.params.insert(
                     SynthParameterLabel::Sustain,
-                    ParameterValue::Scalar(Parameter::with_value(sus)),
+                    ParameterValue::Scalar(DynVal::with_value(sus)),
                 );
 
                 slice_events.push(SourceEvent::Sound(slice_event));

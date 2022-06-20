@@ -131,7 +131,7 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
     if let ConfigParameter::Dynamic(global_tmod) = data
         .global_parameters
         .entry(BuiltinGlobalParameters::GlobalTimeModifier)
-        .or_insert(ConfigParameter::Dynamic(Parameter::with_value(1.0))) // init on first attempt
+        .or_insert(ConfigParameter::Dynamic(DynVal::with_value(1.0))) // init on first attempt
         .value_mut()
     {
         tmod = global_tmod.evaluate_numerical() as f64;
@@ -140,7 +140,7 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
     if let ConfigParameter::Dynamic(global_latency) = data
         .global_parameters
         .entry(BuiltinGlobalParameters::GlobalLatency)
-        .or_insert(ConfigParameter::Dynamic(Parameter::with_value(0.05))) // init on first attempt
+        .or_insert(ConfigParameter::Dynamic(DynVal::with_value(0.05))) // init on first attempt
         .value_mut()
     {
         latency = global_latency.evaluate_numerical() as f64;

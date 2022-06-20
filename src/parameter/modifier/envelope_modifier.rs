@@ -1,10 +1,10 @@
 use crate::parameter::modifier::Modifier;
-use crate::parameter::Parameter;
+use crate::parameter::DynVal;
 
 #[derive(Clone)]
 pub struct EnvelopeModifier {
-    pub values: Vec<Parameter>,
-    pub steps: Vec<Parameter>,
+    pub values: Vec<DynVal>,
+    pub steps: Vec<DynVal>,
     pub current_steps: usize,
     pub current_from: f32,
     pub current_to: f32,
@@ -16,7 +16,7 @@ pub struct EnvelopeModifier {
 }
 
 impl EnvelopeModifier {
-    pub fn from_data(values: &[Parameter], steps: &[Parameter], repeat: bool) -> Self {
+    pub fn from_data(values: &[DynVal], steps: &[DynVal], repeat: bool) -> Self {
         let mut env = EnvelopeModifier {
             values: values.to_vec(),
             steps: steps.to_vec(),
@@ -135,11 +135,11 @@ mod tests {
 
     #[test]
     fn test_envelope_no_repeat() {
-        let steps = vec![Parameter::with_value(10.0), Parameter::with_value(10.0)];
+        let steps = vec![DynVal::with_value(10.0), DynVal::with_value(10.0)];
         let values = vec![
-            Parameter::with_value(0.0),
-            Parameter::with_value(10.0),
-            Parameter::with_value(0.0),
+            DynVal::with_value(0.0),
+            DynVal::with_value(10.0),
+            DynVal::with_value(0.0),
         ];
 
         let mut env = EnvelopeModifier::from_data(&values, &steps, false);
@@ -175,14 +175,14 @@ mod tests {
     #[test]
     fn test_envelope_repeat() {
         let steps = vec![
-            Parameter::with_value(10.0),
-            Parameter::with_value(5.0),
-            Parameter::with_value(10.0),
+            DynVal::with_value(10.0),
+            DynVal::with_value(5.0),
+            DynVal::with_value(10.0),
         ];
         let values = vec![
-            Parameter::with_value(0.0),
-            Parameter::with_value(10.0),
-            Parameter::with_value(5.0),
+            DynVal::with_value(0.0),
+            DynVal::with_value(10.0),
+            DynVal::with_value(5.0),
         ];
 
         let mut env = EnvelopeModifier::from_data(&values, &steps, true);

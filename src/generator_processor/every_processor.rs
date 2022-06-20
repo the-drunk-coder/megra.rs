@@ -11,7 +11,7 @@ use crate::{
 #[derive(Clone)]
 pub struct EveryProcessor {
     pub step_count: usize,
-    pub things_to_be_applied: Vec<(Parameter, EventsAndFilters, GenModFunsAndArgs)>,
+    pub things_to_be_applied: Vec<(DynVal, EventsAndFilters, GenModFunsAndArgs)>,
     pub last_static: Vec<(usize, StaticEventsAndFilters)>, // only needed for events, not filters
 }
 

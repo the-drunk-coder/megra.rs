@@ -39,12 +39,12 @@ pub fn learn(
     let mut bound = 3;
     let mut epsilon = 0.01;
     let mut pfa_size = 30;
-    let mut dur: Parameter = if let ConfigParameter::Numeric(d) = global_parameters
+    let mut dur: DynVal = if let ConfigParameter::Numeric(d) = global_parameters
         .entry(BuiltinGlobalParameters::DefaultDuration)
         .or_insert(ConfigParameter::Numeric(200.0))
         .value()
     {
-        Parameter::with_value(*d)
+        DynVal::with_value(*d)
     } else {
         unreachable!()
     };
@@ -99,7 +99,7 @@ pub fn learn(
                 }
                 "dur" => match tail_drain.next() {
                     Some(EvaluatedExpr::Float(n)) => {
-                        dur = Parameter::with_value(n);
+                        dur = DynVal::with_value(n);
                     }
                     Some(EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p))) => {
                         dur = p;

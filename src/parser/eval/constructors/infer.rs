@@ -90,12 +90,12 @@ pub fn infer(
     let mut collect_events = false;
     let mut collect_rules = false;
 
-    let mut dur: Parameter = if let ConfigParameter::Numeric(d) = global_parameters
+    let mut dur: DynVal = if let ConfigParameter::Numeric(d) = global_parameters
         .entry(BuiltinGlobalParameters::DefaultDuration)
         .or_insert(ConfigParameter::Numeric(200.0))
         .value()
     {
-        Parameter::with_value(*d)
+        DynVal::with_value(*d)
     } else {
         unreachable!()
     };
@@ -139,7 +139,7 @@ pub fn infer(
                 let mut dur_ev = Event::with_name("transition".to_string());
                 dur_ev.params.insert(
                     SynthParameterLabel::Duration,
-                    ParameterValue::Scalar(Parameter::with_value(s.duration as f32)),
+                    ParameterValue::Scalar(DynVal::with_value(s.duration as f32)),
                 );
                 duration_mapping.insert((*s.source.last().unwrap(), s.symbol), dur_ev);
                 rules.push(s.to_pfa_rule());
@@ -161,7 +161,7 @@ pub fn infer(
                 }
                 "dur" => match tail_drain.next() {
                     Some(EvaluatedExpr::Float(n)) => {
-                        dur = Parameter::with_value(n);
+                        dur = DynVal::with_value(n);
                     }
                     Some(EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p))) => {
                         dur = p;

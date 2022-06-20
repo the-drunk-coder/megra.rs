@@ -34,12 +34,12 @@ pub fn cyc(
         "".to_string()
     };
 
-    let mut dur: Parameter = if let ConfigParameter::Numeric(d) = global_parameters
+    let mut dur: DynVal = if let ConfigParameter::Numeric(d) = global_parameters
         .entry(BuiltinGlobalParameters::DefaultDuration)
         .or_insert(ConfigParameter::Numeric(200.0))
         .value()
     {
-        Parameter::with_value(*d)
+        DynVal::with_value(*d)
     } else {
         unreachable!()
     };
@@ -48,7 +48,7 @@ pub fn cyc(
     let mut randomize_chance: f32 = 0.0;
     let mut max_repetitions: f32 = 0.0;
 
-    let mut dur_vec: Vec<Parameter> = Vec::new();
+    let mut dur_vec: Vec<DynVal> = Vec::new();
 
     let mut collect_events = false;
     let mut collect_template = false;
@@ -110,7 +110,7 @@ pub fn cyc(
             EvaluatedExpr::Keyword(k) => match k.as_str() {
                 "dur" => match tail_drain.next() {
                     Some(EvaluatedExpr::Float(n)) => {
-                        dur = Parameter::with_value(n);
+                        dur = DynVal::with_value(n);
                     }
                     Some(EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p))) => {
                         dur = p;
@@ -176,7 +176,7 @@ pub fn cyc(
                 [cyc_parser::CycleResult::Duration(d)] => {
                     // only single durations count
                     // slice pattern are awesome !
-                    *dur_vec.last_mut().unwrap() = Parameter::with_value(*d);
+                    *dur_vec.last_mut().unwrap() = DynVal::with_value(*d);
                 }
                 _ => {
                     let mut pos_vec = Vec::new();

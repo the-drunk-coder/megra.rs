@@ -1,7 +1,7 @@
 use crate::parameter::{
     modifier::bounce_modifier::BounceModifier, modifier::brownian_modifier::BrownianModifier,
     modifier::envelope_modifier::EnvelopeModifier, modifier::randrange_modifier::RandRangeModifier,
-    Parameter,
+    DynVal,
 };
 
 use crate::parser::{BuiltIn, EvaluatedExpr, FunctionMap};
@@ -27,15 +27,15 @@ fn find_keyword_param(
     raw_params: &HashMap<String, EvaluatedExpr>,
     key: &str,
     default: f32,
-) -> Parameter {
+) -> DynVal {
     if let Some(b) = raw_params.get(key) {
         match b {
-            EvaluatedExpr::Float(f) => Parameter::with_value(*f),
+            EvaluatedExpr::Float(f) => DynVal::with_value(*f),
             EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p)) => p.clone(),
-            _ => Parameter::with_value(default),
+            _ => DynVal::with_value(default),
         }
     } else {
-        Parameter::with_value(default)
+        DynVal::with_value(default)
     }
 }
 
@@ -51,15 +51,15 @@ fn find_keyword_bool(
     }
 }
 
-fn get_next_param(tail_drain: &mut std::vec::Drain<EvaluatedExpr>, default: f32) -> Parameter {
+fn get_next_param(tail_drain: &mut std::vec::Drain<EvaluatedExpr>, default: f32) -> DynVal {
     if let Some(b) = tail_drain.next() {
         match b {
-            EvaluatedExpr::Float(f) => Parameter::with_value(f),
+            EvaluatedExpr::Float(f) => DynVal::with_value(f),
             EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p)) => p,
-            _ => Parameter::with_value(default),
+            _ => DynVal::with_value(default),
         }
     } else {
-        Parameter::with_value(default)
+        DynVal::with_value(default)
     }
 }
 
@@ -81,7 +81,7 @@ pub fn bounce(
 
     //println!("{:?} {:?} {:?}", min, max, steps);
 
-    Some(EvaluatedExpr::BuiltIn(BuiltIn::Parameter(Parameter {
+    Some(EvaluatedExpr::BuiltIn(BuiltIn::Parameter(DynVal {
         val: 0.0,
         static_val: 0.0,
         modifier: Some(Box::new(BounceModifier {
@@ -116,7 +116,7 @@ pub fn brownian(
     let step_size = find_keyword_param(&keyword_params, "step", 0.1);
     let wrap = find_keyword_bool(&keyword_params, "wrap", true);
 
-    Some(EvaluatedExpr::BuiltIn(BuiltIn::Parameter(Parameter {
+    Some(EvaluatedExpr::BuiltIn(BuiltIn::Parameter(DynVal {
         val: 0.0,
         static_val: 0.0,
         modifier: Some(Box::new(BrownianModifier {
@@ -149,7 +149,7 @@ pub fn env(
     while let Some(c) = tail_drain.next() {
         if collect_steps {
             match c {
-                EvaluatedExpr::Float(f) => steps.push(Parameter::with_value(f)),
+                EvaluatedExpr::Float(f) => steps.push(DynVal::with_value(f)),
                 EvaluatedExpr::BuiltIn(BuiltIn::Parameter(ref p)) => steps.push(p.clone()),
                 _ => {
                     collect_steps = false;
@@ -158,7 +158,7 @@ pub fn env(
         }
         if collect_values {
             match c {
-                EvaluatedExpr::Float(f) => values.push(Parameter::with_value(f)),
+                EvaluatedExpr::Float(f) => values.push(DynVal::with_value(f)),
                 EvaluatedExpr::BuiltIn(BuiltIn::Parameter(ref p)) => values.push(p.clone()),
                 _ => {
                     collect_values = false;
@@ -189,7 +189,7 @@ pub fn env(
         }
     }
 
-    Some(EvaluatedExpr::BuiltIn(BuiltIn::Parameter(Parameter {
+    Some(EvaluatedExpr::BuiltIn(BuiltIn::Parameter(DynVal {
         val: 0.0,
         static_val: 0.0,
         modifier: Some(Box::new(EnvelopeModifier::from_data(
@@ -220,7 +220,7 @@ pub fn fade(
     let keyword_params = get_keyword_params(&mut tail_drain);
     steps.push(find_keyword_param(&keyword_params, "steps", 128.0));
 
-    Some(EvaluatedExpr::BuiltIn(BuiltIn::Parameter(Parameter {
+    Some(EvaluatedExpr::BuiltIn(BuiltIn::Parameter(DynVal {
         val: 0.0,
         static_val: 0.0,
         modifier: Some(Box::new(EnvelopeModifier::from_data(
@@ -242,7 +242,7 @@ pub fn randrange(
     let min = get_next_param(&mut tail_drain, 0.0);
     let max = get_next_param(&mut tail_drain, 0.0);
 
-    Some(EvaluatedExpr::BuiltIn(BuiltIn::Parameter(Parameter {
+    Some(EvaluatedExpr::BuiltIn(BuiltIn::Parameter(DynVal {
         val: 0.0,
         static_val: 0.0,
         modifier: Some(Box::new(RandRangeModifier::from_data(min, max))),

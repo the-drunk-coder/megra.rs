@@ -34,14 +34,14 @@ pub fn linear(
 
     // collect final events and durations in their position in the list
     let mut ev_vecs = Vec::new();
-    let mut dur_vec: Vec<Parameter> = Vec::new();
+    let mut dur_vec: Vec<DynVal> = Vec::new();
 
-    let dur: Parameter = if let ConfigParameter::Numeric(d) = global_parameters
+    let dur: DynVal = if let ConfigParameter::Numeric(d) = global_parameters
         .entry(BuiltinGlobalParameters::DefaultDuration)
         .or_insert(ConfigParameter::Numeric(200.0))
         .value()
     {
-        Parameter::with_value(*d)
+        DynVal::with_value(*d)
     } else {
         unreachable!()
     };
@@ -59,7 +59,7 @@ pub fn linear(
                 continue;
             }
             EvaluatedExpr::Float(f) => {
-                *dur_vec.last_mut().unwrap() = Parameter::with_value(f);
+                *dur_vec.last_mut().unwrap() = DynVal::with_value(f);
             }
             _ => println! {"ignored"},
         }

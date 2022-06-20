@@ -3,7 +3,7 @@ use std::collections::HashMap;
 
 use crate::event::*;
 use crate::generator_processor::*;
-use crate::parameter::{Parameter, ParameterValue};
+use crate::parameter::{DynVal, ParameterValue};
 use crate::parser::{BuiltIn, EvaluatedExpr};
 
 // this is basically a shorthand for a pear processor
@@ -19,12 +19,12 @@ pub fn collect_inhibit(tail: &mut Vec<EvaluatedExpr>) -> Box<dyn GeneratorProces
     let mut silencer = Event::with_name("silencer".to_string());
     silencer.params.insert(
         SynthParameterLabel::EnvelopeLevel,
-        ParameterValue::Scalar(Parameter::with_value(0.0)),
+        ParameterValue::Scalar(DynVal::with_value(0.0)),
     );
     evs.push(silencer);
 
     let mut collect_filters = false;
-    let mut cur_prob = Parameter::with_value(100.0); // if nothing is specified, it's always or prob 100
+    let mut cur_prob = DynVal::with_value(100.0); // if nothing is specified, it's always or prob 100
 
     while let Some(c) = tail_drain.next() {
         match c {
@@ -49,9 +49,9 @@ pub fn collect_inhibit(tail: &mut Vec<EvaluatedExpr>) -> Box<dyn GeneratorProces
 
                         // grab new probability
                         cur_prob = match tail_drain.next() {
-                            Some(EvaluatedExpr::Float(f)) => Parameter::with_value(f),
+                            Some(EvaluatedExpr::Float(f)) => DynVal::with_value(f),
                             Some(EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p))) => p,
-                            _ => Parameter::with_value(1.0),
+                            _ => DynVal::with_value(1.0),
                         };
                         collect_filters = false;
                     }

@@ -1,15 +1,15 @@
 use crate::parameter::modifier::Modifier;
-use crate::parameter::Parameter;
+use crate::parameter::DynVal;
 use rand::Rng;
 
 #[derive(Clone)]
 pub struct RandRangeModifier {
-    pub min: Parameter,
-    pub max: Parameter,
+    pub min: DynVal,
+    pub max: DynVal,
 }
 
 impl RandRangeModifier {
-    pub fn from_data(min: Parameter, max: Parameter) -> Self {
+    pub fn from_data(min: DynVal, max: DynVal) -> Self {
         RandRangeModifier { min, max }
     }
 }

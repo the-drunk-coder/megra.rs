@@ -6,7 +6,7 @@ use crate::builtin_types::*;
 use crate::event::{Event, EventOperation};
 use crate::generator::Generator;
 use crate::generator_processor::{GeneratorWrapperProcessor, PearProcessor};
-use crate::parameter::{Parameter, ParameterValue};
+use crate::parameter::{DynVal, ParameterValue};
 
 use crate::parser::{BuiltIn, EvaluatedExpr, FunctionMap};
 use crate::{OutputMode, SampleAndWavematrixSet};
@@ -60,12 +60,12 @@ fn spread_gens(gens: &mut [Generator], out_mode: &OutputMode) {
         let mut ev = Event::with_name_and_operation("pos".to_string(), EventOperation::Replace);
         ev.params.insert(
             SynthParameterLabel::ChannelPosition,
-            ParameterValue::Scalar(Parameter::with_value(positions[i])),
+            ParameterValue::Scalar(DynVal::with_value(positions[i])),
         );
         let mut filtered_events = HashMap::new();
         filtered_events.insert(vec!["".to_string()], (true, vec![ev]));
         p.events_to_be_applied
-            .push((Parameter::with_value(100.0), filtered_events));
+            .push((DynVal::with_value(100.0), filtered_events));
         gens[i].processors.push(Box::new(p));
     }
 }
@@ -115,12 +115,12 @@ fn spread_proxies(proxies: &mut [PartProxy], out_mode: &OutputMode) {
         let mut ev = Event::with_name_and_operation("pos".to_string(), EventOperation::Replace);
         ev.params.insert(
             SynthParameterLabel::ChannelPosition,
-            ParameterValue::Scalar(Parameter::with_value(positions[i])),
+            ParameterValue::Scalar(DynVal::with_value(positions[i])),
         );
         let mut filtered_events = HashMap::new();
         filtered_events.insert(vec!["".to_string()], (true, vec![ev]));
         p.events_to_be_applied
-            .push((Parameter::with_value(100.0), filtered_events));
+            .push((DynVal::with_value(100.0), filtered_events));
         match prox {
             PartProxy::Proxy(_, ref mut procs) => procs.push(
                 GeneratorProcessorOrModifier::GeneratorProcessor(Box::new(p)),

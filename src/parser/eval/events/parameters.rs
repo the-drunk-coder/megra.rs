@@ -1,6 +1,6 @@
 use crate::event::{Event, EventOperation};
 use crate::music_theory;
-use crate::parameter::{Parameter, ParameterValue};
+use crate::parameter::{DynVal, ParameterValue};
 use crate::parser::{BuiltIn, EvaluatedExpr, FunctionMap};
 use crate::{GlobalParameters, OutputMode, SampleAndWavematrixSet};
 use parking_lot::Mutex;
@@ -64,7 +64,7 @@ pub fn parameter(
                 ev.params.insert(
                     param_key,
                     match p {
-                        EvaluatedExpr::Float(n) => ParameterValue::Scalar(Parameter::with_value(n)),
+                        EvaluatedExpr::Float(n) => ParameterValue::Scalar(DynVal::with_value(n)),
                         EvaluatedExpr::BuiltIn(BuiltIn::Parameter(pl)) => {
                             ParameterValue::Scalar(pl)
                         }
@@ -75,12 +75,12 @@ pub fn parameter(
                                 || param_key == SynthParameterLabel::HighpassCutoffFrequency
                                 || param_key == SynthParameterLabel::PeakFrequency =>
                         {
-                            ParameterValue::Scalar(Parameter::with_value(music_theory::to_freq(
+                            ParameterValue::Scalar(DynVal::with_value(music_theory::to_freq(
                                 music_theory::from_string(&s),
                                 music_theory::Tuning::EqualTemperament,
                             )))
                         }
-                        _ => ParameterValue::Scalar(Parameter::with_value(0.5)), // should be save ...
+                        _ => ParameterValue::Scalar(DynVal::with_value(0.5)), // should be save ...
                     },
                 );
                 //println!("{:?}", ev);

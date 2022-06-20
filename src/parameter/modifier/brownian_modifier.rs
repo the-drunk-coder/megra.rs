@@ -1,12 +1,12 @@
 use crate::parameter::modifier::Modifier;
-use crate::parameter::Parameter;
+use crate::parameter::DynVal;
 use rand::Rng;
 
 #[derive(Clone)]
 pub struct BrownianModifier {
-    pub min: Parameter,
-    pub max: Parameter,
-    pub step_size: Parameter,
+    pub min: DynVal,
+    pub max: DynVal,
+    pub step_size: DynVal,
     pub current: f32,
     pub wrap: bool,
 }

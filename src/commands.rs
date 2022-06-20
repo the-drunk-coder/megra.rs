@@ -81,7 +81,7 @@ pub fn load_sample_as_wavematrix(
     for x in 0..wavematrix_raw.len() {
         wavematrix.push(Vec::new());
         for y in 0..wavematrix_raw[x].len() {
-            wavematrix[x].push(Parameter::with_value(wavematrix_raw[x][y]));
+            wavematrix[x].push(DynVal::with_value(wavematrix_raw[x][y]));
         }
     }
 
@@ -370,14 +370,14 @@ pub fn step_part<const BUFSIZE: usize, const NCHAN: usize>(
     );
 }
 
-pub fn set_global_tmod(global_parameters: &sync::Arc<GlobalParameters>, p: Parameter) {
+pub fn set_global_tmod(global_parameters: &sync::Arc<GlobalParameters>, p: DynVal) {
     global_parameters.insert(
         BuiltinGlobalParameters::GlobalTimeModifier,
         ConfigParameter::Dynamic(p),
     ); // init on first attempt
 }
 
-pub fn set_global_latency(global_parameters: &sync::Arc<GlobalParameters>, p: Parameter) {
+pub fn set_global_latency(global_parameters: &sync::Arc<GlobalParameters>, p: DynVal) {
     global_parameters.insert(
         BuiltinGlobalParameters::GlobalLatency,
         ConfigParameter::Dynamic(p),

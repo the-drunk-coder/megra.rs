@@ -1,7 +1,7 @@
 use crate::event_helpers::*;
 
 use crate::generator_processor::*;
-use crate::parameter::Parameter;
+use crate::parameter::DynVal;
 
 use crate::parser::{BuiltIn, EvaluatedExpr};
 
@@ -30,7 +30,7 @@ pub fn collect_lifemodel(tail: &mut Vec<EvaluatedExpr>) -> Box<dyn GeneratorProc
     while let Some(c) = tail_drain.next() {
         if collect_durations {
             match c {
-                EvaluatedExpr::Float(f) => proc.durations.push(Parameter::with_value(f)),
+                EvaluatedExpr::Float(f) => proc.durations.push(DynVal::with_value(f)),
                 EvaluatedExpr::BuiltIn(BuiltIn::Parameter(ref p)) => proc.durations.push(p.clone()),
                 _ => {
                     collect_durations = false;

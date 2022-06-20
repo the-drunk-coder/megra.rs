@@ -21,7 +21,7 @@ pub fn vec(
     for p in tail_drain {
         match p {
             EvaluatedExpr::Float(f) => {
-                pvec.push(Parameter::with_value(f));
+                pvec.push(DynVal::with_value(f));
             }
             EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p)) => {
                 pvec.push(p);
@@ -59,7 +59,7 @@ pub fn mat(
                 }
             }
             EvaluatedExpr::Float(f) => {
-                row.push(Parameter::with_value(f));
+                row.push(DynVal::with_value(f));
             }
             EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p)) => {
                 row.push(p);

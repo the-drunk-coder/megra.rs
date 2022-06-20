@@ -19,7 +19,7 @@ pub type PartsStore = HashMap<String, Part>;
 #[derive(Clone)]
 pub enum ConfigParameter {
     Numeric(f32),
-    Dynamic(Parameter),
+    Dynamic(DynVal),
     Symbolic(String),
 }
 
@@ -37,8 +37,8 @@ pub type GlobalParameters = DashMap<BuiltinGlobalParameters, ConfigParameter>;
 #[derive(Clone)]
 pub enum Command {
     Clear,                                                               // clear the entire session
-    Tmod(Parameter),      // set global time mod parameter
-    Latency(Parameter),   // set global latency parameter
+    Tmod(DynVal),         // set global time mod parameter
+    Latency(DynVal),      // set global latency parameter
     Bpm(f32),             // set default tempo in bpm
     DefaultDuration(f32), // set default duration in milliseconds
     GlobRes(f32),         // global resources for lifemodel algorithm

@@ -9,7 +9,7 @@ use crate::{
     event::{Event, InterpretableEvent, StaticEvent},
     generator::GenModFun,
     generator::Generator,
-    parameter::Parameter,
+    parameter::DynVal,
 };
 
 pub enum GeneratorProcessorState {

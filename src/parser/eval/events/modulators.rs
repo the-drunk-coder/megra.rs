@@ -1,4 +1,4 @@
-use crate::parameter::{Parameter, ParameterValue};
+use crate::parameter::{DynVal, ParameterValue};
 use crate::parser::{BuiltIn, EvaluatedExpr, FunctionMap};
 use crate::{GlobalParameters, OutputMode, SampleAndWavematrixSet};
 use parking_lot::Mutex;
@@ -15,14 +15,14 @@ pub fn lin_ramp_modulator(
 ) -> Option<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..).skip(1);
 
-    let mut from = Parameter::with_value(0.01);
-    let mut to = Parameter::with_value(0.5);
-    let mut time = Parameter::with_value(0.2);
+    let mut from = DynVal::with_value(0.01);
+    let mut to = DynVal::with_value(0.5);
+    let mut time = DynVal::with_value(0.2);
     let mut op = ValOp::Replace;
 
     if let Some(f) = tail_drain.next() {
         from = match f {
-            EvaluatedExpr::Float(fl) => Parameter::with_value(fl),
+            EvaluatedExpr::Float(fl) => DynVal::with_value(fl),
             EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p)) => p,
             _ => from,
         };
@@ -30,7 +30,7 @@ pub fn lin_ramp_modulator(
 
     if let Some(t) = tail_drain.next() {
         to = match t {
-            EvaluatedExpr::Float(f) => Parameter::with_value(f),
+            EvaluatedExpr::Float(f) => DynVal::with_value(f),
             EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p)) => p,
             _ => to,
         };
@@ -41,7 +41,7 @@ pub fn lin_ramp_modulator(
             "time" | "t" => {
                 if let Some(p) = tail_drain.next() {
                     time = match p {
-                        EvaluatedExpr::Float(f) => Parameter::with_value(f),
+                        EvaluatedExpr::Float(f) => DynVal::with_value(f),
                         EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p)) => p,
                         _ => time,
                     };
@@ -75,14 +75,14 @@ pub fn log_ramp_modulator(
 ) -> Option<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..).skip(1);
 
-    let mut from = Parameter::with_value(0.01);
-    let mut to = Parameter::with_value(0.5);
-    let mut time = Parameter::with_value(0.2);
+    let mut from = DynVal::with_value(0.01);
+    let mut to = DynVal::with_value(0.5);
+    let mut time = DynVal::with_value(0.2);
     let mut op = ValOp::Replace;
 
     if let Some(f) = tail_drain.next() {
         from = match f {
-            EvaluatedExpr::Float(fl) => Parameter::with_value(fl),
+            EvaluatedExpr::Float(fl) => DynVal::with_value(fl),
             EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p)) => p,
             _ => from,
         };
@@ -90,7 +90,7 @@ pub fn log_ramp_modulator(
 
     if let Some(t) = tail_drain.next() {
         to = match t {
-            EvaluatedExpr::Float(f) => Parameter::with_value(f),
+            EvaluatedExpr::Float(f) => DynVal::with_value(f),
             EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p)) => p,
             _ => to,
         };
@@ -101,7 +101,7 @@ pub fn log_ramp_modulator(
             "time" | "t" => {
                 if let Some(p) = tail_drain.next() {
                     time = match p {
-                        EvaluatedExpr::Float(f) => Parameter::with_value(f),
+                        EvaluatedExpr::Float(f) => DynVal::with_value(f),
                         EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p)) => p,
                         _ => time,
                     };
@@ -135,14 +135,14 @@ pub fn exp_ramp_modulator(
 ) -> Option<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..).skip(1);
 
-    let mut from = Parameter::with_value(0.01);
-    let mut to = Parameter::with_value(0.5);
-    let mut time = Parameter::with_value(0.2);
+    let mut from = DynVal::with_value(0.01);
+    let mut to = DynVal::with_value(0.5);
+    let mut time = DynVal::with_value(0.2);
     let mut op = ValOp::Replace;
 
     if let Some(f) = tail_drain.next() {
         from = match f {
-            EvaluatedExpr::Float(fl) => Parameter::with_value(fl),
+            EvaluatedExpr::Float(fl) => DynVal::with_value(fl),
             EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p)) => p,
             _ => from,
         };
@@ -150,7 +150,7 @@ pub fn exp_ramp_modulator(
 
     if let Some(t) = tail_drain.next() {
         to = match t {
-            EvaluatedExpr::Float(f) => Parameter::with_value(f),
+            EvaluatedExpr::Float(f) => DynVal::with_value(f),
             EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p)) => p,
             _ => to,
         };
@@ -161,7 +161,7 @@ pub fn exp_ramp_modulator(
             "time" | "t" => {
                 if let Some(p) = tail_drain.next() {
                     time = match p {
-                        EvaluatedExpr::Float(f) => Parameter::with_value(f),
+                        EvaluatedExpr::Float(f) => DynVal::with_value(f),
                         EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p)) => p,
                         _ => time,
                     };
@@ -208,7 +208,7 @@ pub fn multi_point_envelope_modulator(
     while let Some(c) = tail_drain.next() {
         if collect_levels {
             match c {
-                EvaluatedExpr::Float(f) => levels.push(Parameter::with_value(f)),
+                EvaluatedExpr::Float(f) => levels.push(DynVal::with_value(f)),
                 EvaluatedExpr::BuiltIn(BuiltIn::Parameter(ref p)) => levels.push(p.clone()),
                 _ => {
                     collect_levels = false;
@@ -217,7 +217,7 @@ pub fn multi_point_envelope_modulator(
         }
         if collect_times {
             match c {
-                EvaluatedExpr::Float(f) => times.push(Parameter::with_value(f)),
+                EvaluatedExpr::Float(f) => times.push(DynVal::with_value(f)),
                 EvaluatedExpr::BuiltIn(BuiltIn::Parameter(ref p)) => times.push(p.clone()),
                 _ => {
                     collect_times = false;
@@ -284,11 +284,11 @@ pub fn lfo_modulator(
 ) -> Option<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..).skip(1);
 
-    let mut init = Parameter::with_value(1.0);
-    let mut freq = Parameter::with_value(1.0);
-    let mut eff_phase = Parameter::with_value(0.0);
-    let mut amp = Parameter::with_value(1.0);
-    let mut add = Parameter::with_value(0.0);
+    let mut init = DynVal::with_value(1.0);
+    let mut freq = DynVal::with_value(1.0);
+    let mut eff_phase = DynVal::with_value(0.0);
+    let mut amp = DynVal::with_value(1.0);
+    let mut add = DynVal::with_value(0.0);
     let mut op = ValOp::Replace;
 
     // make sure range/phase calc is always consistent
@@ -300,7 +300,7 @@ pub fn lfo_modulator(
                 "init" | "i" => {
                     if let Some(p) = tail_drain.next() {
                         match p {
-                            EvaluatedExpr::Float(f) => init = Parameter::with_value(f),
+                            EvaluatedExpr::Float(f) => init = DynVal::with_value(f),
                             EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p)) => init = p,
                             _ => {}
                         }
@@ -309,7 +309,7 @@ pub fn lfo_modulator(
                 "freq" | "f" => {
                     if let Some(p) = tail_drain.next() {
                         match p {
-                            EvaluatedExpr::Float(f) => freq = Parameter::with_value(f),
+                            EvaluatedExpr::Float(f) => freq = DynVal::with_value(f),
                             EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p)) => freq = p,
                             _ => {}
                         }
@@ -319,7 +319,7 @@ pub fn lfo_modulator(
                     if let Some(p) = tail_drain.next() {
                         match p {
                             EvaluatedExpr::Float(f) => {
-                                eff_phase = Parameter::with_value(f);
+                                eff_phase = DynVal::with_value(f);
                                 phase_set = true;
                             }
                             EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p)) => {
@@ -340,19 +340,19 @@ pub fn lfo_modulator(
 
                             // don't overwrite phase if it has been set
                             if !phase_set {
-                                eff_phase = Parameter::with_value(a);
+                                eff_phase = DynVal::with_value(a);
                             }
 
                             //println!("{} {} {} {}", a, b, lamp, ladd);
-                            amp = Parameter::with_value(lamp);
-                            add = Parameter::with_value(ladd);
+                            amp = DynVal::with_value(lamp);
+                            add = DynVal::with_value(ladd);
                         }
                     }
                 }
                 "amp" => {
                     if let Some(p) = tail_drain.next() {
                         match p {
-                            EvaluatedExpr::Float(f) => amp = Parameter::with_value(f),
+                            EvaluatedExpr::Float(f) => amp = DynVal::with_value(f),
                             EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p)) => amp = p,
                             _ => {}
                         }
@@ -361,7 +361,7 @@ pub fn lfo_modulator(
                 "add" => {
                     if let Some(p) = tail_drain.next() {
                         match p {
-                            EvaluatedExpr::Float(f) => add = Parameter::with_value(f),
+                            EvaluatedExpr::Float(f) => add = DynVal::with_value(f),
                             EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p)) => add = p,
                             _ => {}
                         }
@@ -397,11 +397,11 @@ pub fn lfsaw_modulator(
 ) -> Option<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..).skip(1);
 
-    let mut init = Parameter::with_value(1.0);
-    let mut freq = Parameter::with_value(1.0);
-    let mut eff_phase = Parameter::with_value(-1.0);
-    let mut amp = Parameter::with_value(1.0);
-    let mut add = Parameter::with_value(0.0);
+    let mut init = DynVal::with_value(1.0);
+    let mut freq = DynVal::with_value(1.0);
+    let mut eff_phase = DynVal::with_value(-1.0);
+    let mut amp = DynVal::with_value(1.0);
+    let mut add = DynVal::with_value(0.0);
     let mut op = ValOp::Replace;
 
     // make sure range/phase calc is always consistent
@@ -413,7 +413,7 @@ pub fn lfsaw_modulator(
                 "init" | "i" => {
                     if let Some(p) = tail_drain.next() {
                         match p {
-                            EvaluatedExpr::Float(f) => init = Parameter::with_value(f),
+                            EvaluatedExpr::Float(f) => init = DynVal::with_value(f),
                             EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p)) => init = p,
                             _ => {}
                         }
@@ -422,7 +422,7 @@ pub fn lfsaw_modulator(
                 "freq" | "f" => {
                     if let Some(p) = tail_drain.next() {
                         match p {
-                            EvaluatedExpr::Float(f) => freq = Parameter::with_value(f),
+                            EvaluatedExpr::Float(f) => freq = DynVal::with_value(f),
                             EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p)) => freq = p,
                             _ => {}
                         }
@@ -432,7 +432,7 @@ pub fn lfsaw_modulator(
                     if let Some(p) = tail_drain.next() {
                         match p {
                             EvaluatedExpr::Float(f) => {
-                                eff_phase = Parameter::with_value(f);
+                                eff_phase = DynVal::with_value(f);
                                 phase_set = true;
                             }
                             EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p)) => {
@@ -453,11 +453,11 @@ pub fn lfsaw_modulator(
 
                             // don't overwrite phase if it has been set
                             if !phase_set {
-                                eff_phase = Parameter::with_value(a);
+                                eff_phase = DynVal::with_value(a);
                             }
 
-                            amp = Parameter::with_value(lamp);
-                            add = Parameter::with_value(ladd);
+                            amp = DynVal::with_value(lamp);
+                            add = DynVal::with_value(ladd);
                             //range = (a,b);
                         }
                     }
@@ -465,7 +465,7 @@ pub fn lfsaw_modulator(
                 "amp" => {
                     if let Some(p) = tail_drain.next() {
                         match p {
-                            EvaluatedExpr::Float(f) => amp = Parameter::with_value(f),
+                            EvaluatedExpr::Float(f) => amp = DynVal::with_value(f),
                             EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p)) => amp = p,
                             _ => {}
                         }
@@ -474,7 +474,7 @@ pub fn lfsaw_modulator(
                 "add" => {
                     if let Some(p) = tail_drain.next() {
                         match p {
-                            EvaluatedExpr::Float(f) => add = Parameter::with_value(f),
+                            EvaluatedExpr::Float(f) => add = DynVal::with_value(f),
                             EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p)) => add = p,
                             _ => {}
                         }
@@ -510,11 +510,11 @@ pub fn lfrsaw_modulator(
 ) -> Option<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..).skip(1);
 
-    let mut init = Parameter::with_value(1.0);
-    let mut freq = Parameter::with_value(1.0);
-    let mut eff_phase = Parameter::with_value(-1.0);
-    let mut amp = Parameter::with_value(1.0);
-    let mut add = Parameter::with_value(0.0);
+    let mut init = DynVal::with_value(1.0);
+    let mut freq = DynVal::with_value(1.0);
+    let mut eff_phase = DynVal::with_value(-1.0);
+    let mut amp = DynVal::with_value(1.0);
+    let mut add = DynVal::with_value(0.0);
     let mut op = ValOp::Replace;
 
     // make sure range/phase calc is always consistent
@@ -526,7 +526,7 @@ pub fn lfrsaw_modulator(
                 "init" | "i" => {
                     if let Some(p) = tail_drain.next() {
                         match p {
-                            EvaluatedExpr::Float(f) => init = Parameter::with_value(f),
+                            EvaluatedExpr::Float(f) => init = DynVal::with_value(f),
                             EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p)) => init = p,
                             _ => {}
                         }
@@ -535,7 +535,7 @@ pub fn lfrsaw_modulator(
                 "freq" | "f" => {
                     if let Some(p) = tail_drain.next() {
                         match p {
-                            EvaluatedExpr::Float(f) => freq = Parameter::with_value(f),
+                            EvaluatedExpr::Float(f) => freq = DynVal::with_value(f),
                             EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p)) => freq = p,
                             _ => {}
                         }
@@ -545,7 +545,7 @@ pub fn lfrsaw_modulator(
                     if let Some(p) = tail_drain.next() {
                         match p {
                             EvaluatedExpr::Float(f) => {
-                                eff_phase = Parameter::with_value(f);
+                                eff_phase = DynVal::with_value(f);
                                 phase_set = true;
                             }
                             EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p)) => {
@@ -566,11 +566,11 @@ pub fn lfrsaw_modulator(
 
                             // don't overwrite phase if it has been set
                             if !phase_set {
-                                eff_phase = Parameter::with_value(a);
+                                eff_phase = DynVal::with_value(a);
                             }
 
-                            amp = Parameter::with_value(lamp);
-                            add = Parameter::with_value(ladd);
+                            amp = DynVal::with_value(lamp);
+                            add = DynVal::with_value(ladd);
                             //range = (a,b);
                         }
                     }
@@ -578,7 +578,7 @@ pub fn lfrsaw_modulator(
                 "amp" => {
                     if let Some(p) = tail_drain.next() {
                         match p {
-                            EvaluatedExpr::Float(f) => amp = Parameter::with_value(f),
+                            EvaluatedExpr::Float(f) => amp = DynVal::with_value(f),
                             EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p)) => amp = p,
                             _ => {}
                         }
@@ -587,7 +587,7 @@ pub fn lfrsaw_modulator(
                 "add" => {
                     if let Some(p) = tail_drain.next() {
                         match p {
-                            EvaluatedExpr::Float(f) => add = Parameter::with_value(f),
+                            EvaluatedExpr::Float(f) => add = DynVal::with_value(f),
                             EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p)) => add = p,
                             _ => {}
                         }
@@ -623,11 +623,11 @@ pub fn lftri_modulator(
 ) -> Option<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..).skip(1);
 
-    let mut init = Parameter::with_value(1.0);
-    let mut freq = Parameter::with_value(1.0);
-    let mut eff_phase = Parameter::with_value(0.0);
-    let mut amp = Parameter::with_value(1.0);
-    let mut add = Parameter::with_value(0.0);
+    let mut init = DynVal::with_value(1.0);
+    let mut freq = DynVal::with_value(1.0);
+    let mut eff_phase = DynVal::with_value(0.0);
+    let mut amp = DynVal::with_value(1.0);
+    let mut add = DynVal::with_value(0.0);
     let mut op = ValOp::Replace;
 
     // make sure range/phase calc is always consistent
@@ -639,7 +639,7 @@ pub fn lftri_modulator(
                 "init" | "i" => {
                     if let Some(p) = tail_drain.next() {
                         match p {
-                            EvaluatedExpr::Float(f) => init = Parameter::with_value(f),
+                            EvaluatedExpr::Float(f) => init = DynVal::with_value(f),
                             EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p)) => init = p,
                             _ => {}
                         }
@@ -648,7 +648,7 @@ pub fn lftri_modulator(
                 "freq" | "f" => {
                     if let Some(p) = tail_drain.next() {
                         match p {
-                            EvaluatedExpr::Float(f) => freq = Parameter::with_value(f),
+                            EvaluatedExpr::Float(f) => freq = DynVal::with_value(f),
                             EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p)) => freq = p,
                             _ => {}
                         }
@@ -658,7 +658,7 @@ pub fn lftri_modulator(
                     if let Some(p) = tail_drain.next() {
                         match p {
                             EvaluatedExpr::Float(f) => {
-                                eff_phase = Parameter::with_value(f);
+                                eff_phase = DynVal::with_value(f);
                                 phase_set = true;
                             }
                             EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p)) => {
@@ -679,11 +679,11 @@ pub fn lftri_modulator(
 
                             // don't overwrite phase if it has been set
                             if !phase_set {
-                                eff_phase = Parameter::with_value(a);
+                                eff_phase = DynVal::with_value(a);
                             }
 
-                            amp = Parameter::with_value(lamp);
-                            add = Parameter::with_value(ladd);
+                            amp = DynVal::with_value(lamp);
+                            add = DynVal::with_value(ladd);
                             //range = (a,b);
                         }
                     }
@@ -691,7 +691,7 @@ pub fn lftri_modulator(
                 "amp" => {
                     if let Some(p) = tail_drain.next() {
                         match p {
-                            EvaluatedExpr::Float(f) => amp = Parameter::with_value(f),
+                            EvaluatedExpr::Float(f) => amp = DynVal::with_value(f),
                             EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p)) => amp = p,
                             _ => {}
                         }
@@ -700,7 +700,7 @@ pub fn lftri_modulator(
                 "add" => {
                     if let Some(p) = tail_drain.next() {
                         match p {
-                            EvaluatedExpr::Float(f) => add = Parameter::with_value(f),
+                            EvaluatedExpr::Float(f) => add = DynVal::with_value(f),
                             EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p)) => add = p,
                             _ => {}
                         }
@@ -736,11 +736,11 @@ pub fn lfsquare_modulator(
 ) -> Option<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..).skip(1);
 
-    let mut init = Parameter::with_value(1.0);
-    let mut freq = Parameter::with_value(1.0);
-    let mut amp = Parameter::with_value(1.0);
-    let mut add = Parameter::with_value(0.0);
-    let mut pw = Parameter::with_value(0.5);
+    let mut init = DynVal::with_value(1.0);
+    let mut freq = DynVal::with_value(1.0);
+    let mut amp = DynVal::with_value(1.0);
+    let mut add = DynVal::with_value(0.0);
+    let mut pw = DynVal::with_value(0.5);
     let mut op = ValOp::Replace;
 
     while let Some(e) = tail_drain.next() {
@@ -749,7 +749,7 @@ pub fn lfsquare_modulator(
                 "init" | "i" => {
                     if let Some(p) = tail_drain.next() {
                         match p {
-                            EvaluatedExpr::Float(f) => init = Parameter::with_value(f),
+                            EvaluatedExpr::Float(f) => init = DynVal::with_value(f),
                             EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p)) => init = p,
                             _ => {}
                         }
@@ -758,7 +758,7 @@ pub fn lfsquare_modulator(
                 "freq" | "f" => {
                     if let Some(p) = tail_drain.next() {
                         match p {
-                            EvaluatedExpr::Float(f) => freq = Parameter::with_value(f),
+                            EvaluatedExpr::Float(f) => freq = DynVal::with_value(f),
                             EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p)) => freq = p,
                             _ => {}
                         }
@@ -767,7 +767,7 @@ pub fn lfsquare_modulator(
                 "pw" => {
                     if let Some(p) = tail_drain.next() {
                         match p {
-                            EvaluatedExpr::Float(p) => pw = Parameter::with_value(p),
+                            EvaluatedExpr::Float(p) => pw = DynVal::with_value(p),
                             EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p)) => pw = p,
                             _ => {}
                         }
@@ -776,7 +776,7 @@ pub fn lfsquare_modulator(
                 "amp" => {
                     if let Some(p) = tail_drain.next() {
                         match p {
-                            EvaluatedExpr::Float(f) => amp = Parameter::with_value(f),
+                            EvaluatedExpr::Float(f) => amp = DynVal::with_value(f),
                             EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p)) => amp = p,
                             _ => {}
                         }
@@ -785,7 +785,7 @@ pub fn lfsquare_modulator(
                 "add" => {
                     if let Some(p) = tail_drain.next() {
                         match p {
-                            EvaluatedExpr::Float(f) => add = Parameter::with_value(f),
+                            EvaluatedExpr::Float(f) => add = DynVal::with_value(f),
                             EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p)) => add = p,
                             _ => {}
                         }

@@ -46,7 +46,7 @@ pub struct LifemodelProcessor {
     pub growth_cost: f32,
     pub apoptosis_regain: f32,
     pub autophagia_regain: f32,
-    pub durations: Vec<Parameter>,
+    pub durations: Vec<DynVal>,
     pub dont_let_die: bool,
     pub keep_param: HashSet<SynthParameterLabel>,
     pub global_contrib: bool,

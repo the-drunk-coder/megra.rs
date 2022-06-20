@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use crate::generator_processor::*;
-use crate::parameter::Parameter;
+use crate::parameter::DynVal;
 
 use crate::parser::{BuiltIn, EvaluatedExpr};
 
@@ -14,7 +14,7 @@ pub fn collect_pear(tail: &mut Vec<EvaluatedExpr>) -> Box<dyn GeneratorProcessor
 
     let mut evs = Vec::new();
     let mut collect_filters = false;
-    let mut cur_prob = Parameter::with_value(100.0); // if nothing is specified, it's always or prob 100
+    let mut cur_prob = DynVal::with_value(100.0); // if nothing is specified, it's always or prob 100
 
     while let Some(c) = tail_drain.next() {
         match c {
@@ -45,9 +45,9 @@ pub fn collect_pear(tail: &mut Vec<EvaluatedExpr>) -> Box<dyn GeneratorProcessor
                         // grab new probability
 
                         cur_prob = match tail_drain.next() {
-                            Some(EvaluatedExpr::Float(f)) => Parameter::with_value(f),
+                            Some(EvaluatedExpr::Float(f)) => DynVal::with_value(f),
                             Some(EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p))) => p,
-                            _ => Parameter::with_value(1.0),
+                            _ => DynVal::with_value(1.0),
                         };
 
                         collect_filters = false;

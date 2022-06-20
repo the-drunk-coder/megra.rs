@@ -1,7 +1,7 @@
 use crate::event::{Event, EventOperation};
 use crate::event_helpers::map_parameter;
 use crate::music_theory;
-use crate::parameter::{Parameter, ParameterValue};
+use crate::parameter::{DynVal, ParameterValue};
 use crate::parser::{BuiltIn, EvaluatedExpr, FunctionMap};
 use crate::{GlobalParameters, OutputMode, SampleAndWavematrixSet};
 use parking_lot::Mutex;
@@ -16,7 +16,7 @@ fn collect_param_value(
     while let Some(e) = tail_drain.peek() {
         match e {
             EvaluatedExpr::Float(f) => {
-                par_vec.push(Parameter::with_value(*f));
+                par_vec.push(DynVal::with_value(*f));
                 tail_drain.next();
             }
             EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p)) => {
@@ -45,7 +45,7 @@ fn collect_param_value(
         }
     }
     if par_vec.is_empty() {
-        ParameterValue::Scalar(Parameter::with_value(0.0))
+        ParameterValue::Scalar(DynVal::with_value(0.0))
     } else if par_vec.len() == 1 {
         ParameterValue::Scalar(par_vec[0].clone())
     } else {
@@ -62,15 +62,15 @@ fn get_pitch_param(
         SynthParameterLabel::PitchFrequency,
         match tail_drain.next() {
             Some(EvaluatedExpr::BuiltIn(BuiltIn::Modulator(m))) => m,
-            Some(EvaluatedExpr::Float(n)) => ParameterValue::Scalar(Parameter::with_value(n)),
+            Some(EvaluatedExpr::Float(n)) => ParameterValue::Scalar(DynVal::with_value(n)),
             Some(EvaluatedExpr::BuiltIn(BuiltIn::Parameter(pl))) => ParameterValue::Scalar(pl),
             Some(EvaluatedExpr::Symbol(s)) => {
-                ParameterValue::Scalar(Parameter::with_value(music_theory::to_freq(
+                ParameterValue::Scalar(DynVal::with_value(music_theory::to_freq(
                     music_theory::from_string(&s),
                     music_theory::Tuning::EqualTemperament,
                 )))
             }
-            _ => ParameterValue::Scalar(Parameter::with_value(100.0)),
+            _ => ParameterValue::Scalar(DynVal::with_value(100.0)),
         },
     );
 }
@@ -87,9 +87,9 @@ fn get_bufnum_param(
                 let nn = *n;
                 tail_drain.next();
                 if nn as usize > 0 {
-                    Parameter::with_value(nn - 1.0)
+                    DynVal::with_value(nn - 1.0)
                 } else {
-                    Parameter::with_value(0.0)
+                    DynVal::with_value(0.0)
                 }
             }
             Some(EvaluatedExpr::BuiltIn(BuiltIn::Parameter(pl))) => {
@@ -97,7 +97,7 @@ fn get_bufnum_param(
                 tail_drain.next();
                 p
             }
-            _ => Parameter::with_value(0.0),
+            _ => DynVal::with_value(0.0),
         }),
     );
 }
@@ -106,27 +106,27 @@ fn synth_defaults(ev: &mut Event) {
     // set some defaults 2
     ev.params.insert(
         SynthParameterLabel::EnvelopeLevel,
-        ParameterValue::Scalar(Parameter::with_value(0.4)),
+        ParameterValue::Scalar(DynVal::with_value(0.4)),
     );
     ev.params.insert(
         SynthParameterLabel::OscillatorAmplitude,
-        ParameterValue::Scalar(Parameter::with_value(0.9)),
+        ParameterValue::Scalar(DynVal::with_value(0.9)),
     );
     ev.params.insert(
         SynthParameterLabel::Attack,
-        ParameterValue::Scalar(Parameter::with_value(1.0)),
+        ParameterValue::Scalar(DynVal::with_value(1.0)),
     );
     ev.params.insert(
         SynthParameterLabel::Sustain,
-        ParameterValue::Scalar(Parameter::with_value(48.0)),
+        ParameterValue::Scalar(DynVal::with_value(48.0)),
     );
     ev.params.insert(
         SynthParameterLabel::Release,
-        ParameterValue::Scalar(Parameter::with_value(100.0)),
+        ParameterValue::Scalar(DynVal::with_value(100.0)),
     );
     ev.params.insert(
         SynthParameterLabel::ChannelPosition,
-        ParameterValue::Scalar(Parameter::with_value(0.00)),
+        ParameterValue::Scalar(DynVal::with_value(0.00)),
     );
 }
 
@@ -134,35 +134,35 @@ fn sample_defaults(ev: &mut Event) {
     // set some defaults
     ev.params.insert(
         SynthParameterLabel::EnvelopeLevel,
-        ParameterValue::Scalar(Parameter::with_value(0.4)),
+        ParameterValue::Scalar(DynVal::with_value(0.4)),
     );
     ev.params.insert(
         SynthParameterLabel::OscillatorAmplitude,
-        ParameterValue::Scalar(Parameter::with_value(0.9)),
+        ParameterValue::Scalar(DynVal::with_value(0.9)),
     );
     ev.params.insert(
         SynthParameterLabel::Attack,
-        ParameterValue::Scalar(Parameter::with_value(1.0)),
+        ParameterValue::Scalar(DynVal::with_value(1.0)),
     );
     ev.params.insert(
         SynthParameterLabel::Release,
-        ParameterValue::Scalar(Parameter::with_value(1.0)),
+        ParameterValue::Scalar(DynVal::with_value(1.0)),
     );
     ev.params.insert(
         SynthParameterLabel::ChannelPosition,
-        ParameterValue::Scalar(Parameter::with_value(0.00)),
+        ParameterValue::Scalar(DynVal::with_value(0.00)),
     );
     ev.params.insert(
         SynthParameterLabel::PlaybackRate,
-        ParameterValue::Scalar(Parameter::with_value(1.0)),
+        ParameterValue::Scalar(DynVal::with_value(1.0)),
     );
     ev.params.insert(
         SynthParameterLabel::LowpassFilterDistortion,
-        ParameterValue::Scalar(Parameter::with_value(0.0)),
+        ParameterValue::Scalar(DynVal::with_value(0.0)),
     );
     ev.params.insert(
         SynthParameterLabel::PlaybackStart,
-        ParameterValue::Scalar(Parameter::with_value(0.0)),
+        ParameterValue::Scalar(DynVal::with_value(0.0)),
     );
 }
 
@@ -298,13 +298,11 @@ pub fn sound(
 
                 ev.params.insert(
                     SynthParameterLabel::SampleBufferNumber,
-                    ParameterValue::Scalar(Parameter::with_value(sample_info.bufnum as f32)),
+                    ParameterValue::Scalar(DynVal::with_value(sample_info.bufnum as f32)),
                 );
                 ev.params.insert(
                     SynthParameterLabel::Sustain,
-                    ParameterValue::Scalar(Parameter::with_value(
-                        (sample_info.duration - 2) as f32,
-                    )),
+                    ParameterValue::Scalar(DynVal::with_value((sample_info.duration - 2) as f32)),
                 );
                 sample_defaults(&mut ev);
 

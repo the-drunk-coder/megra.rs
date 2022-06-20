@@ -6,13 +6,13 @@ use crate::{
     event::{InterpretableEvent, StaticEvent},
     generator::Generator,
     generator_processor::*,
-    parameter::Parameter,
+    parameter::DynVal,
 };
 
 /// Apple-ys modifiers to the underlying processors
 #[derive(Clone)]
 pub struct AppleProcessor {
-    pub modifiers_to_be_applied: Vec<(Parameter, GenModFunsAndArgs)>,
+    pub modifiers_to_be_applied: Vec<(DynVal, GenModFunsAndArgs)>,
 }
 
 impl AppleProcessor {

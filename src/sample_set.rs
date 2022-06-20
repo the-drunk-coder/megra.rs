@@ -1,4 +1,4 @@
-use crate::parameter::Parameter;
+use crate::parameter::DynVal;
 use rand::seq::SliceRandom;
 use std::collections::{HashMap, HashSet};
 
@@ -22,7 +22,7 @@ impl SampleInfo {
 /// on this size, so I suppose that's ok for the moment ...
 pub struct SampleAndWavematrixSet {
     subsets: HashMap<String, Vec<SampleInfo>>,
-    wavematrices: HashMap<String, Vec<Vec<Parameter>>>,
+    wavematrices: HashMap<String, Vec<Vec<DynVal>>>,
 }
 
 impl Default for SampleAndWavematrixSet {
@@ -39,11 +39,11 @@ impl SampleAndWavematrixSet {
         }
     }
 
-    pub fn insert_wavematrix(&mut self, key: String, table: Vec<Vec<Parameter>>) {
+    pub fn insert_wavematrix(&mut self, key: String, table: Vec<Vec<DynVal>>) {
         self.wavematrices.insert(key, table);
     }
 
-    pub fn get_wavematrix(&self, key: &String) -> Option<&Vec<Vec<Parameter>>> {
+    pub fn get_wavematrix(&self, key: &String) -> Option<&Vec<Vec<DynVal>>> {
         self.wavematrices.get(key)
     }
 
