@@ -33,7 +33,7 @@ epaint = "0.18.1"
 serde = { version = "1", features = ["derive", "rc"], optional = true }
 dashmap = "5.2"
 chrono = "0.4"
-enum-map = { version = "1", features = ["serde"] }
+enum-map = { version = "2.4", features = ["serde"] }
 rosc = "~0.5"
 hound = "3.4"
 regex = "1.5"
