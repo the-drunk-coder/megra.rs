@@ -819,6 +819,19 @@ pub fn lfsquare_modulator(
                         }
                     }
                 }
+                "range" | "r" => {
+                    if let Some(EvaluatedExpr::Float(f1)) = tail_drain.next() {
+                        let a = f1;
+                        if let Some(EvaluatedExpr::Float(f2)) = tail_drain.next() {
+                            let b = f2;
+                            let lamp = (a - b).abs() / 2.0;
+                            let ladd = f32::min(a, b) + lamp;
+
+                            amp = ParameterValue::Scalar(DynVal::with_value(lamp));
+                            add = DynVal::with_value(ladd);
+                        }
+                    }
+                }
                 "pw" => {
                     if let Some(p) = tail_drain.next() {
                         match p {
