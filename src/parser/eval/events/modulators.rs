@@ -285,9 +285,9 @@ pub fn lfo_modulator(
     let mut tail_drain = tail.drain(..).skip(1);
 
     let mut init = DynVal::with_value(1.0);
-    let mut freq = DynVal::with_value(1.0);
+    let mut freq = ParameterValue::Scalar(DynVal::with_value(1.0));
     let mut eff_phase = DynVal::with_value(0.0);
-    let mut amp = DynVal::with_value(1.0);
+    let mut amp = ParameterValue::Scalar(DynVal::with_value(1.0));
     let mut add = DynVal::with_value(0.0);
     let mut op = ValOp::Replace;
 
@@ -309,8 +309,13 @@ pub fn lfo_modulator(
                 "freq" | "f" => {
                     if let Some(p) = tail_drain.next() {
                         match p {
-                            EvaluatedExpr::Float(f) => freq = DynVal::with_value(f),
-                            EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p)) => freq = p,
+                            EvaluatedExpr::Float(f) => {
+                                freq = ParameterValue::Scalar(DynVal::with_value(f))
+                            }
+                            EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p)) => {
+                                freq = ParameterValue::Scalar(p)
+                            }
+                            EvaluatedExpr::BuiltIn(BuiltIn::Modulator(m)) => freq = m,
                             _ => {}
                         }
                     }
@@ -344,7 +349,7 @@ pub fn lfo_modulator(
                             }
 
                             //println!("{} {} {} {}", a, b, lamp, ladd);
-                            amp = DynVal::with_value(lamp);
+                            amp = ParameterValue::Scalar(DynVal::with_value(lamp));
                             add = DynVal::with_value(ladd);
                         }
                     }
@@ -352,8 +357,13 @@ pub fn lfo_modulator(
                 "amp" => {
                     if let Some(p) = tail_drain.next() {
                         match p {
-                            EvaluatedExpr::Float(f) => amp = DynVal::with_value(f),
-                            EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p)) => amp = p,
+                            EvaluatedExpr::Float(f) => {
+                                amp = ParameterValue::Scalar(DynVal::with_value(f))
+                            }
+                            EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p)) => {
+                                amp = ParameterValue::Scalar(p)
+                            }
+                            EvaluatedExpr::BuiltIn(BuiltIn::Modulator(m)) => amp = m,
                             _ => {}
                         }
                     }
@@ -384,7 +394,7 @@ pub fn lfo_modulator(
     }
 
     Some(EvaluatedExpr::BuiltIn(BuiltIn::Modulator(
-        ParameterValue::Lfo(init, freq, eff_phase, amp, add, op),
+        ParameterValue::Lfo(init, Box::new(freq), eff_phase, Box::new(amp), add, op),
     )))
 }
 
@@ -398,9 +408,9 @@ pub fn lfsaw_modulator(
     let mut tail_drain = tail.drain(..).skip(1);
 
     let mut init = DynVal::with_value(1.0);
-    let mut freq = DynVal::with_value(1.0);
+    let mut freq = ParameterValue::Scalar(DynVal::with_value(1.0));
     let mut eff_phase = DynVal::with_value(-1.0);
-    let mut amp = DynVal::with_value(1.0);
+    let mut amp = ParameterValue::Scalar(DynVal::with_value(1.0));
     let mut add = DynVal::with_value(0.0);
     let mut op = ValOp::Replace;
 
@@ -422,8 +432,13 @@ pub fn lfsaw_modulator(
                 "freq" | "f" => {
                     if let Some(p) = tail_drain.next() {
                         match p {
-                            EvaluatedExpr::Float(f) => freq = DynVal::with_value(f),
-                            EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p)) => freq = p,
+                            EvaluatedExpr::Float(f) => {
+                                freq = ParameterValue::Scalar(DynVal::with_value(f))
+                            }
+                            EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p)) => {
+                                freq = ParameterValue::Scalar(p)
+                            }
+                            EvaluatedExpr::BuiltIn(BuiltIn::Modulator(m)) => freq = m,
                             _ => {}
                         }
                     }
@@ -456,7 +471,7 @@ pub fn lfsaw_modulator(
                                 eff_phase = DynVal::with_value(a);
                             }
 
-                            amp = DynVal::with_value(lamp);
+                            amp = ParameterValue::Scalar(DynVal::with_value(lamp));
                             add = DynVal::with_value(ladd);
                             //range = (a,b);
                         }
@@ -465,8 +480,13 @@ pub fn lfsaw_modulator(
                 "amp" => {
                     if let Some(p) = tail_drain.next() {
                         match p {
-                            EvaluatedExpr::Float(f) => amp = DynVal::with_value(f),
-                            EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p)) => amp = p,
+                            EvaluatedExpr::Float(f) => {
+                                amp = ParameterValue::Scalar(DynVal::with_value(f))
+                            }
+                            EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p)) => {
+                                amp = ParameterValue::Scalar(p)
+                            }
+                            EvaluatedExpr::BuiltIn(BuiltIn::Modulator(m)) => amp = m,
                             _ => {}
                         }
                     }
@@ -474,8 +494,13 @@ pub fn lfsaw_modulator(
                 "add" => {
                     if let Some(p) = tail_drain.next() {
                         match p {
-                            EvaluatedExpr::Float(f) => add = DynVal::with_value(f),
-                            EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p)) => add = p,
+                            EvaluatedExpr::Float(f) => {
+                                amp = ParameterValue::Scalar(DynVal::with_value(f))
+                            }
+                            EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p)) => {
+                                amp = ParameterValue::Scalar(p)
+                            }
+                            EvaluatedExpr::BuiltIn(BuiltIn::Modulator(m)) => amp = m,
                             _ => {}
                         }
                     }
@@ -497,7 +522,7 @@ pub fn lfsaw_modulator(
     }
 
     Some(EvaluatedExpr::BuiltIn(BuiltIn::Modulator(
-        ParameterValue::LFSaw(init, freq, eff_phase, amp, add, op),
+        ParameterValue::LFSaw(init, Box::new(freq), eff_phase, Box::new(amp), add, op),
     )))
 }
 
@@ -511,9 +536,9 @@ pub fn lfrsaw_modulator(
     let mut tail_drain = tail.drain(..).skip(1);
 
     let mut init = DynVal::with_value(1.0);
-    let mut freq = DynVal::with_value(1.0);
+    let mut freq = ParameterValue::Scalar(DynVal::with_value(1.0));
     let mut eff_phase = DynVal::with_value(-1.0);
-    let mut amp = DynVal::with_value(1.0);
+    let mut amp = ParameterValue::Scalar(DynVal::with_value(1.0));
     let mut add = DynVal::with_value(0.0);
     let mut op = ValOp::Replace;
 
@@ -535,8 +560,13 @@ pub fn lfrsaw_modulator(
                 "freq" | "f" => {
                     if let Some(p) = tail_drain.next() {
                         match p {
-                            EvaluatedExpr::Float(f) => freq = DynVal::with_value(f),
-                            EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p)) => freq = p,
+                            EvaluatedExpr::Float(f) => {
+                                freq = ParameterValue::Scalar(DynVal::with_value(f))
+                            }
+                            EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p)) => {
+                                freq = ParameterValue::Scalar(p)
+                            }
+                            EvaluatedExpr::BuiltIn(BuiltIn::Modulator(m)) => freq = m,
                             _ => {}
                         }
                     }
@@ -569,7 +599,7 @@ pub fn lfrsaw_modulator(
                                 eff_phase = DynVal::with_value(a);
                             }
 
-                            amp = DynVal::with_value(lamp);
+                            amp = ParameterValue::Scalar(DynVal::with_value(lamp));
                             add = DynVal::with_value(ladd);
                             //range = (a,b);
                         }
@@ -578,8 +608,13 @@ pub fn lfrsaw_modulator(
                 "amp" => {
                     if let Some(p) = tail_drain.next() {
                         match p {
-                            EvaluatedExpr::Float(f) => amp = DynVal::with_value(f),
-                            EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p)) => amp = p,
+                            EvaluatedExpr::Float(f) => {
+                                amp = ParameterValue::Scalar(DynVal::with_value(f))
+                            }
+                            EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p)) => {
+                                amp = ParameterValue::Scalar(p)
+                            }
+                            EvaluatedExpr::BuiltIn(BuiltIn::Modulator(m)) => amp = m,
                             _ => {}
                         }
                     }
@@ -610,7 +645,7 @@ pub fn lfrsaw_modulator(
     }
 
     Some(EvaluatedExpr::BuiltIn(BuiltIn::Modulator(
-        ParameterValue::LFRSaw(init, freq, eff_phase, amp, add, op),
+        ParameterValue::LFRSaw(init, Box::new(freq), eff_phase, Box::new(amp), add, op),
     )))
 }
 
@@ -624,9 +659,9 @@ pub fn lftri_modulator(
     let mut tail_drain = tail.drain(..).skip(1);
 
     let mut init = DynVal::with_value(1.0);
-    let mut freq = DynVal::with_value(1.0);
+    let mut freq = ParameterValue::Scalar(DynVal::with_value(1.0));
     let mut eff_phase = DynVal::with_value(0.0);
-    let mut amp = DynVal::with_value(1.0);
+    let mut amp = ParameterValue::Scalar(DynVal::with_value(1.0));
     let mut add = DynVal::with_value(0.0);
     let mut op = ValOp::Replace;
 
@@ -648,8 +683,13 @@ pub fn lftri_modulator(
                 "freq" | "f" => {
                     if let Some(p) = tail_drain.next() {
                         match p {
-                            EvaluatedExpr::Float(f) => freq = DynVal::with_value(f),
-                            EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p)) => freq = p,
+                            EvaluatedExpr::Float(f) => {
+                                freq = ParameterValue::Scalar(DynVal::with_value(f))
+                            }
+                            EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p)) => {
+                                freq = ParameterValue::Scalar(p)
+                            }
+                            EvaluatedExpr::BuiltIn(BuiltIn::Modulator(m)) => freq = m,
                             _ => {}
                         }
                     }
@@ -682,7 +722,7 @@ pub fn lftri_modulator(
                                 eff_phase = DynVal::with_value(a);
                             }
 
-                            amp = DynVal::with_value(lamp);
+                            amp = ParameterValue::Scalar(DynVal::with_value(lamp));
                             add = DynVal::with_value(ladd);
                             //range = (a,b);
                         }
@@ -691,8 +731,13 @@ pub fn lftri_modulator(
                 "amp" => {
                     if let Some(p) = tail_drain.next() {
                         match p {
-                            EvaluatedExpr::Float(f) => amp = DynVal::with_value(f),
-                            EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p)) => amp = p,
+                            EvaluatedExpr::Float(f) => {
+                                amp = ParameterValue::Scalar(DynVal::with_value(f))
+                            }
+                            EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p)) => {
+                                amp = ParameterValue::Scalar(p)
+                            }
+                            EvaluatedExpr::BuiltIn(BuiltIn::Modulator(m)) => amp = m,
                             _ => {}
                         }
                     }
@@ -700,8 +745,13 @@ pub fn lftri_modulator(
                 "add" => {
                     if let Some(p) = tail_drain.next() {
                         match p {
-                            EvaluatedExpr::Float(f) => add = DynVal::with_value(f),
-                            EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p)) => add = p,
+                            EvaluatedExpr::Float(f) => {
+                                amp = ParameterValue::Scalar(DynVal::with_value(f))
+                            }
+                            EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p)) => {
+                                amp = ParameterValue::Scalar(p)
+                            }
+                            EvaluatedExpr::BuiltIn(BuiltIn::Modulator(m)) => amp = m,
                             _ => {}
                         }
                     }
@@ -723,7 +773,7 @@ pub fn lftri_modulator(
     }
 
     Some(EvaluatedExpr::BuiltIn(BuiltIn::Modulator(
-        ParameterValue::LFTri(init, freq, eff_phase, amp, add, op),
+        ParameterValue::LFTri(init, Box::new(freq), eff_phase, Box::new(amp), add, op),
     )))
 }
 
@@ -737,8 +787,8 @@ pub fn lfsquare_modulator(
     let mut tail_drain = tail.drain(..).skip(1);
 
     let mut init = DynVal::with_value(1.0);
-    let mut freq = DynVal::with_value(1.0);
-    let mut amp = DynVal::with_value(1.0);
+    let mut freq = ParameterValue::Scalar(DynVal::with_value(1.0));
+    let mut amp = ParameterValue::Scalar(DynVal::with_value(1.0));
     let mut add = DynVal::with_value(0.0);
     let mut pw = DynVal::with_value(0.5);
     let mut op = ValOp::Replace;
@@ -758,8 +808,13 @@ pub fn lfsquare_modulator(
                 "freq" | "f" => {
                     if let Some(p) = tail_drain.next() {
                         match p {
-                            EvaluatedExpr::Float(f) => freq = DynVal::with_value(f),
-                            EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p)) => freq = p,
+                            EvaluatedExpr::Float(f) => {
+                                freq = ParameterValue::Scalar(DynVal::with_value(f))
+                            }
+                            EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p)) => {
+                                freq = ParameterValue::Scalar(p)
+                            }
+                            EvaluatedExpr::BuiltIn(BuiltIn::Modulator(m)) => freq = m,
                             _ => {}
                         }
                     }
@@ -776,8 +831,13 @@ pub fn lfsquare_modulator(
                 "amp" => {
                     if let Some(p) = tail_drain.next() {
                         match p {
-                            EvaluatedExpr::Float(f) => amp = DynVal::with_value(f),
-                            EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p)) => amp = p,
+                            EvaluatedExpr::Float(f) => {
+                                amp = ParameterValue::Scalar(DynVal::with_value(f))
+                            }
+                            EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p)) => {
+                                amp = ParameterValue::Scalar(p)
+                            }
+                            EvaluatedExpr::BuiltIn(BuiltIn::Modulator(m)) => amp = m,
                             _ => {}
                         }
                     }
@@ -808,6 +868,6 @@ pub fn lfsquare_modulator(
     }
 
     Some(EvaluatedExpr::BuiltIn(BuiltIn::Modulator(
-        ParameterValue::LFSquare(init, freq, pw, amp, add, op),
+        ParameterValue::LFSquare(init, Box::new(freq), pw, Box::new(amp), add, op),
     )))
 }

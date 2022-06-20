@@ -3,7 +3,7 @@ use std::collections::{BTreeSet, HashMap, HashSet};
 use std::fmt::*;
 
 use crate::builtin_types::Command;
-use crate::parameter::{resolve_parameter, ParameterValue};
+use crate::parameter::{resolve_parameter, shake_parameter, ParameterValue};
 use crate::session::SyncContext;
 
 /// Events can represent arithmetic operations.
@@ -168,81 +168,7 @@ impl Event {
     pub fn shake(&mut self, factor: f32, keep: &HashSet<SynthParameterLabel>) {
         for (k, v) in self.params.iter_mut() {
             if !keep.contains(k) && *k != SynthParameterLabel::SampleBufferNumber {
-                match v {
-                    ParameterValue::Scalar(val) => {
-                        val.shake(factor);
-                    }
-                    ParameterValue::Vector(vals) => {
-                        for val in vals.iter_mut() {
-                            val.shake(factor);
-                        }
-                    }
-                    ParameterValue::Matrix(mat) => {
-                        for row in mat.iter_mut() {
-                            for col in row.iter_mut() {
-                                col.shake(factor);
-                            }
-                        }
-                    }
-                    ParameterValue::Lfo(init, freq, eff_phase, amp, add, _) => {
-                        init.shake(factor);
-                        freq.shake(factor);
-                        eff_phase.shake(factor);
-                        amp.shake(factor);
-                        add.shake(factor);
-                    }
-                    ParameterValue::LFSaw(init, freq, eff_phase, amp, add, _) => {
-                        init.shake(factor);
-                        freq.shake(factor);
-                        eff_phase.shake(factor);
-                        amp.shake(factor);
-                        add.shake(factor);
-                    }
-                    ParameterValue::LFRSaw(init, freq, eff_phase, amp, add, _) => {
-                        init.shake(factor);
-                        freq.shake(factor);
-                        eff_phase.shake(factor);
-                        amp.shake(factor);
-                        add.shake(factor);
-                    }
-                    ParameterValue::LFTri(init, freq, eff_phase, amp, add, _) => {
-                        init.shake(factor);
-                        freq.shake(factor);
-                        eff_phase.shake(factor);
-                        amp.shake(factor);
-                        add.shake(factor);
-                    }
-                    ParameterValue::LFSquare(init, freq, pw, amp, add, _) => {
-                        init.shake(factor);
-                        freq.shake(factor);
-                        pw.shake(factor);
-                        amp.shake(factor);
-                        add.shake(factor);
-                    }
-                    ParameterValue::LinRamp(from, to, time, _) => {
-                        from.shake(factor);
-                        to.shake(factor);
-                        time.shake(factor);
-                    }
-                    ParameterValue::LogRamp(from, to, time, _) => {
-                        from.shake(factor);
-                        to.shake(factor);
-                        time.shake(factor);
-                    }
-                    ParameterValue::ExpRamp(from, to, time, _) => {
-                        from.shake(factor);
-                        to.shake(factor);
-                        time.shake(factor);
-                    }
-                    ParameterValue::MultiPointEnvelope(levels, times, _, _, _) => {
-                        for lvl in levels.iter_mut() {
-                            lvl.shake(factor);
-                        }
-                        for time in times.iter_mut() {
-                            time.shake(factor);
-                        }
-                    }
-                }
+                shake_parameter(v, factor);
             }
         }
     }

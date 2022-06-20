@@ -14,15 +14,93 @@ pub enum ParameterValue {
     Scalar(DynVal),
     Vector(Vec<DynVal>),
     Matrix(Vec<Vec<DynVal>>),
-    Lfo(DynVal, DynVal, DynVal, DynVal, DynVal, ValOp), // init, freq, phase, amp, add, op
-    LFSaw(DynVal, DynVal, DynVal, DynVal, DynVal, ValOp), // init, freq, phase, amp, add, op
-    LFRSaw(DynVal, DynVal, DynVal, DynVal, DynVal, ValOp), // init, freq, phase, amp, add, op
-    LFTri(DynVal, DynVal, DynVal, DynVal, DynVal, ValOp), // init, freq, phase, amp, add, op
-    LFSquare(DynVal, DynVal, DynVal, DynVal, DynVal, ValOp), // init, freq, phase, pw, amp, add, op
+    Lfo(DynVal, Box<ParameterValue>, DynVal, Box<ParameterValue>, DynVal, ValOp), // init, freq, phase, amp, add, op
+    LFSaw(DynVal, Box<ParameterValue>, DynVal, Box<ParameterValue>, DynVal, ValOp), // init, freq, phase, amp, add, op
+    LFRSaw(DynVal, Box<ParameterValue>, DynVal, Box<ParameterValue>, DynVal, ValOp), // init, freq, phase, amp, add, op
+    LFTri(DynVal, Box<ParameterValue>, DynVal, Box<ParameterValue>, DynVal, ValOp), // init, freq, phase, amp, add, op
+    LFSquare(DynVal, Box<ParameterValue>, DynVal, Box<ParameterValue>, DynVal, ValOp), // init, freq, pw, amp, add, op
     LinRamp(DynVal, DynVal, DynVal, ValOp),                        // from, to, time, op
     LogRamp(DynVal, DynVal, DynVal, ValOp),                        // from, to, time, op
     ExpRamp(DynVal, DynVal, DynVal, ValOp),                        // from, to, time, op
     MultiPointEnvelope(Vec<DynVal>, Vec<DynVal>, Vec<SegmentType>, bool, ValOp), // levels, times, loop, op
+}
+
+pub fn shake_parameter(v: &mut ParameterValue, factor: f32) {
+    match v {
+        ParameterValue::Scalar(val) => {
+            val.shake(factor);
+        }
+        ParameterValue::Vector(vals) => {
+            for val in vals.iter_mut() {
+                val.shake(factor);
+            }
+        }
+        ParameterValue::Matrix(mat) => {
+            for row in mat.iter_mut() {
+                for col in row.iter_mut() {
+                    col.shake(factor);
+                }
+            }
+        }
+        ParameterValue::Lfo(init, freq, eff_phase, amp, add, _) => {
+            init.shake(factor);
+            shake_parameter(freq, factor);
+            eff_phase.shake(factor);
+            shake_parameter(amp, factor);
+            add.shake(factor);
+        }
+        ParameterValue::LFSaw(init, freq, eff_phase, amp, add, _) => {
+            init.shake(factor);
+            shake_parameter(freq, factor);
+            eff_phase.shake(factor);
+            shake_parameter(amp, factor);
+            add.shake(factor);
+        }
+        ParameterValue::LFRSaw(init, freq, eff_phase, amp, add, _) => {
+            init.shake(factor);
+            shake_parameter(freq, factor);
+            eff_phase.shake(factor);
+            shake_parameter(amp, factor);
+            add.shake(factor);
+        }
+        ParameterValue::LFTri(init, freq, eff_phase, amp, add, _) => {
+            init.shake(factor);
+            shake_parameter(freq, factor);
+            eff_phase.shake(factor);
+            shake_parameter(amp, factor);
+            add.shake(factor);
+        }
+        ParameterValue::LFSquare(init, freq, pw, amp, add, _) => {
+            init.shake(factor);
+            shake_parameter(freq, factor);
+            pw.shake(factor);
+            shake_parameter(amp, factor);
+            add.shake(factor);
+        }
+        ParameterValue::LinRamp(from, to, time, _) => {
+            from.shake(factor);
+            to.shake(factor);
+            time.shake(factor);
+        }
+        ParameterValue::LogRamp(from, to, time, _) => {
+            from.shake(factor);
+            to.shake(factor);
+            time.shake(factor);
+        }
+        ParameterValue::ExpRamp(from, to, time, _) => {
+            from.shake(factor);
+            to.shake(factor);
+            time.shake(factor);
+        }
+        ParameterValue::MultiPointEnvelope(levels, times, _, _, _) => {
+            for lvl in levels.iter_mut() {
+                lvl.shake(factor);
+            }
+            for time in times.iter_mut() {
+                time.shake(factor);
+            }
+        }
+    }
 }
 
 pub fn translate_stereo(val: SynthParameterValue) -> SynthParameterValue {
@@ -158,41 +236,56 @@ pub fn resolve_parameter(k: SynthParameterLabel, v: &mut ParameterValue) -> Synt
         }
         ParameterValue::Lfo(init, freq, eff_phase, amp, add, op) => SynthParameterValue::Lfo(
             init.evaluate_numerical(),
-            Box::new(freq.evaluate_val_f32()),
+            Box::new(resolve_parameter(SynthParameterLabel::PitchFrequency, freq)),
             eff_phase.evaluate_numerical(),
-            Box::new(amp.evaluate_val_f32()),
+            Box::new(resolve_parameter(
+                SynthParameterLabel::OscillatorAmplitude,
+                amp,
+            )),
             add.evaluate_numerical(),
             *op,
         ),
         ParameterValue::LFSaw(init, freq, eff_phase, amp, add, op) => SynthParameterValue::LFSaw(
             init.evaluate_numerical(),
-            Box::new(freq.evaluate_val_f32()),
+            Box::new(resolve_parameter(SynthParameterLabel::PitchFrequency, freq)),
             eff_phase.evaluate_numerical(),
-            Box::new(amp.evaluate_val_f32()),
+            Box::new(resolve_parameter(
+                SynthParameterLabel::OscillatorAmplitude,
+                amp,
+            )),
             add.evaluate_numerical(),
             *op,
         ),
         ParameterValue::LFRSaw(init, freq, eff_phase, amp, add, op) => SynthParameterValue::LFRSaw(
             init.evaluate_numerical(),
-            Box::new(freq.evaluate_val_f32()),
+            Box::new(resolve_parameter(SynthParameterLabel::PitchFrequency, freq)),
             eff_phase.evaluate_numerical(),
-            Box::new(amp.evaluate_val_f32()),
+            Box::new(resolve_parameter(
+                SynthParameterLabel::OscillatorAmplitude,
+                amp,
+            )),
             add.evaluate_numerical(),
             *op,
         ),
         ParameterValue::LFTri(init, freq, eff_phase, amp, add, op) => SynthParameterValue::LFTri(
             init.evaluate_numerical(),
-            Box::new(freq.evaluate_val_f32()),
+            Box::new(resolve_parameter(SynthParameterLabel::PitchFrequency, freq)),
             eff_phase.evaluate_numerical(),
-            Box::new(amp.evaluate_val_f32()),
+            Box::new(resolve_parameter(
+                SynthParameterLabel::OscillatorAmplitude,
+                amp,
+            )),
             add.evaluate_numerical(),
             *op,
         ),
         ParameterValue::LFSquare(init, freq, pw, amp, add, op) => SynthParameterValue::LFSquare(
             init.evaluate_numerical(),
-            Box::new(freq.evaluate_val_f32()),
+            Box::new(resolve_parameter(SynthParameterLabel::PitchFrequency, freq)),
             pw.evaluate_numerical(),
-            Box::new(amp.evaluate_val_f32()),
+            Box::new(resolve_parameter(
+                SynthParameterLabel::OscillatorAmplitude,
+                amp,
+            )),
             add.evaluate_numerical(),
             *op,
         ),
