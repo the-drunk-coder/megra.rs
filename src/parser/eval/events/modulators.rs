@@ -61,6 +61,7 @@ pub fn lin_ramp_modulator(
             _ => {}
         }
     }
+
     Some(EvaluatedExpr::BuiltIn(BuiltIn::Modulator(
         ParameterValue::LinRamp(from, to, time, op),
     )))

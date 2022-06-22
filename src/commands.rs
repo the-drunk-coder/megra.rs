@@ -519,7 +519,11 @@ pub fn once<const BUFSIZE: usize, const NCHAN: usize>(
                 // special handling for stereo param
                 match k {
                     SynthParameterLabel::ChannelPosition => {
-                        inst.set_instance_parameter(*k, &translate_stereo(v.clone()));
+                        if output_mode == OutputMode::Stereo {
+                            inst.set_instance_parameter(*k, &translate_stereo(v.clone()));
+                        } else {
+                            inst.set_instance_parameter(*k, v);
+                        }
                     }
                     // convert milliseconds to seconds
                     SynthParameterLabel::Duration => {

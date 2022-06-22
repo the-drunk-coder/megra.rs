@@ -617,5 +617,3 @@ pub fn divide_spv(a: &SynthParameterValue, b: &SynthParameterValue) -> SynthPara
         a.clone()
     }
 }
-
-
