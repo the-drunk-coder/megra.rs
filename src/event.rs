@@ -5,6 +5,7 @@ use std::fmt::*;
 use crate::builtin_types::Command;
 use crate::parameter::{resolve_parameter, shake_parameter, ParameterValue};
 use crate::session::SyncContext;
+use crate::synth_parameter_value_arithmetic::*;
 
 /// Events can represent arithmetic operations.
 #[derive(Clone, Copy, Debug)]
@@ -88,43 +89,8 @@ impl StaticEvent {
         // TODO: handle vector values here ...
         for (k, v) in other.params.iter() {
             if self.params.contains_key(k) {
-                match other.op {
-                    EventOperation::Replace => {
-                        self.params.insert(*k, v.clone());
-                    }
-                    EventOperation::Add => {
-                        if let SynthParameterValue::ScalarF32(new_val) = self.params[k] {
-                            if let SynthParameterValue::ScalarF32(old_val) = v {
-                                self.params
-                                    .insert(*k, SynthParameterValue::ScalarF32(old_val + new_val));
-                            };
-                        }
-                    }
-                    EventOperation::Subtract => {
-                        if let SynthParameterValue::ScalarF32(new_val) = self.params[k] {
-                            if let SynthParameterValue::ScalarF32(old_val) = v {
-                                self.params
-                                    .insert(*k, SynthParameterValue::ScalarF32(old_val - new_val));
-                            };
-                        }
-                    }
-                    EventOperation::Multiply => {
-                        if let SynthParameterValue::ScalarF32(new_val) = self.params[k] {
-                            if let SynthParameterValue::ScalarF32(old_val) = v {
-                                self.params
-                                    .insert(*k, SynthParameterValue::ScalarF32(old_val * new_val));
-                            };
-                        }
-                    }
-                    EventOperation::Divide => {
-                        if let SynthParameterValue::ScalarF32(new_val) = self.params[k] {
-                            if let SynthParameterValue::ScalarF32(old_val) = v {
-                                self.params
-                                    .insert(*k, SynthParameterValue::ScalarF32(old_val / new_val));
-                            };
-                        }
-                    }
-                }
+                self.params
+                    .insert(*k, calc_spv(&self.params[k], v, other.op));
             } else {
                 self.params.insert(*k, v.clone());
             }

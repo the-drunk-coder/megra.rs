@@ -25,6 +25,7 @@ pub mod repl;
 pub mod sample_set;
 pub mod scheduler;
 pub mod session;
+pub mod synth_parameter_value_arithmetic;
 
 #[rustfmt::skip]
 mod standard_library;
