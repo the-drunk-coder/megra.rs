@@ -1217,7 +1217,13 @@ fn move_single_cursor(cursor: &mut Cursor, galley: &Galley, key: Key, modifiers:
                 // alt on mac, ctrl on windows
                 *cursor = galley.from_ccursor(ccursor_previous_word(galley.text(), cursor.ccursor));
             } else if modifiers.mac_cmd {
-                *cursor = galley.cursor_begin_of_row(cursor);
+                *cursor = if let Some(par_cursor) =
+                    find_first_open_paren_in_row(galley.text(), &cursor.ccursor)
+                {
+                    galley.from_ccursor(par_cursor)
+                } else {
+                    galley.cursor_begin_of_row(cursor)
+                };
             } else {
                 *cursor = galley.cursor_left_one_character(cursor);
             }
@@ -1254,7 +1260,13 @@ fn move_single_cursor(cursor: &mut Cursor, galley: &Galley, key: Key, modifiers:
                 // windows behavior
                 *cursor = Cursor::default();
             } else {
-                *cursor = galley.cursor_begin_of_row(cursor);
+                *cursor = if let Some(par_cursor) =
+                    find_first_open_paren_in_row(galley.text(), &cursor.ccursor)
+                {
+                    galley.from_ccursor(par_cursor)
+                } else {
+                    galley.cursor_begin_of_row(cursor)
+                };
             }
         }
         Key::End => {
@@ -1551,5 +1563,26 @@ fn find_opening_paren(text: &str, ccursor: &CCursor) -> Option<CCursor> {
             });
         }
     }
+    None
+}
+
+fn find_first_open_paren_in_row(text: &str, ccursor: &CCursor) -> Option<CCursor> {
+    let pos = ccursor.index;
+    let rev_pos = text.chars().count() - pos;
+
+    // well, should be reverse par level ...
+    let mut par_pos = 0;
+
+    for (count, next_char) in text.chars().rev().skip(rev_pos).enumerate() {
+        if next_char == '(' {
+            par_pos = count + 1;
+        } else if next_char == '\n' && par_pos != 0 {
+            return Some(CCursor {
+                index: pos - par_pos,
+                prefer_next_row: false,
+            });
+        }
+    }
+
     None
 }
