@@ -603,6 +603,18 @@ fn livecode_events(
                     None
                 }
             }
+            Event::Key {
+                key: Key::G,
+                pressed: true,
+                modifiers,
+            } => {
+                if modifiers.ctrl {
+                    // clear selection
+                    state.selection_toggle = false;
+                    cursor_range.secondary = cursor_range.primary;
+                }
+                None
+            }
             Event::Text(text_to_insert) => {
                 // clear selection
                 state.selection_toggle = false;
