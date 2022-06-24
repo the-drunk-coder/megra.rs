@@ -1598,3 +1598,26 @@ fn find_first_open_paren_in_row(text: &str, ccursor: &CCursor) -> Option<CCursor
 
     None
 }
+
+/*
+fn find_current_sexp(text: &str, ccursor: &CCursor) -> Option<(CCursor, CCursor)>{
+    if let Some(cursor_open) = find_opening_paren(text, ccursor) {
+    if let Some(cursor_close) = find_closing_paren(text, ccursor) {
+        return Some((cursor_open, cursor_close))
+    }
+    }
+    return None
+}
+
+fn toggle_sexp(text: &str, ccursor: &CCursor) {
+    if let Some((open, close)) = find_current_sexp(text, ccursor) {
+    let cup = CursorRange {
+            primary: galley.from_ccursor(open.primary),
+            secondary: galley.from_ccursor(close.secondary),
+        };
+
+        let formatted = { format_sexp(selected_str(text, &cup)) };
+
+        let mut ccursor = delete_selected(text, &cup);
+    }
+}*/
