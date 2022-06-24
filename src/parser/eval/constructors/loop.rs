@@ -62,7 +62,11 @@ pub fn a_loop(
                 continue;
             }
             EvaluatedExpr::Float(f) => {
-                *dur_vec.last_mut().unwrap() = DynVal::with_value(f);
+                if !dur_vec.is_empty() {
+                    *dur_vec.last_mut().unwrap() = DynVal::with_value(f);
+                } else {
+                    dur_vec.push(DynVal::with_value(f));
+                }
             }
             EvaluatedExpr::Keyword(k) => {
                 if k == "keep" {
