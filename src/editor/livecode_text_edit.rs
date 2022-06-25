@@ -1127,9 +1127,9 @@ fn on_key_press(
 
         Key::T if modifiers.command => {
             // select all
-            toggle_sexp(text, galley, &cursor_range.primary.ccursor);
+            let old_cursor = cursor_range.as_ccursor_range().primary;
+            let on = toggle_sexp(text, galley, &cursor_range.primary.ccursor);
             if let Some(sexp_cursors) = find_toplevel_sexp(text.as_str(), cursor_range) {
-                //let old_cursor = cursor_range.as_ccursor_range();
                 let cup = CursorRange {
                     primary: galley.from_ccursor(sexp_cursors.primary),
                     secondary: galley.from_ccursor(sexp_cursors.secondary),
@@ -1140,7 +1140,17 @@ fn on_key_press(
                 let mut ccursor = delete_selected(text, &cup);
                 insert_text(&mut ccursor, text, &formatted);
             }
-            None
+            if on {
+                Some(CCursorRange::one(CCursor {
+                    index: old_cursor.index + 2,
+                    prefer_next_row: false,
+                }))
+            } else {
+                Some(CCursorRange::one(CCursor {
+                    index: old_cursor.index - 2,
+                    prefer_next_row: false,
+                }))
+            }
         }
 
         Key::K if modifiers.ctrl => {
@@ -1493,7 +1503,9 @@ fn format_sexp(input: &str) -> String {
     let mut out = "".to_string();
     let mut no_whitespace = false;
 
-    for c in input.chars() {
+    let mut sexp_chars = input.chars().peekable();
+
+    while let Some(c) = sexp_chars.next() {
         match c {
             '(' => {
                 lvl += 1;
@@ -1507,10 +1519,27 @@ fn format_sexp(input: &str) -> String {
             }
             '\n' => {
                 out.push(c);
-                no_whitespace = true;
-                for _ in 0..lvl {
-                    out.push(' ');
-                    out.push(' ');
+                if let Some(nc) = sexp_chars.peek() {
+                    if *nc != ';' {
+                        no_whitespace = true;
+                        for _ in 0..lvl {
+                            out.push(' ');
+                            out.push(' ');
+                        }
+                    } else {
+                        sexp_chars.next();
+                        if let Some(nnc) = sexp_chars.peek() {
+                            if *nnc == ';' {
+                                sexp_chars.next();
+                            }
+                        }
+                        out.push(';');
+                        out.push(';');
+                        for _ in 0..lvl {
+                            out.push(' ');
+                            out.push(' ');
+                        }
+                    }
                 }
             }
             ' ' => {
@@ -1785,12 +1814,16 @@ fn sexp_is_commented_out(text: &str, open: &CCursor, close: &CCursor) -> bool {
     true
 }
 
-fn toggle_sexp(text: &mut dyn TextBuffer, galley: &Galley, ccursor: &CCursor) {
+fn toggle_sexp(text: &mut dyn TextBuffer, galley: &Galley, ccursor: &CCursor) -> bool {
+    let mut on = false;
     if let Some((open, close)) = find_current_sexp(text.as_str(), ccursor) {
         if sexp_is_commented_out(text.as_str(), &open, &close) {
             uncomment_sexp(text, galley, open, close);
+            on = false;
         } else {
             comment_sexp(text, galley, open, close);
+            on = true;
         }
     }
+    on
 }
