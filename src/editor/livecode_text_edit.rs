@@ -1125,6 +1125,12 @@ fn on_key_press(
             None
         }
 
+        Key::T if modifiers.command => {
+            // select all
+            toggle_sexp(text, galley, &cursor_range.primary.ccursor);
+            None
+        }
+
         Key::K if modifiers.ctrl => {
             let ccursor = delete_paragraph_after_cursor(text, galley, cursor_range);
             Some(CCursorRange::one(ccursor))
@@ -1599,25 +1605,180 @@ fn find_first_open_paren_in_row(text: &str, ccursor: &CCursor) -> Option<CCursor
     None
 }
 
-/*
-fn find_current_sexp(text: &str, ccursor: &CCursor) -> Option<(CCursor, CCursor)>{
-    if let Some(cursor_open) = find_opening_paren(text, ccursor) {
-    if let Some(cursor_close) = find_closing_paren(text, ccursor) {
-        return Some((cursor_open, cursor_close))
+// find the beginning of the row and check if the row is "clean", that is,
+// there's no character between the current position and the
+fn find_beginning_of_row(text: &str, ccursor: &CCursor) -> Option<(CCursor, bool)> {
+    let pos = ccursor.index;
+    let rev_pos = text.chars().count() - pos;
+
+    // well, should be reverse par level ...
+    let mut clean = true;
+
+    for (count, next_char) in text.chars().rev().skip(rev_pos).enumerate() {
+        if !next_char.is_whitespace() {
+            clean = false;
+        }
+
+        if next_char == '\n' {
+            return Some((
+                CCursor {
+                    index: pos - count - 1,
+                    prefer_next_row: false,
+                },
+                clean,
+            ));
+        }
     }
-    }
-    return None
+
+    None
 }
 
-fn toggle_sexp(text: &str, ccursor: &CCursor) {
-    if let Some((open, close)) = find_current_sexp(text, ccursor) {
-    let cup = CursorRange {
-            primary: galley.from_ccursor(open.primary),
-            secondary: galley.from_ccursor(close.secondary),
-        };
+fn find_end_of_row(text: &str, ccursor: &CCursor) -> Option<(CCursor, bool)> {
+    let mut pos = ccursor.index;
+    let mut clean = true;
+    // spool forward to current position
+    for next_char in text.chars().skip(pos) {
+        //println!("rev next char {}", next_char);
+        if !next_char.is_whitespace() {
+            clean = false;
+        }
 
-        let formatted = { format_sexp(selected_str(text, &cup)) };
-
-        let mut ccursor = delete_selected(text, &cup);
+        if next_char == '\n' {
+            return Some((
+                CCursor {
+                    index: pos,
+                    prefer_next_row: false,
+                },
+                clean,
+            ));
+        }
+        pos += 1;
     }
-}*/
+    None
+}
+
+fn find_current_sexp(text: &str, ccursor: &CCursor) -> Option<(CCursor, CCursor)> {
+    if let Some(cursor_open) = find_opening_paren(text, ccursor) {
+        if let Some(cursor_close) = find_closing_paren(text, ccursor) {
+            return Some((cursor_open, cursor_close));
+        }
+    }
+    None
+}
+
+fn comment_sexp(text: &mut dyn TextBuffer, galley: &Galley, mut open: CCursor, mut close: CCursor) {
+    if let Some((open_line, open_clean)) = find_beginning_of_row(text.as_ref(), &open) {
+        if let Some((close_line, close_clean)) = find_end_of_row(text.as_ref(), &close) {
+            let cup = if !open_clean && !close_clean {
+                insert_text(&mut open, text, "\n");
+                close = CCursor {
+                    // adjust for inserted text
+                    index: close.index + 1,
+                    prefer_next_row: false,
+                };
+                insert_text(&mut close, text, "\n");
+                CursorRange {
+                    primary: galley.from_ccursor(CCursor {
+                        index: open.index - 1,
+                        prefer_next_row: false,
+                    }),
+                    secondary: galley.from_ccursor(CCursor {
+                        index: close.index - 1,
+                        prefer_next_row: false,
+                    }),
+                }
+            } else if !open_clean {
+                insert_text(&mut open, text, "\n");
+                CursorRange {
+                    primary: galley.from_ccursor(CCursor {
+                        index: open.index - 1,
+                        prefer_next_row: false,
+                    }),
+                    secondary: galley.from_ccursor(close_line),
+                }
+            } else if !close_clean {
+                insert_text(&mut close, text, "\n");
+                CursorRange {
+                    primary: galley.from_ccursor(open_line),
+                    secondary: galley.from_ccursor(CCursor {
+                        index: close.index - 1,
+                        prefer_next_row: false,
+                    }),
+                }
+            } else {
+                CursorRange {
+                    primary: galley.from_ccursor(open_line),
+                    secondary: galley.from_ccursor(close_line),
+                }
+            };
+
+            let raw = selected_str(text, &cup);
+            let formatted = str::replace(raw, "\n", "\n;;");
+
+            let mut ccursor = delete_selected(text, &cup);
+            insert_text(&mut ccursor, text, &formatted);
+        }
+    }
+}
+
+fn uncomment_sexp(text: &mut dyn TextBuffer, galley: &Galley, open: CCursor, close: CCursor) {
+    if let Some((open_line, _)) = find_beginning_of_row(text.as_ref(), &open) {
+        if let Some((close_line, _)) = find_end_of_row(text.as_ref(), &close) {
+            let cup = CursorRange {
+                primary: galley.from_ccursor(open_line),
+                secondary: galley.from_ccursor(close_line),
+            };
+
+            let raw = selected_str(text, &cup);
+            let mut formatted = "".to_string();
+            let mut lines = raw.lines().peekable();
+            while let Some(line) = lines.next() {
+                formatted.push_str(&line.replacen(";;", "", 1));
+
+                if lines.peek().is_some() {
+                    formatted.push('\n');
+                }
+            }
+            let mut ccursor = delete_selected(text, &cup);
+            insert_text(&mut ccursor, text, &formatted);
+        }
+    }
+}
+
+fn sexp_is_commented_out(text: &str, open: &CCursor, close: &CCursor) -> bool {
+    let mut pos = open.index;
+    let rev_pos = text.chars().count() - pos;
+
+    // go back to beginning of line or text ...
+    for next_char in text.chars().rev().skip(rev_pos) {
+        if next_char == '\n' || pos == 0 {
+            break;
+        } else {
+            pos -= 1;
+        }
+    }
+
+    for line in text[pos..close.index].lines() {
+        // a line that has no comment or doesn't start with a comment
+        // is not commented
+        if let Some(idx) = line.trim().find(";;") {
+            if idx != 0 {
+                return false;
+            }
+        } else {
+            return false;
+        }
+    }
+
+    true
+}
+
+fn toggle_sexp(text: &mut dyn TextBuffer, galley: &Galley, ccursor: &CCursor) {
+    if let Some((open, close)) = find_current_sexp(text.as_str(), ccursor) {
+        if sexp_is_commented_out(text.as_str(), &open, &close) {
+            uncomment_sexp(text, galley, open, close);
+        } else {
+            comment_sexp(text, galley, open, close);
+        }
+    }
+}
