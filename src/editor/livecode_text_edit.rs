@@ -1128,6 +1128,18 @@ fn on_key_press(
         Key::T if modifiers.command => {
             // select all
             toggle_sexp(text, galley, &cursor_range.primary.ccursor);
+            if let Some(sexp_cursors) = find_toplevel_sexp(text.as_str(), cursor_range) {
+                //let old_cursor = cursor_range.as_ccursor_range();
+                let cup = CursorRange {
+                    primary: galley.from_ccursor(sexp_cursors.primary),
+                    secondary: galley.from_ccursor(sexp_cursors.secondary),
+                };
+
+                let formatted = { format_sexp(selected_str(text, &cup)) };
+
+                let mut ccursor = delete_selected(text, &cup);
+                insert_text(&mut ccursor, text, &formatted);
+            }
             None
         }
 
