@@ -31,11 +31,11 @@ pub fn fully(
         "".to_string()
     };
 
-    let mut collect_labeled = false;
+    //let mut collect_labeled = false;
 
-    let mut collected_evs = Vec::new();
-    let mut collected_mapping = HashMap::<char, Vec<SourceEvent>>::new();
-    let mut cur_key: String = "".to_string();
+    //let mut collected_evs = Vec::new();
+    //let mut collected_mapping = HashMap::<char, Vec<SourceEvent>>::new();
+    //let mut cur_key: String = "".to_string();
 
     let mut keep_root = false;
 
@@ -54,7 +54,7 @@ pub fn fully(
     };
 
     while let Some(c) = tail_drain.next() {
-        if collect_labeled {
+        /*if collect_labeled {
             match c {
                 EvaluatedExpr::Symbol(ref s) => {
                     if !cur_key.is_empty() && !collected_evs.is_empty() {
@@ -83,17 +83,17 @@ pub fn fully(
                     collect_labeled = false;
                 }
             }
-        }
+        }*/
 
         match c {
-            EvaluatedExpr::Symbol(ref s) => {
+            /*EvaluatedExpr::Symbol(ref s) => {
                 let mut final_vec = Vec::new();
                 let label = s.chars().next().unwrap();
                 if collected_mapping.contains_key(&label) {
                     final_vec.append(&mut collected_mapping.get(&label).unwrap().clone());
                 }
                 final_mapping.insert(label, final_vec);
-            }
+            }*/
             EvaluatedExpr::BuiltIn(BuiltIn::SoundEvent(e)) => {
                 let next_char: char = std::char::from_u32(last_char as u32 + 1).unwrap();
                 last_char = next_char;
@@ -118,10 +118,10 @@ pub fn fully(
                     }
                     _ => {}
                 },
-                "events" => {
-                    collect_labeled = true;
-                    continue;
-                }
+                //"events" => {
+                //    collect_labeled = true;
+                //    continue;
+                //}
                 "keep" => {
                     if let Some(EvaluatedExpr::Boolean(b)) = tail_drain.next() {
                         keep_root = b;
