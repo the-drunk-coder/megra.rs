@@ -58,8 +58,8 @@ pub struct Catch<const MAX: usize, const NCHAN: usize> {
     write_interval_ms: f64,
 }
 
-pub struct CatchHandle {
-    pub handle: Option<thread::JoinHandle<()>>,
+pub struct CatchHandle<const MAX: usize, const NCHAN: usize> {
+    pub handle: Option<thread::JoinHandle<Catch<MAX, NCHAN>>>,
     pub running: sync::Arc<AtomicBool>,
 }
 
@@ -67,22 +67,24 @@ pub struct RecordingControl<const MAX: usize, const NCHAN: usize> {
     pub is_recording_output: sync::Arc<AtomicBool>, // communicate with the other thread
     pub is_recording_input: sync::Arc<AtomicBool>,  // communicate with the other thread
     pub catch_out: Option<Catch<MAX, NCHAN>>,
-    pub catch_out_handle: Option<CatchHandle>,
+    pub catch_out_handle: Option<CatchHandle<MAX, NCHAN>>,
     pub catch_in: Option<Catch<MAX, NCHAN>>,
-    pub catch_in_handle: Option<CatchHandle>,
+    pub catch_in_handle: Option<CatchHandle<MAX, NCHAN>>,
     pub samplerate: u32, // assume output and input have the same samplerate
 }
 
-pub fn stop_writer_thread(handle: CatchHandle) {
+pub fn stop_writer_thread<const MAX: usize, const NCHAN: usize>(
+    handle: CatchHandle<MAX, NCHAN>,
+) -> Catch<MAX, NCHAN> {
     handle.running.store(false, Ordering::SeqCst);
-    handle.handle.unwrap().join().unwrap();
+    handle.handle.unwrap().join().unwrap()
 }
 
 pub fn start_writer_thread<const MAX: usize, const NCHAN: usize>(
     catch: Catch<MAX, NCHAN>,
     samplerate: u32,
     path: String,
-) -> CatchHandle {
+) -> CatchHandle<MAX, NCHAN> {
     let write_interval = catch.write_interval_ms;
     let running = sync::Arc::new(AtomicBool::new(true));
     let running2 = running.clone();
@@ -126,6 +128,8 @@ pub fn start_writer_thread<const MAX: usize, const NCHAN: usize>(
                     // needs time correction !
                     thread::sleep(Duration::from_secs_f64(write_interval - diff));
                 }
+
+                catch
             })
             .unwrap(),
     );

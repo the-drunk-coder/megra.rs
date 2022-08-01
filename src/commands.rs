@@ -229,11 +229,14 @@ pub fn start_recording<const BUFSIZE: usize, const NCHAN: usize>(
 ) {
     let maybe_rec_ctrl = session.lock().rec_control.take();
     if let Some(mut rec_ctrl) = maybe_rec_ctrl {
+        //println!("rec state {} {}", rec_ctrl.is_recording_output.load(Ordering::SeqCst) ,rec_ctrl.is_recording_input.load(Ordering::SeqCst));
+
         // OUTPUT RECORDING
         if rec_ctrl.is_recording_output.load(Ordering::SeqCst) {
             println!("there's already a recording in progress, please stop first !");
         } else {
             let maybe_catch = rec_ctrl.catch_out.take();
+            //println!("catch none ? {}", maybe_catch.is_none());
             if let Some(catch_out) = maybe_catch {
                 // place in recordings folder
                 if let Some(proj_dirs) = ProjectDirs::from("de", "parkellipsen", "megra") {
@@ -260,8 +263,13 @@ pub fn start_recording<const BUFSIZE: usize, const NCHAN: usize>(
                         rec_ctrl.samplerate,
                         file_path,
                     ));
+
                     rec_ctrl.is_recording_output.store(true, Ordering::SeqCst);
+                } else {
+                    println!("cant get folder");
                 }
+            } else {
+                println!("can't get catch");
             }
         }
         // INPUT RECORDING
@@ -298,6 +306,7 @@ pub fn start_recording<const BUFSIZE: usize, const NCHAN: usize>(
                 }
             }
         }
+
         session.lock().rec_control = Some(rec_ctrl);
     }
 }
@@ -308,11 +317,12 @@ pub fn stop_recording<const BUFSIZE: usize, const NCHAN: usize>(
 ) {
     let maybe_rec_ctrl = session.lock().rec_control.take();
     if let Some(mut rec_ctrl) = maybe_rec_ctrl {
+        //println!("rec state {} {}", rec_ctrl.is_recording_output.load(Ordering::SeqCst), rec_ctrl.is_recording_input.load(Ordering::SeqCst));
         if rec_ctrl.is_recording_output.load(Ordering::SeqCst) {
             let maybe_catch_handle = rec_ctrl.catch_out_handle.take();
             if let Some(catch_handle) = maybe_catch_handle {
                 rec_ctrl.is_recording_output.store(false, Ordering::SeqCst);
-                real_time_streaming::stop_writer_thread(catch_handle);
+                rec_ctrl.catch_out = Some(real_time_streaming::stop_writer_thread(catch_handle));
             }
         } else {
             println!("can't stop output recording that isn't running !");
@@ -321,11 +331,12 @@ pub fn stop_recording<const BUFSIZE: usize, const NCHAN: usize>(
             let maybe_catch_handle = rec_ctrl.catch_in_handle.take();
             if let Some(catch_handle) = maybe_catch_handle {
                 rec_ctrl.is_recording_input.store(false, Ordering::SeqCst);
-                real_time_streaming::stop_writer_thread(catch_handle);
+                rec_ctrl.catch_in = Some(real_time_streaming::stop_writer_thread(catch_handle));
             }
         } else {
             println!("can't stop input recording that isn't running !");
         }
+
         session.lock().rec_control = Some(rec_ctrl);
     }
 }

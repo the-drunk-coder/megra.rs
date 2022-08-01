@@ -826,6 +826,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
     // start scheduler and main time recursion //
     /////////////////////////////////////////////
     /// start a scheduler, create scheduler data, etc ...
+    #[allow(clippy::format_push_string)]
     fn start_scheduler(
         session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
         sched_data: sync::Arc<Mutex<SchedulerData<BUFSIZE, NCHAN>>>,
