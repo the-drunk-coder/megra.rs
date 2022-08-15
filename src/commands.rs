@@ -177,13 +177,13 @@ pub fn load_sample_set<const BUFSIZE: usize, const NCHAN: usize>(
     // determine set name or use default
     let set_name = if let Some(os_filename) = samples_path.file_stem() {
         if let Some(str_filename) = os_filename.to_str() {
-	    if str_filename.chars().next().unwrap().is_numeric() {
-		let mut owned_string: String = "_".to_owned();
-		owned_string.push_str(str_filename);
-		owned_string
-	    } else {
-		str_filename.to_string()
-	    }
+            if str_filename.chars().next().unwrap().is_numeric() {
+                let mut owned_string: String = "_".to_owned();
+                owned_string.push_str(str_filename);
+                owned_string
+            } else {
+                str_filename.to_string()
+            }
         } else {
             "default".to_string()
         }
@@ -197,19 +197,19 @@ pub fn load_sample_set<const BUFSIZE: usize, const NCHAN: usize>(
             // only consider files here ...
             if path.is_file() {
                 if let Some(ext) = path.extension() {
-		    if let Ok(ext_str) = ext.to_os_string().into_string() {
-			let ext_str_lc = ext_str.as_str().to_lowercase();
-			if ext_str_lc == "flac" || ext_str_lc == "wav" {
+                    if let Ok(ext_str) = ext.to_os_string().into_string() {
+                        let ext_str_lc = ext_str.as_str().to_lowercase();
+                        if ext_str_lc == "flac" || ext_str_lc == "wav" {
                             load_sample(
-				function_map,
-				ruffbox,
-				sample_set,
-				set_name.clone(),
-				&mut Vec::new(),
-				path.to_str().unwrap().to_string(),
+                                function_map,
+                                ruffbox,
+                                sample_set,
+                                set_name.clone(),
+                                &mut Vec::new(),
+                                path.to_str().unwrap().to_string(),
                             );
-			}
-		    }		    
+                        }
+                    }
                 }
             }
         }
