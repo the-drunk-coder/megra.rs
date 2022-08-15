@@ -96,49 +96,68 @@ pub fn load_sample<const BUFSIZE: usize, const NCHAN: usize>(
     keywords: &mut Vec<String>,
     path: String,
 ) {
-    let (mut duration, samplerate, channels, mut sample_buffer) =
-        load_audio_file::load_flac(&path, ruffbox.samplerate);
+    if let Some((mut duration, samplerate, channels, mut sample_buffer)) = if path
+        .as_str()
+        .to_lowercase()
+        .as_str()
+        .trim()
+        .ends_with(".flac")
+    {
+        load_audio_file::load_flac(&path, ruffbox.samplerate)
+    } else if path
+        .as_str()
+        .to_lowercase()
+        .as_str()
+        .trim()
+        .ends_with(".wav")
+    {
+        load_audio_file::load_wav(&path, ruffbox.samplerate)
+    } else {
+        None
+    } {
+        // max ten seconds
+        if duration > 10000 {
+            duration = 10000;
+        }
 
-    // max ten seconds
-    if duration > 10000 {
-        duration = 10000;
-    }
+        // adds interpolation samples to sample buffer, don't use afterwards
+        let bufnum = ruffbox.load_sample(&mut sample_buffer, true, samplerate);
 
-    // adds interpolation samples to sample buffer, don't use afterwards
-    let bufnum = ruffbox.load_sample(&mut sample_buffer, true, samplerate);
+        let mut keyword_set = HashSet::new();
+        for k in keywords.drain(..) {
+            keyword_set.insert(k);
+        }
 
-    let mut keyword_set = HashSet::new();
-    for k in keywords.drain(..) {
-        keyword_set.insert(k);
-    }
-
-    let path2 = Path::new(&path);
-    if let Some(os_filename) = path2.file_stem() {
-        if let Some(str_filename) = os_filename.to_str() {
-            let tokens = str_filename.split(|c| c == ' ' || c == '_' || c == '-' || c == '.');
-            for token in tokens {
-                keyword_set.insert(token.to_lowercase().to_string());
+        let path2 = Path::new(&path);
+        if let Some(os_filename) = path2.file_stem() {
+            if let Some(str_filename) = os_filename.to_str() {
+                let tokens = str_filename.split(|c| c == ' ' || c == '_' || c == '-' || c == '.');
+                for token in tokens {
+                    keyword_set.insert(token.to_lowercase().to_string());
+                }
             }
         }
+
+        println!(
+            "sample path: {} channels: {} dur: {} orig sr: {} ruf sr: {} resampled: {}",
+            path,
+            channels,
+            duration,
+            samplerate,
+            ruffbox.samplerate,
+            samplerate != ruffbox.samplerate
+        );
+
+        sample_set
+            .lock()
+            .insert(set.clone(), keyword_set, bufnum, duration);
+        function_map
+            .lock()
+            .fmap
+            .insert(set, eval::events::sound::sound);
+    } else {
+        println!("can't load sample {}", path);
     }
-
-    println!(
-        "sample path: {} channels: {} dur: {} orig sr: {} ruf sr: {} resampled: {}",
-        path,
-        channels,
-        duration,
-        samplerate,
-        ruffbox.samplerate,
-        samplerate != ruffbox.samplerate
-    );
-
-    sample_set
-        .lock()
-        .insert(set.clone(), keyword_set, bufnum, duration);
-    function_map
-        .lock()
-        .fmap
-        .insert(set, eval::events::sound::sound);
 }
 
 pub fn load_sample_set<const BUFSIZE: usize, const NCHAN: usize>(

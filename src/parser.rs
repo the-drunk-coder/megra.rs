@@ -299,7 +299,7 @@ pub fn eval_expression(
         }),
         Expr::Application(head, tail) => {
             if let Some(EvaluatedExpr::FunctionName(f)) =
-                eval_expression(&*head, functions, globals, sample_set, out_mode)
+                eval_expression(head, functions, globals, sample_set, out_mode)
             {
                 // check if we have this function ...
                 if functions.fmap.contains_key(&f) {

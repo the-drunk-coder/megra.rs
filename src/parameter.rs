@@ -324,7 +324,7 @@ pub fn resolve_parameter(k: SynthParameterLabel, v: &mut ParameterValue) -> Synt
                     times_evaluated.push(time.evaluate_numerical());
                 }
 
-                let mut time = if let Some(t) = times_evaluated.get(0) {
+                let mut time = if let Some(t) = times_evaluated.first() {
                     *t
                 } else {
                     0.2
