@@ -554,7 +554,7 @@ mod tests {
         }
 
         match &o[1][0] {
-            CycleResult::Duration(d) => assert!(*d == 100.0 as f32),
+            CycleResult::Duration(d) => assert!(*d == 100.0_f32),
             _ => assert!(false),
         }
 

@@ -18,7 +18,7 @@ use crate::real_time_streaming;
 use crate::scheduler::{Scheduler, SchedulerData};
 use crate::visualizer_client::VisualizerClient;
 
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum OutputMode {
     Stereo,
     // AmbisonicsBinaural,
@@ -29,7 +29,7 @@ pub enum OutputMode {
     //TwentyFourChannel,
 }
 
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub enum SyncMode {
     All,          // sync on all events
     NotOnSilence, // don't sync on silent events

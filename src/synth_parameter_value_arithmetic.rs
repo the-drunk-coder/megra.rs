@@ -39,7 +39,7 @@ pub fn multiply_spv(a: &SynthParameterValue, b: &SynthParameterValue) -> SynthPa
                     init * incoming,
                     freq.clone(),
                     phase * incoming,
-                    Box::new(multiply_spv(&*amp, b)),
+                    Box::new(multiply_spv(amp, b)),
                     add * incoming,
                     *op,
                 )
@@ -50,7 +50,7 @@ pub fn multiply_spv(a: &SynthParameterValue, b: &SynthParameterValue) -> SynthPa
                     init * incoming,
                     freq.clone(),
                     phase * incoming,
-                    Box::new(multiply_spv(&*amp, b)),
+                    Box::new(multiply_spv(amp, b)),
                     add * incoming,
                     *op,
                 )
@@ -61,7 +61,7 @@ pub fn multiply_spv(a: &SynthParameterValue, b: &SynthParameterValue) -> SynthPa
                     init * incoming,
                     freq.clone(),
                     phase * incoming,
-                    Box::new(multiply_spv(&*amp, b)),
+                    Box::new(multiply_spv(amp, b)),
                     add * incoming,
                     *op,
                 )
@@ -72,7 +72,7 @@ pub fn multiply_spv(a: &SynthParameterValue, b: &SynthParameterValue) -> SynthPa
                     init * incoming,
                     freq.clone(),
                     phase * incoming,
-                    Box::new(multiply_spv(&*amp, b)),
+                    Box::new(multiply_spv(amp, b)),
                     add * incoming,
                     *op,
                 )
@@ -111,7 +111,7 @@ pub fn multiply_spv(a: &SynthParameterValue, b: &SynthParameterValue) -> SynthPa
                     init * original,
                     freq.clone(),
                     phase * original,
-                    Box::new(multiply_spv(a, &*amp)),
+                    Box::new(multiply_spv(a, amp)),
                     add * original,
                     *op,
                 )
@@ -122,7 +122,7 @@ pub fn multiply_spv(a: &SynthParameterValue, b: &SynthParameterValue) -> SynthPa
                     init * original,
                     freq.clone(),
                     phase * original,
-                    Box::new(multiply_spv(a, &*amp)),
+                    Box::new(multiply_spv(a, amp)),
                     add * original,
                     *op,
                 )
@@ -133,7 +133,7 @@ pub fn multiply_spv(a: &SynthParameterValue, b: &SynthParameterValue) -> SynthPa
                     init * original,
                     freq.clone(),
                     phase * original,
-                    Box::new(multiply_spv(a, &*amp)),
+                    Box::new(multiply_spv(a, amp)),
                     add * original,
                     *op,
                 )
@@ -144,7 +144,7 @@ pub fn multiply_spv(a: &SynthParameterValue, b: &SynthParameterValue) -> SynthPa
                     init * original,
                     freq.clone(),
                     phase * original,
-                    Box::new(multiply_spv(a, &*amp)),
+                    Box::new(multiply_spv(a, amp)),
                     add * original,
                     *op,
                 )
@@ -189,7 +189,7 @@ pub fn add_spv(a: &SynthParameterValue, b: &SynthParameterValue) -> SynthParamet
                     init + incoming,
                     freq.clone(),
                     phase + incoming,
-                    Box::new(add_spv(&*amp, b)),
+                    Box::new(add_spv(amp, b)),
                     add + incoming,
                     *op,
                 )
@@ -200,7 +200,7 @@ pub fn add_spv(a: &SynthParameterValue, b: &SynthParameterValue) -> SynthParamet
                     init + incoming,
                     freq.clone(),
                     phase + incoming,
-                    Box::new(add_spv(&*amp, b)),
+                    Box::new(add_spv(amp, b)),
                     add + incoming,
                     *op,
                 )
@@ -211,7 +211,7 @@ pub fn add_spv(a: &SynthParameterValue, b: &SynthParameterValue) -> SynthParamet
                     init + incoming,
                     freq.clone(),
                     phase + incoming,
-                    Box::new(add_spv(&*amp, b)),
+                    Box::new(add_spv(amp, b)),
                     add + incoming,
                     *op,
                 )
@@ -222,7 +222,7 @@ pub fn add_spv(a: &SynthParameterValue, b: &SynthParameterValue) -> SynthParamet
                     init + incoming,
                     freq.clone(),
                     phase + incoming,
-                    Box::new(add_spv(&*amp, b)),
+                    Box::new(add_spv(amp, b)),
                     add + incoming,
                     *op,
                 )
@@ -261,7 +261,7 @@ pub fn add_spv(a: &SynthParameterValue, b: &SynthParameterValue) -> SynthParamet
                     init + original,
                     freq.clone(),
                     phase + original,
-                    Box::new(add_spv(a, &*amp)),
+                    Box::new(add_spv(a, amp)),
                     add + original,
                     *op,
                 )
@@ -272,7 +272,7 @@ pub fn add_spv(a: &SynthParameterValue, b: &SynthParameterValue) -> SynthParamet
                     init + original,
                     freq.clone(),
                     phase + original,
-                    Box::new(add_spv(a, &*amp)),
+                    Box::new(add_spv(a, amp)),
                     add + original,
                     *op,
                 )
@@ -283,7 +283,7 @@ pub fn add_spv(a: &SynthParameterValue, b: &SynthParameterValue) -> SynthParamet
                     init + original,
                     freq.clone(),
                     phase + original,
-                    Box::new(add_spv(a, &*amp)),
+                    Box::new(add_spv(a, amp)),
                     add + original,
                     *op,
                 )
@@ -294,7 +294,7 @@ pub fn add_spv(a: &SynthParameterValue, b: &SynthParameterValue) -> SynthParamet
                     init + original,
                     freq.clone(),
                     phase + original,
-                    Box::new(add_spv(a, &*amp)),
+                    Box::new(add_spv(a, amp)),
                     add + original,
                     *op,
                 )
@@ -339,7 +339,7 @@ pub fn subtract_spv(a: &SynthParameterValue, b: &SynthParameterValue) -> SynthPa
                     init - incoming,
                     freq.clone(),
                     phase - incoming,
-                    Box::new(subtract_spv(&*amp, b)),
+                    Box::new(subtract_spv(amp, b)),
                     add - incoming,
                     *op,
                 )
@@ -350,7 +350,7 @@ pub fn subtract_spv(a: &SynthParameterValue, b: &SynthParameterValue) -> SynthPa
                     init - incoming,
                     freq.clone(),
                     phase - incoming,
-                    Box::new(subtract_spv(&*amp, b)),
+                    Box::new(subtract_spv(amp, b)),
                     add - incoming,
                     *op,
                 )
@@ -361,7 +361,7 @@ pub fn subtract_spv(a: &SynthParameterValue, b: &SynthParameterValue) -> SynthPa
                     init - incoming,
                     freq.clone(),
                     phase - incoming,
-                    Box::new(subtract_spv(&*amp, b)),
+                    Box::new(subtract_spv(amp, b)),
                     add - incoming,
                     *op,
                 )
@@ -372,7 +372,7 @@ pub fn subtract_spv(a: &SynthParameterValue, b: &SynthParameterValue) -> SynthPa
                     init - incoming,
                     freq.clone(),
                     phase - incoming,
-                    Box::new(subtract_spv(&*amp, b)),
+                    Box::new(subtract_spv(amp, b)),
                     add - incoming,
                     *op,
                 )
@@ -411,7 +411,7 @@ pub fn subtract_spv(a: &SynthParameterValue, b: &SynthParameterValue) -> SynthPa
                     init - original,
                     freq.clone(),
                     phase - original,
-                    Box::new(subtract_spv(a, &*amp)),
+                    Box::new(subtract_spv(a, amp)),
                     add - original,
                     *op,
                 )
@@ -422,7 +422,7 @@ pub fn subtract_spv(a: &SynthParameterValue, b: &SynthParameterValue) -> SynthPa
                     init - original,
                     freq.clone(),
                     phase - original,
-                    Box::new(subtract_spv(a, &*amp)),
+                    Box::new(subtract_spv(a, amp)),
                     add - original,
                     *op,
                 )
@@ -433,7 +433,7 @@ pub fn subtract_spv(a: &SynthParameterValue, b: &SynthParameterValue) -> SynthPa
                     init - original,
                     freq.clone(),
                     phase - original,
-                    Box::new(subtract_spv(a, &*amp)),
+                    Box::new(subtract_spv(a, amp)),
                     add - original,
                     *op,
                 )
@@ -444,7 +444,7 @@ pub fn subtract_spv(a: &SynthParameterValue, b: &SynthParameterValue) -> SynthPa
                     init - original,
                     freq.clone(),
                     phase - original,
-                    Box::new(subtract_spv(a, &*amp)),
+                    Box::new(subtract_spv(a, amp)),
                     add - original,
                     *op,
                 )
@@ -489,7 +489,7 @@ pub fn divide_spv(a: &SynthParameterValue, b: &SynthParameterValue) -> SynthPara
                     init / incoming,
                     freq.clone(),
                     phase / incoming,
-                    Box::new(divide_spv(&*amp, b)),
+                    Box::new(divide_spv(amp, b)),
                     add / incoming,
                     *op,
                 )
@@ -500,7 +500,7 @@ pub fn divide_spv(a: &SynthParameterValue, b: &SynthParameterValue) -> SynthPara
                     init / incoming,
                     freq.clone(),
                     phase / incoming,
-                    Box::new(divide_spv(&*amp, b)),
+                    Box::new(divide_spv(amp, b)),
                     add / incoming,
                     *op,
                 )
@@ -511,7 +511,7 @@ pub fn divide_spv(a: &SynthParameterValue, b: &SynthParameterValue) -> SynthPara
                     init / incoming,
                     freq.clone(),
                     phase / incoming,
-                    Box::new(divide_spv(&*amp, b)),
+                    Box::new(divide_spv(amp, b)),
                     add / incoming,
                     *op,
                 )
@@ -522,7 +522,7 @@ pub fn divide_spv(a: &SynthParameterValue, b: &SynthParameterValue) -> SynthPara
                     init / incoming,
                     freq.clone(),
                     phase / incoming,
-                    Box::new(divide_spv(&*amp, b)),
+                    Box::new(divide_spv(amp, b)),
                     add / incoming,
                     *op,
                 )
@@ -561,7 +561,7 @@ pub fn divide_spv(a: &SynthParameterValue, b: &SynthParameterValue) -> SynthPara
                     init / original,
                     freq.clone(),
                     phase / original,
-                    Box::new(divide_spv(a, &*amp)),
+                    Box::new(divide_spv(a, amp)),
                     add / original,
                     *op,
                 )
@@ -572,7 +572,7 @@ pub fn divide_spv(a: &SynthParameterValue, b: &SynthParameterValue) -> SynthPara
                     init / original,
                     freq.clone(),
                     phase / original,
-                    Box::new(divide_spv(a, &*amp)),
+                    Box::new(divide_spv(a, amp)),
                     add / original,
                     *op,
                 )
@@ -583,7 +583,7 @@ pub fn divide_spv(a: &SynthParameterValue, b: &SynthParameterValue) -> SynthPara
                     init / original,
                     freq.clone(),
                     phase / original,
-                    Box::new(divide_spv(a, &*amp)),
+                    Box::new(divide_spv(a, amp)),
                     add / original,
                     *op,
                 )
@@ -594,7 +594,7 @@ pub fn divide_spv(a: &SynthParameterValue, b: &SynthParameterValue) -> SynthPara
                     init / original,
                     freq.clone(),
                     phase / original,
-                    Box::new(divide_spv(a, &*amp)),
+                    Box::new(divide_spv(a, amp)),
                     add / original,
                     *op,
                 )

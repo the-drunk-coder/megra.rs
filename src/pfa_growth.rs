@@ -397,7 +397,7 @@ mod tests {
 
         let mut pfa = Pfa::<char>::infer_from_rules(&mut rules, true);
 
-        assert!(!grow_old(&mut pfa).is_none());
+        assert!(grow_old(&mut pfa).is_some());
     }
 
     #[test]
@@ -413,7 +413,7 @@ mod tests {
         let mut pfa = Pfa::<char>::infer_from_rules(&mut rules, true);
 
         for _ in 0..1000 {
-            assert!(!grow_old(&mut pfa).is_none());
+            assert!(grow_old(&mut pfa).is_some());
         }
     }
 
@@ -429,7 +429,7 @@ mod tests {
 
         let mut pfa = Pfa::<char>::infer_from_rules(&mut rules, true);
 
-        assert!(!grow_flower(&mut pfa).is_none());
+        assert!(grow_flower(&mut pfa).is_some());
     }
 
     #[test]
@@ -445,7 +445,7 @@ mod tests {
         let mut pfa = Pfa::<char>::infer_from_rules(&mut rules, true);
 
         for _ in 0..1000 {
-            assert!(!grow_flower(&mut pfa).is_none());
+            assert!(grow_flower(&mut pfa).is_some());
         }
     }
 
@@ -461,7 +461,7 @@ mod tests {
 
         let mut pfa = Pfa::<char>::infer_from_rules(&mut rules, true);
 
-        assert!(!grow_loop(&mut pfa).is_none());
+        assert!(grow_loop(&mut pfa).is_some());
     }
 
     #[test]
@@ -477,7 +477,7 @@ mod tests {
         let mut pfa = Pfa::<char>::infer_from_rules(&mut rules, true);
 
         for _ in 0..1000 {
-            assert!(!grow_loop(&mut pfa).is_none());
+            assert!(grow_loop(&mut pfa).is_some());
         }
     }
 
@@ -493,7 +493,7 @@ mod tests {
 
         let mut pfa = Pfa::<char>::infer_from_rules(&mut rules, true);
 
-        assert!(!grow_triloop(&mut pfa).is_none());
+        assert!(grow_triloop(&mut pfa).is_some());
     }
 
     #[test]
@@ -509,7 +509,7 @@ mod tests {
         let mut pfa = Pfa::<char>::infer_from_rules(&mut rules, true);
 
         for _ in 0..1000 {
-            assert!(!grow_triloop(&mut pfa).is_none());
+            assert!(grow_triloop(&mut pfa).is_some());
         }
     }
 
@@ -525,7 +525,7 @@ mod tests {
 
         let mut pfa = Pfa::<char>::infer_from_rules(&mut rules, true);
 
-        assert!(!grow_quadloop(&mut pfa).is_none());
+        assert!(grow_quadloop(&mut pfa).is_some());
     }
 
     #[test]
@@ -545,7 +545,7 @@ mod tests {
         }
 
         for _ in 0..1000 {
-            assert!(!grow_quadloop(&mut pfa).is_none());
+            assert!(grow_quadloop(&mut pfa).is_some());
         }
     }
 
@@ -565,7 +565,7 @@ mod tests {
 
         grow_triloop(&mut pfa);
 
-        assert!(!pfa.current_state.is_none());
+        assert!(pfa.current_state.is_some());
         assert!(pfa.labels.contains_key(&pfa.current_state.unwrap()));
     }
 
@@ -585,7 +585,7 @@ mod tests {
 
         grow_loop(&mut pfa);
 
-        assert!(!pfa.current_state.is_none());
+        assert!(pfa.current_state.is_some());
         assert!(pfa.labels.contains_key(&pfa.current_state.unwrap()));
     }
 
@@ -605,7 +605,7 @@ mod tests {
 
         grow_quadloop(&mut pfa);
 
-        assert!(!pfa.current_state.is_none());
+        assert!(pfa.current_state.is_some());
         assert!(pfa.labels.contains_key(&pfa.current_state.unwrap()));
     }
 }
