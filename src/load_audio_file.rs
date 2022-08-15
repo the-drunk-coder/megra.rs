@@ -20,7 +20,7 @@ pub fn load_flac(path: &str, samplerate: f32) -> Option<(usize, f32, u32, Vec<f3
         // decode to f32
         let max_val = (i32::MAX >> (32 - reader.streaminfo().bits_per_sample)) as f32;
         for sample in reader.samples() {
-            let s = sample.unwrap() as f32 / max_val;
+            let s = sample.unwrap_or(0) as f32 / max_val;
             sample_buffer.push(s);
         }
 
@@ -51,7 +51,7 @@ pub fn load_wav(path: &str, _: f32) -> Option<(usize, f32, u32, Vec<f32>)> {
                 // decode to f32
                 let max_val = (i32::MAX >> (32 - reader.spec().bits_per_sample)) as f32;
                 for sample in reader.into_samples::<i32>() {
-                    let s = sample.unwrap() as f32 / max_val;
+                    let s = sample.unwrap_or(0) as f32 / max_val;
                     convert_buffer.push(s);
                 }
                 convert_buffer
