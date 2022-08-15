@@ -183,7 +183,7 @@ pub fn load_sample_set<const BUFSIZE: usize, const NCHAN: usize>(
             // only consider files here ...
             if path.is_file() {
                 if let Some(ext) = path.extension() {
-                    if ext == "flac" {
+                    if ext == "flac" || ext == "wav" {
                         load_sample(
                             function_map,
                             ruffbox,

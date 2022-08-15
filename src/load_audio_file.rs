@@ -37,7 +37,7 @@ pub fn load_flac(path: &str, samplerate: f32) -> Option<(usize, f32, u32, Vec<f3
 
 pub fn load_wav(path: &str, _: f32) -> Option<(usize, f32, u32, Vec<f32>)> {
     if let Ok(reader) = hound::WavReader::open(path) {
-        let duration = reader.duration() / reader.spec().sample_rate * 1000;
+        let duration = (reader.duration() as f32 / reader.spec().sample_rate as f32) * 1000.0;
         let channels = reader.spec().channels;
         let sr = reader.spec().sample_rate;
 
@@ -57,12 +57,8 @@ pub fn load_wav(path: &str, _: f32) -> Option<(usize, f32, u32, Vec<f32>)> {
                 convert_buffer
             }
         };
-        Some((
-            duration.try_into().unwrap(),
-            sr as f32,
-            channels.into(),
-            sample_buffer,
-        ))
+
+        Some((duration as usize, sr as f32, channels.into(), sample_buffer))
     } else {
         None
     }
