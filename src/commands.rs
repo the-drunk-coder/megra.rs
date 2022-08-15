@@ -115,13 +115,21 @@ pub fn load_sample<const BUFSIZE: usize, const NCHAN: usize>(
     } else {
         None
     } {
-        // max ten seconds
+        // max duration ten seconds
         if duration > 10000 {
             duration = 10000;
         }
 
-        // adds interpolation samples to sample buffer, don't use afterwards
-        let bufnum = ruffbox.load_sample(&mut sample_buffer, true, samplerate);
+        // downmix
+        let bufnum = if channels != 1 {
+            let mut downmix_buffer = sample_buffer
+                .chunks(channels.try_into().unwrap())
+                .map(|x| x.iter().sum::<f32>() / channels as f32)
+                .collect();
+            ruffbox.load_sample(&mut downmix_buffer, true, samplerate)
+        } else {
+            ruffbox.load_sample(&mut sample_buffer, true, samplerate)
+        };
 
         let mut keyword_set = HashSet::new();
         for k in keywords.drain(..) {
@@ -189,16 +197,19 @@ pub fn load_sample_set<const BUFSIZE: usize, const NCHAN: usize>(
             // only consider files here ...
             if path.is_file() {
                 if let Some(ext) = path.extension() {
-                    if ext == "flac" || ext == "wav" {
-                        load_sample(
-                            function_map,
-                            ruffbox,
-                            sample_set,
-                            set_name.clone(),
-                            &mut Vec::new(),
-                            path.to_str().unwrap().to_string(),
-                        );
-                    }
+		    if let Ok(ext_str) = ext.to_os_string().into_string() {
+			let ext_str_lc = ext_str.as_str().to_lowercase();
+			if ext_str_lc == "flac" || ext_str_lc == "wav" {
+                            load_sample(
+				function_map,
+				ruffbox,
+				sample_set,
+				set_name.clone(),
+				&mut Vec::new(),
+				path.to_str().unwrap().to_string(),
+                            );
+			}
+		    }		    
                 }
             }
         }
