@@ -169,7 +169,13 @@ pub fn load_sample_set<const BUFSIZE: usize, const NCHAN: usize>(
     // determine set name or use default
     let set_name = if let Some(os_filename) = samples_path.file_stem() {
         if let Some(str_filename) = os_filename.to_str() {
-            str_filename.to_string()
+	    if str_filename.chars().next().unwrap().is_numeric() {
+		let mut owned_string: String = "_".to_owned();
+		owned_string.push_str(str_filename);
+		owned_string
+	    } else {
+		str_filename.to_string()
+	    }
         } else {
             "default".to_string()
         }
