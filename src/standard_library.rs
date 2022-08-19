@@ -242,6 +242,7 @@ pub fn define_standard_library() -> FunctionMap {
     standard_library.fmap.insert("haste".to_string(), eval::generator_modifier::eval_haste);
     standard_library.fmap.insert("relax".to_string(), eval::generator_modifier::eval_relax);
     standard_library.fmap.insert("grow".to_string(), eval::generator_modifier::eval_grow);
+    standard_library.fmap.insert("grown".to_string(), eval::generator_modifier::eval_grown);
     standard_library.fmap.insert("shrink".to_string(), eval::generator_modifier::eval_shrink);
     standard_library.fmap.insert("solidify".to_string(), eval::generator_modifier::eval_solidify);
     standard_library.fmap.insert("blur".to_string(), eval::generator_modifier::eval_blur);

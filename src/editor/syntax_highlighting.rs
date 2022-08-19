@@ -200,6 +200,7 @@ fn is_genmod(word: &str) -> bool {
         "haste"
             | "shrink"
             | "grow"
+            | "grown"
             | "keep"
             | "rep"
             | "rnd"

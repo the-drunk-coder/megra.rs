@@ -153,6 +153,16 @@ pub fn eval_grow(
     eval_generator_modifier(grow, tail)
 }
 
+pub fn eval_grown(
+    _: &FunctionMap,
+    tail: &mut Vec<EvaluatedExpr>,
+    _: &sync::Arc<GlobalParameters>,
+    _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
+    _: OutputMode,
+) -> Option<EvaluatedExpr> {
+    eval_generator_modifier(grown, tail)
+}
+
 pub fn eval_shrink(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,

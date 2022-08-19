@@ -34,6 +34,19 @@ pub fn reverse_raw(gen: &mut MarkovSequenceGenerator) {
     gen.set_modified();
 }
 
+pub fn grown_raw(
+    gen: &mut MarkovSequenceGenerator,
+    m: &str, // method
+    variance: f32,
+    keep: &HashSet<SynthParameterLabel>,
+    durations: &[DynVal],
+    iterations: usize,
+) {
+    for _ in 0..iterations {
+        grow_raw(gen, m, variance, keep, durations);
+    }
+}
+
 pub fn grow_raw(
     gen: &mut MarkovSequenceGenerator,
     m: &str, // method

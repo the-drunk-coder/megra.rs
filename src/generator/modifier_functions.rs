@@ -60,6 +60,32 @@ pub fn grow(
     }
 }
 
+pub fn grown(
+    gen: &mut Generator,
+    pos_args: &[ConfigParameter],
+    named_args: &HashMap<String, ConfigParameter>,
+) {
+    if let Some(ConfigParameter::Numeric(n)) = pos_args.get(0) {
+        if let Some(ConfigParameter::Numeric(f)) = pos_args.get(1) {
+            // get method or use default ...
+            let m = if let Some(ConfigParameter::Symbolic(s)) = named_args.get("method") {
+                s.clone()
+            } else {
+                "flower".to_string()
+            };
+
+            grown_raw(
+                &mut gen.root_generator,
+                &m,
+                *f,
+                &HashSet::new(),
+                &Vec::<DynVal>::new(),
+                *n as usize,
+            );
+        }
+    }
+}
+
 pub fn shrink(gen: &mut Generator, _: &[ConfigParameter], _: &HashMap<String, ConfigParameter>) {
     if let Some(random_symbol) = gen
         .root_generator

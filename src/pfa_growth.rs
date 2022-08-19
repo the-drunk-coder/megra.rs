@@ -10,7 +10,7 @@ use vom_rs::pst;
 pub fn grow_old(pfa: &mut Pfa<char>) -> Option<PfaOperationResult<char>> {
     //pfa.pad_history();
     if pfa.history.is_empty() {
-        return None;
+        pfa.sim_steps(9);
     }
 
     let source_id = vec![*pfa.history.first().unwrap()];
@@ -91,8 +91,8 @@ pub fn grow_old(pfa: &mut Pfa<char>) -> Option<PfaOperationResult<char>> {
 pub fn grow_flower(pfa: &mut Pfa<char>) -> Option<PfaOperationResult<char>> {
     //pfa.pad_history();
 
-    if pfa.history.is_empty() {
-        return None;
+    if pfa.history.len() < 5 {
+        pfa.sim_steps(9);
     }
 
     let mut source_id = Label::new();
@@ -103,7 +103,7 @@ pub fn grow_flower(pfa: &mut Pfa<char>) -> Option<PfaOperationResult<char>> {
             break;
         }
         if source_id.len() > 4 {
-            // only look for a certain lenght
+            // only look for a certain length
             return None;
         }
     }
@@ -165,7 +165,7 @@ pub fn grow_triloop(pfa: &mut Pfa<char>) -> Option<PfaOperationResult<char>> {
 
     if pfa.history.len() < 3 {
         println!("history too short");
-        return None;
+        pfa.sim_steps(9);
     }
 
     let source_id = vec![*pfa.history.last().unwrap()];
@@ -239,7 +239,7 @@ pub fn grow_loop(pfa: &mut Pfa<char>) -> Option<PfaOperationResult<char>> {
     // unwraps should be fine because the history is padded ...
     if pfa.history.len() < 3 {
         println!("history too short");
-        return None;
+        pfa.sim_steps(9);
     }
 
     let dest_id = vec![*pfa.history.last().unwrap()];
@@ -318,7 +318,7 @@ pub fn grow_quadloop(pfa: &mut Pfa<char>) -> Option<PfaOperationResult<char>> {
     //pfa.pad_history();
     // unwraps should be fine because the history is padded ...
     if pfa.history.len() < 4 {
-        return None;
+        pfa.sim_steps(9);
     }
 
     let source_id = vec![*pfa.history.last().unwrap()];
