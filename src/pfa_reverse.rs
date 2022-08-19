@@ -26,8 +26,11 @@ pub fn reverse_pfa(pfa: &Pfa<char>) -> Pfa<char> {
         }
     }
 
+    reversed_pfa.rebuild_pst();
+
     reversed_pfa.rebalance();
-    println!("reverse");
+
+    //println!("reverse");
 
     reversed_pfa
 }
