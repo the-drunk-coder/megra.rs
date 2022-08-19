@@ -206,6 +206,12 @@ pub fn sound(
             synth_defaults(&mut ev);
             ev
         }
+	"wsaw" => {
+            let mut ev = Event::with_name_and_operation("wsaw".to_string(), EventOperation::Replace);
+            get_pitch_param(&mut ev, &mut tail_drain);
+            synth_defaults(&mut ev);
+            ev
+        }
         "sqr" => {
             let mut ev = Event::with_name_and_operation("sqr".to_string(), EventOperation::Replace);
             get_pitch_param(&mut ev, &mut tail_drain);

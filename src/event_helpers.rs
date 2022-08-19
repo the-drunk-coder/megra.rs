@@ -6,6 +6,7 @@ pub fn map_name(name: &str) -> SynthType {
         "sine" => SynthType::SineSynth,
         "tri" => SynthType::LFTriangleSynth,
         "saw" => SynthType::LFSawSynth,
+	"wsaw" => SynthType::WTSawSynth,
         "sqr" => SynthType::LFSquareSynth,
         "cub" => SynthType::LFCubSynth,
         "risset" => SynthType::RissetBell,
