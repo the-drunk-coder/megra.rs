@@ -96,6 +96,8 @@ fn main() -> Result<(), anyhow::Error> {
     );
     opts.optopt("", "reverb-ir", "reverb impulse response (file)", "");
 
+    opts.optopt("", "sample-folder", "folder to a collection of samples", "");
+
     opts.optopt(
         "",
         "live-buffers",
@@ -271,42 +273,51 @@ fn main() -> Result<(), anyhow::Error> {
                     &output_device,
                     &out_conf,
                     &in_conf,
-                    out_mode,
-                    num_live_buffers as usize,
-                    live_buffer_time,
-                    editor,
-                    load_samples,
-                    &reverb_mode,
-                    matches.opt_str("font").as_deref(),
-                    font_size,
+                    RunOptions {
+                        mode: out_mode,
+                        num_live_buffers: num_live_buffers as usize,
+                        live_buffer_time,
+                        editor,
+                        load_samples,
+                        sample_folder: matches.opt_str("sample-folder"),
+                        reverb_mode,
+                        font: matches.opt_str("font"),
+                        font_size,
+                    },
                 )?,
                 cpal::SampleFormat::I16 => run::<i16, 2>(
                     &input_device,
                     &output_device,
                     &out_conf,
                     &in_conf,
-                    out_mode,
-                    num_live_buffers as usize,
-                    live_buffer_time,
-                    editor,
-                    load_samples,
-                    &reverb_mode,
-                    matches.opt_str("font").as_deref(),
-                    font_size,
+                    RunOptions {
+                        mode: out_mode,
+                        num_live_buffers: num_live_buffers as usize,
+                        live_buffer_time,
+                        editor,
+                        load_samples,
+                        sample_folder: matches.opt_str("sample-folder"),
+                        reverb_mode,
+                        font: matches.opt_str("font"),
+                        font_size,
+                    },
                 )?,
                 cpal::SampleFormat::U16 => run::<u16, 2>(
                     &input_device,
                     &output_device,
                     &out_conf,
                     &in_conf,
-                    out_mode,
-                    num_live_buffers as usize,
-                    live_buffer_time,
-                    editor,
-                    load_samples,
-                    &reverb_mode,
-                    matches.opt_str("font").as_deref(),
-                    font_size,
+                    RunOptions {
+                        mode: out_mode,
+                        num_live_buffers: num_live_buffers as usize,
+                        live_buffer_time,
+                        editor,
+                        load_samples,
+                        sample_folder: matches.opt_str("sample-folder"),
+                        reverb_mode,
+                        font: matches.opt_str("font"),
+                        font_size,
+                    },
                 )?,
             }
         }
@@ -321,42 +332,51 @@ fn main() -> Result<(), anyhow::Error> {
                     &output_device,
                     &out_conf,
                     &in_conf,
-                    out_mode,
-                    num_live_buffers as usize,
-                    live_buffer_time,
-                    editor,
-                    load_samples,
-                    &reverb_mode,
-                    matches.opt_str("font").as_deref(),
-                    font_size,
+                    RunOptions {
+                        mode: out_mode,
+                        num_live_buffers: num_live_buffers as usize,
+                        live_buffer_time,
+                        editor,
+                        load_samples,
+                        sample_folder: matches.opt_str("sample-folder"),
+                        reverb_mode,
+                        font: matches.opt_str("font"),
+                        font_size,
+                    },
                 )?,
                 cpal::SampleFormat::I16 => run::<i16, 4>(
                     &input_device,
                     &output_device,
                     &out_conf,
                     &in_conf,
-                    out_mode,
-                    num_live_buffers as usize,
-                    live_buffer_time,
-                    editor,
-                    load_samples,
-                    &reverb_mode,
-                    matches.opt_str("font").as_deref(),
-                    font_size,
+                    RunOptions {
+                        mode: out_mode,
+                        num_live_buffers: num_live_buffers as usize,
+                        live_buffer_time,
+                        editor,
+                        load_samples,
+                        sample_folder: matches.opt_str("sample-folder"),
+                        reverb_mode,
+                        font: matches.opt_str("font"),
+                        font_size,
+                    },
                 )?,
                 cpal::SampleFormat::U16 => run::<u16, 4>(
                     &input_device,
                     &output_device,
                     &out_conf,
                     &in_conf,
-                    out_mode,
-                    num_live_buffers as usize,
-                    live_buffer_time,
-                    editor,
-                    load_samples,
-                    &reverb_mode,
-                    matches.opt_str("font").as_deref(),
-                    font_size,
+                    RunOptions {
+                        mode: out_mode,
+                        num_live_buffers: num_live_buffers as usize,
+                        live_buffer_time,
+                        editor,
+                        load_samples,
+                        sample_folder: matches.opt_str("sample-folder"),
+                        reverb_mode,
+                        font: matches.opt_str("font"),
+                        font_size,
+                    },
                 )?,
             }
         }
@@ -371,42 +391,51 @@ fn main() -> Result<(), anyhow::Error> {
                     &output_device,
                     &out_conf,
                     &in_conf,
-                    out_mode,
-                    num_live_buffers as usize,
-                    live_buffer_time,
-                    editor,
-                    load_samples,
-                    &reverb_mode,
-                    matches.opt_str("font").as_deref(),
-                    font_size,
+                    RunOptions {
+                        mode: out_mode,
+                        num_live_buffers: num_live_buffers as usize,
+                        live_buffer_time,
+                        editor,
+                        load_samples,
+                        sample_folder: matches.opt_str("sample-folder"),
+                        reverb_mode,
+                        font: matches.opt_str("font"),
+                        font_size,
+                    },
                 )?,
                 cpal::SampleFormat::I16 => run::<i16, 8>(
                     &input_device,
                     &output_device,
                     &out_conf,
                     &in_conf,
-                    out_mode,
-                    num_live_buffers as usize,
-                    live_buffer_time,
-                    editor,
-                    load_samples,
-                    &reverb_mode,
-                    matches.opt_str("font").as_deref(),
-                    font_size,
+                    RunOptions {
+                        mode: out_mode,
+                        num_live_buffers: num_live_buffers as usize,
+                        live_buffer_time,
+                        editor,
+                        load_samples,
+                        sample_folder: matches.opt_str("sample-folder"),
+                        reverb_mode,
+                        font: matches.opt_str("font"),
+                        font_size,
+                    },
                 )?,
                 cpal::SampleFormat::U16 => run::<u16, 8>(
                     &input_device,
                     &output_device,
                     &out_conf,
                     &in_conf,
-                    out_mode,
-                    num_live_buffers as usize,
-                    live_buffer_time,
-                    editor,
-                    load_samples,
-                    &reverb_mode,
-                    matches.opt_str("font").as_deref(),
-                    font_size,
+                    RunOptions {
+                        mode: out_mode,
+                        num_live_buffers: num_live_buffers as usize,
+                        live_buffer_time,
+                        editor,
+                        load_samples,
+                        sample_folder: matches.opt_str("sample-folder"),
+                        reverb_mode,
+                        font: matches.opt_str("font"),
+                        font_size,
+                    },
                 )?,
             }
         }
@@ -415,20 +444,25 @@ fn main() -> Result<(), anyhow::Error> {
     Ok(())
 }
 
+struct RunOptions {
+    mode: OutputMode,
+    num_live_buffers: usize,
+    live_buffer_time: f32,
+    editor: bool,
+    load_samples: bool,
+    sample_folder: Option<String>,
+    reverb_mode: ReverbMode,
+    font: Option<String>,
+    font_size: f32,
+}
+
 #[allow(clippy::too_many_arguments)]
 fn run<T, const NCHAN: usize>(
     input_device: &cpal::Device,
     output_device: &cpal::Device,
     out_config: &cpal::StreamConfig,
     in_config: &cpal::StreamConfig,
-    mode: OutputMode,
-    num_live_buffers: usize,
-    live_buffer_time: f32,
-    editor: bool,
-    load_samples: bool,
-    reverb_mode: &ReverbMode,
-    font: Option<&str>,
-    font_size: f32,
+    options: RunOptions,
 ) -> Result<(), anyhow::Error>
 where
     T: cpal::Sample,
@@ -442,9 +476,9 @@ where
 
     #[cfg(feature = "ringbuffer")]
     let (controls, playhead) = init_ruffbox::<128, NCHAN>(
-        num_live_buffers,
-        live_buffer_time.into(),
-        reverb_mode,
+        options.num_live_buffers,
+        options.live_buffer_time.into(),
+        &options.reverb_mode,
         sample_rate.into(),
         3000,
         10,
@@ -452,9 +486,9 @@ where
 
     #[cfg(not(feature = "ringbuffer"))]
     let (controls, playhead) = init_ruffbox::<512, NCHAN>(
-        num_live_buffers,
-        live_buffer_time.into(),
-        reverb_mode,
+        options.num_live_buffers,
+        options.live_buffer_time.into(),
+        &options.reverb_mode,
         sample_rate.into(),
         3000,
         10,
@@ -754,7 +788,12 @@ where
             std::fs::create_dir_all(proj_dirs.config_dir().to_str().unwrap())?;
         }
 
-        let samples_path = proj_dirs.config_dir().join("samples");
+        let samples_path = if let Some(folder) = options.sample_folder {
+            std::path::PathBuf::from(folder)
+        } else {
+            proj_dirs.config_dir().join("samples")
+        };
+
         if !samples_path.exists() {
             println!("create megra samples directory {:?}", samples_path);
             std::fs::create_dir_all(samples_path.to_str().unwrap())?;
@@ -772,7 +811,7 @@ where
             std::fs::create_dir_all(recordings_path.to_str().unwrap())?;
         }
         // load the default sample set ...
-        if load_samples {
+        if options.load_samples {
             println!("load samples from path: {:?}", samples_path);
             let controls_arc2 = sync::Arc::clone(&controls_arc);
             let sample_set2 = sync::Arc::clone(&sample_set);
@@ -789,7 +828,7 @@ where
         }
     }
 
-    if editor {
+    if options.editor {
         editor::run_editor(
             &stdlib,
             &session,
@@ -797,9 +836,9 @@ where
             &global_parameters,
             &sample_set,
             &parts_store,
-            mode,
-            font,
-            font_size,
+            options.mode,
+            options.font.as_deref(),
+            options.font_size,
         );
         Ok(())
     } else {
@@ -811,7 +850,7 @@ where
             &global_parameters,
             &sample_set,
             &parts_store,
-            mode,
+            options.mode,
         )
     }
 }
