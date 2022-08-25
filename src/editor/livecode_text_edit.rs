@@ -260,7 +260,7 @@ impl<'t> LivecodeTextEdit<'t> {
             // .unwrap_or_else(|| ui.style().interact(&response).text_color()); // too bright
             .unwrap_or_else(|| ui.visuals().widgets.inactive.text_color());
 
-        let prev_text = text.as_ref().to_owned();
+        let prev_text = text.as_str().to_owned();
         let font_id = font_selection.resolve(ui.style());
         let row_height = ui.fonts().row_height(&font_id);
         const MIN_WIDTH: f32 = 24.0; // Never make a `LivecodeTextEdit` more narrow than this.
@@ -287,7 +287,7 @@ impl<'t> LivecodeTextEdit<'t> {
 
         let layouter = layouter.unwrap_or(&mut default_layouter);
 
-        let mut galley = layouter(ui, text.as_ref(), wrap_width);
+        let mut galley = layouter(ui, text.as_str(), wrap_width);
 
         let desired_width = galley.size().x.max(wrap_width); // always show everything in multiline
 
@@ -349,7 +349,7 @@ impl<'t> LivecodeTextEdit<'t> {
             if response.double_clicked() {
                 // Select word:
                 let center = cursor_at_pointer;
-                let ccursor_range = select_word_at(text.as_ref(), center.ccursor);
+                let ccursor_range = select_word_at(text.as_str(), center.ccursor);
                 state.set_cursor_range(Some(CursorRange {
                     primary: galley.from_ccursor(ccursor_range.primary),
                     secondary: galley.from_ccursor(ccursor_range.secondary),
@@ -545,7 +545,7 @@ fn livecode_events(
     // so that the undoer creates automatic saves even when there are no events for a while.
     state.undoer.lock().feed_state(
         ui.input().time,
-        &(cursor_range.as_ccursor_range(), text.as_ref().to_owned()),
+        &(cursor_range.as_ccursor_range(), text.as_str().to_owned()),
     );
 
     let copy_if_not_password = |ui: &Ui, text: String| {
@@ -562,7 +562,7 @@ fn livecode_events(
                 state.selection_toggle = false;
 
                 if cursor_range.is_empty() {
-                    copy_if_not_password(ui, text.as_ref().to_owned());
+                    copy_if_not_password(ui, text.as_str().to_owned());
                 } else {
                     copy_if_not_password(ui, selected_str(text, &cursor_range).to_owned());
                 }
@@ -768,7 +768,7 @@ fn livecode_events(
                 if let Some((undo_ccursor_range, undo_txt)) = state
                     .undoer
                     .lock()
-                    .undo(&(cursor_range.as_ccursor_range(), text.as_ref().to_owned()))
+                    .undo(&(cursor_range.as_ccursor_range(), text.as_str().to_owned()))
                 {
                     text.replace(undo_txt);
                     Some(*undo_ccursor_range)
@@ -845,7 +845,7 @@ fn livecode_events(
             any_change = true;
 
             // Layout again to avoid frame delay, and to keep `text` and `galley` in sync.
-            *galley = layouter(ui, text.as_ref(), wrap_width);
+            *galley = layouter(ui, text.as_str(), wrap_width);
 
             // Set cursor_range using new galley:
             cursor_range = CursorRange {
@@ -859,7 +859,7 @@ fn livecode_events(
 
     state.undoer.lock().feed_state(
         ui.input().time,
-        &(cursor_range.as_ccursor_range(), text.as_ref().to_owned()),
+        &(cursor_range.as_ccursor_range(), text.as_str().to_owned()),
     );
 
     (any_change, cursor_range)
@@ -996,12 +996,12 @@ fn delete_next_char(text: &mut dyn TextBuffer, ccursor: CCursor) -> CCursor {
 }
 
 fn delete_previous_word(text: &mut dyn TextBuffer, max_ccursor: CCursor) -> CCursor {
-    let min_ccursor = ccursor_previous_word(text.as_ref(), max_ccursor);
+    let min_ccursor = ccursor_previous_word(text.as_str(), max_ccursor);
     delete_selected_ccursor_range(text, [min_ccursor, max_ccursor])
 }
 
 fn delete_next_word(text: &mut dyn TextBuffer, min_ccursor: CCursor) -> CCursor {
-    let max_ccursor = ccursor_next_word(text.as_ref(), min_ccursor);
+    let max_ccursor = ccursor_next_word(text.as_str(), min_ccursor);
     delete_selected_ccursor_range(text, [min_ccursor, max_ccursor])
 }
 
@@ -1708,8 +1708,8 @@ fn find_current_sexp(text: &str, ccursor: &CCursor) -> Option<(CCursor, CCursor)
 }
 
 fn comment_sexp(text: &mut dyn TextBuffer, galley: &Galley, mut open: CCursor, mut close: CCursor) {
-    if let Some((open_line, open_clean)) = find_beginning_of_row(text.as_ref(), &open) {
-        if let Some((close_line, close_clean)) = find_end_of_row(text.as_ref(), &close) {
+    if let Some((open_line, open_clean)) = find_beginning_of_row(text.as_str(), &open) {
+        if let Some((close_line, close_clean)) = find_end_of_row(text.as_str(), &close) {
             let cup = if !open_clean && !close_clean {
                 insert_text(&mut open, text, "\n");
                 close = CCursor {
@@ -1763,8 +1763,8 @@ fn comment_sexp(text: &mut dyn TextBuffer, galley: &Galley, mut open: CCursor, m
 }
 
 fn uncomment_sexp(text: &mut dyn TextBuffer, galley: &Galley, open: CCursor, close: CCursor) {
-    if let Some((open_line, _)) = find_beginning_of_row(text.as_ref(), &open) {
-        if let Some((close_line, _)) = find_end_of_row(text.as_ref(), &close) {
+    if let Some((open_line, _)) = find_beginning_of_row(text.as_str(), &open) {
+        if let Some((close_line, _)) = find_end_of_row(text.as_str(), &close) {
             let cup = CursorRange {
                 primary: galley.from_ccursor(open_line),
                 secondary: galley.from_ccursor(close_line),
