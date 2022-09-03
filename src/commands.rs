@@ -560,7 +560,9 @@ pub fn once<const BUFSIZE: usize, const NCHAN: usize>(
         }
 
         // latency 0.05, should be made configurable later ...
-        if let Some(mut inst) = ruffbox.prepare_instance(map_name(&s.name), 0.0, bufnum) {
+        if let Some(mut inst) =
+            ruffbox.prepare_instance(map_synth_type(&s.name, &s.params), 0.0, bufnum)
+        {
             // set parameters and trigger instance
             for (k, v) in s.params.iter() {
                 // special handling for stereo param

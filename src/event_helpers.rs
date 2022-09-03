@@ -1,16 +1,37 @@
-use ruffbox_synth::building_blocks::SynthParameterLabel;
+use ruffbox_synth::building_blocks::{FilterType, SynthParameterLabel, SynthParameterValue};
 use ruffbox_synth::synths::SynthType;
+use std::collections::HashMap;
 
-pub fn map_name(name: &str) -> SynthType {
+//
+pub fn map_synth_type(
+    name: &str,
+    params: &HashMap<SynthParameterLabel, SynthParameterValue>,
+) -> SynthType {
     match name {
         "sine" => SynthType::SineSynth,
         "tri" => SynthType::LFTriangleSynth,
         "saw" => SynthType::LFSawSynth,
         "wsaw" => SynthType::WTSawSynth,
+	"fmsaw" => SynthType::FMSawSynth,
         "sqr" => SynthType::LFSquareSynth,
         "cub" => SynthType::LFCubSynth,
         "risset" => SynthType::RissetBell,
-        "sampler" => SynthType::Sampler,
+        "sampler" => SynthType::Sampler(
+            if let Some(SynthParameterValue::FilterType(t)) =
+                params.get(&SynthParameterLabel::HighpassFilterType)
+            {
+                *t
+            } else {
+                FilterType::BiquadHpf12dB
+            },
+            if let Some(SynthParameterValue::FilterType(t)) =
+                params.get(&SynthParameterLabel::LowpassFilterType)
+            {
+                *t
+            } else {
+                FilterType::Lpf18
+            },
+        ),
         "livesampler" => SynthType::LiveSampler,
         "frozensampler" => SynthType::FrozenSampler,
         "wavetable" => SynthType::Wavetable,
@@ -33,8 +54,10 @@ pub fn map_parameter(name: &str) -> SynthParameterLabel {
         "lpf" => SynthParameterLabel::LowpassCutoffFrequency,
         "lpd" => SynthParameterLabel::LowpassFilterDistortion,
         "lpq" => SynthParameterLabel::LowpassQFactor,
+        "lpt" => SynthParameterLabel::LowpassFilterType,
         "hpf" => SynthParameterLabel::HighpassCutoffFrequency,
         "hpq" => SynthParameterLabel::HighpassQFactor,
+        "hpt" => SynthParameterLabel::HighpassFilterType,
         "pff" => SynthParameterLabel::PeakFrequency,
         "pfq" => SynthParameterLabel::PeakQFactor,
         "pfg" => SynthParameterLabel::PeakGain,

@@ -224,7 +224,7 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
                 }
 
                 if let Some(mut inst) = data.ruffbox.prepare_instance(
-                    map_name(&s.name),
+                    map_synth_type(&s.name, &s.params),
                     data.stream_time + latency,
                     bufnum,
                 ) {

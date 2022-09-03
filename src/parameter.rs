@@ -6,7 +6,7 @@ use std::boxed::Box;
 use std::fmt::*;
 
 use ruffbox_synth::building_blocks::mod_env::{SegmentInfo, SegmentType};
-use ruffbox_synth::building_blocks::{SynthParameterLabel, SynthParameterValue, ValOp};
+use ruffbox_synth::building_blocks::{FilterType, SynthParameterLabel, SynthParameterValue, ValOp};
 
 #[derive(Clone)]
 #[rustfmt::skip]
@@ -14,6 +14,7 @@ pub enum ParameterValue {
     Scalar(DynVal),
     Vector(Vec<DynVal>),
     Matrix(Vec<Vec<DynVal>>),
+    FilterType(FilterType),
     Lfo(DynVal, Box<ParameterValue>, DynVal, Box<ParameterValue>, DynVal, ValOp), // init, freq, phase, amp, add, op
     LFSaw(DynVal, Box<ParameterValue>, DynVal, Box<ParameterValue>, DynVal, ValOp), // init, freq, phase, amp, add, op
     LFRSaw(DynVal, Box<ParameterValue>, DynVal, Box<ParameterValue>, DynVal, ValOp), // init, freq, phase, amp, add, op
@@ -100,6 +101,7 @@ pub fn shake_parameter(v: &mut ParameterValue, factor: f32) {
                 time.shake(factor);
             }
         }
+        _ => { /* u can't shake this */ }
     }
 }
 
@@ -197,6 +199,7 @@ pub fn translate_stereo(val: SynthParameterValue) -> SynthParameterValue {
 
 pub fn resolve_parameter(k: SynthParameterLabel, v: &mut ParameterValue) -> SynthParameterValue {
     match v {
+        ParameterValue::FilterType(t) => SynthParameterValue::FilterType(*t),
         ParameterValue::Scalar(val) => {
             if k == SynthParameterLabel::SampleBufferNumber {
                 val.evaluate_val_usize()

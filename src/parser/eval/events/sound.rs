@@ -5,9 +5,20 @@ use crate::parameter::{DynVal, ParameterValue};
 use crate::parser::{BuiltIn, EvaluatedExpr, FunctionMap};
 use crate::{GlobalParameters, OutputMode, SampleAndWavematrixSet};
 use parking_lot::Mutex;
-use ruffbox_synth::building_blocks::SynthParameterLabel;
+use ruffbox_synth::building_blocks::{FilterType, SynthParameterLabel};
 use std::collections::HashSet;
 use std::sync;
+
+fn map_symbolic_param_value(sym: &str) -> Option<ParameterValue>{
+    match sym {
+	"hpf12" => Some(ParameterValue::FilterType(FilterType::BiquadHpf12dB)),
+	"hpf24" => Some(ParameterValue::FilterType(FilterType::BiquadHpf24dB)),
+	"lpf12" => Some(ParameterValue::FilterType(FilterType::BiquadLpf12dB)),
+	"lpf24" => Some(ParameterValue::FilterType(FilterType::BiquadLpf24dB)),
+	"lpf18" => Some(ParameterValue::FilterType(FilterType::Lpf18)),
+	_ => None
+    }
+}
 
 fn collect_param_value(
     tail_drain: &mut std::iter::Peekable<std::vec::Drain<EvaluatedExpr>>,
@@ -18,6 +29,16 @@ fn collect_param_value(
             EvaluatedExpr::Float(f) => {
                 par_vec.push(DynVal::with_value(*f));
                 tail_drain.next();
+            }
+	    
+	    EvaluatedExpr::Symbol(s) => {
+                if let Some(p) = map_symbolic_param_value(&s) {
+		    let pc = p.clone();
+		    tail_drain.next();
+		    return pc;
+		} else {
+		    break;
+		}
             }
             EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p)) => {
                 // this is an annoying clone, really ...
@@ -202,6 +223,12 @@ pub fn sound(
         }
         "saw" => {
             let mut ev = Event::with_name_and_operation("saw".to_string(), EventOperation::Replace);
+            get_pitch_param(&mut ev, &mut tail_drain);
+            synth_defaults(&mut ev);
+            ev
+        }
+	"fmsaw" => {
+            let mut ev = Event::with_name_and_operation("fmsaw".to_string(), EventOperation::Replace);
             get_pitch_param(&mut ev, &mut tail_drain);
             synth_defaults(&mut ev);
             ev
