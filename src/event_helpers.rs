@@ -14,6 +14,7 @@ pub fn map_synth_type(
         "wsaw" => SynthType::WTSawSynth,
         "fmsaw" => SynthType::FMSawSynth,
         "fmsqr" => SynthType::FMSquareSynth,
+	"fmtri" => SynthType::FMTriSynth,
         "sqr" => SynthType::LFSquareSynth,
         "cub" => SynthType::LFCubSynth,
         "risset" => SynthType::RissetBell,
