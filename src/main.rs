@@ -472,7 +472,11 @@ where
     let out_channels = out_config.channels as usize;
     let in_channels = in_config.channels as usize;
     let err_fn = |err| eprintln!("an error occurred on stream: {}", err);
-    println!("in chan: {} out chan: {}", in_channels, out_channels);
+
+    println!(
+        "samplerate: {} in chan: {} out chan: {}",
+        sample_rate, in_channels, out_channels
+    );
 
     #[cfg(feature = "ringbuffer")]
     let (controls, playhead) = init_ruffbox::<128, NCHAN>(

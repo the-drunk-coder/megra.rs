@@ -59,6 +59,7 @@ pub fn define_standard_library() -> FunctionMap {
     standard_library.fmap.insert("saw".to_string(), eval::events::sound::sound);
     standard_library.fmap.insert("wsaw".to_string(), eval::events::sound::sound);
     standard_library.fmap.insert("fmsaw".to_string(), eval::events::sound::sound);
+    standard_library.fmap.insert("fmsqr".to_string(), eval::events::sound::sound);
     standard_library.fmap.insert("sqr".to_string(), eval::events::sound::sound);
     standard_library.fmap.insert("cub".to_string(), eval::events::sound::sound);
     standard_library.fmap.insert("tri".to_string(), eval::events::sound::sound);
