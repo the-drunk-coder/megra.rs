@@ -24,6 +24,7 @@ pub fn run_editor<const BUFSIZE: usize, const NCHAN: usize>(
     global_parameters: &sync::Arc<GlobalParameters>,
     sample_set: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     parts_store: &sync::Arc<Mutex<PartsStore>>,
+    base_dir: String,
     mode: OutputMode,
     font: Option<&str>,
     font_size: f32,
@@ -83,7 +84,7 @@ pub fn run_editor<const BUFSIZE: usize, const NCHAN: usize>(
         "Mégra Editor",
         native_options,
         Box::new(|cc| {
-            let mut inner_app = MegraEditor::new(cc);
+            let mut inner_app = MegraEditor::new(cc, base_dir);
             inner_app.set_font_size(fs);
             inner_app.set_font(ifont);
             inner_app.set_callback(callback_ref);

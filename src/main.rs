@@ -97,6 +97,12 @@ fn main() -> Result<(), anyhow::Error> {
     opts.optopt("", "reverb-ir", "reverb impulse response (file)", "");
 
     opts.optopt("", "sample-folder", "folder to a collection of samples", "");
+    opts.optopt(
+        "",
+        "base",
+        "base folder including samples, a sketchbook, and a recordings folder",
+        "",
+    );
 
     opts.optopt(
         "",
@@ -261,6 +267,19 @@ fn main() -> Result<(), anyhow::Error> {
     // let's assume it's the same for both ...
     let sample_format = out_config.sample_format();
 
+    let run_opts = RunOptions {
+        mode: out_mode,
+        num_live_buffers: num_live_buffers as usize,
+        live_buffer_time,
+        editor,
+        load_samples,
+        sample_folder: matches.opt_str("sample-folder"),
+        base_folder: matches.opt_str("base"),
+        reverb_mode,
+        font: matches.opt_str("font"),
+        font_size,
+    };
+
     match out_mode {
         OutputMode::Stereo => {
             let mut out_conf: cpal::StreamConfig = out_config.into();
@@ -268,57 +287,15 @@ fn main() -> Result<(), anyhow::Error> {
             in_conf.channels = num_live_buffers;
             out_conf.channels = 2;
             match sample_format {
-                cpal::SampleFormat::F32 => run::<f32, 2>(
-                    &input_device,
-                    &output_device,
-                    &out_conf,
-                    &in_conf,
-                    RunOptions {
-                        mode: out_mode,
-                        num_live_buffers: num_live_buffers as usize,
-                        live_buffer_time,
-                        editor,
-                        load_samples,
-                        sample_folder: matches.opt_str("sample-folder"),
-                        reverb_mode,
-                        font: matches.opt_str("font"),
-                        font_size,
-                    },
-                )?,
-                cpal::SampleFormat::I16 => run::<i16, 2>(
-                    &input_device,
-                    &output_device,
-                    &out_conf,
-                    &in_conf,
-                    RunOptions {
-                        mode: out_mode,
-                        num_live_buffers: num_live_buffers as usize,
-                        live_buffer_time,
-                        editor,
-                        load_samples,
-                        sample_folder: matches.opt_str("sample-folder"),
-                        reverb_mode,
-                        font: matches.opt_str("font"),
-                        font_size,
-                    },
-                )?,
-                cpal::SampleFormat::U16 => run::<u16, 2>(
-                    &input_device,
-                    &output_device,
-                    &out_conf,
-                    &in_conf,
-                    RunOptions {
-                        mode: out_mode,
-                        num_live_buffers: num_live_buffers as usize,
-                        live_buffer_time,
-                        editor,
-                        load_samples,
-                        sample_folder: matches.opt_str("sample-folder"),
-                        reverb_mode,
-                        font: matches.opt_str("font"),
-                        font_size,
-                    },
-                )?,
+                cpal::SampleFormat::F32 => {
+                    run::<f32, 2>(&input_device, &output_device, &out_conf, &in_conf, run_opts)?
+                }
+                cpal::SampleFormat::I16 => {
+                    run::<i16, 2>(&input_device, &output_device, &out_conf, &in_conf, run_opts)?
+                }
+                cpal::SampleFormat::U16 => {
+                    run::<u16, 2>(&input_device, &output_device, &out_conf, &in_conf, run_opts)?
+                }
             }
         }
         OutputMode::FourChannel => {
@@ -327,57 +304,15 @@ fn main() -> Result<(), anyhow::Error> {
             in_conf.channels = num_live_buffers;
             out_conf.channels = 4;
             match sample_format {
-                cpal::SampleFormat::F32 => run::<f32, 4>(
-                    &input_device,
-                    &output_device,
-                    &out_conf,
-                    &in_conf,
-                    RunOptions {
-                        mode: out_mode,
-                        num_live_buffers: num_live_buffers as usize,
-                        live_buffer_time,
-                        editor,
-                        load_samples,
-                        sample_folder: matches.opt_str("sample-folder"),
-                        reverb_mode,
-                        font: matches.opt_str("font"),
-                        font_size,
-                    },
-                )?,
-                cpal::SampleFormat::I16 => run::<i16, 4>(
-                    &input_device,
-                    &output_device,
-                    &out_conf,
-                    &in_conf,
-                    RunOptions {
-                        mode: out_mode,
-                        num_live_buffers: num_live_buffers as usize,
-                        live_buffer_time,
-                        editor,
-                        load_samples,
-                        sample_folder: matches.opt_str("sample-folder"),
-                        reverb_mode,
-                        font: matches.opt_str("font"),
-                        font_size,
-                    },
-                )?,
-                cpal::SampleFormat::U16 => run::<u16, 4>(
-                    &input_device,
-                    &output_device,
-                    &out_conf,
-                    &in_conf,
-                    RunOptions {
-                        mode: out_mode,
-                        num_live_buffers: num_live_buffers as usize,
-                        live_buffer_time,
-                        editor,
-                        load_samples,
-                        sample_folder: matches.opt_str("sample-folder"),
-                        reverb_mode,
-                        font: matches.opt_str("font"),
-                        font_size,
-                    },
-                )?,
+                cpal::SampleFormat::F32 => {
+                    run::<f32, 4>(&input_device, &output_device, &out_conf, &in_conf, run_opts)?
+                }
+                cpal::SampleFormat::I16 => {
+                    run::<i16, 4>(&input_device, &output_device, &out_conf, &in_conf, run_opts)?
+                }
+                cpal::SampleFormat::U16 => {
+                    run::<u16, 4>(&input_device, &output_device, &out_conf, &in_conf, run_opts)?
+                }
             }
         }
         OutputMode::EightChannel => {
@@ -386,57 +321,15 @@ fn main() -> Result<(), anyhow::Error> {
             in_conf.channels = num_live_buffers;
             out_conf.channels = 8;
             match sample_format {
-                cpal::SampleFormat::F32 => run::<f32, 8>(
-                    &input_device,
-                    &output_device,
-                    &out_conf,
-                    &in_conf,
-                    RunOptions {
-                        mode: out_mode,
-                        num_live_buffers: num_live_buffers as usize,
-                        live_buffer_time,
-                        editor,
-                        load_samples,
-                        sample_folder: matches.opt_str("sample-folder"),
-                        reverb_mode,
-                        font: matches.opt_str("font"),
-                        font_size,
-                    },
-                )?,
-                cpal::SampleFormat::I16 => run::<i16, 8>(
-                    &input_device,
-                    &output_device,
-                    &out_conf,
-                    &in_conf,
-                    RunOptions {
-                        mode: out_mode,
-                        num_live_buffers: num_live_buffers as usize,
-                        live_buffer_time,
-                        editor,
-                        load_samples,
-                        sample_folder: matches.opt_str("sample-folder"),
-                        reverb_mode,
-                        font: matches.opt_str("font"),
-                        font_size,
-                    },
-                )?,
-                cpal::SampleFormat::U16 => run::<u16, 8>(
-                    &input_device,
-                    &output_device,
-                    &out_conf,
-                    &in_conf,
-                    RunOptions {
-                        mode: out_mode,
-                        num_live_buffers: num_live_buffers as usize,
-                        live_buffer_time,
-                        editor,
-                        load_samples,
-                        sample_folder: matches.opt_str("sample-folder"),
-                        reverb_mode,
-                        font: matches.opt_str("font"),
-                        font_size,
-                    },
-                )?,
+                cpal::SampleFormat::F32 => {
+                    run::<f32, 8>(&input_device, &output_device, &out_conf, &in_conf, run_opts)?
+                }
+                cpal::SampleFormat::I16 => {
+                    run::<i16, 8>(&input_device, &output_device, &out_conf, &in_conf, run_opts)?
+                }
+                cpal::SampleFormat::U16 => {
+                    run::<u16, 8>(&input_device, &output_device, &out_conf, &in_conf, run_opts)?
+                }
             }
         }
     }
@@ -451,6 +344,7 @@ struct RunOptions {
     editor: bool,
     load_samples: bool,
     sample_folder: Option<String>,
+    base_folder: Option<String>,
     reverb_mode: ReverbMode,
     font: Option<String>,
     font_size: f32,
@@ -783,53 +677,66 @@ where
     let stdlib = sync::Arc::new(Mutex::new(define_standard_library()));
     let controls_arc = sync::Arc::new(controls);
 
-    if let Some(proj_dirs) = ProjectDirs::from("de", "parkellipsen", "megra") {
+    let base_dir = if let Some(p) = options.base_folder {
+        let bd = std::path::PathBuf::from(p);
+        if !bd.exists() {
+            println!("create custom megra resource directory {:?}", bd);
+            std::fs::create_dir_all(bd.to_str().unwrap())?;
+        }
+        bd
+    } else if let Some(proj_dirs) = ProjectDirs::from("de", "parkellipsen", "megra") {
         if !proj_dirs.config_dir().exists() {
             println!(
-                "create megra resource directory {:?}",
+                "create default megra resource directory {:?}",
                 proj_dirs.config_dir()
             );
             std::fs::create_dir_all(proj_dirs.config_dir().to_str().unwrap())?;
         }
-
-        let samples_path = if let Some(folder) = options.sample_folder {
-            std::path::PathBuf::from(folder)
-        } else {
-            proj_dirs.config_dir().join("samples")
-        };
-
-        if !samples_path.exists() {
-            println!("create megra samples directory {:?}", samples_path);
-            std::fs::create_dir_all(samples_path.to_str().unwrap())?;
+        proj_dirs.config_dir().to_path_buf()
+    } else {
+        // not the most elegant solution, hope this doesn't happen
+        let bd = std::path::PathBuf::from("~/MEGRA_FALLBACK");
+        if !bd.exists() {
+            println!("create custom megra resource directory {:?}", bd);
+            std::fs::create_dir_all(bd.to_str().unwrap())?;
         }
+        bd
+    };
 
-        let sketchbook_path = proj_dirs.config_dir().join("sketchbook");
-        if !sketchbook_path.exists() {
-            println!("create megra sketchbook directory {:?}", sketchbook_path);
-            std::fs::create_dir_all(sketchbook_path.to_str().unwrap())?;
-        }
+    println!("base dir is: {:?}", base_dir);
 
-        let recordings_path = proj_dirs.config_dir().join("recordings");
-        if !recordings_path.exists() {
-            println!("create megra recordings directory {:?}", recordings_path);
-            std::fs::create_dir_all(recordings_path.to_str().unwrap())?;
-        }
-        // load the default sample set ...
-        if options.load_samples {
-            println!("load samples from path: {:?}", samples_path);
-            let controls_arc2 = sync::Arc::clone(&controls_arc);
-            let sample_set2 = sync::Arc::clone(&sample_set);
-            let stdlib2 = sync::Arc::clone(&stdlib);
-            thread::spawn(move || {
-                commands::load_sample_sets_path(
-                    &stdlib2,
-                    &controls_arc2,
-                    &sample_set2,
-                    &samples_path,
-                );
-                println!("a command (load default sample sets)");
-            });
-        }
+    let samples_path = if let Some(folder) = options.sample_folder {
+        std::path::PathBuf::from(folder)
+    } else {
+        base_dir.join("samples")
+    };
+
+    if !samples_path.exists() {
+        println!("create megra samples directory {:?}", samples_path);
+        std::fs::create_dir_all(samples_path.to_str().unwrap())?;
+    }
+
+    let sketchbook_path = base_dir.join("sketchbook");
+    if !sketchbook_path.exists() {
+        println!("create megra sketchbook directory {:?}", sketchbook_path);
+        std::fs::create_dir_all(sketchbook_path.to_str().unwrap())?;
+    }
+
+    let recordings_path = base_dir.join("recordings");
+    if !recordings_path.exists() {
+        println!("create megra recordings directory {:?}", recordings_path);
+        std::fs::create_dir_all(recordings_path.to_str().unwrap())?;
+    }
+    // load the default sample set ...
+    if options.load_samples {
+        println!("load samples from path: {:?}", samples_path);
+        let controls_arc2 = sync::Arc::clone(&controls_arc);
+        let sample_set2 = sync::Arc::clone(&sample_set);
+        let stdlib2 = sync::Arc::clone(&stdlib);
+        thread::spawn(move || {
+            commands::load_sample_sets_path(&stdlib2, &controls_arc2, &sample_set2, &samples_path);
+            println!("a command (load default sample sets)");
+        });
     }
 
     if options.editor {
@@ -840,6 +747,7 @@ where
             &global_parameters,
             &sample_set,
             &parts_store,
+            base_dir.display().to_string(),
             options.mode,
             options.font.as_deref(),
             options.font_size,
