@@ -241,7 +241,7 @@ pub fn sound(
             synth_defaults(&mut ev);
             ev
         }
-	"fmtri" => {
+        "fmtri" => {
             let mut ev =
                 Event::with_name_and_operation("fmtri".to_string(), EventOperation::Replace);
             get_pitch_param(&mut ev, &mut tail_drain);

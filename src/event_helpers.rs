@@ -14,17 +14,30 @@ pub fn map_synth_type(
         "wsaw" => SynthType::WTSawSynth,
         "fmsaw" => SynthType::FMSawSynth,
         "fmsqr" => SynthType::FMSquareSynth,
-	"fmtri" => SynthType::FMTriSynth,
+        "fmtri" => SynthType::FMTriSynth,
         "sqr" => SynthType::LFSquareSynth,
         "cub" => SynthType::LFCubSynth,
         "risset" => SynthType::RissetBell,
         "sampler" => SynthType::Sampler(
+            // assemble sampler
             if let Some(SynthParameterValue::FilterType(t)) =
                 params.get(&SynthParameterLabel::HighpassFilterType)
             {
                 *t
             } else {
                 FilterType::BiquadHpf12dB
+            },
+            if let Some(_) = params.get(&SynthParameterLabel::PeakFrequency) {
+                FilterType::PeakEQ
+            } else if let Some(_) = params.get(&SynthParameterLabel::Peak1Frequency) {
+                FilterType::PeakEQ
+            } else {
+                FilterType::Dummy
+            },
+            if let Some(_) = params.get(&SynthParameterLabel::Peak2Frequency) {
+                FilterType::PeakEQ
+            } else {
+                FilterType::Dummy
             },
             if let Some(SynthParameterValue::FilterType(t)) =
                 params.get(&SynthParameterLabel::LowpassFilterType)
@@ -60,9 +73,15 @@ pub fn map_parameter(name: &str) -> SynthParameterLabel {
         "hpf" => SynthParameterLabel::HighpassCutoffFrequency,
         "hpq" => SynthParameterLabel::HighpassQFactor,
         "hpt" => SynthParameterLabel::HighpassFilterType,
-        "pff" => SynthParameterLabel::PeakFrequency,
-        "pfq" => SynthParameterLabel::PeakQFactor,
-        "pfg" => SynthParameterLabel::PeakGain,
+        "pff" => SynthParameterLabel::Peak1Frequency,
+        "pfbw" => SynthParameterLabel::Peak1Bandwidth,
+        "pfg" => SynthParameterLabel::Peak1Gain,
+        "pff1" => SynthParameterLabel::Peak1Frequency,
+        "pfbw1" => SynthParameterLabel::Peak1Bandwidth,
+        "pfg2" => SynthParameterLabel::Peak2Gain,
+        "pff2" => SynthParameterLabel::Peak2Frequency,
+        "pfbw2" => SynthParameterLabel::Peak2Bandwidth,
+        "pfg1" => SynthParameterLabel::Peak1Gain,
         "pw" => SynthParameterLabel::Pulsewidth,
         "rate" => SynthParameterLabel::PlaybackRate,
         "start" => SynthParameterLabel::PlaybackStart,
