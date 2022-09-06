@@ -27,14 +27,14 @@ pub fn map_synth_type(
             } else {
                 FilterType::BiquadHpf12dB
             },
-            if let Some(_) = params.get(&SynthParameterLabel::PeakFrequency) {
-                FilterType::PeakEQ
-            } else if let Some(_) = params.get(&SynthParameterLabel::Peak1Frequency) {
+            if params.get(&SynthParameterLabel::PeakFrequency).is_some()
+                || params.get(&SynthParameterLabel::Peak1Frequency).is_some()
+            {
                 FilterType::PeakEQ
             } else {
                 FilterType::Dummy
             },
-            if let Some(_) = params.get(&SynthParameterLabel::Peak2Frequency) {
+            if params.get(&SynthParameterLabel::Peak2Frequency).is_some() {
                 FilterType::PeakEQ
             } else {
                 FilterType::Dummy

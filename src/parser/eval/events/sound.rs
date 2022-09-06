@@ -32,8 +32,8 @@ fn collect_param_value(
             }
 
             EvaluatedExpr::Symbol(s) => {
-                if let Some(p) = map_symbolic_param_value(&s) {
-                    let pc = p.clone();
+                if let Some(p) = map_symbolic_param_value(s) {
+                    let pc = p;
                     tail_drain.next();
                     return pc;
                 } else {
