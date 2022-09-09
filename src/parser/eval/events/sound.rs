@@ -16,6 +16,7 @@ fn map_symbolic_param_value(sym: &str) -> Option<ParameterValue> {
         "lpf12" => Some(ParameterValue::FilterType(FilterType::BiquadLpf12dB)),
         "lpf24" => Some(ParameterValue::FilterType(FilterType::BiquadLpf24dB)),
         "lpf18" => Some(ParameterValue::FilterType(FilterType::Lpf18)),
+	"none" => Some(ParameterValue::FilterType(FilterType::Dummy)),
         _ => None,
     }
 }
