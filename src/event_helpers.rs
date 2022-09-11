@@ -8,15 +8,150 @@ pub fn map_synth_type(
     params: &HashMap<SynthParameterLabel, SynthParameterValue>,
 ) -> SynthType {
     match name {
-        "sine" => SynthType::SineSynth,
-        "tri" => SynthType::LFTriangleSynth,
-        "saw" => SynthType::LFSawSynth,
-        "wsaw" => SynthType::WTSawSynth,
-        "fmsaw" => SynthType::FMSawSynth,
-        "fmsqr" => SynthType::FMSquareSynth,
-        "fmtri" => SynthType::FMTriSynth,
-        "sqr" => SynthType::LFSquareSynth,
-        "cub" => SynthType::LFCubSynth,
+        "sine" => SynthType::SineSynth(
+            if let Some(SynthParameterValue::FilterType(t)) =
+                params.get(&SynthParameterLabel::LowpassFilterType)
+            {
+                *t
+            } else {
+                FilterType::Lpf18
+            },
+            if let Some(SynthParameterValue::FilterType(t)) =
+                params.get(&SynthParameterLabel::HighpassFilterType)
+            {
+                *t
+            } else {
+                FilterType::Dummy
+            },
+        ),
+        "tri" => SynthType::LFTriangleSynth(
+            if let Some(SynthParameterValue::FilterType(t)) =
+                params.get(&SynthParameterLabel::LowpassFilterType)
+            {
+                *t
+            } else {
+                FilterType::Lpf18
+            },
+            if let Some(SynthParameterValue::FilterType(t)) =
+                params.get(&SynthParameterLabel::HighpassFilterType)
+            {
+                *t
+            } else {
+                FilterType::BiquadHpf12dB
+            },
+        ),
+        "saw" => SynthType::LFSawSynth(
+            if let Some(SynthParameterValue::FilterType(t)) =
+                params.get(&SynthParameterLabel::LowpassFilterType)
+            {
+                *t
+            } else {
+                FilterType::Lpf18
+            },
+            if let Some(SynthParameterValue::FilterType(t)) =
+                params.get(&SynthParameterLabel::HighpassFilterType)
+            {
+                *t
+            } else {
+                FilterType::BiquadHpf12dB
+            },
+        ),
+        "wsaw" => SynthType::WTSawSynth(
+            if let Some(SynthParameterValue::FilterType(t)) =
+                params.get(&SynthParameterLabel::LowpassFilterType)
+            {
+                *t
+            } else {
+                FilterType::Lpf18
+            },
+            if let Some(SynthParameterValue::FilterType(t)) =
+                params.get(&SynthParameterLabel::HighpassFilterType)
+            {
+                *t
+            } else {
+                FilterType::BiquadHpf12dB
+            },
+        ),
+        "fmsaw" => SynthType::FMSawSynth(
+            if let Some(SynthParameterValue::FilterType(t)) =
+                params.get(&SynthParameterLabel::LowpassFilterType)
+            {
+                *t
+            } else {
+                FilterType::Lpf18
+            },
+            if let Some(SynthParameterValue::FilterType(t)) =
+                params.get(&SynthParameterLabel::HighpassFilterType)
+            {
+                *t
+            } else {
+                FilterType::BiquadHpf12dB
+            },
+        ),
+        "fmsqr" => SynthType::FMSquareSynth(
+            if let Some(SynthParameterValue::FilterType(t)) =
+                params.get(&SynthParameterLabel::LowpassFilterType)
+            {
+                *t
+            } else {
+                FilterType::Lpf18
+            },
+            if let Some(SynthParameterValue::FilterType(t)) =
+                params.get(&SynthParameterLabel::HighpassFilterType)
+            {
+                *t
+            } else {
+                FilterType::BiquadHpf12dB
+            },
+        ),
+        "fmtri" => SynthType::FMTriSynth(
+            if let Some(SynthParameterValue::FilterType(t)) =
+                params.get(&SynthParameterLabel::LowpassFilterType)
+            {
+                *t
+            } else {
+                FilterType::Lpf18
+            },
+            if let Some(SynthParameterValue::FilterType(t)) =
+                params.get(&SynthParameterLabel::HighpassFilterType)
+            {
+                *t
+            } else {
+                FilterType::BiquadHpf12dB
+            },
+        ),
+        "sqr" => SynthType::LFSquareSynth(
+            if let Some(SynthParameterValue::FilterType(t)) =
+                params.get(&SynthParameterLabel::LowpassFilterType)
+            {
+                *t
+            } else {
+                FilterType::Lpf18
+            },
+            if let Some(SynthParameterValue::FilterType(t)) =
+                params.get(&SynthParameterLabel::HighpassFilterType)
+            {
+                *t
+            } else {
+                FilterType::BiquadHpf12dB
+            },
+        ),
+        "cub" => SynthType::LFCubSynth(
+            if let Some(SynthParameterValue::FilterType(t)) =
+                params.get(&SynthParameterLabel::LowpassFilterType)
+            {
+                *t
+            } else {
+                FilterType::Lpf18
+            },
+            if let Some(SynthParameterValue::FilterType(t)) =
+                params.get(&SynthParameterLabel::HighpassFilterType)
+            {
+                *t
+            } else {
+                FilterType::BiquadHpf12dB
+            },
+        ),
         "risset" => SynthType::RissetBell,
         "sampler" => SynthType::Sampler(
             // assemble sampler
@@ -105,9 +240,54 @@ pub fn map_synth_type(
                 FilterType::Lpf18
             },
         ),
-        "wavetable" => SynthType::Wavetable,
-        "wavematrix" => SynthType::Wavematrix,
-        _ => SynthType::SineSynth,
+        "wavetable" => SynthType::Wavetable(
+            if let Some(SynthParameterValue::FilterType(t)) =
+                params.get(&SynthParameterLabel::LowpassFilterType)
+            {
+                *t
+            } else {
+                FilterType::Lpf18
+            },
+            if let Some(SynthParameterValue::FilterType(t)) =
+                params.get(&SynthParameterLabel::HighpassFilterType)
+            {
+                *t
+            } else {
+                FilterType::BiquadHpf12dB
+            },
+        ),
+        "wavematrix" => SynthType::Wavematrix(
+            if let Some(SynthParameterValue::FilterType(t)) =
+                params.get(&SynthParameterLabel::LowpassFilterType)
+            {
+                *t
+            } else {
+                FilterType::Lpf18
+            },
+            if let Some(SynthParameterValue::FilterType(t)) =
+                params.get(&SynthParameterLabel::HighpassFilterType)
+            {
+                *t
+            } else {
+                FilterType::BiquadHpf12dB
+            },
+        ),
+        _ => SynthType::SineSynth(
+            if let Some(SynthParameterValue::FilterType(t)) =
+                params.get(&SynthParameterLabel::LowpassFilterType)
+            {
+                *t
+            } else {
+                FilterType::Lpf18
+            },
+            if let Some(SynthParameterValue::FilterType(t)) =
+                params.get(&SynthParameterLabel::HighpassFilterType)
+            {
+                *t
+            } else {
+                FilterType::Dummy
+            },
+        ),
     }
 }
 
