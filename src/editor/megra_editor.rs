@@ -67,7 +67,11 @@ impl MegraEditor {
         self.callback = Some(callback);
     }
 
-    pub fn new(cc: &eframe::CreationContext<'_>, base_dir: String) -> Self {
+    pub fn new(
+        cc: &eframe::CreationContext<'_>,
+        base_dir: String,
+        create_sketch: Arc<bool>,
+    ) -> Self {
         let mut ed = Self::default();
         let mut fonts = FontDefinitions::default();
 
@@ -138,12 +142,14 @@ impl MegraEditor {
         let base_dir_buf = std::path::PathBuf::from(base_dir);
         let sketchbook_path = base_dir_buf.join("sketchbook");
         if sketchbook_path.exists() {
-            // prepare sketch marked with date
-            let id = format!("sketch_{}.megra3", Local::now().format("%Y%m%d_%H%M_%S"));
-            let file_path = sketchbook_path.join(id);
-            ed.current_sketch = file_path.to_str().unwrap().to_string();
-            // push current sketch so it'll be the one visible
-            ed.sketch_list.push(ed.current_sketch.clone());
+            if *create_sketch {
+                // prepare sketch marked with date
+                let id = format!("sketch_{}.megra3", Local::now().format("%Y%m%d_%H%M_%S"));
+                let file_path = sketchbook_path.join(id);
+                ed.current_sketch = file_path.to_str().unwrap().to_string();
+                // push current sketch so it'll be the one visible
+                ed.sketch_list.push(ed.current_sketch.clone());
+            }
 
             if let Ok(entries) = fs::read_dir(sketchbook_path) {
                 let mut disk_sketches = Vec::new();

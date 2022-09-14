@@ -77,6 +77,9 @@ fn main() -> Result<(), anyhow::Error> {
         "repl",
         "no editor, repl only (i.e. for integration with other editors)",
     );
+
+    opts.optflag("", "nosketch", "don't create new sketch in editor mode");
+
     opts.optflag("h", "help", "Print this help");
     opts.optflag("n", "no-samples", "don't load default samples");
     opts.optopt("o", "output-mode", "output mode (stereo, 8ch)", "stereo");
@@ -134,6 +137,7 @@ fn main() -> Result<(), anyhow::Error> {
     }
 
     let editor: bool = !matches.opt_present("r");
+    let create_sketch: bool = !matches.opt_present("nosketch");
     let load_samples: bool = !matches.opt_present("n");
 
     if matches.opt_present("h") {
@@ -272,6 +276,7 @@ fn main() -> Result<(), anyhow::Error> {
         num_live_buffers: num_live_buffers as usize,
         live_buffer_time,
         editor,
+        create_sketch,
         load_samples,
         sample_folder: matches.opt_str("sample-folder"),
         base_folder: matches.opt_str("base"),
@@ -342,6 +347,7 @@ struct RunOptions {
     num_live_buffers: usize,
     live_buffer_time: f32,
     editor: bool,
+    create_sketch: bool,
     load_samples: bool,
     sample_folder: Option<String>,
     base_folder: Option<String>,
@@ -748,6 +754,7 @@ where
             &sample_set,
             &parts_store,
             base_dir.display().to_string(),
+            options.create_sketch,
             options.mode,
             options.font.as_deref(),
             options.font_size,
