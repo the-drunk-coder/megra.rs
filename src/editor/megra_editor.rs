@@ -132,11 +132,6 @@ impl MegraEditor {
 
         cc.egui_ctx.set_fonts(fonts);
 
-        ed.content = format!(
-            ";; Created {}",
-            Local::now().format("%A, %F, %H:%M:%S ... good luck!")
-        );
-
         // create sketch and load sketch file list ...
 
         let base_dir_buf = std::path::PathBuf::from(base_dir);
@@ -149,6 +144,11 @@ impl MegraEditor {
                 ed.current_sketch = file_path.to_str().unwrap().to_string();
                 // push current sketch so it'll be the one visible
                 ed.sketch_list.push(ed.current_sketch.clone());
+
+                ed.content = format!(
+                    ";; Created {}",
+                    Local::now().format("%A, %F, %H:%M:%S ... good luck!")
+                );
             }
 
             if let Ok(entries) = fs::read_dir(sketchbook_path) {
@@ -168,6 +168,22 @@ impl MegraEditor {
                 disk_sketches.sort();
                 // sort sketch list so it's easier to find the sketches
                 ed.sketch_list.append(&mut disk_sketches);
+            }
+
+            if !*create_sketch && !ed.sketch_list.is_empty() {
+                ed.current_sketch = ed.sketch_list[0].clone();
+                let p = path::Path::new(&ed.current_sketch);
+                match fs::read_to_string(p) {
+                    Ok(mut s) => {
+                        if !s.ends_with('\n') {
+                            s.push('\n');
+                        }
+                        ed.content = s
+                    }
+                    Err(e) => {
+                        println!("couldn't read sketch {}", e);
+                    }
+                }
             }
         }
 
