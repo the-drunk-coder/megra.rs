@@ -328,7 +328,7 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
                                 });
                             }
                             Command::Once((mut s, mut c)) => {
-                                println!("handle once from gen");
+                                //println!("handle once from gen");
                                 commands::once(
                                     &data.ruffbox,
                                     &data.parts_store,
