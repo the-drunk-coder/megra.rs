@@ -327,6 +327,19 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
                                     println!("a command (stop session)");
                                 });
                             }
+                            Command::Once((mut s, mut c)) => {
+                                println!("handle once from gen");
+                                commands::once(
+                                    &data.ruffbox,
+                                    &data.parts_store,
+                                    &data.global_parameters,
+                                    &data.session,
+                                    &mut s,
+                                    &mut c,
+                                    data.output_mode,
+                                );
+                            }
+
                             _ => {
                                 println!("ignore command")
                             }
