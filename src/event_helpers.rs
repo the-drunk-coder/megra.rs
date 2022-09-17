@@ -1,4 +1,6 @@
-use ruffbox_synth::building_blocks::{FilterType, SynthParameterLabel, SynthParameterValue};
+use ruffbox_synth::building_blocks::{
+    FilterType, OscillatorType, SynthParameterLabel, SynthParameterValue,
+};
 use ruffbox_synth::synths::SynthType;
 use std::collections::HashMap;
 
@@ -8,7 +10,8 @@ pub fn map_synth_type(
     params: &HashMap<SynthParameterLabel, SynthParameterValue>,
 ) -> SynthType {
     match name {
-        "sine" => SynthType::SineSynth(
+        "sine" => SynthType::SingleOscillator(
+            OscillatorType::Sine,
             if let Some(SynthParameterValue::FilterType(t)) =
                 params.get(&SynthParameterLabel::LowpassFilterType)
             {
@@ -24,7 +27,8 @@ pub fn map_synth_type(
                 FilterType::Dummy
             },
         ),
-        "tri" => SynthType::LFTriangleSynth(
+        "tri" => SynthType::SingleOscillator(
+            OscillatorType::LFTri,
             if let Some(SynthParameterValue::FilterType(t)) =
                 params.get(&SynthParameterLabel::LowpassFilterType)
             {
@@ -40,7 +44,8 @@ pub fn map_synth_type(
                 FilterType::BiquadHpf12dB
             },
         ),
-        "saw" => SynthType::LFSawSynth(
+        "saw" => SynthType::SingleOscillator(
+            OscillatorType::LFSaw,
             if let Some(SynthParameterValue::FilterType(t)) =
                 params.get(&SynthParameterLabel::LowpassFilterType)
             {
@@ -56,7 +61,8 @@ pub fn map_synth_type(
                 FilterType::BiquadHpf12dB
             },
         ),
-        "wsaw" => SynthType::WTSawSynth(
+        "wsaw" => SynthType::SingleOscillator(
+            OscillatorType::WTSaw,
             if let Some(SynthParameterValue::FilterType(t)) =
                 params.get(&SynthParameterLabel::LowpassFilterType)
             {
@@ -72,7 +78,8 @@ pub fn map_synth_type(
                 FilterType::BiquadHpf12dB
             },
         ),
-        "fmsaw" => SynthType::FMSawSynth(
+        "fmsaw" => SynthType::SingleOscillator(
+            OscillatorType::FMSaw,
             if let Some(SynthParameterValue::FilterType(t)) =
                 params.get(&SynthParameterLabel::LowpassFilterType)
             {
@@ -88,7 +95,8 @@ pub fn map_synth_type(
                 FilterType::BiquadHpf12dB
             },
         ),
-        "fmsqr" => SynthType::FMSquareSynth(
+        "fmsqr" => SynthType::SingleOscillator(
+            OscillatorType::FMSquare,
             if let Some(SynthParameterValue::FilterType(t)) =
                 params.get(&SynthParameterLabel::LowpassFilterType)
             {
@@ -104,7 +112,8 @@ pub fn map_synth_type(
                 FilterType::BiquadHpf12dB
             },
         ),
-        "fmtri" => SynthType::FMTriSynth(
+        "fmtri" => SynthType::SingleOscillator(
+            OscillatorType::FMTri,
             if let Some(SynthParameterValue::FilterType(t)) =
                 params.get(&SynthParameterLabel::LowpassFilterType)
             {
@@ -120,7 +129,8 @@ pub fn map_synth_type(
                 FilterType::BiquadHpf12dB
             },
         ),
-        "sqr" => SynthType::LFSquareSynth(
+        "sqr" => SynthType::SingleOscillator(
+            OscillatorType::LFSquare,
             if let Some(SynthParameterValue::FilterType(t)) =
                 params.get(&SynthParameterLabel::LowpassFilterType)
             {
@@ -136,7 +146,8 @@ pub fn map_synth_type(
                 FilterType::BiquadHpf12dB
             },
         ),
-        "cub" => SynthType::LFCubSynth(
+        "cub" => SynthType::SingleOscillator(
+            OscillatorType::LFCub,
             if let Some(SynthParameterValue::FilterType(t)) =
                 params.get(&SynthParameterLabel::LowpassFilterType)
             {
@@ -240,7 +251,8 @@ pub fn map_synth_type(
                 FilterType::Lpf18
             },
         ),
-        "wavetable" => SynthType::Wavetable(
+        "wavetable" => SynthType::SingleOscillator(
+            OscillatorType::Wavetable,
             if let Some(SynthParameterValue::FilterType(t)) =
                 params.get(&SynthParameterLabel::LowpassFilterType)
             {
@@ -256,7 +268,8 @@ pub fn map_synth_type(
                 FilterType::BiquadHpf12dB
             },
         ),
-        "wavematrix" => SynthType::Wavematrix(
+        "wavematrix" => SynthType::SingleOscillator(
+            OscillatorType::Wavematrix,
             if let Some(SynthParameterValue::FilterType(t)) =
                 params.get(&SynthParameterLabel::LowpassFilterType)
             {
@@ -272,7 +285,8 @@ pub fn map_synth_type(
                 FilterType::BiquadHpf12dB
             },
         ),
-        _ => SynthType::SineSynth(
+        _ => SynthType::SingleOscillator(
+            OscillatorType::Sine,
             if let Some(SynthParameterValue::FilterType(t)) =
                 params.get(&SynthParameterLabel::LowpassFilterType)
             {
