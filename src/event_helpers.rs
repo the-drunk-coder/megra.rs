@@ -10,159 +10,37 @@ pub fn map_synth_type(
     params: &HashMap<SynthParameterLabel, SynthParameterValue>,
 ) -> SynthType {
     match name {
-        "sine" => SynthType::SingleOscillator(
-            OscillatorType::Sine,
-            if let Some(SynthParameterValue::FilterType(t)) =
-                params.get(&SynthParameterLabel::LowpassFilterType)
-            {
-                *t
-            } else {
-                FilterType::Lpf18
-            },
-            if let Some(SynthParameterValue::FilterType(t)) =
-                params.get(&SynthParameterLabel::HighpassFilterType)
-            {
-                *t
-            } else {
-                FilterType::Dummy
-            },
-        ),
-        "tri" => SynthType::SingleOscillator(
-            OscillatorType::LFTri,
-            if let Some(SynthParameterValue::FilterType(t)) =
-                params.get(&SynthParameterLabel::LowpassFilterType)
-            {
-                *t
-            } else {
-                FilterType::Lpf18
-            },
-            if let Some(SynthParameterValue::FilterType(t)) =
-                params.get(&SynthParameterLabel::HighpassFilterType)
-            {
-                *t
-            } else {
-                FilterType::BiquadHpf12dB
-            },
-        ),
-        "saw" => SynthType::SingleOscillator(
-            OscillatorType::LFSaw,
-            if let Some(SynthParameterValue::FilterType(t)) =
-                params.get(&SynthParameterLabel::LowpassFilterType)
-            {
-                *t
-            } else {
-                FilterType::Lpf18
-            },
-            if let Some(SynthParameterValue::FilterType(t)) =
-                params.get(&SynthParameterLabel::HighpassFilterType)
-            {
-                *t
-            } else {
-                FilterType::BiquadHpf12dB
-            },
-        ),
-        "wsaw" => SynthType::SingleOscillator(
-            OscillatorType::WTSaw,
-            if let Some(SynthParameterValue::FilterType(t)) =
-                params.get(&SynthParameterLabel::LowpassFilterType)
-            {
-                *t
-            } else {
-                FilterType::Lpf18
-            },
-            if let Some(SynthParameterValue::FilterType(t)) =
-                params.get(&SynthParameterLabel::HighpassFilterType)
-            {
-                *t
-            } else {
-                FilterType::BiquadHpf12dB
-            },
-        ),
-        "fmsaw" => SynthType::SingleOscillator(
-            OscillatorType::FMSaw,
-            if let Some(SynthParameterValue::FilterType(t)) =
-                params.get(&SynthParameterLabel::LowpassFilterType)
-            {
-                *t
-            } else {
-                FilterType::Lpf18
-            },
-            if let Some(SynthParameterValue::FilterType(t)) =
-                params.get(&SynthParameterLabel::HighpassFilterType)
-            {
-                *t
-            } else {
-                FilterType::BiquadHpf12dB
-            },
-        ),
-        "fmsqr" => SynthType::SingleOscillator(
-            OscillatorType::FMSquare,
-            if let Some(SynthParameterValue::FilterType(t)) =
-                params.get(&SynthParameterLabel::LowpassFilterType)
-            {
-                *t
-            } else {
-                FilterType::Lpf18
-            },
-            if let Some(SynthParameterValue::FilterType(t)) =
-                params.get(&SynthParameterLabel::HighpassFilterType)
-            {
-                *t
-            } else {
-                FilterType::BiquadHpf12dB
-            },
-        ),
-        "fmtri" => SynthType::SingleOscillator(
-            OscillatorType::FMTri,
-            if let Some(SynthParameterValue::FilterType(t)) =
-                params.get(&SynthParameterLabel::LowpassFilterType)
-            {
-                *t
-            } else {
-                FilterType::Lpf18
-            },
-            if let Some(SynthParameterValue::FilterType(t)) =
-                params.get(&SynthParameterLabel::HighpassFilterType)
-            {
-                *t
-            } else {
-                FilterType::BiquadHpf12dB
-            },
-        ),
-        "sqr" => SynthType::SingleOscillator(
-            OscillatorType::LFSquare,
-            if let Some(SynthParameterValue::FilterType(t)) =
-                params.get(&SynthParameterLabel::LowpassFilterType)
-            {
-                *t
-            } else {
-                FilterType::Lpf18
-            },
-            if let Some(SynthParameterValue::FilterType(t)) =
-                params.get(&SynthParameterLabel::HighpassFilterType)
-            {
-                *t
-            } else {
-                FilterType::BiquadHpf12dB
-            },
-        ),
-        "cub" => SynthType::SingleOscillator(
-            OscillatorType::LFCub,
-            if let Some(SynthParameterValue::FilterType(t)) =
-                params.get(&SynthParameterLabel::LowpassFilterType)
-            {
-                *t
-            } else {
-                FilterType::Lpf18
-            },
-            if let Some(SynthParameterValue::FilterType(t)) =
-                params.get(&SynthParameterLabel::HighpassFilterType)
-            {
-                *t
-            } else {
-                FilterType::BiquadHpf12dB
-            },
-        ),
+        "sine" | "tri" | "sqr" | "saw" | "rsaw" | "wsaw" | "fmsqr" | "fmsaw" | "fmtri" | "cub" => {
+            SynthType::SingleOscillator(
+                match name {
+                    "sine" => OscillatorType::Sine,
+                    "tri" => OscillatorType::LFTri,
+                    "sqr" => OscillatorType::LFSquare,
+                    "saw" => OscillatorType::LFSaw,
+                    "rsaw" => OscillatorType::LFRsaw,
+                    "wsaw" => OscillatorType::WTSaw,
+                    "fmsqr" => OscillatorType::FMSquare,
+                    "fmsaw" => OscillatorType::FMSaw,
+                    "fmtri" => OscillatorType::FMTri,
+                    "cub" => OscillatorType::LFCub,
+                    _ => OscillatorType::Sine,
+                },
+                if let Some(SynthParameterValue::FilterType(t)) =
+                    params.get(&SynthParameterLabel::LowpassFilterType)
+                {
+                    *t
+                } else {
+                    FilterType::Lpf18
+                },
+                if let Some(SynthParameterValue::FilterType(t)) =
+                    params.get(&SynthParameterLabel::HighpassFilterType)
+                {
+                    *t
+                } else {
+                    FilterType::Dummy
+                },
+            )
+        }
         "risset" => SynthType::RissetBell,
         "sampler" => SynthType::Sampler(
             // assemble sampler
