@@ -16,6 +16,9 @@ fn map_symbolic_param_value(sym: &str) -> Option<ParameterValue> {
         "lpf12" => Some(ParameterValue::FilterType(FilterType::BiquadLpf12dB)),
         "lpf24" => Some(ParameterValue::FilterType(FilterType::BiquadLpf24dB)),
         "lpf18" => Some(ParameterValue::FilterType(FilterType::Lpf18)),
+        "butter4lpf" => Some(ParameterValue::FilterType(FilterType::Butterworth4Lpf)),
+        "butter4hpf" => Some(ParameterValue::FilterType(FilterType::Butterworth4Hpf)),
+        "peak" => Some(ParameterValue::FilterType(FilterType::PeakEQ)),
         "none" => Some(ParameterValue::FilterType(FilterType::Dummy)),
         _ => None,
     }
