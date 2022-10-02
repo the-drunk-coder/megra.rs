@@ -2,7 +2,7 @@ use crate::parameter::{DynVal, ParameterValue};
 use crate::parser::{BuiltIn, EvaluatedExpr, FunctionMap};
 use crate::{GlobalParameters, OutputMode, SampleAndWavematrixSet};
 use parking_lot::Mutex;
-use ruffbox_synth::building_blocks::mod_env::SegmentType;
+use ruffbox_synth::building_blocks::EnvelopeSegmentType;
 use ruffbox_synth::building_blocks::ValOp;
 use std::sync;
 
@@ -229,10 +229,10 @@ pub fn multi_point_envelope_modulator(
         if collect_segment_types {
             if let EvaluatedExpr::Symbol(ref s) = c {
                 types.push(match s.as_str() {
-                    "lin" => SegmentType::Lin,
-                    "log" => SegmentType::Log,
-                    "exp" => SegmentType::Exp,
-                    _ => SegmentType::Lin,
+                    "lin" => EnvelopeSegmentType::Lin,
+                    "log" => EnvelopeSegmentType::Log,
+                    "exp" => EnvelopeSegmentType::Exp,
+                    _ => EnvelopeSegmentType::Lin,
                 });
             } else {
                 collect_segment_types = false;

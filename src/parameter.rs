@@ -5,7 +5,7 @@ use rand::Rng;
 use std::boxed::Box;
 use std::fmt::*;
 
-use ruffbox_synth::building_blocks::mod_env::{SegmentInfo, SegmentType};
+use ruffbox_synth::building_blocks::{EnvelopeSegmentInfo, EnvelopeSegmentType};
 use ruffbox_synth::building_blocks::{FilterType, SynthParameterLabel, SynthParameterValue, ValOp};
 
 #[derive(Clone)]
@@ -23,7 +23,7 @@ pub enum ParameterValue {
     LinRamp(DynVal, DynVal, DynVal, ValOp),                        // from, to, time, op
     LogRamp(DynVal, DynVal, DynVal, ValOp),                        // from, to, time, op
     ExpRamp(DynVal, DynVal, DynVal, ValOp),                        // from, to, time, op
-    MultiPointEnvelope(Vec<DynVal>, Vec<DynVal>, Vec<SegmentType>, bool, ValOp), // levels, times, loop, op
+    MultiPointEnvelope(Vec<DynVal>, Vec<DynVal>, Vec<EnvelopeSegmentType>, bool, ValOp), // levels, times, loop, op
 }
 
 pub fn shake_parameter(v: &mut ParameterValue, factor: f32) {
@@ -184,7 +184,7 @@ pub fn translate_stereo(val: SynthParameterValue) -> SynthParameterValue {
         SynthParameterValue::MultiPointEnvelope(segments, loop_env, op) => {
             let mut segments_translated = Vec::new();
             for seg in segments.iter() {
-                segments_translated.push(SegmentInfo {
+                segments_translated.push(EnvelopeSegmentInfo {
                     from: (seg.from + 1.0) * 0.5,
                     to: (seg.to + 1.0) * 0.5,
                     time: seg.time,
@@ -335,13 +335,13 @@ pub fn resolve_parameter(k: SynthParameterLabel, v: &mut ParameterValue) -> Synt
                 let mut segment_type = if let Some(t) = types.get(0) {
                     *t
                 } else {
-                    SegmentType::Lin
+                    EnvelopeSegmentType::Lin
                 };
 
                 for i in 0..levels_evaluated.len() {
                     let from = levels_evaluated[i];
                     if let Some(to) = levels_evaluated.get(i + 1) {
-                        segments.push(SegmentInfo {
+                        segments.push(EnvelopeSegmentInfo {
                             from,
                             to: *to,
                             time,

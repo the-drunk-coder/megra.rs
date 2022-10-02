@@ -1,4 +1,4 @@
-use ruffbox_synth::building_blocks::{mod_env::SegmentInfo, SynthParameterValue};
+use ruffbox_synth::building_blocks::{EnvelopeSegmentInfo, SynthParameterValue};
 
 use crate::event::EventOperation;
 
@@ -80,7 +80,7 @@ pub fn multiply_spv(a: &SynthParameterValue, b: &SynthParameterValue) -> SynthPa
             SynthParameterValue::MultiPointEnvelope(segments, loop_env, op) => {
                 let mut seg_new = Vec::new();
                 for seg in segments.iter() {
-                    seg_new.push(SegmentInfo {
+                    seg_new.push(EnvelopeSegmentInfo {
                         from: seg.from * incoming,
                         to: seg.to * incoming,
                         time: seg.time,
@@ -152,7 +152,7 @@ pub fn multiply_spv(a: &SynthParameterValue, b: &SynthParameterValue) -> SynthPa
             SynthParameterValue::MultiPointEnvelope(segments, loop_env, op) => {
                 let mut seg_new = Vec::new();
                 for seg in segments.iter() {
-                    seg_new.push(SegmentInfo {
+                    seg_new.push(EnvelopeSegmentInfo {
                         from: seg.from * original,
                         to: seg.to * original,
                         time: seg.time,
@@ -230,7 +230,7 @@ pub fn add_spv(a: &SynthParameterValue, b: &SynthParameterValue) -> SynthParamet
             SynthParameterValue::MultiPointEnvelope(segments, loop_env, op) => {
                 let mut seg_new = Vec::new();
                 for seg in segments.iter() {
-                    seg_new.push(SegmentInfo {
+                    seg_new.push(EnvelopeSegmentInfo {
                         from: seg.from + incoming,
                         to: seg.to + incoming,
                         time: seg.time,
@@ -302,7 +302,7 @@ pub fn add_spv(a: &SynthParameterValue, b: &SynthParameterValue) -> SynthParamet
             SynthParameterValue::MultiPointEnvelope(segments, loop_env, op) => {
                 let mut seg_new = Vec::new();
                 for seg in segments.iter() {
-                    seg_new.push(SegmentInfo {
+                    seg_new.push(EnvelopeSegmentInfo {
                         from: seg.from + original,
                         to: seg.to + original,
                         time: seg.time,
@@ -380,7 +380,7 @@ pub fn subtract_spv(a: &SynthParameterValue, b: &SynthParameterValue) -> SynthPa
             SynthParameterValue::MultiPointEnvelope(segments, loop_env, op) => {
                 let mut seg_new = Vec::new();
                 for seg in segments.iter() {
-                    seg_new.push(SegmentInfo {
+                    seg_new.push(EnvelopeSegmentInfo {
                         from: seg.from - incoming,
                         to: seg.to - incoming,
                         time: seg.time,
@@ -452,7 +452,7 @@ pub fn subtract_spv(a: &SynthParameterValue, b: &SynthParameterValue) -> SynthPa
             SynthParameterValue::MultiPointEnvelope(segments, loop_env, op) => {
                 let mut seg_new = Vec::new();
                 for seg in segments.iter() {
-                    seg_new.push(SegmentInfo {
+                    seg_new.push(EnvelopeSegmentInfo {
                         from: seg.from - original,
                         to: seg.to - original,
                         time: seg.time,
@@ -530,7 +530,7 @@ pub fn divide_spv(a: &SynthParameterValue, b: &SynthParameterValue) -> SynthPara
             SynthParameterValue::MultiPointEnvelope(segments, loop_env, op) => {
                 let mut seg_new = Vec::new();
                 for seg in segments.iter() {
-                    seg_new.push(SegmentInfo {
+                    seg_new.push(EnvelopeSegmentInfo {
                         from: seg.from / incoming,
                         to: seg.to / incoming,
                         time: seg.time,
@@ -602,7 +602,7 @@ pub fn divide_spv(a: &SynthParameterValue, b: &SynthParameterValue) -> SynthPara
             SynthParameterValue::MultiPointEnvelope(segments, loop_env, op) => {
                 let mut seg_new = Vec::new();
                 for seg in segments.iter() {
-                    seg_new.push(SegmentInfo {
+                    seg_new.push(EnvelopeSegmentInfo {
                         from: seg.from / original,
                         to: seg.to / original,
                         time: seg.time,
