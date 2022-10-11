@@ -231,7 +231,6 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
                     // set parameters and trigger instance
                     for (k, v) in s.params.iter() {
                         // special handling for stereo param
-                        //println!("{:?}", k);
                         match k {
                             SynthParameterLabel::ChannelPosition => {
                                 if data.output_mode == OutputMode::Stereo {
@@ -242,30 +241,6 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
                             }
                             // convert milliseconds to seconds
                             SynthParameterLabel::Duration => {
-                                if let SynthParameterValue::ScalarF32(val) = v {
-                                    inst.set_instance_parameter(
-                                        *k,
-                                        &SynthParameterValue::ScalarF32(*val * 0.001),
-                                    )
-                                }
-                            }
-                            SynthParameterLabel::Attack => {
-                                if let SynthParameterValue::ScalarF32(val) = v {
-                                    inst.set_instance_parameter(
-                                        *k,
-                                        &SynthParameterValue::ScalarF32(*val * 0.001),
-                                    )
-                                }
-                            }
-                            SynthParameterLabel::Sustain => {
-                                if let SynthParameterValue::ScalarF32(val) = v {
-                                    inst.set_instance_parameter(
-                                        *k,
-                                        &SynthParameterValue::ScalarF32(*val * 0.001),
-                                    )
-                                }
-                            }
-                            SynthParameterLabel::Release => {
                                 if let SynthParameterValue::ScalarF32(val) = v {
                                     inst.set_instance_parameter(
                                         *k,

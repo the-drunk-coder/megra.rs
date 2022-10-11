@@ -194,7 +194,7 @@ pub fn map_parameter(name: &str) -> SynthParameterLabel {
         "rel" => SynthParameterLabel::Release,
         "rel-type" => SynthParameterLabel::ReleaseType,
         "sus" => SynthParameterLabel::Sustain,
-        "env" => SynthParameterLabel::CustomEnvelope,
+        "env" => SynthParameterLabel::Envelope,
         "pos" => SynthParameterLabel::ChannelPosition,
         "lvl" => SynthParameterLabel::EnvelopeLevel,
         "amp" => SynthParameterLabel::OscillatorAmplitude,

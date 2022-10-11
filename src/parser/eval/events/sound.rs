@@ -5,7 +5,7 @@ use crate::parameter::{DynVal, ParameterValue};
 use crate::parser::{BuiltIn, EvaluatedExpr, FunctionMap};
 use crate::{GlobalParameters, OutputMode, SampleAndWavematrixSet};
 use parking_lot::Mutex;
-use ruffbox_synth::building_blocks::{FilterType, SynthParameterLabel};
+use ruffbox_synth::building_blocks::{EnvelopeSegmentType, FilterType, SynthParameterLabel};
 use std::collections::HashSet;
 use std::sync;
 
@@ -28,6 +28,18 @@ fn map_symbolic_param_value(sym: &str) -> Option<ParameterValue> {
         "butter10hpf" => Some(ParameterValue::FilterType(FilterType::ButterworthHpf(10))),
         "peak" => Some(ParameterValue::FilterType(FilterType::PeakEQ)),
         "none" => Some(ParameterValue::FilterType(FilterType::Dummy)),
+        "lin" => Some(ParameterValue::EnvelopeSegmentType(
+            EnvelopeSegmentType::Lin,
+        )),
+        "log" => Some(ParameterValue::EnvelopeSegmentType(
+            EnvelopeSegmentType::Log,
+        )),
+        "exp" => Some(ParameterValue::EnvelopeSegmentType(
+            EnvelopeSegmentType::Exp,
+        )),
+        "const" => Some(ParameterValue::EnvelopeSegmentType(
+            EnvelopeSegmentType::Constant,
+        )),
         _ => None,
     }
 }

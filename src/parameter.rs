@@ -23,6 +23,7 @@ pub enum ParameterValue {
     LinRamp(DynVal, DynVal, DynVal, ValOp),                        // from, to, time, op
     LogRamp(DynVal, DynVal, DynVal, ValOp),                        // from, to, time, op
     ExpRamp(DynVal, DynVal, DynVal, ValOp),                        // from, to, time, op
+    EnvelopeSegmentType(EnvelopeSegmentType),
     MultiPointEnvelope(Vec<DynVal>, Vec<DynVal>, Vec<EnvelopeSegmentType>, bool, ValOp), // levels, times, loop, op
 }
 
@@ -310,6 +311,7 @@ pub fn resolve_parameter(k: SynthParameterLabel, v: &mut ParameterValue) -> Synt
             time.evaluate_numerical(),
             *op,
         ),
+        ParameterValue::EnvelopeSegmentType(e) => SynthParameterValue::EnvelopeSegmentType(*e),
         ParameterValue::MultiPointEnvelope(levels, times, types, loop_env, op) => {
             if levels.len() == 1 {
                 SynthParameterValue::ScalarF32(levels[0].evaluate_numerical())

@@ -1,4 +1,6 @@
-use ruffbox_synth::building_blocks::{SynthParameterLabel, SynthParameterValue};
+use ruffbox_synth::building_blocks::{
+    EnvelopeSegmentInfo, EnvelopeSegmentType, SynthParameterLabel, SynthParameterValue, ValOp,
+};
 use std::collections::{BTreeSet, HashMap, HashSet};
 use std::fmt::*;
 
@@ -96,6 +98,109 @@ impl StaticEvent {
             }
         }
     }
+
+    /// collect the envelope information and compile a
+    /// single multi-point envelope
+    pub fn build_envelope(&mut self) {
+        // if this event already has a complete envelope,
+        // we don't need to do anything ...
+        if self.params.contains_key(&SynthParameterLabel::Envelope) {
+            return;
+        }
+
+        let mut segments = Vec::new();
+        let attack_level = if let Some(SynthParameterValue::ScalarF32(a)) =
+            self.params.remove(&SynthParameterLabel::AttackPeakLevel)
+        {
+            a
+        } else {
+            0.7
+        };
+
+        let sustain_level = if let Some(SynthParameterValue::ScalarF32(a)) =
+            self.params.remove(&SynthParameterLabel::EnvelopeLevel)
+        {
+            a
+        } else {
+            0.7
+        };
+
+        // ADSR values are specified as milliseconds,
+        // hence some conversion is necessary
+
+        // ATTACK
+        if let Some(SynthParameterValue::ScalarF32(a)) =
+            self.params.remove(&SynthParameterLabel::Attack)
+        {
+            segments.push(EnvelopeSegmentInfo {
+                from: 0.0,
+                to: attack_level,
+                time: a * 0.001, // ms to sec
+                segment_type: if let Some(SynthParameterValue::EnvelopeSegmentType(e)) =
+                    self.params.remove(&SynthParameterLabel::AttackType)
+                {
+                    e
+                } else {
+                    EnvelopeSegmentType::Lin
+                },
+            });
+        }
+
+        // DECAY (if applicable)
+        if let Some(SynthParameterValue::ScalarF32(d)) =
+            self.params.remove(&SynthParameterLabel::Decay)
+        {
+            segments.push(EnvelopeSegmentInfo {
+                from: attack_level,
+                to: sustain_level,
+                time: d * 0.001, // ms to sec
+                segment_type: if let Some(SynthParameterValue::EnvelopeSegmentType(e)) =
+                    self.params.remove(&SynthParameterLabel::DecayType)
+                {
+                    e
+                } else {
+                    EnvelopeSegmentType::Lin
+                },
+            });
+        }
+
+        // SUSTAIN
+        if let Some(SynthParameterValue::ScalarF32(s)) =
+            self.params.remove(&SynthParameterLabel::Sustain)
+        {
+            segments.push(EnvelopeSegmentInfo {
+                from: sustain_level,
+                to: sustain_level,
+                time: s * 0.001, // ms to sec
+                segment_type: EnvelopeSegmentType::Constant,
+            });
+        }
+
+        // RELEASE
+        if let Some(SynthParameterValue::ScalarF32(r)) =
+            self.params.remove(&SynthParameterLabel::Release)
+        {
+            segments.push(EnvelopeSegmentInfo {
+                from: sustain_level,
+                to: 0.0,
+                time: r * 0.001, // ms to sec
+                segment_type: if let Some(SynthParameterValue::EnvelopeSegmentType(e)) =
+                    self.params.remove(&SynthParameterLabel::ReleaseType)
+                {
+                    e
+                } else {
+                    EnvelopeSegmentType::Lin
+                },
+            });
+        }
+
+        self.params.insert(
+            SynthParameterLabel::Envelope,
+            SynthParameterValue::MultiPointEnvelope(segments, false, ValOp::Replace),
+        );
+
+        //println!("par {:?}", self.params);
+    }
 }
 
 impl Event {
@@ -140,11 +245,16 @@ impl Event {
     }
 
     pub fn get_static(&mut self) -> StaticEvent {
-        StaticEvent {
+        let mut static_event = StaticEvent {
             name: self.name.clone(),
             params: self.evaluate_parameters(),
             tags: self.tags.clone(),
             op: self.op,
-        }
+        };
+        // before we send the event, make sure we have a self-contained
+        // envelope (building and changing the envelope incrementally
+        // is a bit annoying later down the line)
+        static_event.build_envelope();
+        static_event
     }
 }
