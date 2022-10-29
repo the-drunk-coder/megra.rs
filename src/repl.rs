@@ -13,6 +13,7 @@ use crate::parser::FunctionMap;
 use crate::sample_set::SampleAndWavematrixSet;
 use crate::session::{OutputMode, Session};
 
+#[allow(clippy::too_many_arguments)]
 pub fn start_repl<const BUFSIZE: usize, const NCHAN: usize>(
     function_map: &sync::Arc<Mutex<FunctionMap>>,
     session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
@@ -21,6 +22,7 @@ pub fn start_repl<const BUFSIZE: usize, const NCHAN: usize>(
     sample_set: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     parts_store: &sync::Arc<Mutex<PartsStore>>,
     mode: OutputMode,
+    base_dir: String,
 ) -> Result<(), anyhow::Error> {
     // `()` can be used when no completer is required
     let mut rl = Editor::<()>::new();
@@ -79,6 +81,7 @@ pub fn start_repl<const BUFSIZE: usize, const NCHAN: usize>(
                                                     sample_set,
                                                     parts_store,
                                                     mode,
+                                                    base_dir.clone(),
                                                 );
                                                 rl.add_history_entry(line_buffer.as_str());
                                                 break;
@@ -108,6 +111,7 @@ pub fn start_repl<const BUFSIZE: usize, const NCHAN: usize>(
                             sample_set,
                             parts_store,
                             mode,
+                            base_dir.clone(),
                         );
                         rl.add_history_entry(line.as_str());
                     }

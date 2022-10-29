@@ -30,16 +30,13 @@ pub fn run_editor<const BUFSIZE: usize, const NCHAN: usize>(
     font: Option<&str>,
     font_size: f32,
 ) {
-    // Restore editor from file, or create new editor:
-
-    //let mut app: MegraEditor = MegraEditor::default();
-
     let session2 = sync::Arc::clone(session);
     let function_map2 = sync::Arc::clone(function_map);
     let ruffbox2 = sync::Arc::clone(ruffbox);
     let sample_set2 = sync::Arc::clone(sample_set);
     let global_parameters2 = sync::Arc::clone(global_parameters);
     let parts_store2 = sync::Arc::clone(parts_store);
+    let base_dir_2 = base_dir.clone();
 
     let callback_ref: sync::Arc<Mutex<dyn FnMut(&String)>> =
         sync::Arc::new(Mutex::new(move |text: &String| {
@@ -61,6 +58,7 @@ pub fn run_editor<const BUFSIZE: usize, const NCHAN: usize>(
                         &sample_set2,
                         &parts_store2,
                         mode,
+                        base_dir_2.to_string(),
                     );
                 }
                 Err(e) => {

@@ -21,6 +21,7 @@ pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
     sample_set: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     parts_store: &sync::Arc<Mutex<PartsStore>>,
     output_mode: OutputMode,
+    base_dir: String,
 ) {
     match parsed_in {
         EvaluatedExpr::BuiltIn(BuiltIn::Generator(g)) => {
@@ -95,7 +96,7 @@ pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
                     }
                 }
                 Command::StartRecording(prefix, rec_input) => {
-                    commands::start_recording(session, prefix, rec_input);
+                    commands::start_recording(session, prefix, base_dir, rec_input);
                 }
                 Command::StopRecording => {
                     commands::stop_recording(session);

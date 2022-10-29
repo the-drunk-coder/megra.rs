@@ -770,6 +770,7 @@ where
             &sample_set,
             &parts_store,
             options.mode,
+            base_dir.display().to_string(),
         )
     }
 }

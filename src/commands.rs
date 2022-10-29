@@ -261,6 +261,7 @@ pub fn load_part(parts_store: &sync::Arc<Mutex<PartsStore>>, name: String, part:
 pub fn start_recording<const BUFSIZE: usize, const NCHAN: usize>(
     session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
     prefix: Option<String>,
+    base_dir: String,
     rec_input: bool,
 ) {
     let maybe_rec_ctrl = session.lock().rec_control.take();
@@ -275,35 +276,32 @@ pub fn start_recording<const BUFSIZE: usize, const NCHAN: usize>(
             //println!("catch none ? {}", maybe_catch.is_none());
             if let Some(catch_out) = maybe_catch {
                 // place in recordings folder
-                if let Some(proj_dirs) = ProjectDirs::from("de", "parkellipsen", "megra") {
-                    let id = if let Some(p) = prefix.clone() {
-                        format!("{}_{}_output.wav", p, Local::now().format("%Y%m%d_%H%M_%S"))
-                    } else {
-                        format!(
-                            "megra_recording_{}_output.wav",
-                            Local::now().format("%Y%m%d_%H%M_%S")
-                        )
-                    };
 
-                    let recordings_path = proj_dirs.config_dir().join("recordings");
-
-                    let file_path = if recordings_path.exists() {
-                        let path = recordings_path.join(id).into_os_string().into_string();
-                        path.unwrap()
-                    } else {
-                        id
-                    };
-
-                    rec_ctrl.catch_out_handle = Some(real_time_streaming::start_writer_thread(
-                        catch_out,
-                        rec_ctrl.samplerate,
-                        file_path,
-                    ));
-
-                    rec_ctrl.is_recording_output.store(true, Ordering::SeqCst);
+                let id = if let Some(p) = prefix.clone() {
+                    format!("{}_{}_output.wav", p, Local::now().format("%Y%m%d_%H%M_%S"))
                 } else {
-                    println!("cant get folder");
-                }
+                    format!(
+                        "megra_recording_{}_output.wav",
+                        Local::now().format("%Y%m%d_%H%M_%S")
+                    )
+                };
+
+                let recordings_path = Path::new(&base_dir).join("recordings");
+
+                let file_path = if recordings_path.exists() {
+                    let path = recordings_path.join(id).into_os_string().into_string();
+                    path.unwrap()
+                } else {
+                    id
+                };
+
+                rec_ctrl.catch_out_handle = Some(real_time_streaming::start_writer_thread(
+                    catch_out,
+                    rec_ctrl.samplerate,
+                    file_path,
+                ));
+
+                rec_ctrl.is_recording_output.store(true, Ordering::SeqCst);
             } else {
                 println!("can't get catch");
             }
