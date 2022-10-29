@@ -109,13 +109,6 @@ impl StaticEvent {
         }
 
         let mut segments = Vec::new();
-        let attack_level = if let Some(SynthParameterValue::ScalarF32(a)) =
-            self.params.remove(&SynthParameterLabel::AttackPeakLevel)
-        {
-            a
-        } else {
-            0.7
-        };
 
         let sustain_level = if let Some(SynthParameterValue::ScalarF32(a)) =
             self.params.remove(&SynthParameterLabel::EnvelopeLevel)
@@ -123,6 +116,14 @@ impl StaticEvent {
             a
         } else {
             0.7
+        };
+
+        let attack_level = if let Some(SynthParameterValue::ScalarF32(a)) =
+            self.params.remove(&SynthParameterLabel::AttackPeakLevel)
+        {
+            a
+        } else {
+            sustain_level
         };
 
         // ADSR values are specified as milliseconds,
