@@ -82,19 +82,10 @@ impl LifemodelProcessor {
 }
 
 impl GeneratorProcessor for LifemodelProcessor {
-    fn set_state(&mut self, _: GeneratorProcessorState) {}
 
-    fn get_state(&self) -> GeneratorProcessorState {
-        GeneratorProcessorState::None
-    }
-
-    fn process_events(&mut self, _: &mut Vec<InterpretableEvent>, _: &Arc<GlobalParameters>) {
-        /* pass */
-    }
-    fn process_transition(&mut self, _: &mut StaticEvent, _: &Arc<GlobalParameters>) {
-        /* pass */
-    }
-
+    // I'm a bit surprises this one's stateless ...
+    
+    // this one only processes the generators ...
     fn process_generator(
         &mut self,
         gen: &mut Generator,
@@ -240,13 +231,5 @@ impl GeneratorProcessor for LifemodelProcessor {
         }
 
         self.step_count += 1;
-    }
-
-    fn visualize_if_possible(&mut self, _: &sync::Arc<VisualizerClient>) {
-        // pass
-    }
-
-    fn clear_visualization(&self, _: &sync::Arc<VisualizerClient>) {
-        // pass, same as above
-    }
+    }    
 }

@@ -21,25 +21,29 @@ pub enum GeneratorProcessorState {
 pub trait GeneratorProcessor: GeneratorProcessorClone {
     fn process_events(
         &mut self,
-        events: &mut Vec<InterpretableEvent>,
-        global_parameters: &Arc<GlobalParameters>,
-    );
+        _events: &mut Vec<InterpretableEvent>,
+        _global_parameters: &Arc<GlobalParameters>,
+    ) { /* pass by default */ }
     fn process_generator(
         &mut self,
-        generator: &mut Generator,
-        global_parameters: &Arc<GlobalParameters>,
-    );
+        _generator: &mut Generator,
+        _global_parameters: &Arc<GlobalParameters>,
+    ) { /* pass by default */ }
     fn process_transition(
         &mut self,
-        transition: &mut StaticEvent,
-        global_parameters: &Arc<GlobalParameters>,
-    );
+        _transition: &mut StaticEvent,
+        _global_parameters: &Arc<GlobalParameters>,
+    ) { /* pass by default */}
 
-    fn get_state(&self) -> GeneratorProcessorState;
-    fn set_state(&mut self, state: GeneratorProcessorState);
+    fn set_state(&mut self, _: GeneratorProcessorState) { /* processors are stateless by defalt */ }
 
-    fn visualize_if_possible(&mut self, vis_client: &sync::Arc<VisualizerClient>);
-    fn clear_visualization(&self, vis_client: &sync::Arc<VisualizerClient>);
+    fn get_state(&self) -> GeneratorProcessorState {
+	// processors are stateless by default
+        GeneratorProcessorState::None
+    }
+
+    fn visualize_if_possible(&mut self, _vis_client: &sync::Arc<VisualizerClient>) {/* most won't need this */}
+    fn clear_visualization(&self, _vis_client: &sync::Arc<VisualizerClient>) {/* most won't need this */}
 }
 
 pub trait GeneratorProcessorClone {

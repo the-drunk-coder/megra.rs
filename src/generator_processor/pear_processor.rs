@@ -28,16 +28,7 @@ impl PearProcessor {
 
 // zip mode etc seem to be outdated ... going for any mode for now
 impl GeneratorProcessor for PearProcessor {
-    fn set_state(&mut self, _: GeneratorProcessorState) {}
-
-    fn get_state(&self) -> GeneratorProcessorState {
-        GeneratorProcessorState::None
-    }
-
-    fn process_generator(&mut self, _: &mut Generator, _: &Arc<GlobalParameters>) {
-        /* pass */
-    }
-
+    // this one only processes the event stream ...
     fn process_events(&mut self, events: &mut Vec<InterpretableEvent>, _: &Arc<GlobalParameters>) {
         self.last_static.clear();
         let mut rng = rand::thread_rng();
@@ -70,7 +61,7 @@ impl GeneratorProcessor for PearProcessor {
             self.last_static.push((cur_prob, stat_evs));
         }
     }
-
+    // .. including transition events
     fn process_transition(&mut self, trans: &mut StaticEvent, _: &Arc<GlobalParameters>) {
         let mut rng = rand::thread_rng();
         for (prob, filtered_events) in self.last_static.iter_mut() {
@@ -82,13 +73,5 @@ impl GeneratorProcessor for PearProcessor {
                 }
             }
         }
-    }
-
-    fn visualize_if_possible(&mut self, _: &sync::Arc<VisualizerClient>) {
-        // pass ... no idea (yet) how to visualize this ...
-    }
-
-    fn clear_visualization(&self, _: &sync::Arc<VisualizerClient>) {
-        // pass, same as above
-    }
+    }    
 }

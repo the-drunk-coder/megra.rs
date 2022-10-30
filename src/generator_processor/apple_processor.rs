@@ -24,19 +24,8 @@ impl AppleProcessor {
 }
 
 impl GeneratorProcessor for AppleProcessor {
-    fn set_state(&mut self, _: GeneratorProcessorState) {}
-
-    fn get_state(&self) -> GeneratorProcessorState {
-        GeneratorProcessorState::None
-    }
-
-    fn process_events(&mut self, _: &mut Vec<InterpretableEvent>, _: &Arc<GlobalParameters>) {
-        /* pass */
-    }
-    fn process_transition(&mut self, _: &mut StaticEvent, _: &Arc<GlobalParameters>) {
-        /* pass */
-    }
-
+    // this one only processes generators ... for the event stream processor,
+    // see "pear"
     fn process_generator(&mut self, gen: &mut Generator, _: &Arc<GlobalParameters>) {
         let mut rng = rand::thread_rng();
         for (prob, gen_mods) in self.modifiers_to_be_applied.iter_mut() {
@@ -47,13 +36,5 @@ impl GeneratorProcessor for AppleProcessor {
                 }
             }
         }
-    }
-
-    fn visualize_if_possible(&mut self, _: &sync::Arc<VisualizerClient>) {
-        // pass
-    }
-
-    fn clear_visualization(&self, _: &sync::Arc<VisualizerClient>) {
-        // pass
-    }
+    }    
 }
