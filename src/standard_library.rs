@@ -84,6 +84,14 @@ pub fn define_standard_library() -> FunctionMap {
     standard_library.fmap.insert("env~".to_string(), eval::events::modulators::multi_point_envelope_modulator);
     
     // parameter events
+
+    // symbolic type paramerters
+    standard_library.fmap.insert("lpt".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("hpt".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("atkt".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("dect".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("relt".to_string(), eval::events::parameters::parameter);
+    
     standard_library.fmap.insert("pitch".to_string(), eval::events::parameters::parameter);
     standard_library.fmap.insert("pitch-add".to_string(), eval::events::parameters::parameter);
     standard_library.fmap.insert("pitch-mul".to_string(), eval::events::parameters::parameter);

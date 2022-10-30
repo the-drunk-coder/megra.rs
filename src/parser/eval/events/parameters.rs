@@ -56,6 +56,10 @@ pub fn parameter(
                                 music_theory::Tuning::EqualTemperament,
                             )))
                         }
+                        EvaluatedExpr::Symbol(s) => {
+                            // jump out if the user entered garbage ...
+                            crate::parser::eval::events::sound::map_symbolic_param_value(&s)?
+                        }
                         _ => ParameterValue::Scalar(DynVal::with_value(0.5)), // should be save ...
                     },
                 );

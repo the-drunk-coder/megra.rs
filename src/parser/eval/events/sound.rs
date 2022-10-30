@@ -9,7 +9,7 @@ use ruffbox_synth::building_blocks::{EnvelopeSegmentType, FilterType, SynthParam
 use std::collections::HashSet;
 use std::sync;
 
-fn map_symbolic_param_value(sym: &str) -> Option<ParameterValue> {
+pub fn map_symbolic_param_value(sym: &str) -> Option<ParameterValue> {
     match sym {
         "hpf12" => Some(ParameterValue::FilterType(FilterType::BiquadHpf12dB)),
         "hpf24" => Some(ParameterValue::FilterType(FilterType::BiquadHpf24dB)),
