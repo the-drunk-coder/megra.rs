@@ -23,27 +23,34 @@ pub trait GeneratorProcessor: GeneratorProcessorClone {
         &mut self,
         _events: &mut Vec<InterpretableEvent>,
         _global_parameters: &Arc<GlobalParameters>,
-    ) { /* pass by default */ }
+    ) { /* pass by default */
+    }
     fn process_generator(
         &mut self,
         _generator: &mut Generator,
         _global_parameters: &Arc<GlobalParameters>,
-    ) { /* pass by default */ }
+    ) { /* pass by default */
+    }
     fn process_transition(
         &mut self,
         _transition: &mut StaticEvent,
         _global_parameters: &Arc<GlobalParameters>,
-    ) { /* pass by default */}
+    ) { /* pass by default */
+    }
 
-    fn set_state(&mut self, _: GeneratorProcessorState) { /* processors are stateless by defalt */ }
+    fn set_state(&mut self, _: GeneratorProcessorState) { /* processors are stateless by defalt */
+    }
 
     fn get_state(&self) -> GeneratorProcessorState {
-	// processors are stateless by default
+        // processors are stateless by default
         GeneratorProcessorState::None
     }
 
-    fn visualize_if_possible(&mut self, _vis_client: &sync::Arc<VisualizerClient>) {/* most won't need this */}
-    fn clear_visualization(&self, _vis_client: &sync::Arc<VisualizerClient>) {/* most won't need this */}
+    fn visualize_if_possible(&mut self, _vis_client: &sync::Arc<VisualizerClient>) {
+        /* most won't need this */
+    }
+    fn clear_visualization(&self, _vis_client: &sync::Arc<VisualizerClient>) { /* most won't need this */
+    }
 }
 
 pub trait GeneratorProcessorClone {

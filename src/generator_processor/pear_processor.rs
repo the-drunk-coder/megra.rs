@@ -72,5 +72,5 @@ impl GeneratorProcessor for PearProcessor {
                 }
             }
         }
-    }    
+    }
 }

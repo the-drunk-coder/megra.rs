@@ -2,9 +2,7 @@ use rand::*;
 use std::sync::*;
 
 use crate::{
-    builtin_types::GlobalParameters,
-    generator::Generator,
-    generator_processor::*,
+    builtin_types::GlobalParameters, generator::Generator, generator_processor::*,
     parameter::DynVal,
 };
 
@@ -35,5 +33,5 @@ impl GeneratorProcessor for AppleProcessor {
                 }
             }
         }
-    }    
+    }
 }

@@ -358,52 +358,52 @@ mod tests {
                 if let EvaluatedExpr::Symbol(s) = &tail[1] {
                     assert!(s == "tar");
                 } else {
-                    assert!(false);
+                    panic!();
                 }
 
                 // KEYWORDS
                 if let EvaluatedExpr::Keyword(k) = &tail[2] {
                     assert!(k == "lvl");
                 } else {
-                    assert!(false);
+                    panic!();
                 }
 
                 if let EvaluatedExpr::Keyword(k) = &tail[4] {
                     assert!(k == "global");
                 } else {
-                    assert!(false);
+                    panic!();
                 }
 
                 if let EvaluatedExpr::Keyword(k) = &tail[6] {
                     assert!(k == "relate");
                 } else {
-                    assert!(false);
+                    panic!();
                 }
 
                 if let EvaluatedExpr::Keyword(k) = &tail[8] {
                     assert!(k == "boost");
                 } else {
-                    assert!(false);
+                    panic!();
                 }
 
                 // BOOLEANS
                 if let EvaluatedExpr::Boolean(b) = &tail[5] {
                     assert!(b);
                 } else {
-                    assert!(false);
+                    panic!();
                 }
 
                 if let EvaluatedExpr::Boolean(b) = &tail[7] {
                     assert!(!b);
                 } else {
-                    assert!(false);
+                    panic!();
                 }
 
                 // FLOAT
                 if let EvaluatedExpr::Float(f) = &tail[3] {
                     assert!(*f == 1.0);
                 } else {
-                    assert!(false);
+                    panic!();
                 }
 
                 Some(EvaluatedExpr::Boolean(true))
@@ -415,12 +415,12 @@ mod tests {
                 if let EvaluatedExpr::Float(f) = &tail[1] {
                     assert!(*f == 0.0);
                 } else {
-                    assert!(false);
+                    panic!();
                 }
                 if let EvaluatedExpr::Float(f) = &tail[2] {
                     assert!(*f == 400.0);
                 } else {
-                    assert!(false);
+                    panic!();
                 }
 
                 Some(EvaluatedExpr::Boolean(true))
@@ -438,7 +438,7 @@ mod tests {
             }
             Err(e) => {
                 println!("err {}", e);
-                assert!(false)
+                panic!()
             }
         }
     }
@@ -547,59 +547,59 @@ mod tests {
             if let Expr::Constant(Atom::Function(function_name)) = *head {
                 assert!(function_name == "text");
             } else {
-                assert!(false)
+                panic!()
             }
 
             // SYMBOLS
             if let Expr::Constant(Atom::Symbol(s)) = &tail[0] {
                 assert!(s == "tar");
             } else {
-                assert!(false);
+                panic!();
             }
 
             // KEYWORDS
             if let Expr::Constant(Atom::Keyword(k)) = &tail[1] {
                 assert!(k == "lvl");
             } else {
-                assert!(false);
+                panic!();
             }
 
             if let Expr::Constant(Atom::Keyword(k)) = &tail[3] {
                 assert!(k == "global");
             } else {
-                assert!(false);
+                panic!();
             }
 
             if let Expr::Constant(Atom::Keyword(k)) = &tail[5] {
                 assert!(k == "relate");
             } else {
-                assert!(false);
+                panic!();
             }
 
             if let Expr::Constant(Atom::Keyword(k)) = &tail[7] {
                 assert!(k == "boost");
             } else {
-                assert!(false);
+                panic!();
             }
 
             // BOOLEANS
             if let Expr::Constant(Atom::Boolean(b)) = &tail[4] {
                 assert!(b);
             } else {
-                assert!(false);
+                panic!();
             }
 
             if let Expr::Constant(Atom::Boolean(b)) = &tail[6] {
                 assert!(!b);
             } else {
-                assert!(false);
+                panic!();
             }
 
             // FLOAT
             if let Expr::Constant(Atom::Float(f)) = &tail[2] {
                 assert!(*f == 1.0);
             } else {
-                assert!(false);
+                panic!();
             }
 
             // APPLICATION
@@ -607,25 +607,25 @@ mod tests {
                 if let Expr::Constant(Atom::Function(function_name2)) = &**head2 {
                     assert!(function_name2 == "bounce")
                 } else {
-                    assert!(false)
+                    panic!()
                 }
                 // FLOAT
                 if let Expr::Constant(Atom::Float(f)) = &tail2[0] {
                     assert!(*f == 0.0);
                 } else {
-                    assert!(false);
+                    panic!();
                 }
                 // FLOAT
                 if let Expr::Constant(Atom::Float(f)) = &tail2[1] {
                     assert!(*f == 400.0);
                 } else {
-                    assert!(false);
+                    panic!();
                 }
             } else {
-                assert!(false);
+                panic!();
             }
         } else {
-            assert!(false);
+            panic!();
         }
     }
 }

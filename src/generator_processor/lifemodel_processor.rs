@@ -81,9 +81,8 @@ impl LifemodelProcessor {
 }
 
 impl GeneratorProcessor for LifemodelProcessor {
-
     // I'm a bit surprises this one's stateless ...
-    
+
     // this one only processes the generators ...
     fn process_generator(
         &mut self,
@@ -230,5 +229,5 @@ impl GeneratorProcessor for LifemodelProcessor {
         }
 
         self.step_count += 1;
-    }    
+    }
 }

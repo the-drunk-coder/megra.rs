@@ -37,7 +37,6 @@ impl GeneratorProcessor for GeneratorWrapperProcessor {
         GeneratorProcessorState::WrappedGenerator(self.wrapped_generator.clone())
     }
 
-    
     // another pure event-stream processor
     fn process_events(
         &mut self,
