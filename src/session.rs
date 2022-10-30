@@ -168,7 +168,7 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
     };
 
     // retrieve the current events
-    let events = data.generator.current_events(&data.global_parameters);
+    let mut events = data.generator.current_events(&data.global_parameters);
     //if events.is_empty() {
     //    println!("really no events");
     //}
@@ -184,7 +184,7 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
         sync = true;
     }
 
-    for ev in events.iter() {
+    for ev in events.iter_mut() {
         match ev {
             InterpretableEvent::Sound(s) => {
                 // no need to allocate a string everytime here, should be changed
@@ -222,6 +222,10 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
                 {
                     bufnum = *b;
                 }
+
+                // prepare a single, self-contained envelope from
+                // the available information ...
+                s.build_envelope();
 
                 if let Some(mut inst) = data.ruffbox.prepare_instance(
                     map_synth_type(&s.name, &s.params),

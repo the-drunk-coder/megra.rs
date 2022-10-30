@@ -537,7 +537,11 @@ pub fn once(
 
     for c in tail_drain {
         match c {
-            EvaluatedExpr::BuiltIn(BuiltIn::SoundEvent(mut e)) => sound_events.push(e.get_static()),
+            EvaluatedExpr::BuiltIn(BuiltIn::SoundEvent(mut e)) => {
+                let mut es = e.get_static();
+                es.build_envelope(); // build consistent envelope before evaluating
+                sound_events.push(es)
+            }
             EvaluatedExpr::BuiltIn(BuiltIn::ControlEvent(c)) => control_events.push(c),
             _ => {}
         }

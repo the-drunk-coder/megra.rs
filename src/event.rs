@@ -247,17 +247,11 @@ impl Event {
     }
 
     pub fn get_static(&mut self) -> StaticEvent {
-        let mut static_event = StaticEvent {
+        StaticEvent {
             name: self.name.clone(),
             params: self.evaluate_parameters(),
             tags: self.tags.clone(),
             op: self.op,
-        };
-        // before we send the event, make sure we have a self-contained
-        // envelope (building and changing the envelope incrementally
-        // is a bit annoying later down the line)
-        static_event.build_envelope();
-
-        static_event
+        }
     }
 }
