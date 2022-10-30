@@ -156,11 +156,24 @@ pub fn define_standard_library() -> FunctionMap {
     standard_library.fmap.insert("atk-sub".to_string(), eval::events::parameters::parameter);
     standard_library.fmap.insert("atk-div".to_string(), eval::events::parameters::parameter);
 
+    // attack peak
+    standard_library.fmap.insert("atkp".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("atkp-add".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("atkp-mul".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("atkp-sub".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("atkp-div".to_string(), eval::events::parameters::parameter);
+
     standard_library.fmap.insert("sus".to_string(), eval::events::parameters::parameter);
     standard_library.fmap.insert("sus-add".to_string(), eval::events::parameters::parameter);
     standard_library.fmap.insert("sus-mul".to_string(), eval::events::parameters::parameter);
     standard_library.fmap.insert("sus-sub".to_string(), eval::events::parameters::parameter);
     standard_library.fmap.insert("sus-div".to_string(), eval::events::parameters::parameter);
+
+    standard_library.fmap.insert("dec".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("dec-add".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("dec-mul".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("dec-sub".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("dec-div".to_string(), eval::events::parameters::parameter);
 
     standard_library.fmap.insert("rel".to_string(), eval::events::parameters::parameter);
     standard_library.fmap.insert("rel-add".to_string(), eval::events::parameters::parameter);

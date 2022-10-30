@@ -33,37 +33,7 @@ pub fn parameter(
                 EventOperation::Replace
             };
 
-            let param_key = match parts[0] {
-                "freq" => SynthParameterLabel::PitchFrequency,
-                "pitch" => SynthParameterLabel::PitchFrequency,
-                "atk" => SynthParameterLabel::Attack,
-                "rel" => SynthParameterLabel::Release,
-                "sus" => SynthParameterLabel::Sustain,
-                "pos" => SynthParameterLabel::ChannelPosition,
-                "lvl" => SynthParameterLabel::EnvelopeLevel,
-                "gain" => SynthParameterLabel::OscillatorAmplitude,
-                "dur" => SynthParameterLabel::Duration,
-                "rev" => SynthParameterLabel::ReverbMix,
-                "del" => SynthParameterLabel::DelayMix,
-                "lpf" => SynthParameterLabel::LowpassCutoffFrequency,
-                "lpq" => SynthParameterLabel::LowpassQFactor,
-                "lpd" => SynthParameterLabel::LowpassFilterDistortion,
-                "hpf" => SynthParameterLabel::HighpassCutoffFrequency,
-                "hpq" => SynthParameterLabel::HighpassQFactor,
-                "pff" => SynthParameterLabel::PeakFrequency,
-                "pfbw" => SynthParameterLabel::PeakBandwidth,
-                "pfg" => SynthParameterLabel::PeakGain,
-                "pff1" => SynthParameterLabel::Peak1Frequency,
-                "pfbw1" => SynthParameterLabel::Peak1Bandwidth,
-                "pfg1" => SynthParameterLabel::Peak1Gain,
-                "pff2" => SynthParameterLabel::Peak2Frequency,
-                "pfbw2" => SynthParameterLabel::Peak2Bandwidth,
-                "pfg2" => SynthParameterLabel::Peak2Gain,
-                "pw" => SynthParameterLabel::Pulsewidth,
-                "start" => SynthParameterLabel::PlaybackStart,
-                "rate" => SynthParameterLabel::PlaybackRate,
-                _ => SynthParameterLabel::PitchFrequency,
-            };
+            let param_key = crate::event_helpers::map_parameter(parts[0]);
 
             if let Some(p) = tail_drain.next() {
                 let mut ev = Event::with_name_and_operation(parts[0].to_string(), op);
