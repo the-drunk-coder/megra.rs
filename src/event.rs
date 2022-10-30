@@ -39,7 +39,7 @@ impl Debug for Event {
 
 /// This is the final sound or operation event. An event can also represent an operation,
 /// such as an addition or multiplication.
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct StaticEvent {
     pub name: String,
     pub params: HashMap<SynthParameterLabel, SynthParameterValue>,
@@ -195,12 +195,13 @@ impl StaticEvent {
             });
         }
 
-        self.params.insert(
-            SynthParameterLabel::Envelope,
-            SynthParameterValue::MultiPointEnvelope(segments, false, ValOp::Replace),
-        );
-
-        //println!("par {:?}", self.params);
+        // only add if there's actual envelope info to be found ...
+        if !segments.is_empty() {
+            self.params.insert(
+                SynthParameterLabel::Envelope,
+                SynthParameterValue::MultiPointEnvelope(segments, false, ValOp::Replace),
+            );
+        }
     }
 }
 
@@ -256,6 +257,7 @@ impl Event {
         // envelope (building and changing the envelope incrementally
         // is a bit annoying later down the line)
         static_event.build_envelope();
+
         static_event
     }
 }
