@@ -6,7 +6,6 @@ use ruffbox_synth::building_blocks::SynthParameterLabel;
 
 use crate::{
     builtin_types::{BuiltinGlobalParameters, GlobalParameters},
-    event::{InterpretableEvent, StaticEvent},
     generator::modifier_functions_raw::*,
     generator::Generator,
     generator_processor::*,

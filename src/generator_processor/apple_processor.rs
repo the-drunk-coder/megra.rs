@@ -3,7 +3,6 @@ use std::sync::*;
 
 use crate::{
     builtin_types::GlobalParameters,
-    event::{InterpretableEvent, StaticEvent},
     generator::Generator,
     generator_processor::*,
     parameter::DynVal,
