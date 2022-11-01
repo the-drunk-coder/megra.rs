@@ -31,7 +31,7 @@ pub trait GeneratorProcessor: GeneratorProcessorClone {
         /* pass by default */
     }
     /// implement this if you need to modify the previous
-    /// processor's structure 
+    /// processor's structure
     fn process_generator(
         &mut self,
         _generator: &mut Generator,
