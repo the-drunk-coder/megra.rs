@@ -31,6 +31,12 @@ pub fn map_symbolic_param_value(sym: &str) -> Option<ParameterValue> {
         "lin" => Some(ParameterValue::EnvelopeSegmentType(
             EnvelopeSegmentType::Lin,
         )),
+        "sin" => Some(ParameterValue::EnvelopeSegmentType(
+            EnvelopeSegmentType::Lin,
+        )),
+        "cos" => Some(ParameterValue::EnvelopeSegmentType(
+            EnvelopeSegmentType::Cos,
+        )),
         "log" => Some(ParameterValue::EnvelopeSegmentType(
             EnvelopeSegmentType::Log,
         )),
@@ -211,6 +217,54 @@ fn sample_defaults(ev: &mut Event) {
     );
 }
 
+fn nofilter_defaults(ev: &mut Event) {
+    // set some defaults
+    ev.params.insert(
+        SynthParameterLabel::EnvelopeLevel,
+        ParameterValue::Scalar(DynVal::with_value(0.5)),
+    );
+    ev.params.insert(
+        SynthParameterLabel::LowpassFilterType,
+        ParameterValue::FilterType(FilterType::Dummy),
+    );
+    ev.params.insert(
+        SynthParameterLabel::HighpassFilterType,
+        ParameterValue::FilterType(FilterType::Dummy),
+    );
+    ev.params.insert(
+        SynthParameterLabel::OscillatorAmplitude,
+        ParameterValue::Scalar(DynVal::with_value(0.77)),
+    );
+    ev.params.insert(
+        SynthParameterLabel::Attack,
+        ParameterValue::Scalar(DynVal::with_value(1.0)),
+    );
+    ev.params.insert(
+        SynthParameterLabel::Sustain,
+        ParameterValue::Scalar(DynVal::with_value(48.0)),
+    );
+    ev.params.insert(
+        SynthParameterLabel::Release,
+        ParameterValue::Scalar(DynVal::with_value(100.0)),
+    );
+    ev.params.insert(
+        SynthParameterLabel::ChannelPosition,
+        ParameterValue::Scalar(DynVal::with_value(0.00)),
+    );
+    ev.params.insert(
+        SynthParameterLabel::PlaybackRate,
+        ParameterValue::Scalar(DynVal::with_value(1.0)),
+    );
+    ev.params.insert(
+        SynthParameterLabel::LowpassFilterDistortion,
+        ParameterValue::Scalar(DynVal::with_value(0.0)),
+    );
+    ev.params.insert(
+        SynthParameterLabel::PlaybackStart,
+        ParameterValue::Scalar(DynVal::with_value(0.0)),
+    );
+}
+
 pub fn sound(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
@@ -236,7 +290,7 @@ pub fn sound(
             let mut ev =
                 Event::with_name_and_operation("sine".to_string(), EventOperation::Replace);
             get_pitch_param(&mut ev, &mut tail_drain);
-            synth_defaults(&mut ev);
+            nofilter_defaults(&mut ev);
             ev
         }
         "tri" => {
@@ -288,7 +342,7 @@ pub fn sound(
         "cub" => {
             let mut ev = Event::with_name_and_operation("cub".to_string(), EventOperation::Replace);
             get_pitch_param(&mut ev, &mut tail_drain);
-            synth_defaults(&mut ev);
+            nofilter_defaults(&mut ev);
             ev
         }
         "risset" => {
