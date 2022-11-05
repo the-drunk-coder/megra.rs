@@ -355,10 +355,10 @@ mod tests {
             Ok((_, o)) => match &o[0][0] {
                 CycleItem::Event((_, _)) => assert!(true),
                 _ => {
-                    assert!(false)
+                    panic!()
                 }
             },
-            Err(_) => assert!(false),
+            Err(_) => panic!(),
         }
     }
 
@@ -370,25 +370,25 @@ mod tests {
 
                 match &o[0][0] {
                     CycleItem::Event((s, _)) => assert!(s == "saw"),
-                    _ => assert!(false),
+                    _ => panic!(),
                 }
 
                 match &o[1][0] {
                     CycleItem::Event((s, _)) => assert!(s == "~"),
-                    _ => assert!(false),
+                    _ => panic!(),
                 }
 
                 match &o[2][0] {
                     CycleItem::Event((s, _)) => assert!(s == "~"),
-                    _ => assert!(false),
+                    _ => panic!(),
                 }
 
                 match &o[3][0] {
                     CycleItem::Event((s, _)) => assert!(s == "~"),
-                    _ => assert!(false),
+                    _ => panic!(),
                 }
             }
-            Err(_) => assert!(false),
+            Err(_) => panic!(),
         }
     }
 
@@ -400,25 +400,25 @@ mod tests {
 
                 match &o[0][0] {
                     CycleItem::Event((s, _)) => assert!(s == "saw"),
-                    _ => assert!(false),
+                    _ => panic!(),
                 }
 
                 match &o[1][0] {
                     CycleItem::Event((s, _)) => assert!(s == "~"),
-                    _ => assert!(false),
+                    _ => panic!(),
                 }
 
                 match &o[2][0] {
                     CycleItem::Event((s, _)) => assert!(s == "~"),
-                    _ => assert!(false),
+                    _ => panic!(),
                 }
 
                 match &o[3][0] {
                     CycleItem::Event((s, _)) => assert!(s == "~"),
-                    _ => assert!(false),
+                    _ => panic!(),
                 }
             }
-            Err(_) => assert!(false),
+            Err(_) => panic!(),
         }
     }
 
@@ -430,30 +430,30 @@ mod tests {
 
                 match &o[0][0] {
                     CycleItem::Event((s, _)) => assert!(s == "saw"),
-                    _ => assert!(false),
+                    _ => panic!(),
                 }
 
                 match &o[1][0] {
                     CycleItem::Duration(d) => assert!(*d == 100.0),
-                    _ => assert!(false),
+                    _ => panic!(),
                 }
 
                 match &o[2][0] {
                     CycleItem::Event((s, _)) => assert!(s == "saw"),
-                    _ => assert!(false),
+                    _ => panic!(),
                 }
 
                 match &o[3][0] {
                     CycleItem::Event((s, _)) => assert!(s == "~"),
-                    _ => assert!(false),
+                    _ => panic!(),
                 }
 
                 match &o[4][0] {
                     CycleItem::Event((s, _)) => assert!(s == "~"),
-                    _ => assert!(false),
+                    _ => panic!(),
                 }
             }
-            Err(_) => assert!(false),
+            Err(_) => panic!(),
         }
     }
 
@@ -463,25 +463,25 @@ mod tests {
             Ok((_, o)) => {
                 match &o[0][0] {
                     CycleItem::Parameter(CycleParameter::Symbol(s)) => assert!(s == "boat"),
-                    _ => assert!(false),
+                    _ => panic!(),
                 }
 
                 match &o[1][0] {
                     CycleItem::Event((s, _)) => assert!(s == "~"),
-                    _ => assert!(false),
+                    _ => panic!(),
                 }
 
                 match &o[2][0] {
                     CycleItem::Event((s, _)) => assert!(s == "~"),
-                    _ => assert!(false),
+                    _ => panic!(),
                 }
 
                 match &o[3][0] {
                     CycleItem::Event((s, _)) => assert!(s == "~"),
-                    _ => assert!(false),
+                    _ => panic!(),
                 }
             }
-            Err(_) => assert!(false),
+            Err(_) => panic!(),
         }
     }
 
@@ -491,25 +491,25 @@ mod tests {
             Ok((_, o)) => {
                 match &o[0][0] {
                     CycleItem::Parameter(CycleParameter::Number(f)) => assert!(*f == 200.0),
-                    _ => assert!(false),
+                    _ => panic!(),
                 }
 
                 match &o[1][0] {
                     CycleItem::Event((s, _)) => assert!(s == "~"),
-                    _ => assert!(false),
+                    _ => panic!(),
                 }
 
                 match &o[2][0] {
                     CycleItem::Event((s, _)) => assert!(s == "~"),
-                    _ => assert!(false),
+                    _ => panic!(),
                 }
 
                 match &o[3][0] {
                     CycleItem::Event((s, _)) => assert!(s == "~"),
-                    _ => assert!(false),
+                    _ => panic!(),
                 }
             }
-            Err(_) => assert!(false),
+            Err(_) => panic!(),
         }
     }
 
@@ -550,52 +550,52 @@ mod tests {
 
         match &o[0][0] {
             CycleResult::SoundEvent(e) => assert!(e.name == "saw"),
-            _ => assert!(false),
+            _ => panic!(),
         }
 
         match &o[1][0] {
             CycleResult::Duration(d) => assert!(*d == 100.0_f32),
-            _ => assert!(false),
+            _ => panic!(),
         }
 
         match &o[2][0] {
             CycleResult::SoundEvent(e) => assert!(e.name == "saw"),
-            _ => assert!(false),
+            _ => panic!(),
         }
 
         match &o[3][0] {
             CycleResult::SoundEvent(e) => assert!(e.name == "silence"),
-            _ => assert!(false),
+            _ => panic!(),
         }
 
         match &o[4][0] {
             CycleResult::SoundEvent(e) => assert!(e.name == "silence"),
-            _ => assert!(false),
+            _ => panic!(),
         }
 
         match &o[5][0] {
             CycleResult::SoundEvent(e) => assert!(e.name == "saw"),
-            _ => assert!(false),
+            _ => panic!(),
         }
 
         match &o[5][1] {
             CycleResult::SoundEvent(e) => assert!(e.name == "saw"),
-            _ => assert!(false),
+            _ => panic!(),
         }
 
         match &o[6][0] {
             CycleResult::SoundEvent(e) => assert!(e.name == "silence"),
-            _ => assert!(false),
+            _ => panic!(),
         }
 
         match &o[7][0] {
             CycleResult::SoundEvent(e) => assert!(e.name == "sampler"),
-            _ => assert!(false),
+            _ => panic!(),
         }
 
         match &o[8][0] {
             CycleResult::SoundEvent(e) => assert!(e.name == "sampler"),
-            _ => assert!(false),
+            _ => panic!(),
         }
     }
 }

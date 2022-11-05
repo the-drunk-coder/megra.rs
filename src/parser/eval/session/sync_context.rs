@@ -174,7 +174,7 @@ mod tests {
             }
             Err(e) => {
                 println!("err {}", e);
-                assert!(false)
+                panic!()
             }
         }
     }
