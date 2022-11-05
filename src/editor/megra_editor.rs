@@ -234,7 +234,7 @@ impl eframe::App for MegraEditor {
                 // store content explicitly when changing ...
                 if !self.current_sketch.is_empty() {
                     let p = path::Path::new(&self.current_sketch);
-                    match fs::write(p, &self.content.as_bytes()) {
+                    match fs::write(p, self.content.as_bytes()) {
                         Ok(_) => {}
                         Err(e) => {
                             println!("couldn't save sketch {}", e);
@@ -311,7 +311,7 @@ impl eframe::App for MegraEditor {
     fn save(&mut self, storage: &mut dyn eframe::Storage) {
         if !self.current_sketch.is_empty() {
             let p = path::Path::new(&self.current_sketch);
-            match fs::write(p, &self.content.as_bytes()) {
+            match fs::write(p, self.content.as_bytes()) {
                 Ok(_) => {}
                 Err(e) => {
                     println!("couldn't save sketch {}", e);
