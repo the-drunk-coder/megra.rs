@@ -20,8 +20,8 @@ parking_lot = "0.12"
 ruffbox_synth = "0.5"
 #ruffbox_synth = { path = "../ruffbox-synth" }
 nom = "7.1"
-#vom_rs = "0.2"
-vom_rs = { path = "../vom.rs" }
+vom_rs = "0.3"
+#vom_rs = { path = "../vom.rs" }
 rustyline = "9.1"
 claxon = "0.4"
 getopts = "0.2"
