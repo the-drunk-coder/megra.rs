@@ -15,6 +15,7 @@ pub mod generator_processor;
 pub mod interpreter;
 pub mod load_audio_file;
 pub mod markov_sequence_generator;
+pub mod midi_input;
 pub mod music_theory;
 pub mod parameter;
 pub mod parser;
@@ -66,6 +67,21 @@ const RINGBUFFER_SIZE: usize = 8000;
 #[cfg(feature = "ringbuffer")]
 const BLOCKSIZE: usize = 128;
 
+struct RunOptions {
+    mode: OutputMode,
+    num_live_buffers: usize,
+    live_buffer_time: f32,
+    editor: bool,
+    create_sketch: bool,
+    load_samples: bool,
+    sample_folder: Option<String>,
+    base_folder: Option<String>,
+    reverb_mode: ReverbMode,
+    font: Option<String>,
+    font_size: f32,
+    midi_in: Option<usize>,
+}
+
 fn main() -> Result<(), anyhow::Error> {
     let mut argv = env::args();
     let program = argv.next().unwrap();
@@ -83,7 +99,18 @@ fn main() -> Result<(), anyhow::Error> {
     opts.optflag("h", "help", "Print this help");
     opts.optflag("n", "no-samples", "don't load default samples");
     opts.optopt("o", "output-mode", "output mode (stereo, 8ch)", "stereo");
-    opts.optflag("l", "list-devices", "list available devices");
+    opts.optopt(
+        "",
+        "midi-in",
+        "choose midi input (none deactivates midi in)",
+        "none",
+    );
+    opts.optflag("l", "list-devices", "list available audio devices");
+    opts.optflag(
+        "",
+        "list-midi-input-ports",
+        "list available midi input ports",
+    );
     opts.optopt("d", "device", "choose device", "default");
     opts.optopt(
         "",
@@ -132,7 +159,7 @@ fn main() -> Result<(), anyhow::Error> {
     };
 
     if matches.opt_present("v") {
-        println!("0.0.5");
+        println!("0.0.6");
         return Ok(());
     }
 
@@ -241,6 +268,10 @@ fn main() -> Result<(), anyhow::Error> {
         return Ok(());
     }
 
+    if matches.opt_present("list-midi-input-ports") {
+        return midi_input::list_midi_input_ports();
+    }
+
     let out_device = if let Some(dev) = matches.opt_str("d") {
         dev
     } else {
@@ -271,6 +302,16 @@ fn main() -> Result<(), anyhow::Error> {
     // let's assume it's the same for both ...
     let sample_format = out_config.sample_format();
 
+    let midi_in: Option<usize> = if let Some(midi_port) = matches.opt_str("midi-in") {
+        if midi_port.to_lowercase() == "none" {
+            None
+        } else {
+            Some(midi_port.parse()?)
+        }
+    } else {
+        None
+    };
+
     let run_opts = RunOptions {
         mode: out_mode,
         num_live_buffers: num_live_buffers as usize,
@@ -283,6 +324,7 @@ fn main() -> Result<(), anyhow::Error> {
         reverb_mode,
         font: matches.opt_str("font"),
         font_size,
+        midi_in,
     };
 
     match out_mode {
@@ -340,20 +382,6 @@ fn main() -> Result<(), anyhow::Error> {
     }
 
     Ok(())
-}
-
-struct RunOptions {
-    mode: OutputMode,
-    num_live_buffers: usize,
-    live_buffer_time: f32,
-    editor: bool,
-    create_sketch: bool,
-    load_samples: bool,
-    sample_folder: Option<String>,
-    base_folder: Option<String>,
-    reverb_mode: ReverbMode,
-    font: Option<String>,
-    font_size: f32,
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -441,6 +469,13 @@ where
 
     let playhead_out = sync::Arc::new(Mutex::new(playhead)); // the one for the audio thread (out stream)...
     let playhead_in = sync::Arc::clone(&playhead_out); // the one for the audio thread (in stream)...
+
+    // check if we have a midi input situation
+    if let Some(midi_in_port) = options.midi_in {
+        thread::spawn(move || {
+            midi_input::open_midi_input_port(midi_in_port);
+        });
+    }
 
     #[cfg(not(feature = "ringbuffer"))]
     let in_stream = input_device.build_input_stream(
