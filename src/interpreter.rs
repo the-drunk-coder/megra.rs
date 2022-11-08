@@ -1,4 +1,5 @@
 use parking_lot::Mutex;
+use std::collections::HashMap;
 use std::sync;
 use std::thread;
 
@@ -150,6 +151,7 @@ pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
 pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
     parsed_in: EvaluatedExpr,
     function_map: &sync::Arc<Mutex<FunctionMap>>,
+    midi_callback_map: &sync::Arc<Mutex<HashMap<u8, Command>>>,
     session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
     ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
     global_parameters: &sync::Arc<GlobalParameters>,
@@ -224,6 +226,9 @@ pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
                 output_mode,
                 base_dir,
             );
+        }
+        EvaluatedExpr::BuiltIn(BuiltIn::DefineMidiCallback(key, c)) => {
+            midi_callback_map.lock().insert(key, c);
         }
         EvaluatedExpr::Float(f) => {
             println!("a number: {}", f)

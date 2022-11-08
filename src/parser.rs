@@ -48,6 +48,7 @@ pub enum Expr {
 pub enum BuiltIn {
     Rule(Rule),
     Command(Command),
+    DefineMidiCallback(u8, Command),
     PartProxy(PartProxy),
     ProxyList(Vec<PartProxy>),
     Generator(Generator),
@@ -69,6 +70,7 @@ impl fmt::Debug for BuiltIn {
         match self {
             BuiltIn::Rule(_) => write!(f, "BuiltIn::Rule(..)"),
             BuiltIn::Command(_) => write!(f, "BuiltIn::Command(..)"),
+            BuiltIn::DefineMidiCallback(_, _) => write!(f, "BuiltIn::DefineMidiCallback(..)"),
             BuiltIn::PartProxy(_) => write!(f, "BuiltIn::PartProxy(..)"),
             BuiltIn::ProxyList(_) => write!(f, "BuiltIn::ProxyList(..)"),
             BuiltIn::Generator(g) => write!(f, "BuiltIn::Generator({:?})", g.id_tags),

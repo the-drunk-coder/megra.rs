@@ -42,6 +42,7 @@ use getopts::Options;
 use parking_lot::Mutex;
 use ruffbox_synth::ruffbox::{init_ruffbox, ReverbMode};
 use standard_library::define_standard_library;
+use std::collections::HashMap;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::{env, sync, thread};
 
@@ -106,11 +107,7 @@ fn main() -> Result<(), anyhow::Error> {
         "none",
     );
     opts.optflag("l", "list-devices", "list available audio devices");
-    opts.optflag(
-        "",
-        "list-midi-input-ports",
-        "list available midi input ports",
-    );
+    opts.optflag("", "midi-ports", "list available midi input ports");
     opts.optopt("d", "device", "choose device", "default");
     opts.optopt(
         "",
@@ -268,7 +265,7 @@ fn main() -> Result<(), anyhow::Error> {
         return Ok(());
     }
 
-    if matches.opt_present("list-midi-input-ports") {
+    if matches.opt_present("midi-ports") {
         return midi_input::list_midi_input_ports();
     }
 
@@ -469,13 +466,6 @@ where
 
     let playhead_out = sync::Arc::new(Mutex::new(playhead)); // the one for the audio thread (out stream)...
     let playhead_in = sync::Arc::clone(&playhead_out); // the one for the audio thread (in stream)...
-
-    // check if we have a midi input situation
-    if let Some(midi_in_port) = options.midi_in {
-        thread::spawn(move || {
-            midi_input::open_midi_input_port(midi_in_port);
-        });
-    }
 
     #[cfg(not(feature = "ringbuffer"))]
     let in_stream = input_device.build_input_stream(
@@ -718,6 +708,27 @@ where
     let stdlib = sync::Arc::new(Mutex::new(define_standard_library()));
     let controls_arc = sync::Arc::new(controls);
 
+    // check if we have a midi input situation
+    let midi_callback_map = sync::Arc::new(Mutex::new(HashMap::<u8, Command>::new()));
+    if let Some(midi_in_port) = options.midi_in {
+        let cb_2 = sync::Arc::clone(&midi_callback_map);
+        let session_midi = sync::Arc::clone(&session);
+        let ruffbox_midi = sync::Arc::clone(&controls_arc);
+        let glob_midi = sync::Arc::clone(&global_parameters);
+        let parts_midi = sync::Arc::clone(&parts_store);
+        thread::spawn(move || {
+            midi_input::open_midi_input_port(
+                cb_2,
+                midi_in_port,
+                session_midi,
+                ruffbox_midi,
+                glob_midi,
+                parts_midi,
+                options.mode,
+            );
+        });
+    }
+
     let base_dir = if let Some(p) = options.base_folder {
         let bd = std::path::PathBuf::from(p);
         if !bd.exists() {
@@ -783,6 +794,7 @@ where
     if options.editor {
         editor::run_editor(
             &stdlib,
+            &midi_callback_map,
             &session,
             &controls_arc,
             &global_parameters,
@@ -799,6 +811,7 @@ where
         // start the megra repl
         repl::start_repl(
             &stdlib,
+            &midi_callback_map,
             &session,
             &controls_arc,
             &global_parameters,

@@ -46,7 +46,8 @@ pub fn define_standard_library() -> FunctionMap {
     standard_library.fmap.insert("connect-visualizer".to_string(), eval::commands::connect_visualizer);
     standard_library.fmap.insert("rec".to_string(), eval::commands::start_recording);
     standard_library.fmap.insert("stop-rec".to_string(), eval::commands::stop_recording);
-
+    standard_library.fmap.insert("midi-callback".to_string(), eval::commands::define_midi_callback);
+    
     // control event
     standard_library.fmap.insert("ctrl".to_string(), eval::events::control::control);
 

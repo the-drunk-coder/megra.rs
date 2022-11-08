@@ -44,6 +44,28 @@ pub fn load_part(
     ))))
 }
 
+pub fn define_midi_callback(
+    _: &FunctionMap,
+    tail: &mut Vec<EvaluatedExpr>,
+    _: &sync::Arc<GlobalParameters>,
+    _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
+    _: OutputMode,
+) -> Option<EvaluatedExpr> {
+    let mut tail_drain = tail.drain(..).skip(1);
+
+    let key: u8 = if let Some(EvaluatedExpr::Float(s)) = tail_drain.next() {
+        s as u8
+    } else {
+        return None;
+    };
+
+    if let Some(EvaluatedExpr::BuiltIn(BuiltIn::Command(c))) = tail_drain.next() {
+        Some(EvaluatedExpr::BuiltIn(BuiltIn::DefineMidiCallback(key, c)))
+    } else {
+        None
+    }
+}
+
 #[allow(clippy::unnecessary_unwrap)]
 pub fn load_sample_as_wavematrix(
     _: &FunctionMap,

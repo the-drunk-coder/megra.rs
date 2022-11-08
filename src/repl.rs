@@ -1,4 +1,5 @@
 use parking_lot::Mutex;
+use std::collections::HashMap;
 use std::sync;
 
 use ruffbox_synth::ruffbox::RuffboxControls;
@@ -16,6 +17,7 @@ use crate::session::{OutputMode, Session};
 #[allow(clippy::too_many_arguments)]
 pub fn start_repl<const BUFSIZE: usize, const NCHAN: usize>(
     function_map: &sync::Arc<Mutex<FunctionMap>>,
+    midi_callback_map: &sync::Arc<Mutex<HashMap<u8, Command>>>,
     session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
     ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
     global_parameters: &sync::Arc<GlobalParameters>,
@@ -75,6 +77,7 @@ pub fn start_repl<const BUFSIZE: usize, const NCHAN: usize>(
                                                 interpreter::interpret(
                                                     pfa,
                                                     function_map,
+                                                    midi_callback_map,
                                                     session,
                                                     ruffbox,
                                                     global_parameters,
@@ -105,6 +108,7 @@ pub fn start_repl<const BUFSIZE: usize, const NCHAN: usize>(
                         interpreter::interpret(
                             pfa,
                             function_map,
+                            midi_callback_map,
                             session,
                             ruffbox,
                             global_parameters,
