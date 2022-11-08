@@ -46,3 +46,4 @@ assert_approx_eq = "1.1.0"
 [features]
 default = ["serde"] # enable ringbuffer for WASAPI !
 ringbuffer = []
+low_latency = [] # blocksize 128 instead of 512

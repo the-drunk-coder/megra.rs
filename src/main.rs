@@ -65,8 +65,18 @@ Usage:
 // will be ignored if ringbuffer feature isn't activated
 #[cfg(feature = "ringbuffer")]
 const RINGBUFFER_SIZE: usize = 8000;
-#[cfg(feature = "ringbuffer")]
+
+#[cfg(any(feature = "ringbuffer", feature = "low_latency"))]
 const BLOCKSIZE: usize = 128;
+
+#[cfg(any(feature = "ringbuffer", feature = "low_latency"))]
+const BLOCKSIZE_FLOAT: f32 = 128.0;
+
+#[cfg(not(any(feature = "ringbuffer", feature = "low_latency")))]
+const BLOCKSIZE: usize = 512;
+
+#[cfg(not(any(feature = "ringbuffer", feature = "low_latency")))]
+const BLOCKSIZE_FLOAT: f32 = 512.0;
 
 struct RunOptions {
     mode: OutputMode,
@@ -403,8 +413,7 @@ where
         sample_rate, in_channels, out_channels
     );
 
-    #[cfg(feature = "ringbuffer")]
-    let (controls, playhead) = init_ruffbox::<128, NCHAN>(
+    let (controls, playhead) = init_ruffbox::<BLOCKSIZE, NCHAN>(
         options.num_live_buffers,
         options.live_buffer_time.into(),
         &options.reverb_mode,
@@ -413,41 +422,15 @@ where
         10,
     );
 
-    #[cfg(not(feature = "ringbuffer"))]
-    let (controls, playhead) = init_ruffbox::<512, NCHAN>(
-        options.num_live_buffers,
-        options.live_buffer_time.into(),
-        &options.reverb_mode,
-        sample_rate.into(),
-        3000,
-        10,
-    );
-
-    // write real time stream 4 times a sec ...
-    #[cfg(not(feature = "ringbuffer"))]
     // OUTPUT RECORDING
-    let (throw_out, catch_out) = real_time_streaming::init_real_time_stream::<512, NCHAN>(
-        (512.0 / sample_rate) as f64,
-        0.25,
-    );
-    // write real time stream 4 times a sec ...
-    // INPUT MONITOR RECORDING
-    #[cfg(not(feature = "ringbuffer"))]
-    let (throw_in, catch_in) = real_time_streaming::init_real_time_stream::<512, NCHAN>(
-        (512.0 / sample_rate) as f64,
+    let (throw_out, catch_out) = real_time_streaming::init_real_time_stream::<BLOCKSIZE, NCHAN>(
+        (BLOCKSIZE_FLOAT / sample_rate) as f64,
         0.25,
     );
 
-    // SAME AS ABOVE, but with the ringbuffer feature ...
-    // not sure if this is working with variable block sizes ...
-    #[cfg(feature = "ringbuffer")]
-    let (throw_out, catch_out) = real_time_streaming::init_real_time_stream::<128, NCHAN>(
-        (128.0 / sample_rate) as f64,
-        0.25,
-    );
-    #[cfg(feature = "ringbuffer")] // not really sure which values to use here ...
-    let (throw_in, catch_in) = real_time_streaming::init_real_time_stream::<128, NCHAN>(
-        (128.0 / sample_rate) as f64,
+    // INPUT MONITOR RECORDING
+    let (throw_in, catch_in) = real_time_streaming::init_real_time_stream::<BLOCKSIZE, NCHAN>(
+        (BLOCKSIZE_FLOAT / sample_rate) as f64,
         0.25,
     );
 
@@ -522,13 +505,14 @@ where
 
             if is_recording_input.load(Ordering::SeqCst) {
                 let current_blocksize = data.len() / in_channels;
-                let num_blocks = current_blocksize / 128;
-                let leftover = current_blocksize - (num_blocks * 128);
+                let num_blocks = current_blocksize / BLOCKSIZE;
+                let leftover = current_blocksize - (num_blocks * BLOCKSIZE);
 
                 for i in 0..num_blocks {
                     let mut stream_item = throw_in.prep_next().unwrap();
                     // there might be a faster way to de-interleave here ...
-                    for (f, frame) in data[i * 128 * in_channels..(i + 1) * 128 * in_channels]
+                    for (f, frame) in data
+                        [i * BLOCKSIZE * in_channels..(i + 1) * BLOCKSIZE * in_channels]
                         .chunks(in_channels)
                         .enumerate()
                     {
@@ -543,7 +527,7 @@ where
                 if leftover > 0 {
                     let mut stream_item = throw_in.prep_next().unwrap();
                     // there might be a faster way to de-interleave here ...
-                    for (f, frame) in data[num_blocks * 128 * in_channels..]
+                    for (f, frame) in data[num_blocks * BLOCKSIZE * in_channels..]
                         .chunks(in_channels)
                         .enumerate()
                     {
@@ -582,7 +566,7 @@ where
             let ruff_out = ruff.process(0.0, true);
 
             if is_recording_output.load(Ordering::SeqCst) {
-                throw_out.write_samples(&ruff_out, 512);
+                throw_out.write_samples(&ruff_out, BLOCKSIZE);
             }
 
             // there might be a faster way to de-interleave here ...
@@ -639,7 +623,7 @@ where
                     let ruff_out = ruff.process(0.0, true);
 
                     if is_recording_output.load(Ordering::SeqCst) {
-                        throw_out.write_samples(&ruff_out, 128);
+                        throw_out.write_samples(&ruff_out, BLOCKSIZE);
                     }
 
                     //produced += BLOCKSIZE;
