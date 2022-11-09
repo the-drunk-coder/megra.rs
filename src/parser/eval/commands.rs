@@ -561,7 +561,6 @@ pub fn once(
         match c {
             EvaluatedExpr::BuiltIn(BuiltIn::SoundEvent(mut e)) => {
                 let mut es = e.get_static();
-                es.build_envelope(); // build consistent envelope before evaluating
                 sound_events.push(es)
             }
             EvaluatedExpr::BuiltIn(BuiltIn::ControlEvent(c)) => control_events.push(c),

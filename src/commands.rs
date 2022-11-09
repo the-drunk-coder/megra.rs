@@ -550,6 +550,8 @@ pub fn once<const BUFSIZE: usize, const NCHAN: usize>(
             continue;
         }
 
+        s.build_envelope(); // build consistent envelope before evaluating
+
         let mut bufnum: usize = 0;
         if let Some(SynthParameterValue::ScalarUsize(b)) =
             s.params.get(&SynthParameterLabel::SampleBufferNumber)
