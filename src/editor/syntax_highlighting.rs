@@ -177,10 +177,10 @@ fn is_function(word: &str) -> bool {
 fn is_command(word: &str) -> bool {
     matches!(
         word,
-        "apple"
+        "tmod"
+            | "midi-callback"
             | "export-dot"
             | "step-part"
-            | "tmod"
             | "latency"
             | "global-resources"
             | "delay"
