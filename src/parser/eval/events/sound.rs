@@ -366,6 +366,18 @@ pub fn sound(
             synth_defaults(&mut ev);
             ev
         }
+        "white" => {
+            let mut ev =
+                Event::with_name_and_operation("white".to_string(), EventOperation::Replace);
+            synth_defaults(&mut ev);
+            ev
+        }
+        "brown" => {
+            let mut ev =
+                Event::with_name_and_operation("brown".to_string(), EventOperation::Replace);
+            synth_defaults(&mut ev);
+            ev
+        }
         "silence" => Event::with_name_and_operation("silence".to_string(), EventOperation::Replace),
         "~" => Event::with_name_and_operation("silence".to_string(), EventOperation::Replace),
         "feedr" => {

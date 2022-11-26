@@ -10,37 +10,38 @@ pub fn map_synth_type(
     params: &HashMap<SynthParameterLabel, SynthParameterValue>,
 ) -> SynthType {
     match name {
-        "sine" | "tri" | "sqr" | "saw" | "rsaw" | "wsaw" | "fmsqr" | "fmsaw" | "fmtri" | "cub" => {
-            SynthType::SingleOscillator(
-                match name {
-                    "sine" => OscillatorType::Sine,
-                    "tri" => OscillatorType::LFTri,
-                    "sqr" => OscillatorType::LFSquare,
-                    "saw" => OscillatorType::LFSaw,
-                    "rsaw" => OscillatorType::LFRsaw,
-                    "wsaw" => OscillatorType::WTSaw,
-                    "fmsqr" => OscillatorType::FMSquare,
-                    "fmsaw" => OscillatorType::FMSaw,
-                    "fmtri" => OscillatorType::FMTri,
-                    "cub" => OscillatorType::LFCub,
-                    _ => OscillatorType::Sine,
-                },
-                if let Some(SynthParameterValue::FilterType(t)) =
-                    params.get(&SynthParameterLabel::LowpassFilterType)
-                {
-                    *t
-                } else {
-                    FilterType::Lpf18
-                },
-                if let Some(SynthParameterValue::FilterType(t)) =
-                    params.get(&SynthParameterLabel::HighpassFilterType)
-                {
-                    *t
-                } else {
-                    FilterType::Dummy
-                },
-            )
-        }
+        "sine" | "tri" | "sqr" | "saw" | "rsaw" | "wsaw" | "fmsqr" | "fmsaw" | "fmtri" | "cub"
+        | "white" | "brown" => SynthType::SingleOscillator(
+            match name {
+                "sine" => OscillatorType::Sine,
+                "tri" => OscillatorType::LFTri,
+                "sqr" => OscillatorType::LFSquare,
+                "saw" => OscillatorType::LFSaw,
+                "rsaw" => OscillatorType::LFRsaw,
+                "wsaw" => OscillatorType::WTSaw,
+                "fmsqr" => OscillatorType::FMSquare,
+                "fmsaw" => OscillatorType::FMSaw,
+                "fmtri" => OscillatorType::FMTri,
+                "cub" => OscillatorType::LFCub,
+                "white" => OscillatorType::WhiteNoise,
+                "brown" => OscillatorType::BrownNoise,
+                _ => OscillatorType::Sine,
+            },
+            if let Some(SynthParameterValue::FilterType(t)) =
+                params.get(&SynthParameterLabel::LowpassFilterType)
+            {
+                *t
+            } else {
+                FilterType::Lpf18
+            },
+            if let Some(SynthParameterValue::FilterType(t)) =
+                params.get(&SynthParameterLabel::HighpassFilterType)
+            {
+                *t
+            } else {
+                FilterType::Dummy
+            },
+        ),
         "risset" => SynthType::RissetBell,
         "sampler" => SynthType::Sampler(
             // assemble sampler
