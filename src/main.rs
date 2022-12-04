@@ -82,6 +82,7 @@ struct RunOptions {
     mode: OutputMode,
     num_live_buffers: usize,
     live_buffer_time: f32,
+    max_sample_buffers: usize,
     editor: bool,
     create_sketch: bool,
     load_samples: bool,
@@ -146,6 +147,13 @@ fn main() -> Result<(), anyhow::Error> {
         "live-buffers",
         "number of live input buffers (creates one input channels per live buffer)",
         "1",
+    );
+
+    opts.optopt(
+        "",
+        "max-sample-buffers",
+        "maximum number of sample buffers you can load",
+        "3000",
     );
 
     opts.optopt(
@@ -230,6 +238,16 @@ fn main() -> Result<(), anyhow::Error> {
         }
     } else {
         1
+    };
+
+    let max_sample_buffers: usize = if let Some(s) = matches.opt_str("max-sample-buffers") {
+        if let Ok(f) = s.parse() {
+            f
+        } else {
+            3000
+        }
+    } else {
+        3000
     };
 
     let live_buffer_time: f32 = if let Some(s) = matches.opt_str("live-buffer-time") {
@@ -323,6 +341,7 @@ fn main() -> Result<(), anyhow::Error> {
         mode: out_mode,
         num_live_buffers: num_live_buffers as usize,
         live_buffer_time,
+        max_sample_buffers,
         editor,
         create_sketch,
         load_samples,
@@ -418,7 +437,7 @@ where
         options.live_buffer_time.into(),
         &options.reverb_mode,
         sample_rate.into(),
-        3000,
+        options.max_sample_buffers,
         10,
     );
 
