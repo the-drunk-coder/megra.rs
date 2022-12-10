@@ -7,6 +7,42 @@ use parking_lot::Mutex;
 use ruffbox_synth::building_blocks::SynthParameterLabel;
 use std::sync;
 
+pub fn transpose(
+    _: &FunctionMap,
+    tail: &mut Vec<EvaluatedExpr>,
+    _: &sync::Arc<GlobalParameters>,
+    _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
+    _: OutputMode,
+) -> Option<EvaluatedExpr> {
+    let mut tail_drain = tail.drain(..).skip(1);
+
+    if let Some(EvaluatedExpr::Float(n)) = tail_drain.next() {
+        let mut ev =
+            Event::with_name_and_operation("ratefreq".to_string(), EventOperation::Multiply);
+
+        let factor = if n < 0.0 {
+            1.0 / f32::powf(1.05946309436, -n) // twelfth root of two, no complex scales so far ...
+        } else if n > 0.0 {
+            f32::powf(1.05946309436, n)
+        } else {
+            1.0
+        };
+
+        ev.params.insert(
+            SynthParameterLabel::PlaybackRate,
+            ParameterValue::Scalar(DynVal::with_value(factor)),
+        );
+
+        ev.params.insert(
+            SynthParameterLabel::PitchFrequency,
+            ParameterValue::Scalar(DynVal::with_value(factor)),
+        );
+        Some(EvaluatedExpr::BuiltIn(BuiltIn::SoundEvent(ev)))
+    } else {
+        None
+    }
+}
+
 pub fn parameter(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,

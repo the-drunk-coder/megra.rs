@@ -240,6 +240,9 @@ pub fn define_standard_library() -> FunctionMap {
     standard_library.fmap.insert("gain-sub".to_string(), eval::events::parameters::parameter);
     standard_library.fmap.insert("gain-div".to_string(), eval::events::parameters::parameter);
 
+    standard_library.fmap.insert("transpose".to_string(), eval::events::parameters::transpose);
+    standard_library.fmap.insert("tpo".to_string(), eval::events::parameters::transpose);
+
     // dynpars
     standard_library.fmap.insert("bounce".to_string(), eval::dynpar::bounce);
     standard_library.fmap.insert("brownian".to_string(), eval::dynpar::brownian);
