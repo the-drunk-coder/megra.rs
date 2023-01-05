@@ -284,6 +284,13 @@ pub fn define_standard_library() -> FunctionMap {
     standard_library.fmap.insert("rep".to_string(), eval::generator_modifier::eval_rep);
     standard_library.fmap.insert("reverse".to_string(), eval::generator_modifier::eval_reverse);
     standard_library.fmap.insert("keep".to_string(), eval::generator_modifier::eval_keep);
-        
+
+    // arithmetic
+    standard_library.fmap.insert("add".to_string(), eval::arithmetic::add);
+    standard_library.fmap.insert("mul".to_string(), eval::arithmetic::mul);
+    standard_library.fmap.insert("sub".to_string(), eval::arithmetic::sub);
+    standard_library.fmap.insert("div".to_string(), eval::arithmetic::div);
+    standard_library.fmap.insert("mod".to_string(), eval::arithmetic::modulo);
+
     standard_library
 }

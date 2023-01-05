@@ -191,6 +191,11 @@ fn is_command(word: &str) -> bool {
             | "clear"
             | "rec"
             | "stop-rec"
+            | "add"
+            | "sub"
+            | "mul"
+            | "div"
+            | "mod"
     )
 }
 

@@ -1,3 +1,4 @@
+pub mod arithmetic;
 pub mod commands;
 pub mod compose;
 pub mod constructors;
