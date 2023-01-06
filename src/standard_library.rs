@@ -291,6 +291,7 @@ pub fn define_standard_library() -> FunctionMap {
     standard_library.fmap.insert("sub".to_string(), eval::arithmetic::sub);
     standard_library.fmap.insert("div".to_string(), eval::arithmetic::div);
     standard_library.fmap.insert("mod".to_string(), eval::arithmetic::modulo);
+    standard_library.fmap.insert("pow".to_string(), eval::arithmetic::pow);
 
     standard_library
 }

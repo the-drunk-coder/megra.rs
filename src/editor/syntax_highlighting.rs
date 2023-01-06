@@ -196,6 +196,7 @@ fn is_command(word: &str) -> bool {
             | "mul"
             | "div"
             | "mod"
+            | "pow"
     )
 }
 

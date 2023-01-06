@@ -7,6 +7,7 @@ use parking_lot::Mutex;
 use ruffbox_synth::building_blocks::SynthParameterLabel;
 use std::sync;
 
+#[allow(clippy::excessive_precision)]
 pub fn transpose(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,

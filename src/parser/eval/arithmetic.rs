@@ -121,3 +121,24 @@ pub fn modulo(
         None
     }
 }
+
+pub fn pow(
+    _: &FunctionMap,
+    tail: &mut Vec<EvaluatedExpr>,
+    _: &sync::Arc<GlobalParameters>,
+    _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
+    _: OutputMode,
+) -> Option<EvaluatedExpr> {
+    let mut tail_drain = tail.drain(..);
+    tail_drain.next(); // don't need the function name
+
+    if let Some(EvaluatedExpr::Float(a)) = tail_drain.next() {
+        if let Some(EvaluatedExpr::Float(b)) = tail_drain.next() {
+            Some(EvaluatedExpr::Float(a.powf(b)))
+        } else {
+            None
+        }
+    } else {
+        None
+    }
+}
