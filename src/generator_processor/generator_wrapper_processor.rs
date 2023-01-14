@@ -41,10 +41,8 @@ impl GeneratorProcessor for GeneratorWrapperProcessor {
     fn process_events(
         &mut self,
         events: &mut Vec<InterpretableEvent>,
-        glob: &Arc<GlobalParameters>,
+        _glob: &Arc<GlobalParameters>,
     ) {
-        self.current_events = self.wrapped_generator.current_events(glob);
-
         for ev in self.current_events.iter_mut() {
             if let InterpretableEvent::Sound(sev) = ev {
                 for in_ev in events.iter_mut() {
@@ -63,12 +61,17 @@ impl GeneratorProcessor for GeneratorWrapperProcessor {
     }
 
     fn process_transition(&mut self, trans: &mut StaticEvent, glob: &Arc<GlobalParameters>) {
+        self.wrapped_generator.current_transition(glob);
+
+        // already get current events here so we have the same execution
+        // order and still can properly process the first transition
+        self.current_events = self.wrapped_generator.current_events(glob);
+
         for ev in self.current_events.iter_mut() {
             if let InterpretableEvent::Sound(sev) = ev {
                 trans.apply(sev, &self.filter, true);
             }
         }
-        self.wrapped_generator.current_transition(glob);
     }
 
     fn visualize_if_possible(&mut self, vis_client: &sync::Arc<VisualizerClient>) {
