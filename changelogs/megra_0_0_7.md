@@ -3,3 +3,4 @@
 * transpose function
 * update egui dependency to latest version
 * add basic arithmetic functions
+* `facts` constructor
