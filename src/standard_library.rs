@@ -23,6 +23,7 @@ pub fn define_standard_library() -> FunctionMap {
     standard_library.fmap.insert("cyc".to_string(), eval::constructors::cyc::cyc);
     standard_library.fmap.insert("flower".to_string(), eval::constructors::flower::flower);
     standard_library.fmap.insert("stages".to_string(), eval::constructors::stages::stages);
+    standard_library.fmap.insert("facts".to_string(), eval::constructors::facts::facts);
 
     // commands
     standard_library.fmap.insert("defpart".to_string(), eval::commands::load_part);

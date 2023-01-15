@@ -160,6 +160,7 @@ fn is_function(word: &str) -> bool {
             | "life"
             | "lin"
             | "loop"
+            | "facts"
             | "ls"
             | "list"
             | "every"
