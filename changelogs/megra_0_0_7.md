@@ -4,3 +4,4 @@
 * update egui dependency to latest version
 * add basic arithmetic functions
 * `facts` constructor
+* allow usage of stereo samples
