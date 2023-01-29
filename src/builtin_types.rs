@@ -44,19 +44,19 @@ pub enum Command {
     GlobRes(f32),         // global resources for lifemodel algorithm
     GlobalRuffboxParams(HashMap<SynthParameterLabel, ParameterValue>), // global ruffbox params
     LoadSampleAsWavematrix(String, String, String, (usize, usize), f32), // key, path, method, matrix size, start
-    LoadSample((String, Vec<String>, String)), // set (events), keyword, path
-    LoadSampleSet(String),                     // set path
-    LoadSampleSets(String),                    // top level sets set path
-    LoadPart((String, Part)),                  // set (events), keyword, path
-    StepPart(String),                          // step through specified path
-    FreezeBuffer(usize, usize),                // freeze live buffer
-    ExportDotStatic((String, Generator)),      // filename, generator
-    ExportDotRunning((String, BTreeSet<String>)), // filename, generator id
-    ExportDotPart((String, String)),           // filename, part name
-    Once((Vec<StaticEvent>, Vec<ControlEvent>)), // execute event(s) once
-    ConnectVisualizer,                         // connect visualizer
-    StartRecording(Option<String>, bool),      // start recording, prefix, input
-    StopRecording,                             // stop recording ...
+    LoadSample(String, Vec<String>, String, bool), // set (events), keyword, path, downmix_stereo
+    LoadSampleSet(String, bool),                   // set path, downmix stereo
+    LoadSampleSets(String, bool),                  // top level sets set path
+    LoadPart((String, Part)),                      // set (events), keyword, path
+    StepPart(String),                              // step through specified path
+    FreezeBuffer(usize, usize),                    // freeze live buffer
+    ExportDotStatic((String, Generator)),          // filename, generator
+    ExportDotRunning((String, BTreeSet<String>)),  // filename, generator id
+    ExportDotPart((String, String)),               // filename, part name
+    Once((Vec<StaticEvent>, Vec<ControlEvent>)),   // execute event(s) once
+    ConnectVisualizer,                             // connect visualizer
+    StartRecording(Option<String>, bool),          // start recording, prefix, input
+    StopRecording,                                 // stop recording ...
 }
 
 #[derive(Clone)]

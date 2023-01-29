@@ -47,7 +47,7 @@ pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
         Command::StopRecording => {
             commands::stop_recording(session);
         }
-        Command::LoadSample((set, mut keywords, path)) => {
+        Command::LoadSample(set, mut keywords, path, downmix_stereo) => {
             let ruffbox2 = sync::Arc::clone(ruffbox);
             let fmap2 = sync::Arc::clone(function_map);
             let sample_set2 = sync::Arc::clone(sample_set);
@@ -59,7 +59,7 @@ pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
                     set,
                     &mut keywords,
                     path,
-                    false,
+                    downmix_stereo,
                 );
                 println!("a command (load sample)");
             });
@@ -78,21 +78,27 @@ pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
                 println!("a command (load wavematrix)");
             });
         }
-        Command::LoadSampleSets(path) => {
+        Command::LoadSampleSets(path, downmix_stereo) => {
             let ruffbox2 = sync::Arc::clone(ruffbox);
             let fmap2 = sync::Arc::clone(function_map);
             let sample_set2 = sync::Arc::clone(sample_set);
             thread::spawn(move || {
-                commands::load_sample_sets(&fmap2, &ruffbox2, &sample_set2, path, false);
+                commands::load_sample_sets(&fmap2, &ruffbox2, &sample_set2, path, downmix_stereo);
                 println!("a command (load sample sets)");
             });
         }
-        Command::LoadSampleSet(path) => {
+        Command::LoadSampleSet(path, downmix_stereo) => {
             let ruffbox2 = sync::Arc::clone(ruffbox);
             let fmap2 = sync::Arc::clone(function_map);
             let sample_set2 = sync::Arc::clone(sample_set);
             thread::spawn(move || {
-                commands::load_sample_set_string(&fmap2, &ruffbox2, &sample_set2, path, false);
+                commands::load_sample_set_string(
+                    &fmap2,
+                    &ruffbox2,
+                    &sample_set2,
+                    path,
+                    downmix_stereo,
+                );
                 println!("a command (load sample sets)");
             });
         }

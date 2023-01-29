@@ -188,6 +188,7 @@ pub fn load_sample(
     let mut keywords: Vec<String> = Vec::new();
     let mut path: String = "".to_string();
     let mut set: String = "".to_string();
+    let mut downmix_stereo = false;
 
     while let Some(c) = tail_drain.next() {
         if collect_keywords {
@@ -215,13 +216,18 @@ pub fn load_sample(
                         path = n.to_string();
                     }
                 }
+                "use-stereo" => {
+                    if let Some(EvaluatedExpr::Boolean(b)) = tail_drain.next() {
+                        downmix_stereo = !b;
+                    }
+                }
                 _ => println!("{}", k),
             }
         }
     }
 
     Some(EvaluatedExpr::BuiltIn(BuiltIn::Command(
-        Command::LoadSample((set, keywords, path)),
+        Command::LoadSample(set, keywords, path, downmix_stereo),
     )))
 }
 
@@ -239,8 +245,17 @@ pub fn load_sample_sets(
         "".to_string()
     };
 
+    let mut downmix_stereo = false;
+    if let Some(EvaluatedExpr::Keyword(k)) = tail_drain.next() {
+        if k == "use-stereo" {
+            if let Some(EvaluatedExpr::Boolean(b)) = tail_drain.next() {
+                downmix_stereo = !b
+            }
+        }
+    }
+
     Some(EvaluatedExpr::BuiltIn(BuiltIn::Command(
-        Command::LoadSampleSets(path),
+        Command::LoadSampleSets(path, downmix_stereo),
     )))
 }
 
@@ -258,8 +273,17 @@ pub fn load_sample_set(
         "".to_string()
     };
 
+    let mut downmix_stereo = false;
+    if let Some(EvaluatedExpr::Keyword(k)) = tail_drain.next() {
+        if k == "use-stereo" {
+            if let Some(EvaluatedExpr::Boolean(b)) = tail_drain.next() {
+                downmix_stereo = !b
+            }
+        }
+    }
+
     Some(EvaluatedExpr::BuiltIn(BuiltIn::Command(
-        Command::LoadSampleSet(path),
+        Command::LoadSampleSet(path, downmix_stereo),
     )))
 }
 
