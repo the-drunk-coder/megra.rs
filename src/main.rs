@@ -92,6 +92,7 @@ struct RunOptions {
     font: Option<String>,
     font_size: f32,
     midi_in: Option<usize>,
+    downmix_stereo: bool,
 }
 
 fn main() -> Result<(), anyhow::Error> {
@@ -107,6 +108,11 @@ fn main() -> Result<(), anyhow::Error> {
     );
 
     opts.optflag("", "nosketch", "don't create new sketch in editor mode");
+    opts.optflag(
+        "",
+        "use-stereo-samples",
+        "don't downmix stereo samples to mono (which is the default behaviour)",
+    );
 
     opts.optflag("h", "help", "Print this help");
     opts.optflag("n", "no-samples", "don't load default samples");
@@ -181,6 +187,7 @@ fn main() -> Result<(), anyhow::Error> {
     let editor: bool = !matches.opt_present("r");
     let create_sketch: bool = !matches.opt_present("nosketch");
     let load_samples: bool = !matches.opt_present("n");
+    let downmix_stereo: bool = !matches.opt_present("use-stereo-samples");
 
     if matches.opt_present("h") {
         print_help(&program, opts);
@@ -351,6 +358,7 @@ fn main() -> Result<(), anyhow::Error> {
         font: matches.opt_str("font"),
         font_size,
         midi_in,
+        downmix_stereo,
     };
 
     match out_mode {
@@ -789,7 +797,13 @@ where
         let sample_set2 = sync::Arc::clone(&sample_set);
         let stdlib2 = sync::Arc::clone(&stdlib);
         thread::spawn(move || {
-            commands::load_sample_sets_path(&stdlib2, &controls_arc2, &sample_set2, &samples_path);
+            commands::load_sample_sets_path(
+                &stdlib2,
+                &controls_arc2,
+                &sample_set2,
+                &samples_path,
+                options.downmix_stereo,
+            );
             println!("a command (load default sample sets)");
         });
     }

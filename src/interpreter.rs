@@ -52,7 +52,15 @@ pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
             let fmap2 = sync::Arc::clone(function_map);
             let sample_set2 = sync::Arc::clone(sample_set);
             thread::spawn(move || {
-                commands::load_sample(&fmap2, &ruffbox2, &sample_set2, set, &mut keywords, path);
+                commands::load_sample(
+                    &fmap2,
+                    &ruffbox2,
+                    &sample_set2,
+                    set,
+                    &mut keywords,
+                    path,
+                    false,
+                );
                 println!("a command (load sample)");
             });
         }
@@ -75,7 +83,7 @@ pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
             let fmap2 = sync::Arc::clone(function_map);
             let sample_set2 = sync::Arc::clone(sample_set);
             thread::spawn(move || {
-                commands::load_sample_sets(&fmap2, &ruffbox2, &sample_set2, path);
+                commands::load_sample_sets(&fmap2, &ruffbox2, &sample_set2, path, false);
                 println!("a command (load sample sets)");
             });
         }
@@ -84,7 +92,7 @@ pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
             let fmap2 = sync::Arc::clone(function_map);
             let sample_set2 = sync::Arc::clone(sample_set);
             thread::spawn(move || {
-                commands::load_sample_set_string(&fmap2, &ruffbox2, &sample_set2, path);
+                commands::load_sample_set_string(&fmap2, &ruffbox2, &sample_set2, path, false);
                 println!("a command (load sample sets)");
             });
         }

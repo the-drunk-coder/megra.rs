@@ -95,6 +95,7 @@ pub fn load_sample<const BUFSIZE: usize, const NCHAN: usize>(
     set: String,
     keywords: &mut Vec<String>,
     path: String,
+    downmix_stereo: bool,
 ) {
     if let Some((mut duration, samplerate, channels, mut sample_buffer)) = if path
         .as_str()
@@ -122,13 +123,27 @@ pub fn load_sample<const BUFSIZE: usize, const NCHAN: usize>(
 
         // downmix
         let bufnum = if channels != 1 {
-            let mut downmix_buffer = sample_buffer
-                .chunks(channels.try_into().unwrap())
-                .map(|x| x.iter().sum::<f32>() / channels as f32)
-                .collect();
-            ruffbox.load_sample(&mut downmix_buffer, true, samplerate)
+            if channels == 2 && !downmix_stereo {
+                // load stereo sample
+                let mut left = Vec::new();
+                let mut right = Vec::new();
+                let mut frames = sample_buffer.chunks_exact(channels.try_into().unwrap());
+                while let Some([l, r]) = frames.next() {
+                    left.push(*l);
+                    right.push(*r);
+                }
+                ruffbox.load_stereo_sample(&mut left, &mut right, true, samplerate)
+            } else {
+                // downmix to mono (default case)
+                let mut downmix_buffer = sample_buffer
+                    .chunks(channels.try_into().unwrap())
+                    .map(|x| x.iter().sum::<f32>() / channels as f32)
+                    .collect();
+                ruffbox.load_mono_sample(&mut downmix_buffer, true, samplerate)
+            }
         } else {
-            ruffbox.load_sample(&mut sample_buffer, true, samplerate)
+            // load mono as-is
+            ruffbox.load_mono_sample(&mut sample_buffer, true, samplerate)
         };
 
         let mut keyword_set = HashSet::new();
@@ -173,6 +188,7 @@ pub fn load_sample_set<const BUFSIZE: usize, const NCHAN: usize>(
     ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
     sample_set: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     samples_path: &Path,
+    downmix_stereo: bool,
 ) {
     // determine set name or use default
     let set_name = if let Some(os_filename) = samples_path.file_stem() {
@@ -207,6 +223,7 @@ pub fn load_sample_set<const BUFSIZE: usize, const NCHAN: usize>(
                                 set_name.clone(),
                                 &mut Vec::new(),
                                 path.to_str().unwrap().to_string(),
+                                downmix_stereo,
                             );
                         }
                     }
@@ -221,9 +238,10 @@ pub fn load_sample_set_string<const BUFSIZE: usize, const NCHAN: usize>(
     ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
     sample_set: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     samples_path: String,
+    downmix_stereo: bool,
 ) {
     let path = Path::new(&samples_path);
-    load_sample_set(function_map, ruffbox, sample_set, path);
+    load_sample_set(function_map, ruffbox, sample_set, path, downmix_stereo);
 }
 
 pub fn load_sample_sets<const BUFSIZE: usize, const NCHAN: usize>(
@@ -231,9 +249,10 @@ pub fn load_sample_sets<const BUFSIZE: usize, const NCHAN: usize>(
     ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
     sample_set: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     folder_path: String,
+    downmix_stereo: bool,
 ) {
     let root_path = Path::new(&folder_path);
-    load_sample_sets_path(function_map, ruffbox, sample_set, root_path);
+    load_sample_sets_path(function_map, ruffbox, sample_set, root_path, downmix_stereo);
 }
 
 pub fn load_sample_sets_path<const BUFSIZE: usize, const NCHAN: usize>(
@@ -241,12 +260,13 @@ pub fn load_sample_sets_path<const BUFSIZE: usize, const NCHAN: usize>(
     ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
     sample_set: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     root_path: &Path,
+    downmix_stereo: bool,
 ) {
     if let Ok(entries) = fs::read_dir(root_path) {
         for entry in entries.flatten() {
             let path = entry.path();
             if path.is_dir() {
-                load_sample_set(function_map, ruffbox, sample_set, &path);
+                load_sample_set(function_map, ruffbox, sample_set, &path, downmix_stereo);
             }
         }
     }
