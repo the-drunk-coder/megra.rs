@@ -43,35 +43,71 @@ pub fn map_synth_type(
             },
         ),
         "risset" => SynthType::RissetBell,
-        "sampler" => SynthType::Sampler(
-            // assemble sampler
-            if let Some(SynthParameterValue::FilterType(t)) =
-                params.get(&SynthParameterLabel::HighpassFilterType)
+        "sampler" => {
+            if params.contains_key(&SynthParameterLabel::AmbisonicAzimuth)
+                || params.contains_key(&SynthParameterLabel::AmbisonicElevation)
             {
-                *t
+                SynthType::AmbisonicSampler(
+                    // assemble sampler
+                    if let Some(SynthParameterValue::FilterType(t)) =
+                        params.get(&SynthParameterLabel::HighpassFilterType)
+                    {
+                        *t
+                    } else {
+                        FilterType::BiquadHpf12dB
+                    },
+                    if params.get(&SynthParameterLabel::PeakFrequency).is_some()
+                        || params.get(&SynthParameterLabel::Peak1Frequency).is_some()
+                    {
+                        FilterType::PeakEQ
+                    } else {
+                        FilterType::Dummy
+                    },
+                    if params.get(&SynthParameterLabel::Peak2Frequency).is_some() {
+                        FilterType::PeakEQ
+                    } else {
+                        FilterType::Dummy
+                    },
+                    if let Some(SynthParameterValue::FilterType(t)) =
+                        params.get(&SynthParameterLabel::LowpassFilterType)
+                    {
+                        *t
+                    } else {
+                        FilterType::Lpf18
+                    },
+                )
             } else {
-                FilterType::BiquadHpf12dB
-            },
-            if params.get(&SynthParameterLabel::PeakFrequency).is_some()
-                || params.get(&SynthParameterLabel::Peak1Frequency).is_some()
-            {
-                FilterType::PeakEQ
-            } else {
-                FilterType::Dummy
-            },
-            if params.get(&SynthParameterLabel::Peak2Frequency).is_some() {
-                FilterType::PeakEQ
-            } else {
-                FilterType::Dummy
-            },
-            if let Some(SynthParameterValue::FilterType(t)) =
-                params.get(&SynthParameterLabel::LowpassFilterType)
-            {
-                *t
-            } else {
-                FilterType::Lpf18
-            },
-        ),
+                SynthType::Sampler(
+                    // assemble sampler
+                    if let Some(SynthParameterValue::FilterType(t)) =
+                        params.get(&SynthParameterLabel::HighpassFilterType)
+                    {
+                        *t
+                    } else {
+                        FilterType::BiquadHpf12dB
+                    },
+                    if params.get(&SynthParameterLabel::PeakFrequency).is_some()
+                        || params.get(&SynthParameterLabel::Peak1Frequency).is_some()
+                    {
+                        FilterType::PeakEQ
+                    } else {
+                        FilterType::Dummy
+                    },
+                    if params.get(&SynthParameterLabel::Peak2Frequency).is_some() {
+                        FilterType::PeakEQ
+                    } else {
+                        FilterType::Dummy
+                    },
+                    if let Some(SynthParameterValue::FilterType(t)) =
+                        params.get(&SynthParameterLabel::LowpassFilterType)
+                    {
+                        *t
+                    } else {
+                        FilterType::Lpf18
+                    },
+                )
+            }
+        }
         "livesampler" => SynthType::LiveSampler(
             // assemble sampler
             if let Some(SynthParameterValue::FilterType(t)) =
@@ -225,6 +261,8 @@ pub fn map_parameter(name: &str) -> SynthParameterLabel {
         "bufnum" => SynthParameterLabel::SampleBufferNumber,
         "rev" => SynthParameterLabel::ReverbMix,
         "del" => SynthParameterLabel::DelayMix,
+        "azi" => SynthParameterLabel::AmbisonicAzimuth,
+        "ele" => SynthParameterLabel::AmbisonicElevation,
         "wt" | "wavetable" => SynthParameterLabel::Wavetable,
         "wm" | "wavematrix" => SynthParameterLabel::Wavematrix,
         "ti" | "tableindex" => SynthParameterLabel::WavematrixTableIndex,

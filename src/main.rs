@@ -93,6 +93,7 @@ struct RunOptions {
     font_size: f32,
     midi_in: Option<usize>,
     downmix_stereo: bool,
+    ambisonic_binaural: bool,
 }
 
 fn main() -> Result<(), anyhow::Error> {
@@ -108,6 +109,7 @@ fn main() -> Result<(), anyhow::Error> {
     );
 
     opts.optflag("", "nosketch", "don't create new sketch in editor mode");
+    opts.optflag("", "ambisonic-binaural", "enable ambisonic-binaural mode");
     opts.optflag(
         "",
         "use-stereo-samples",
@@ -180,7 +182,7 @@ fn main() -> Result<(), anyhow::Error> {
     };
 
     if matches.opt_present("v") {
-        println!("0.0.6");
+        println!("0.0.7");
         return Ok(());
     }
 
@@ -188,6 +190,7 @@ fn main() -> Result<(), anyhow::Error> {
     let create_sketch: bool = !matches.opt_present("nosketch");
     let load_samples: bool = !matches.opt_present("n");
     let downmix_stereo: bool = !matches.opt_present("use-stereo-samples");
+    let ambisonic_binaural: bool = matches.opt_present("ambisonic-binaural");
 
     if matches.opt_present("h") {
         print_help(&program, opts);
@@ -359,6 +362,7 @@ fn main() -> Result<(), anyhow::Error> {
         font_size,
         midi_in,
         downmix_stereo,
+        ambisonic_binaural,
     };
 
     match out_mode {
@@ -447,6 +451,7 @@ where
         sample_rate.into(),
         options.max_sample_buffers,
         10,
+        options.ambisonic_binaural,
     );
 
     // OUTPUT RECORDING
