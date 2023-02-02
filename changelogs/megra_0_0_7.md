@@ -5,3 +5,4 @@
 * add basic arithmetic functions
 * `facts` constructor
 * allow usage of stereo samples
+* ambisonic-binaural sources (samples only)

@@ -162,6 +162,18 @@ pub fn define_standard_library() -> FunctionMap {
     standard_library.fmap.insert("hpq-sub".to_string(), eval::events::parameters::parameter);
     standard_library.fmap.insert("hpq-div".to_string(), eval::events::parameters::parameter);
 
+    standard_library.fmap.insert("azi".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("azi-add".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("azi-mul".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("azi-sub".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("azi-div".to_string(), eval::events::parameters::parameter);
+
+    standard_library.fmap.insert("ele".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("ele-add".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("ele-mul".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("ele-sub".to_string(), eval::events::parameters::parameter);
+    standard_library.fmap.insert("ele-div".to_string(), eval::events::parameters::parameter);
+
     standard_library.fmap.insert("atk".to_string(), eval::events::parameters::parameter);
     standard_library.fmap.insert("atk-add".to_string(), eval::events::parameters::parameter);
     standard_library.fmap.insert("atk-mul".to_string(), eval::events::parameters::parameter);
