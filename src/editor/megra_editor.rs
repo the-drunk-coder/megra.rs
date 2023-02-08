@@ -267,7 +267,7 @@ impl eframe::App for MegraEditor {
                     let theme = CodeTheme::dark(self.font_size);
                     let mut layouter = |ui: &egui::Ui, string: &str, _wrap_width: f32| {
                         let layout_job = highlight(ui.ctx(), &theme, string);
-                        ui.fonts().layout_job(layout_job)
+                        ui.fonts(|f| f.layout_job(layout_job))
                     };
 
                     let tx = if let Some(cb) = self.callback.as_ref() {

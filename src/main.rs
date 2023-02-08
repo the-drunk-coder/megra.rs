@@ -827,7 +827,8 @@ where
             options.mode,
             options.font.as_deref(),
             options.font_size,
-        );
+        )
+        .unwrap();
         Ok(())
     } else {
         // start the megra repl

@@ -67,11 +67,11 @@ type Undoer = egui::util::undoer::Undoer<(CCursorRange, String)>;
 
 impl LivecodeTextEditState {
     pub fn load(ctx: &Context, id: Id) -> Option<Self> {
-        ctx.memory().data.get_persisted(id)
+        ctx.data_mut(|d| d.get_persisted(id))
     }
 
     pub fn store(self, ctx: &Context, id: Id) {
-        ctx.memory().data.insert_persisted(id, self);
+        ctx.data_mut(|d| d.insert_persisted(id, self));
     }
 
     pub fn set_cursor_range(&mut self, cursor_range: Option<CursorRange>) {
@@ -234,7 +234,7 @@ impl<'t> LivecodeTextEdit<'t> {
         output.response |= ui.interact(frame_rect, id, Sense::click());
 
         if output.response.clicked() && !output.response.lost_focus() {
-            ui.memory().request_focus(output.response.id);
+            ui.memory_mut(|mem| mem.request_focus(output.response.id));
         }
 
         output
@@ -262,7 +262,8 @@ impl<'t> LivecodeTextEdit<'t> {
 
         let prev_text = text.as_str().to_owned();
         let font_id = font_selection.resolve(ui.style());
-        let row_height = ui.fonts().row_height(&font_id);
+        let row_height = ui.fonts(|f| f.row_height(&font_id));
+
         const MIN_WIDTH: f32 = 24.0; // Never make a `LivecodeTextEdit` more narrow than this.
         let available_width = ui.available_width().at_least(MIN_WIDTH);
         //println!("available {}", available_width);
@@ -277,12 +278,14 @@ impl<'t> LivecodeTextEdit<'t> {
         };*/
 
         let mut default_layouter = move |ui: &Ui, text: &str, wrap_width: f32| {
-            ui.fonts().layout_job(LayoutJob::simple(
-                text.to_string(),
-                font_id.clone(),
-                text_color,
-                wrap_width,
-            ))
+            ui.fonts(|f| {
+                f.layout_job(LayoutJob::simple(
+                    text.to_string(),
+                    font_id.clone(),
+                    text_color,
+                    wrap_width,
+                ))
+            })
         };
 
         let layouter = layouter.unwrap_or(&mut default_layouter);
@@ -309,7 +312,8 @@ impl<'t> LivecodeTextEdit<'t> {
         // dragging select text, or scroll the enclosing `ScrollArea` (if any)?
         // Since currently copying selected text in not supported on `egui_web`,
         // we prioritize touch-scrolling:
-        let allow_drag_to_select = !ui.input().any_touches() || ui.memory().has_focus(id);
+        let allow_drag_to_select =
+            !ui.input(|i| i.any_touches()) || ui.memory(|mem| mem.has_focus(id));
 
         let sense = if allow_drag_to_select {
             Sense::click_and_drag()
@@ -323,7 +327,7 @@ impl<'t> LivecodeTextEdit<'t> {
 
         if let Some(pointer_pos) = ui.ctx().pointer_interact_pos() {
             if response.hovered() && text.is_mutable() {
-                ui.output().mutable_text_under_cursor = true;
+                ui.output_mut(|o| o.mutable_text_under_cursor = true);
             }
 
             // TODO: triple-click to select whole paragraph
@@ -333,7 +337,7 @@ impl<'t> LivecodeTextEdit<'t> {
 
             if ui.visuals().text_cursor_preview
                 && response.hovered()
-                && ui.input().pointer.is_moving()
+                && ui.input(|i| i.pointer.is_moving())
             {
                 // preview:
                 paint_cursor_end(
@@ -355,9 +359,9 @@ impl<'t> LivecodeTextEdit<'t> {
                     secondary: galley.from_ccursor(ccursor_range.secondary),
                 }));
             } else if allow_drag_to_select {
-                if response.hovered() && ui.input().pointer.any_pressed() {
-                    ui.memory().request_focus(id);
-                    if ui.input().modifiers.shift {
+                if response.hovered() && ui.input(|i| i.pointer.any_pressed()) {
+                    ui.memory_mut(|mem| mem.request_focus(id));
+                    if ui.input(|i| i.modifiers.shift) {
                         if let Some(mut cursor_range) = state.cursor_range(&galley) {
                             cursor_range.primary = cursor_at_pointer;
                             state.set_cursor_range(Some(cursor_range));
@@ -367,7 +371,8 @@ impl<'t> LivecodeTextEdit<'t> {
                     } else {
                         state.set_cursor_range(Some(CursorRange::one(cursor_at_pointer)));
                     }
-                } else if ui.input().pointer.any_down() && response.is_pointer_button_down_on() {
+                } else if ui.input(|i| i.pointer.any_down()) && response.is_pointer_button_down_on()
+                {
                     // drag to select text:
                     if let Some(mut cursor_range) = state.cursor_range(&galley) {
                         cursor_range.primary = cursor_at_pointer;
@@ -378,13 +383,13 @@ impl<'t> LivecodeTextEdit<'t> {
         }
 
         if response.hovered() {
-            ui.output().cursor_icon = CursorIcon::Text;
+            ui.ctx().set_cursor_icon(CursorIcon::Text);
         }
 
         let mut cursor_range = None;
         let prev_cursor_range = state.cursor_range(&galley);
-        if ui.memory().has_focus(id) {
-            ui.memory().lock_focus(id, lock_focus);
+        if ui.memory(|mem| mem.has_focus(id)) {
+            ui.memory_mut(|mem| mem.lock_focus(id, lock_focus));
 
             let default_cursor_range = if cursor_at_end {
                 CursorRange::one(galley.end())
@@ -423,7 +428,7 @@ impl<'t> LivecodeTextEdit<'t> {
         if ui.is_rect_visible(rect) {
             painter.galley(text_draw_pos, galley.clone());
 
-            if ui.memory().has_focus(id) {
+            if ui.memory(|mem| mem.has_focus(id)) {
                 if let Some(cursor_range) = state.cursor_range(&galley) {
                     // We paint the cursor on top of the text, in case
                     // the text galley has backgrounds (as e.g. `code` snippets in markup do).
@@ -492,7 +497,9 @@ impl<'t> LivecodeTextEdit<'t> {
                     if text.is_mutable() {
                         // egui_web uses `text_cursor_pos` when showing IME,
                         // so only set it when text is editable and visible!
-                        ui.ctx().output().text_cursor_pos = Some(cursor_pos.left_top());
+                        ui.ctx().output_mut(|o| {
+                            o.text_cursor_pos = Some(cursor_pos.left_top());
+                        });
                     }
                 }
             }
@@ -507,11 +514,7 @@ impl<'t> LivecodeTextEdit<'t> {
             let char_range =
                 cursor_range.primary.ccursor.index..=cursor_range.secondary.ccursor.index;
             let info = WidgetInfo::text_selection_changed(char_range, text.as_str());
-            response
-                .ctx
-                .output()
-                .events
-                .push(OutputEvent::TextSelectionChanged(info));
+            response.output_event(OutputEvent::TextSelectionChanged(info));
         } else {
             response.widget_info(|| WidgetInfo::text_edit(prev_text.as_str(), text.as_str()));
         }
@@ -544,17 +547,17 @@ fn livecode_events(
     // We feed state to the undoer both before and after handling input
     // so that the undoer creates automatic saves even when there are no events for a while.
     state.undoer.lock().feed_state(
-        ui.input().time,
+        ui.input(|i| i.time),
         &(cursor_range.as_ccursor_range(), text.as_str().to_owned()),
     );
 
     let copy_if_not_password = |ui: &Ui, text: String| {
-        ui.ctx().output().copied_text = text;
+        ui.ctx().output_mut(|o| o.copied_text = text);
     };
 
     let mut any_change = false;
 
-    let events = ui.input().events.clone(); // avoid dead-lock by cloning. TODO: optimize
+    let events = ui.input(|i| i.events.clone()); // avoid dead-lock by cloning. TODO: optimize
     for event in &events {
         let did_mutate_text = match event {
             Event::Copy => {
@@ -582,7 +585,7 @@ fn livecode_events(
             Event::Paste(text_to_insert) => {
                 if !text_to_insert.is_empty() {
                     let mut ccursor = delete_selected(text, &cursor_range);
-                    insert_text(&mut ccursor, text, text_to_insert);
+                    insert_text(&mut ccursor, text, &text_to_insert);
                     Some(CCursorRange::one(ccursor))
                 } else {
                     None
@@ -592,6 +595,7 @@ fn livecode_events(
                 key: Key::W,
                 pressed: true,
                 modifiers,
+                ..
             } => {
                 if modifiers.ctrl {
                     // clear selection
@@ -607,6 +611,7 @@ fn livecode_events(
                 key: Key::G,
                 pressed: true,
                 modifiers,
+                ..
             } => {
                 if modifiers.ctrl {
                     // clear selection
@@ -665,7 +670,7 @@ fn livecode_events(
                         Some(CCursorRange::one(ccursor))
                     } else {
                         let mut ccursor = delete_selected(text, &cursor_range);
-                        insert_text(&mut ccursor, text, text_to_insert);
+                        insert_text(&mut ccursor, text, &text_to_insert);
                         Some(CCursorRange::one(ccursor))
                     }
                 } else {
@@ -697,6 +702,7 @@ fn livecode_events(
                 key: Key::F,
                 pressed: true,
                 modifiers,
+                ..
             } if modifiers.command => {
                 cursor_range.primary = galley.cursor_right_one_character(&cursor_range.primary);
                 Some(CCursorRange::one(cursor_range.primary.ccursor))
@@ -705,6 +711,7 @@ fn livecode_events(
                 key: Key::Enter,
                 pressed: true,
                 modifiers,
+                ..
             } => {
                 // clear selection
                 state.selection_toggle = false;
@@ -763,6 +770,7 @@ fn livecode_events(
                 key: Key::Z,
                 pressed: true,
                 modifiers,
+                ..
             } if modifiers.command && !modifiers.shift => {
                 // TODO: redo
                 if let Some((undo_ccursor_range, undo_txt)) = state
@@ -792,6 +800,7 @@ fn livecode_events(
                 key: Key::Space,
                 pressed: true,
                 modifiers,
+                ..
             } => {
                 if modifiers.command {
                     state.selection_toggle = !state.selection_toggle;
@@ -804,7 +813,8 @@ fn livecode_events(
                 key,
                 pressed: true,
                 modifiers,
-            } => on_key_press(&mut cursor_range, text, galley, *key, modifiers, state),
+                ..
+            } => on_key_press(&mut cursor_range, text, galley, *key, &modifiers, state),
 
             Event::CompositionStart => {
                 state.has_ime = true;
@@ -816,7 +826,7 @@ fn livecode_events(
                 {
                     let mut ccursor = delete_selected(text, &cursor_range);
                     let start_cursor = ccursor;
-                    insert_text(&mut ccursor, text, text_mark);
+                    insert_text(&mut ccursor, text, &text_mark);
                     Some(CCursorRange::two(start_cursor, ccursor))
                 } else {
                     None
@@ -831,7 +841,7 @@ fn livecode_events(
                 {
                     state.has_ime = false;
                     let mut ccursor = delete_selected(text, &cursor_range);
-                    insert_text(&mut ccursor, text, prediction);
+                    insert_text(&mut ccursor, text, &prediction);
                     Some(CCursorRange::one(ccursor))
                 } else {
                     None
@@ -858,7 +868,7 @@ fn livecode_events(
     state.set_cursor_range(Some(cursor_range));
 
     state.undoer.lock().feed_state(
-        ui.input().time,
+        ui.input(|i| i.time),
         &(cursor_range.as_ccursor_range(), text.as_str().to_owned()),
     );
 

@@ -31,7 +31,7 @@ pub fn run_editor<const BUFSIZE: usize, const NCHAN: usize>(
     mode: OutputMode,
     font: Option<&str>,
     font_size: f32,
-) {
+) -> std::result::Result<(), eframe::Error> {
     let session2 = sync::Arc::clone(session);
     let function_map2 = sync::Arc::clone(function_map);
     let midi_callback_map2 = sync::Arc::clone(midi_callback_map);
@@ -95,5 +95,5 @@ pub fn run_editor<const BUFSIZE: usize, const NCHAN: usize>(
             inner_app.set_callback(callback_ref);
             Box::new(inner_app)
         }),
-    );
+    )
 }

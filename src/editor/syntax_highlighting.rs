@@ -10,11 +10,9 @@ pub fn highlight(ctx: &egui::Context, theme: &CodeTheme, code: &str) -> LayoutJo
         }
     }
 
-    type HighlightCache<'a> = egui::util::cache::FrameCache<LayoutJob, Highlighter>;
+    type HighlightCache = egui::util::cache::FrameCache<LayoutJob, Highlighter>;
 
-    let mut memory = ctx.memory();
-    let highlight_cache = memory.caches.cache::<HighlightCache<'_>>();
-    highlight_cache.get((theme, code))
+    ctx.memory_mut(|mem| mem.caches.cache::<HighlightCache>().get((theme, code)))
 }
 
 // ----------------------------------------------------------------------------
