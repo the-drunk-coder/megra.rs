@@ -159,6 +159,7 @@ fn is_function(word: &str) -> bool {
             | "lin"
             | "loop"
             | "facts"
+            | "vals"
             | "ls"
             | "list"
             | "every"
