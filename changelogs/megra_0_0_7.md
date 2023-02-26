@@ -4,5 +4,6 @@
 * update egui dependency to latest version
 * add basic arithmetic functions
 * `facts` constructor
+* `vals` constructor
 * allow usage of stereo samples
 * ambisonic-binaural sources (samples only)
