@@ -7,3 +7,4 @@
 * `vals` constructor
 * allow usage of stereo samples
 * ambisonic-binaural sources (samples only)
+* `pear` with `dur` event is now applied to first transition
