@@ -438,9 +438,7 @@ where
     let in_channels = in_config.channels as usize;
     let err_fn = |err| eprintln!("an error occurred on stream: {err}");
 
-    println!(
-        "samplerate: {sample_rate} in chan: {in_channels} out chan: {out_channels}"
-    );
+    println!("samplerate: {sample_rate} in chan: {in_channels} out chan: {out_channels}");
 
     let (controls, playhead) = init_ruffbox::<BLOCKSIZE, NCHAN>(
         options.num_live_buffers,
