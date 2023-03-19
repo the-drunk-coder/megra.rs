@@ -69,11 +69,11 @@ pub fn facts(
                         keep_root = b;
                     }
                 }
-                _ => println!("{}", k),
+                _ => println!("{k}"),
             },
             EvaluatedExpr::Float(f) => {
                 let mut e = Event::with_name_and_operation(
-                    format!("{}-mul", param),
+                    format!("{param}-mul"),
                     EventOperation::Multiply,
                 );
                 e.params.insert(

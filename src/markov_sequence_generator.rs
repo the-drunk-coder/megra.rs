@@ -59,7 +59,7 @@ impl MarkovSequenceGenerator {
                     });
                 }
             } else {
-                println!("no events for sym {}", last_symbol);
+                println!("no events for sym {last_symbol}");
             }
         }
 

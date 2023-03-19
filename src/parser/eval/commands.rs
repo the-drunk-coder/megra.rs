@@ -221,7 +221,7 @@ pub fn load_sample(
                         downmix_stereo = !b;
                     }
                 }
-                _ => println!("{}", k),
+                _ => println!("{k}"),
             }
         }
     }
@@ -407,7 +407,7 @@ pub fn reverb(
                     }
                 }
 
-                _ => println!("{}", k),
+                _ => println!("{k}"),
             },
             _ => println! {"ignored"},
         }
@@ -509,7 +509,7 @@ pub fn delay(
                     }
                     _ => {}
                 },
-                _ => println!("{}", k),
+                _ => println!("{k}"),
             },
             _ => println! {"ignored"},
         }

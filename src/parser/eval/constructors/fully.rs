@@ -127,7 +127,7 @@ pub fn fully(
                         keep_root = b;
                     }
                 }
-                _ => println!("{}", k),
+                _ => println!("{k}"),
             },
             _ => {}
         }

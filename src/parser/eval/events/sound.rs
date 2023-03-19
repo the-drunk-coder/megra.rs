@@ -470,7 +470,7 @@ pub fn sound(
                     );
                     tail_drain.next();
                 } else {
-                    println!("couldn't find wavematrix {}", s)
+                    println!("couldn't find wavematrix {s}")
                 }
             } else {
                 ev.params
@@ -517,7 +517,7 @@ mod tests {
                 ));
             }
             Err(e) => {
-                println!("err {}", e);
+                println!("err {e}");
                 assert!(false)
             }
         }

@@ -179,7 +179,7 @@ pub fn load_sample<const BUFSIZE: usize, const NCHAN: usize>(
             .fmap
             .insert(set, eval::events::sound::sound);
     } else {
-        println!("can't load sample {}", path);
+        println!("can't load sample {path}");
     }
 }
 
@@ -474,7 +474,7 @@ pub fn set_global_ruffbox_parameters<const BUFSIZE: usize, const NCHAN: usize>(
 
 pub fn export_dot_static(filename: &str, generator: &Generator) {
     let dot_string = pfa::to_dot::<char>(&generator.root_generator.generator);
-    println!("export to {}", filename);
+    println!("export to {filename}");
     fs::write(filename, dot_string).expect("Unable to write file");
 }
 
@@ -499,7 +499,7 @@ pub fn export_dot_part(
             filename_tagged = filename_tagged[..filename_tagged.len() - 1].to_string();
             filename_tagged.push_str(".dot");
             let dot_string = pfa::to_dot::<char>(&gen.root_generator.generator);
-            println!("export to {}", filename_tagged);
+            println!("export to {filename_tagged}");
             fs::write(filename_tagged, dot_string).expect("Unable to write file");
         }
     }
@@ -535,7 +535,7 @@ pub fn export_dot_running<const BUFSIZE: usize, const NCHAN: usize>(
         filename_tagged = filename_tagged[..filename_tagged.len() - 1].to_string();
         filename_tagged.push_str(".dot");
         let dot_string = pfa::to_dot::<char>(&gen.root_generator.generator);
-        println!("export to {}", filename_tagged);
+        println!("export to {filename_tagged}");
         fs::write(filename_tagged, dot_string).expect("Unable to write file");
     }
 }

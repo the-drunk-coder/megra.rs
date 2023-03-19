@@ -173,7 +173,7 @@ pub fn infer(
                         keep_root = b;
                     }
                 }
-                _ => println!("{}", k),
+                _ => println!("{k}"),
             },
             _ => println! {"ignored"},
         }

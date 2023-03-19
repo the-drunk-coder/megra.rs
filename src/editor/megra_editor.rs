@@ -181,7 +181,7 @@ impl MegraEditor {
                         ed.content = s
                     }
                     Err(e) => {
-                        println!("couldn't read sketch {}", e);
+                        println!("couldn't read sketch {e}");
                     }
                 }
             }
@@ -237,7 +237,7 @@ impl eframe::App for MegraEditor {
                     match fs::write(p, self.content.as_bytes()) {
                         Ok(_) => {}
                         Err(e) => {
-                            println!("couldn't save sketch {}", e);
+                            println!("couldn't save sketch {e}");
                         }
                     }
                 }
@@ -252,7 +252,7 @@ impl eframe::App for MegraEditor {
                         self.content = s
                     }
                     Err(e) => {
-                        println!("couldn't read sketch {}", e);
+                        println!("couldn't read sketch {e}");
                     }
                 }
             }
@@ -289,7 +289,7 @@ impl eframe::App for MegraEditor {
 
                     let mut linenums = "".to_owned();
                     for i in 1..num_lines {
-                        linenums.push_str(format!("{}\n", i).as_str());
+                        linenums.push_str(format!("{i}\n").as_str());
                     }
 
                     let ln = egui::Label::new(
@@ -314,7 +314,7 @@ impl eframe::App for MegraEditor {
             match fs::write(p, self.content.as_bytes()) {
                 Ok(_) => {}
                 Err(e) => {
-                    println!("couldn't save sketch {}", e);
+                    println!("couldn't save sketch {e}");
                 }
             }
         }

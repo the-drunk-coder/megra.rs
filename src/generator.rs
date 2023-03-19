@@ -67,10 +67,8 @@ impl Generator {
                 {
                     gp.set_state(other.processors[id_idx].1.get_state())
                 }
-            } else {
-                if let Some((_, g)) = other.processors.get(idx) {
-                    gp.set_state(g.get_state());
-                }
+            } else if let Some((_, g)) = other.processors.get(idx) {
+                gp.set_state(g.get_state());
             }
         }
     }

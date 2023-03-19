@@ -585,7 +585,7 @@ fn livecode_events(
             Event::Paste(text_to_insert) => {
                 if !text_to_insert.is_empty() {
                     let mut ccursor = delete_selected(text, &cursor_range);
-                    insert_text(&mut ccursor, text, &text_to_insert);
+                    insert_text(&mut ccursor, text, text_to_insert);
                     Some(CCursorRange::one(ccursor))
                 } else {
                     None
@@ -633,7 +633,7 @@ fn livecode_events(
                         let selection = selected_str(text, &cursor_range).to_string();
                         let selection_len = selection.chars().count();
                         let mut ccursor = delete_selected(text, &cursor_range);
-                        insert_text(&mut ccursor, text, format!("({})", selection).as_str());
+                        insert_text(&mut ccursor, text, format!("({selection})").as_str());
                         // clear selection
                         // go to opening paren so the function name can be entered ...
                         ccursor.index -= selection_len + 1;
@@ -644,7 +644,7 @@ fn livecode_events(
                         let selection = selected_str(text, &cursor_range).to_string();
                         let selection_len = selection.chars().count();
                         let mut ccursor = delete_selected(text, &cursor_range);
-                        insert_text(&mut ccursor, text, format!("[{}]", selection).as_str());
+                        insert_text(&mut ccursor, text, format!("[{selection}]").as_str());
                         // go to opening paren so the function name can be entered ...
                         ccursor.index -= selection_len + 1;
                         Some(CCursorRange::one(ccursor))
@@ -654,7 +654,7 @@ fn livecode_events(
                         let selection = selected_str(text, &cursor_range).to_string();
                         let selection_len = selection.chars().count();
                         let mut ccursor = delete_selected(text, &cursor_range);
-                        insert_text(&mut ccursor, text, format!("{{{}}}", selection).as_str());
+                        insert_text(&mut ccursor, text, format!("{{{selection}}}").as_str());
                         // go to opening paren so the function name can be entered ...
                         ccursor.index -= selection_len + 1;
                         Some(CCursorRange::one(ccursor))
@@ -664,13 +664,13 @@ fn livecode_events(
                         let selection = selected_str(text, &cursor_range).to_string();
                         let selection_len = selection.chars().count();
                         let mut ccursor = delete_selected(text, &cursor_range);
-                        insert_text(&mut ccursor, text, format!("\"{}\"", selection).as_str());
+                        insert_text(&mut ccursor, text, format!("\"{selection}\"").as_str());
                         // go to opening paren so the function name can be entered ...
                         ccursor.index -= selection_len + 1;
                         Some(CCursorRange::one(ccursor))
                     } else {
                         let mut ccursor = delete_selected(text, &cursor_range);
-                        insert_text(&mut ccursor, text, &text_to_insert);
+                        insert_text(&mut ccursor, text, text_to_insert);
                         Some(CCursorRange::one(ccursor))
                     }
                 } else {
@@ -814,7 +814,7 @@ fn livecode_events(
                 pressed: true,
                 modifiers,
                 ..
-            } => on_key_press(&mut cursor_range, text, galley, *key, &modifiers, state),
+            } => on_key_press(&mut cursor_range, text, galley, *key, modifiers, state),
 
             Event::CompositionStart => {
                 state.has_ime = true;
@@ -826,7 +826,7 @@ fn livecode_events(
                 {
                     let mut ccursor = delete_selected(text, &cursor_range);
                     let start_cursor = ccursor;
-                    insert_text(&mut ccursor, text, &text_mark);
+                    insert_text(&mut ccursor, text, text_mark);
                     Some(CCursorRange::two(start_cursor, ccursor))
                 } else {
                     None
@@ -841,7 +841,7 @@ fn livecode_events(
                 {
                     state.has_ime = false;
                     let mut ccursor = delete_selected(text, &cursor_range);
-                    insert_text(&mut ccursor, text, &prediction);
+                    insert_text(&mut ccursor, text, prediction);
                     Some(CCursorRange::one(ccursor))
                 } else {
                     None

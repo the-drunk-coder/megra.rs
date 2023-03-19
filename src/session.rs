@@ -364,7 +364,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
             }
 
             for (i, gen) in gens.iter_mut().enumerate() {
-                gen.id_tags.insert(format!("prox-{}", i));
+                gen.id_tags.insert(format!("prox-{i}"));
                 gen.id_tags.insert(ctx.name.clone());
             }
 
@@ -396,9 +396,9 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                 }
             }
 
-            println!("newcomers {:?}", newcomers);
-            println!("remainders {:?}", remainders);
-            println!("quitters {:?}", quitters);
+            println!("newcomers {newcomers:?}");
+            println!("remainders {remainders:?}");
+            println!("quitters {quitters:?}");
 
             // HANDLE QUITTERS (generators to be stopped ...)
             // stop asynchronously to keep main thread reactive
@@ -605,7 +605,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
             if let Some((_, data)) = sess.schedulers.get_mut(&id_tags) {
                 print!("resume generator \'");
                 for tag in id_tags.iter() {
-                    print!("{} ", tag);
+                    print!("{tag} ");
                 }
                 println!("\'");
 
@@ -635,7 +635,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
             if let Some((_, data)) = sess.schedulers.get_mut(&id_tags) {
                 print!("resume generator \'");
                 for tag in id_tags.iter() {
-                    print!("{} ", tag);
+                    print!("{tag} ");
                 }
                 println!("\'");
                 // keep the scheduler running, just replace the data ...
@@ -681,7 +681,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
             if let Some(sync_data) = s_data {
                 print!("resume sync generator \'");
                 for tag in id_tags.iter() {
-                    print!("{} ", tag);
+                    print!("{tag} ");
                 }
                 println!("\'");
 
@@ -702,7 +702,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                 // resume sync: later ...
                 print!("resume generator \'");
                 for tag in id_tags.iter() {
-                    print!("{} ", tag);
+                    print!("{tag} ");
                 }
                 println!("\'");
                 // keep the scheduler running, just replace the data ...
@@ -733,7 +733,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
 
         print!("start generator (sync time data) \'");
         for tag in id_tags.iter() {
-            print!("{} ", tag);
+            print!("{tag} ");
         }
         println!("\'");
         // sync to data
@@ -765,11 +765,11 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
         if let Some((_, data)) = sess.schedulers.get_mut(sync_tags) {
             print!("start generator \'");
             for tag in gen.id_tags.iter() {
-                print!("{} ", tag);
+                print!("{tag} ");
             }
             print!("\' (push sync to existing \'");
             for tag in sync_tags.iter() {
-                print!("{} ", tag);
+                print!("{tag} ");
             }
             println!("\')");
 
@@ -795,7 +795,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
 
         print!("start generator (no sync) \'");
         for tag in id_tags.iter() {
-            print!("{} ", tag);
+            print!("{tag} ");
         }
         println!("\'");
 
@@ -830,7 +830,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
         // assemble name for thread ...
         let mut thread_name: String = "".to_owned();
         for tag in id_tags.iter() {
-            thread_name.push_str(&(format!("{} ", tag)));
+            thread_name.push_str(&(format!("{tag} ")));
         }
 
         sched.start(thread_name.trim(), eval_loop, sync::Arc::clone(&sched_data));
@@ -850,7 +850,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                 sched.join();
                 print!("replacing generator \'");
                 for tag in id_tags.iter() {
-                    print!("{} ", tag);
+                    print!("{tag} ");
                 }
                 println!("\'");
             });
@@ -863,7 +863,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
     ) {
         print!("--- stopping generator \'");
         for tag in gen_name.iter() {
-            print!("{} ", tag);
+            print!("{tag} ");
         }
         println!("\'");
         // get sched out of map, try to keep lock only shortly ...
@@ -881,7 +881,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
             sched.join();
             print!("stopped/removed generator \'");
             for tag in gen_name.iter() {
-                print!("{} ", tag);
+                print!("{tag} ");
             }
             println!("\'");
             let sess = session.lock();
@@ -944,7 +944,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
             sched.join();
             print!("stopped/removed generator \'");
             for tag in k.iter() {
-                print!("{} ", tag);
+                print!("{tag} ");
             }
             println!("\'");
         }

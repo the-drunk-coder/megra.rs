@@ -70,7 +70,7 @@ pub fn nuc(
                         keep_root = b;
                     }
                 }
-                _ => println!("{}", k),
+                _ => println!("{k}"),
             },
             _ => println! {"ignored"},
         }
@@ -152,7 +152,7 @@ mod tests {
                 assert!(matches!(res, EvaluatedExpr::BuiltIn(BuiltIn::Generator(_))));
             }
             Err(e) => {
-                println!("err {}", e);
+                println!("err {e}");
                 assert!(false)
             }
         }

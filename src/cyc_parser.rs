@@ -177,8 +177,8 @@ pub fn eval_cyc_from_str(
     global_parameters: &sync::Arc<GlobalParameters>,
 ) -> Vec<Vec<CycleResult>> {
     let items = parse_cyc(src.trim()).map_err(|e: nom::Err<VerboseError<&str>>| {
-        let ret = format!("{:#?}", e);
-        println!("{}", ret);
+        let ret = format!("{e:#?}");
+        println!("{ret}");
         ret
     });
 
@@ -210,13 +210,13 @@ pub fn eval_cyc_from_str(
                                         pname,
                                         CycleParameter::Symbol(s),
                                     )) => {
-                                        name = name + &format!(" :{} \'{} ", pname, s);
+                                        name = name + &format!(" :{pname} \'{s} ");
                                     }
                                     CycleItem::NamedParameter((
                                         pname,
                                         CycleParameter::Number(f),
                                     )) => {
-                                        name = name + &format!(" :{} {} ", pname, f);
+                                        name = name + &format!(" :{pname} {f} ");
                                     }
                                     _ => {
                                         println!("ignore cycle event param")
@@ -224,7 +224,7 @@ pub fn eval_cyc_from_str(
                                 }
                             }
                             // in brackets so it's recognized as a "function"
-                            name = format!("({})", name);
+                            name = format!("({name})");
                             //println!("{}", name);
                             match parse_expr(name.trim()) {
                                 Ok((_, expr)) => {
@@ -288,16 +288,16 @@ pub fn eval_cyc_from_str(
                                     ev_name = ev_name + " \'" + s;
                                 }
                                 CycleItem::NamedParameter((pname, CycleParameter::Number(f))) => {
-                                    ev_name = ev_name + &format!(" :{} {} ", pname, f);
+                                    ev_name = ev_name + &format!(" :{pname} {f} ");
                                 }
                                 CycleItem::NamedParameter((pname, CycleParameter::Symbol(s))) => {
-                                    ev_name = ev_name + &format!(" :{} \'{} ", pname, s);
+                                    ev_name = ev_name + &format!(" :{pname} \'{s} ");
                                 }
                                 _ => {}
                             }
                         }
                         // brackets so it's recognized as a "function"
-                        ev_name = format!("({})", ev_name);
+                        ev_name = format!("({ev_name})");
                         match parse_expr(ev_name.trim()) {
                             Ok((_, expr)) => {
                                 if let Some(EvaluatedExpr::BuiltIn(BuiltIn::SoundEvent(e))) =
@@ -344,7 +344,7 @@ mod tests {
                 println!("{:?}", o.0)
             }
             Err(e) => {
-                println!("{:?}", e)
+                println!("{e:?}")
             }
         }
     }

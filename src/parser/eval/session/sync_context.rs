@@ -173,7 +173,7 @@ mod tests {
                 ));
             }
             Err(e) => {
-                println!("err {}", e);
+                println!("err {e}");
                 panic!()
             }
         }

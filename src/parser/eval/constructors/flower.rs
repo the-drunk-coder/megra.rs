@@ -187,7 +187,7 @@ pub fn flower(
                         keep_root = b;
                     }
                 }
-                _ => println!("{}", k),
+                _ => println!("{k}"),
             }
         }
     }

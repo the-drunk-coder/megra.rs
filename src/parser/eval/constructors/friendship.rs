@@ -181,7 +181,7 @@ pub fn friendship(
                         keep_root = b;
                     }
                 }
-                _ => println!("{}", k),
+                _ => println!("{k}"),
             }
         }
     }

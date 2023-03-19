@@ -87,7 +87,7 @@ pub fn stages(
                         keep_root = b;
                     }
                 }
-                _ => println!("{}", k),
+                _ => println!("{k}"),
             },
             EvaluatedExpr::BuiltIn(BuiltIn::SoundEvent(e)) => {
                 collected_evs.push(SourceEvent::Sound(e));

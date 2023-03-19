@@ -145,7 +145,7 @@ pub fn cyc(
                         keep_root = b;
                     }
                 }
-                _ => println!("{}", k),
+                _ => println!("{k}"),
             },
             EvaluatedExpr::String(d) => {
                 cycle_string = d.clone();

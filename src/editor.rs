@@ -66,7 +66,7 @@ pub fn run_editor<const BUFSIZE: usize, const NCHAN: usize>(
                     );
                 }
                 Err(e) => {
-                    println!("could not parse this! {} {}", text, e)
+                    println!("could not parse this! {text} {e}")
                 }
             }
         }));

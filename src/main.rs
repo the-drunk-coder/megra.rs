@@ -48,14 +48,13 @@ use std::{env, sync, thread};
 
 fn print_help(program: &str, opts: Options) {
     let description = format!(
-        "{prog}: a markov-chain music language
+        "{program}: a markov-chain music language
 
 Mégra is a DSL to make music with markov chains.
 
 Usage:
-    {prog} [options] [FILES...]
+    {program} [options] [FILES...]
       ",
-        prog = program,
     );
     println!("{}", opts.usage(&description));
 }
@@ -176,7 +175,7 @@ fn main() -> Result<(), anyhow::Error> {
     let matches = match opts.parse(argv) {
         Ok(m) => m,
         Err(e) => {
-            eprintln!("Error: {}. Please see --help for more details", e);
+            eprintln!("Error: {e}. Please see --help for more details");
             return Ok(());
         }
     };
@@ -280,7 +279,7 @@ fn main() -> Result<(), anyhow::Error> {
         15.0
     };
 
-    println!("using a live buffer time of: {}", live_buffer_time);
+    println!("using a live buffer time of: {live_buffer_time}");
 
     #[cfg(any(target_os = "linux", target_os = "dragonfly", target_os = "freebsd"))]
     let host = cpal::host_from_id(cpal::available_hosts()
@@ -437,11 +436,10 @@ where
     let sample_rate = out_config.sample_rate.0 as f32;
     let out_channels = out_config.channels as usize;
     let in_channels = in_config.channels as usize;
-    let err_fn = |err| eprintln!("an error occurred on stream: {}", err);
+    let err_fn = |err| eprintln!("an error occurred on stream: {err}");
 
     println!(
-        "samplerate: {} in chan: {} out chan: {}",
-        sample_rate, in_channels, out_channels
+        "samplerate: {sample_rate} in chan: {in_channels} out chan: {out_channels}"
     );
 
     let (controls, playhead) = init_ruffbox::<BLOCKSIZE, NCHAN>(
@@ -748,7 +746,7 @@ where
     let base_dir = if let Some(p) = options.base_folder {
         let bd = std::path::PathBuf::from(p);
         if !bd.exists() {
-            println!("create custom megra resource directory {:?}", bd);
+            println!("create custom megra resource directory {bd:?}");
             std::fs::create_dir_all(bd.to_str().unwrap())?;
         }
         bd
@@ -765,13 +763,13 @@ where
         // not the most elegant solution, hope this doesn't happen
         let bd = std::path::PathBuf::from("~/MEGRA_FALLBACK");
         if !bd.exists() {
-            println!("create custom megra resource directory {:?}", bd);
+            println!("create custom megra resource directory {bd:?}");
             std::fs::create_dir_all(bd.to_str().unwrap())?;
         }
         bd
     };
 
-    println!("base dir is: {:?}", base_dir);
+    println!("base dir is: {base_dir:?}");
 
     let samples_path = if let Some(folder) = options.sample_folder {
         std::path::PathBuf::from(folder)
@@ -780,24 +778,24 @@ where
     };
 
     if !samples_path.exists() {
-        println!("create megra samples directory {:?}", samples_path);
+        println!("create megra samples directory {samples_path:?}");
         std::fs::create_dir_all(samples_path.to_str().unwrap())?;
     }
 
     let sketchbook_path = base_dir.join("sketchbook");
     if !sketchbook_path.exists() {
-        println!("create megra sketchbook directory {:?}", sketchbook_path);
+        println!("create megra sketchbook directory {sketchbook_path:?}");
         std::fs::create_dir_all(sketchbook_path.to_str().unwrap())?;
     }
 
     let recordings_path = base_dir.join("recordings");
     if !recordings_path.exists() {
-        println!("create megra recordings directory {:?}", recordings_path);
+        println!("create megra recordings directory {recordings_path:?}");
         std::fs::create_dir_all(recordings_path.to_str().unwrap())?;
     }
     // load the default sample set ...
     if options.load_samples {
-        println!("load samples from path: {:?}", samples_path);
+        println!("load samples from path: {samples_path:?}");
         let controls_arc2 = sync::Arc::clone(&controls_arc);
         let sample_set2 = sync::Arc::clone(&sample_set);
         let stdlib2 = sync::Arc::clone(&stdlib);

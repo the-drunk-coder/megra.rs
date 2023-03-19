@@ -106,13 +106,13 @@ pub enum EvaluatedExpr {
 impl fmt::Debug for EvaluatedExpr {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            EvaluatedExpr::Float(fl) => write!(f, "EvaluatedExpr::Float({})", fl),
-            EvaluatedExpr::Symbol(s) => write!(f, "EvaluatedExpr::Symbol({})", s),
-            EvaluatedExpr::Keyword(k) => write!(f, "EvaluatedExpr::Keyword({})", k),
-            EvaluatedExpr::String(s) => write!(f, "EvaluatedExpr::String({})", s),
-            EvaluatedExpr::Boolean(b) => write!(f, "EvaluatedExpr::Boolean({})", b),
-            EvaluatedExpr::FunctionName(fna) => write!(f, "EvaluatedExpr::FunctionName({})", fna),
-            EvaluatedExpr::BuiltIn(b) => write!(f, "EvaluatedExpr::BuiltIn({:?})", b),
+            EvaluatedExpr::Float(fl) => write!(f, "EvaluatedExpr::Float({fl})"),
+            EvaluatedExpr::Symbol(s) => write!(f, "EvaluatedExpr::Symbol({s})"),
+            EvaluatedExpr::Keyword(k) => write!(f, "EvaluatedExpr::Keyword({k})"),
+            EvaluatedExpr::String(s) => write!(f, "EvaluatedExpr::String({s})"),
+            EvaluatedExpr::Boolean(b) => write!(f, "EvaluatedExpr::Boolean({b})"),
+            EvaluatedExpr::FunctionName(fna) => write!(f, "EvaluatedExpr::FunctionName({fna})"),
+            EvaluatedExpr::BuiltIn(b) => write!(f, "EvaluatedExpr::BuiltIn({b:?})"),
         }
     }
 }
@@ -333,7 +333,7 @@ pub fn eval_from_str(
     let re = Regex::new(r";[^\n]+\n").unwrap();
     let src_nocomment = re.replace_all(src, "\n");
     parse_expr(&src_nocomment)
-        .map_err(|e: nom::Err<VerboseError<&str>>| format!("{:#?}", e))
+        .map_err(|e: nom::Err<VerboseError<&str>>| format!("{e:#?}"))
         .and_then(|(_, exp)| {
             eval_expression(&exp, functions, globals, sample_set, out_mode)
                 .ok_or_else(|| "eval failed".to_string())
@@ -439,7 +439,7 @@ mod tests {
                 assert!(matches!(res, EvaluatedExpr::Boolean(true)))
             }
             Err(e) => {
-                println!("err {}", e);
+                println!("err {e}");
                 panic!()
             }
         }

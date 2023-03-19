@@ -146,7 +146,7 @@ mod tests {
 
         let mut count = 0;
         let mut val = env.evaluate(0.0);
-        println!("count: {} val: {}", count, val);
+        println!("count: {count} val: {val}");
         assert_approx_eq::assert_approx_eq!(val, 0.0, 0.00001);
         count += 1;
         for _ in 0..9 {
@@ -154,7 +154,7 @@ mod tests {
             count += 1;
         }
         val = env.evaluate(0.0);
-        println!("count: {} val: {}", count, val);
+        println!("count: {count} val: {val}");
         assert_approx_eq::assert_approx_eq!(val, 10.0, 0.00001);
         count += 1;
         for _ in 0..9 {
@@ -162,7 +162,7 @@ mod tests {
             count += 1;
         }
         val = env.evaluate(0.0);
-        println!("count: {} val: {}", count, val);
+        println!("count: {count} val: {val}");
         assert_approx_eq::assert_approx_eq!(val, 0.0, 0.00001);
         count += 1;
         for _ in 0..9 {
@@ -189,7 +189,7 @@ mod tests {
 
         let mut count = 0;
         let mut val = env.evaluate(0.0);
-        println!("count: {} val: {}", count, val);
+        println!("count: {count} val: {val}");
         assert_approx_eq::assert_approx_eq!(val, 0.0, 0.00001);
         count += 1;
         for _ in 0..9 {
@@ -197,7 +197,7 @@ mod tests {
             count += 1;
         }
         val = env.evaluate(0.0);
-        println!("count: {} val: {}", count, val);
+        println!("count: {count} val: {val}");
         assert_approx_eq::assert_approx_eq!(val, 10.0, 0.00001);
         count += 1;
         for _ in 0..4 {
@@ -205,7 +205,7 @@ mod tests {
             count += 1;
         }
         val = env.evaluate(0.0);
-        println!("count: {} val: {}", count, val);
+        println!("count: {count} val: {val}");
         assert_approx_eq::assert_approx_eq!(val, 5.0, 0.00001);
         count += 1;
         for _ in 0..9 {

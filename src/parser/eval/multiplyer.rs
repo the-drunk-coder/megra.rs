@@ -158,7 +158,7 @@ pub fn eval_multiplyer(
                 )]);
             }
             _ => {
-                println!("can't multiply {:?} {:?}", c, last);
+                println!("can't multiply {c:?} {last:?}");
             }
         }
     }
@@ -166,7 +166,7 @@ pub fn eval_multiplyer(
     Some(match last {
         // create a proxy ...
         Some(EvaluatedExpr::Symbol(s)) => {
-            println!("create proxy {}", s);
+            println!("create proxy {s}");
             let mut proxies = Vec::new();
             for gpl in gen_proc_list_list.drain(..) {
                 proxies.push(PartProxy::Proxy(s.clone(), gpl));
@@ -177,7 +177,7 @@ pub fn eval_multiplyer(
             EvaluatedExpr::BuiltIn(BuiltIn::ProxyList(proxies))
         }
         Some(EvaluatedExpr::BuiltIn(BuiltIn::PartProxy(PartProxy::Proxy(s, procs)))) => {
-            println!("create proxy list from proxy {}", s);
+            println!("create proxy list from proxy {s}");
             let mut proxies = Vec::new();
             for mut gpl in gen_proc_list_list.drain(..) {
                 let mut ngpl = procs.clone();
@@ -216,7 +216,7 @@ pub fn eval_multiplyer(
 
                 // this isn't super elegant but hey ...
                 for i in idx..100 {
-                    let tag = format!("mpx-{}", i);
+                    let tag = format!("mpx-{i}");
                     if !pclone.id_tags.contains(&tag) {
                         pclone.id_tags.insert(tag);
                         idx = i + 1;
@@ -262,7 +262,7 @@ pub fn eval_multiplyer(
 
                     // this isn't super elegant but hey ...
                     for i in idx..100 {
-                        let tag = format!("mpx-{}", i);
+                        let tag = format!("mpx-{i}");
                         if !all_tags.contains(&tag) {
                             pclone.id_tags.insert(tag);
                             idx = i + 1;

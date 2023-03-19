@@ -178,7 +178,7 @@ pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
         EvaluatedExpr::BuiltIn(BuiltIn::Generator(g)) => {
             print!("a generator called \'");
             for tag in g.id_tags.iter() {
-                print!("{} ", tag);
+                print!("{tag} ");
             }
             println!("\'");
         }
@@ -209,7 +209,7 @@ pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
             for gen in gl.iter() {
                 print!("--- a generator called \'");
                 for tag in gen.id_tags.iter() {
-                    print!("{} ", tag);
+                    print!("{tag} ");
                 }
                 println!("\'");
             }
@@ -245,19 +245,19 @@ pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
             midi_callback_map.lock().insert(key, c);
         }
         EvaluatedExpr::Float(f) => {
-            println!("a number: {}", f)
+            println!("a number: {f}")
         }
         EvaluatedExpr::Symbol(s) => {
-            println!("a symbol: {}", s)
+            println!("a symbol: {s}")
         }
         EvaluatedExpr::String(s) => {
-            println!("a string: {}", s)
+            println!("a string: {s}")
         }
         EvaluatedExpr::Keyword(k) => {
-            println!("a keyword: {}", k)
+            println!("a keyword: {k}")
         }
         EvaluatedExpr::Boolean(b) => {
-            println!("a boolean: {}", b)
+            println!("a boolean: {b}")
         }
         _ => println!("unknown"),
     }

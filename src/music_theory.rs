@@ -26,7 +26,7 @@ pub fn from_string(string: &str) -> Note {
 }
 
 pub fn from_note_nr(nr: u8) -> Note {
-    println!("nr: {}", nr);
+    println!("nr: {nr}");
     let pitch_class = PitchClass::from_u8(nr % 12);
     let octave = nr / 12;
     Note::new(pitch_class, octave)

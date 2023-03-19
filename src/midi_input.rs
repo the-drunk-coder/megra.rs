@@ -68,7 +68,7 @@ pub fn open_midi_input_port<const BUFSIZE: usize, const NCHAN: usize>(
         )
         .unwrap();
 
-    println!("Connection open, reading input from '{}' ...", in_port_name);
+    println!("Connection open, reading input from '{in_port_name}' ...");
 
     // keep midi thread running until we quit the program ...
     std::thread::park();

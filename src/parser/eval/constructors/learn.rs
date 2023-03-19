@@ -131,9 +131,9 @@ pub fn learn(
                         keep_root = b;
                     }
                 }
-                _ => println!("{}", k),
+                _ => println!("{k}"),
             },
-            _ => println! {"ignored {:?}", c},
+            _ => println! {"ignored {c:?}"},
         }
     }
 

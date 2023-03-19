@@ -101,7 +101,7 @@ pub fn start_repl<const BUFSIZE: usize, const NCHAN: usize>(
                                 }
                             }
                         } else {
-                            println!("parser error {}", e);
+                            println!("parser error {e}");
                         }
                     }
                     Ok(pfa) => {
@@ -130,7 +130,7 @@ pub fn start_repl<const BUFSIZE: usize, const NCHAN: usize>(
                 break;
             }
             Err(err) => {
-                println!("Error: {:?}", err);
+                println!("Error: {err:?}");
                 break;
             }
         }

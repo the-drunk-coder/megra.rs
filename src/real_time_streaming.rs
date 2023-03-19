@@ -90,7 +90,7 @@ pub fn start_writer_thread<const MAX: usize, const NCHAN: usize>(
     let running2 = running.clone();
 
     // create the writer thread
-    let thread_name = format!("dwt_{}", path);
+    let thread_name = format!("dwt_{path}");
     let builder = thread::Builder::new().name(thread_name);
 
     let handle = Some(
@@ -154,7 +154,7 @@ pub fn init_real_time_stream<const MAX: usize, const NCHAN: usize>(
     // assume write interval is smaller than block interval ...
     // also, use a safety margin
     let pre_fill: usize = ((write_interval_ms / block_interval_ms) * 1.6) as usize;
-    println!("real time stream pre-fill {}", pre_fill);
+    println!("real time stream pre-fill {pre_fill}");
     // pre-fill return queue with specified amount of
     // stream items
     for _ in 0..pre_fill {
