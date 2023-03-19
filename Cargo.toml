@@ -39,6 +39,9 @@ rosc = "~0.5"
 hound = "3.4"
 regex = "1.5"
 midir = "0.8.0"
+reqwest = {version = "*", features = ["blocking"]}
+zip = "0.6.4"
+
 
 [dev-dependencies]
 assert_approx_eq = "1.1.0"

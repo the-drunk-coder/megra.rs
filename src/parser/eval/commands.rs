@@ -66,6 +66,57 @@ pub fn define_midi_callback(
     }
 }
 
+pub fn import_sample_set(
+    _: &FunctionMap,
+    tail: &mut Vec<EvaluatedExpr>,
+    _: &sync::Arc<GlobalParameters>,
+    _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
+    _: OutputMode,
+) -> Option<EvaluatedExpr> {
+    let mut tail_drain = tail.drain(..).skip(1).peekable();
+
+    let mut url: Option<String> = None;
+    let mut file: Option<String> = None;
+    let mut checksum: Option<String> = None;
+
+    // handle named sample sets ...
+    if let Some(EvaluatedExpr::Symbol(s)) = tail_drain.peek() {
+    } else {
+        while let Some(c) = tail_drain.next() {
+            if let EvaluatedExpr::Keyword(k) = c {
+                if k.as_str() == "checksum" {
+                    if let Some(EvaluatedExpr::String(s)) = tail_drain.peek() {
+                        checksum = Some(s.to_string());
+                    }
+                }
+                if k.as_str() == "url" {
+                    if let Some(EvaluatedExpr::String(s)) = tail_drain.peek() {
+                        url = Some(s.to_string());
+                    }
+                }
+                if k.as_str() == "file" {
+                    if let Some(EvaluatedExpr::String(s)) = tail_drain.peek() {
+                        file = Some(s.to_string());
+                    }
+                }
+            }
+        }
+    }
+
+    // url has priority in case someone provided both ..
+    if let Some(url_string) = url {
+        Some(EvaluatedExpr::BuiltIn(BuiltIn::Command(
+            Command::ImportSampleSet(SampleResource::Url(url_string, checksum)),
+        )))
+    } else if let Some(path_string) = file {
+        Some(EvaluatedExpr::BuiltIn(BuiltIn::Command(
+            Command::ImportSampleSet(SampleResource::File(path_string, checksum)),
+        )))
+    } else {
+        None
+    }
+}
+
 #[allow(clippy::unnecessary_unwrap)]
 pub fn load_sample_as_wavematrix(
     _: &FunctionMap,

@@ -35,6 +35,12 @@ pub enum BuiltinGlobalParameters {
 pub type GlobalParameters = DashMap<BuiltinGlobalParameters, ConfigParameter>;
 
 #[derive(Clone)]
+pub enum SampleResource {
+    File(String, Option<String>), // file path, checksum
+    Url(String, Option<String>),  // Url path, checksum
+}
+
+#[derive(Clone)]
 pub enum Command {
     Clear,                                                               // clear the entire session
     Tmod(DynVal),         // set global time mod parameter
@@ -44,6 +50,7 @@ pub enum Command {
     GlobRes(f32),         // global resources for lifemodel algorithm
     GlobalRuffboxParams(HashMap<SynthParameterLabel, ParameterValue>), // global ruffbox params
     LoadSampleAsWavematrix(String, String, String, (usize, usize), f32), // key, path, method, matrix size, start
+    ImportSampleSet(SampleResource),
     LoadSample(String, Vec<String>, String, bool), // set (events), keyword, path, downmix_stereo
     LoadSampleSet(String, bool),                   // set path, downmix stereo
     LoadSampleSets(String, bool),                  // top level sets set path

@@ -25,7 +25,76 @@ use crate::sample_set::SampleAndWavematrixSet;
 use crate::session::*;
 use chrono::Local;
 use directories_next::ProjectDirs;
+use std::io::Cursor;
 use std::sync::atomic::Ordering;
+
+use std::io;
+
+fn fetch_url(url: String, file_name: String) -> anyhow::Result<()> {
+    let response = reqwest::blocking::get(url)?;
+    let mut file = std::fs::File::create(file_name)?;
+    let mut content = Cursor::new(response.bytes()?);
+    std::io::copy(&mut content, &mut file)?;
+    Ok(())
+}
+
+pub fn fetch_sample_set(resource: SampleResource) {
+    fetch_url(
+        "https://github.com/the-drunk-coder/megra-public-samples/archive/refs/heads/master.zip"
+            .to_string(),
+        "default.zip".to_string(),
+    )
+    .unwrap();
+
+    let fname = std::path::Path::new("default.zip");
+    let file = fs::File::open(fname).unwrap();
+
+    let mut archive = zip::ZipArchive::new(file).unwrap();
+
+    for i in 0..archive.len() {
+        let mut file = archive.by_index(i).unwrap();
+        let outpath = match file.enclosed_name() {
+            Some(path) => path.to_owned(),
+            None => continue,
+        };
+
+        {
+            let comment = file.comment();
+            if !comment.is_empty() {
+                println!("File {i} comment: {comment}");
+            }
+        }
+
+        if (*file.name()).ends_with('/') {
+            println!("File {} extracted to \"{}\"", i, outpath.display());
+            fs::create_dir_all(&outpath).unwrap();
+        } else {
+            println!(
+                "File {} extracted to \"{}\" ({} bytes)",
+                i,
+                outpath.display(),
+                file.size()
+            );
+            if let Some(p) = outpath.parent() {
+                if !p.exists() {
+                    fs::create_dir_all(p).unwrap();
+                }
+            }
+            let mut outfile = fs::File::create(&outpath).unwrap();
+            io::copy(&mut file, &mut outfile).unwrap();
+        }
+
+        // Get and Set permissions
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+
+            if let Some(mode) = file.unix_mode() {
+                fs::set_permissions(&outpath, fs::Permissions::from_mode(mode)).unwrap();
+            }
+        }
+    }
+}
 
 pub fn freeze_buffer<const BUFSIZE: usize, const NCHAN: usize>(
     ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,

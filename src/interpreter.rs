@@ -47,6 +47,11 @@ pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
         Command::StopRecording => {
             commands::stop_recording(session);
         }
+        Command::ImportSampleSet(resource) => {
+            thread::spawn(move || {
+                commands::fetch_sample_set(resource);
+            });
+        }
         Command::LoadSample(set, mut keywords, path, downmix_stereo) => {
             let ruffbox2 = sync::Arc::clone(ruffbox);
             let fmap2 = sync::Arc::clone(function_map);
