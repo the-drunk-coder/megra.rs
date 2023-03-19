@@ -8,3 +8,5 @@
 * allow usage of stereo samples
 * ambisonic-binaural sources (samples only)
 * `pear` with `dur` event is now applied to first transition
+* state preservation for named generator processors
+* optional id for `every`
