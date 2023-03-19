@@ -10,6 +10,8 @@ use crate::{
 /// Apple-ys events to the throughcoming ones
 #[derive(Clone)]
 pub struct EveryProcessor {
+    // optional ID in case we want to preserve state ...
+    pub id: Option<String>,
     pub step_count: usize,
     pub things_to_be_applied: Vec<(DynVal, EventsAndFilters, GenModFunsAndArgs)>,
     pub last_static: Vec<(usize, StaticEventsAndFilters)>, // only needed for events, not filters
@@ -18,6 +20,7 @@ pub struct EveryProcessor {
 impl EveryProcessor {
     pub fn new() -> Self {
         EveryProcessor {
+            id: None,
             step_count: 1,
             things_to_be_applied: Vec::new(),
             last_static: Vec::new(),
@@ -26,6 +29,10 @@ impl EveryProcessor {
 }
 
 impl GeneratorProcessor for EveryProcessor {
+    fn get_id(&self) -> Option<String> {
+        self.id.clone()
+    }
+
     fn set_state(&mut self, other: GeneratorProcessorState) {
         if let GeneratorProcessorState::Count(c) = other {
             self.step_count = c;

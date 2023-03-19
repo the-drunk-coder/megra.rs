@@ -101,6 +101,13 @@ pub fn collect_every(tail: &mut Vec<EvaluatedExpr>) -> Box<dyn GeneratorProcesso
 
                         collect_filters = false;
                     }
+                    "id" => {
+                        // should be peek, really
+                        if let Some(EvaluatedExpr::Symbol(s)) = tail_drain.next() {
+                            proc.id = Some(s)
+                        }
+                    }
+
                     _ => {}
                 }
             }
