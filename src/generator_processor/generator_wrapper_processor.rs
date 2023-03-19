@@ -27,8 +27,18 @@ impl GeneratorWrapperProcessor {
 
 // zip mode etc seem to be outdated ... going for any mode for now
 impl GeneratorProcessor for GeneratorWrapperProcessor {
+    /// id helps us to preserve state ...
+    fn get_id(&self) -> Option<String> {
+        let mut id = "".to_string();
+        for tag in self.wrapped_generator.id_tags.iter() {
+            id.push_str(tag);
+        }
+        Some(id)
+    }
+
     fn set_state(&mut self, other: GeneratorProcessorState) {
         if let GeneratorProcessorState::WrappedGenerator(g) = other {
+            //println!("transfer state");
             self.wrapped_generator.transfer_state(&g);
         }
     }
@@ -80,14 +90,14 @@ impl GeneratorProcessor for GeneratorWrapperProcessor {
             self.wrapped_generator.root_generator.clear_modified();
         }
         vis_client.update_active_node(&self.wrapped_generator);
-        for proc in self.wrapped_generator.processors.iter_mut() {
+        for (_, proc) in self.wrapped_generator.processors.iter_mut() {
             proc.visualize_if_possible(vis_client);
         }
     }
 
     fn clear_visualization(&self, vc: &sync::Arc<VisualizerClient>) {
         vc.clear(&self.wrapped_generator.id_tags);
-        for proc in self.wrapped_generator.processors.iter() {
+        for (_, proc) in self.wrapped_generator.processors.iter() {
             proc.clear_visualization(vc);
         }
     }

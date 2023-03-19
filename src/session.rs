@@ -75,7 +75,7 @@ fn resolve_proxy(parts_store: &PartsStore, proxy: PartProxy, generators: &mut Ve
                     for gpom in procs_clone.drain(..) {
                         match gpom {
                             GeneratorProcessorOrModifier::GeneratorProcessor(gp) => {
-                                gen.processors.push(gp)
+                                gen.processors.push((gp.get_id(), gp))
                             }
                             GeneratorProcessorOrModifier::GeneratorModifierFunction((
                                 fun,
@@ -96,7 +96,7 @@ fn resolve_proxy(parts_store: &PartsStore, proxy: PartProxy, generators: &mut Ve
                         for gpom in procs_clone.drain(..) {
                             match gpom {
                                 GeneratorProcessorOrModifier::GeneratorProcessor(gp) => {
-                                    gen.processors.push(gp)
+                                    gen.processors.push((gp.get_id(), gp))
                                 }
                                 GeneratorProcessorOrModifier::GeneratorModifierFunction((
                                     fun,
@@ -152,7 +152,7 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
             data.generator.root_generator.clear_modified()
         }
         vc.update_active_node(&data.generator);
-        for proc in data.generator.processors.iter_mut() {
+        for (_, proc) in data.generator.processors.iter_mut() {
             proc.visualize_if_possible(vc);
         }
     }
@@ -887,7 +887,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
             let sess = session.lock();
             if let Some(c) = &sess.visualizer_client {
                 let d = data.lock();
-                for proc in d.generator.processors.iter() {
+                for (_, proc) in d.generator.processors.iter() {
                     proc.clear_visualization(c);
                 }
             }
@@ -919,7 +919,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
             let sess = session.lock();
             if let Some(c) = &sess.visualizer_client {
                 let d = data.lock();
-                for proc in d.generator.processors.iter() {
+                for (_, proc) in d.generator.processors.iter() {
                     proc.clear_visualization(c);
                 }
             }
@@ -953,7 +953,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
             for (k, (_, data)) in sess.schedulers.iter() {
                 c.clear(k);
                 let d = data.lock();
-                for proc in d.generator.processors.iter() {
+                for (_, proc) in d.generator.processors.iter() {
                     proc.clear_visualization(c);
                 }
             }

@@ -62,11 +62,11 @@ impl GeneratorProcessor for PearProcessor {
     }
     // .. including transition events
     fn process_transition(&mut self, trans: &mut StaticEvent, g: &Arc<GlobalParameters>) {
-	// init last_static so it can be applied to the first transition,
-	// giving more predictable behaviour ...
-	if self.last_static.is_empty() {
-	    self.process_events(&mut vec![], g);
-	}
+        // init last_static so it can be applied to the first transition,
+        // giving more predictable behaviour ...
+        if self.last_static.is_empty() {
+            self.process_events(&mut vec![], g);
+        }
         let mut rng = rand::thread_rng();
         for (prob, filtered_events) in self.last_static.iter_mut() {
             for (filter, evs) in filtered_events.iter_mut() {

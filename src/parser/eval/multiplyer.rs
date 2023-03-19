@@ -5,7 +5,7 @@ use std::sync;
 use crate::builtin_types::*;
 use crate::event::{Event, EventOperation};
 use crate::generator::Generator;
-use crate::generator_processor::{GeneratorWrapperProcessor, PearProcessor};
+use crate::generator_processor::{GeneratorProcessor, GeneratorWrapperProcessor, PearProcessor};
 use crate::parameter::{DynVal, ParameterValue};
 
 use crate::parser::{BuiltIn, EvaluatedExpr, FunctionMap};
@@ -66,7 +66,7 @@ fn spread_gens(gens: &mut [Generator], out_mode: &OutputMode) {
         filtered_events.insert(vec!["".to_string()], (true, vec![ev]));
         p.events_to_be_applied
             .push((DynVal::with_value(100.0), filtered_events));
-        gens[i].processors.push(Box::new(p));
+        gens[i].processors.push((p.get_id(), Box::new(p)));
     }
 }
 
@@ -227,7 +227,7 @@ pub fn eval_multiplyer(
                 for gpom in gpl.drain(..) {
                     match gpom {
                         GeneratorProcessorOrModifier::GeneratorProcessor(gp) => {
-                            pclone.processors.push(gp)
+                            pclone.processors.push((gp.get_id(), gp))
                         }
                         GeneratorProcessorOrModifier::GeneratorModifierFunction((
                             fun,
@@ -274,7 +274,7 @@ pub fn eval_multiplyer(
                     for gpom in gpl_clone.drain(..) {
                         match gpom {
                             GeneratorProcessorOrModifier::GeneratorProcessor(gp) => {
-                                pclone.processors.push(gp)
+                                pclone.processors.push((gp.get_id(), gp))
                             }
                             GeneratorProcessorOrModifier::GeneratorModifierFunction((
                                 fun,

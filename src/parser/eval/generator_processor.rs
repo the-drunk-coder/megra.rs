@@ -83,7 +83,8 @@ fn eval_generator_processor(
     let last = tail.pop();
     Some(match last {
         Some(EvaluatedExpr::BuiltIn(BuiltIn::Generator(mut g))) => {
-            g.processors.push(collector(tail));
+            let gp = collector(tail);
+            g.processors.push((gp.get_id(), gp));
             EvaluatedExpr::BuiltIn(BuiltIn::Generator(g))
         }
         Some(EvaluatedExpr::Symbol(s)) => {
@@ -128,7 +129,7 @@ fn eval_generator_processor(
         Some(EvaluatedExpr::BuiltIn(BuiltIn::GeneratorList(mut gl))) => {
             let gp = collector(tail);
             for gen in gl.iter_mut() {
-                gen.processors.push(gp.clone());
+                gen.processors.push((gp.get_id(), gp.clone()));
             }
             EvaluatedExpr::BuiltIn(BuiltIn::GeneratorList(gl))
         }

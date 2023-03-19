@@ -37,9 +37,16 @@ impl TimeMod {
 #[derive(Clone)]
 pub struct Generator {
     pub id_tags: BTreeSet<String>,
+    // the root generator is the lowest-level sequence generator
     pub root_generator: MarkovSequenceGenerator,
-    pub processors: Vec<Box<dyn GeneratorProcessor + Send>>,
+    // processors modify the root generator or the emitted events ...
+    // could use a map but typically this will be 2 or three, rarely more, so linear
+    // search is no drawback here.
+    pub processors: Vec<(Option<String>, Box<dyn GeneratorProcessor + Send>)>,
+    // time mods manipulate the evaluation timing ...
     pub time_mods: Vec<TimeMod>,
+    // the keep_root flag determines whether we replace the root at
+    // subsequent evaluations ...
     pub keep_root: bool,
 }
 
@@ -48,9 +55,22 @@ impl Generator {
         self.root_generator.transfer_state(&other.root_generator);
         // this will only work if the generators remain in the same order,
         // but it'll still be helpful I think ..
-        for (idx, gp) in self.processors.iter_mut().enumerate() {
-            if let Some(g) = other.processors.get(idx) {
-                gp.set_state(g.get_state());
+        for (idx, (id_hint, gp)) in self.processors.iter_mut().enumerate() {
+            // some generator processors (such as wrapped generators) have
+            // ids, so we can preserve their state. Others will have their
+            // state preserved when they are in the same position as before
+            if let Some(id) = id_hint {
+                if let Some(id_idx) = other
+                    .processors
+                    .iter()
+                    .position(|oh| oh.0 == Some(id.to_string()))
+                {
+                    gp.set_state(other.processors[id_idx].1.get_state())
+                }
+            } else {
+                if let Some((_, g)) = other.processors.get(idx) {
+                    gp.set_state(g.get_state());
+                }
             }
         }
     }
@@ -77,9 +97,8 @@ impl Generator {
         let mut tmp_procs = Vec::new();
         tmp_procs.append(&mut self.processors);
 
-        for proc in tmp_procs.iter_mut() {
+        for (_, proc) in tmp_procs.iter_mut() {
             proc.process_events(&mut events, global_parameters);
-
             proc.process_generator(self, global_parameters);
         }
 
@@ -95,7 +114,7 @@ impl Generator {
 
     pub fn current_transition(&mut self, global_parameters: &Arc<GlobalParameters>) -> StaticEvent {
         let mut trans = self.root_generator.current_transition();
-        for proc in self.processors.iter_mut() {
+        for (_, proc) in self.processors.iter_mut() {
             proc.process_transition(&mut trans, global_parameters);
         }
         if let Some(tmod) = self.time_mods.pop() {

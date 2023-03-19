@@ -21,6 +21,12 @@ pub enum GeneratorProcessorState {
 /// the generator processor only needs to implement
 /// a subset of the methods available ...
 pub trait GeneratorProcessor: GeneratorProcessorClone {
+    /// some generator processors have a state flag,
+    /// others are stateless ...
+    fn get_id(&self) -> Option<String> {
+        None
+    }
+
     /// implement this if you want to modify the previous
     /// processor's event stream
     fn process_events(
