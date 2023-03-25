@@ -81,9 +81,12 @@ pub fn import_sample_set(
 
     // handle named sample sets ...
     if let Some(EvaluatedExpr::Symbol(s)) = tail_drain.peek() {
+        // hard-coded tutorial sample set with checksum ...
         if s.as_str() == "tutorial" {
-            url = Some("https://github.com/the-drunk-coder/megra-public-samples/archive/refs/heads/master.zip"
-            .to_string());
+            url = Some("https://github.com/the-drunk-coder/megra-public-samples/archive/refs/heads/master.zip".to_string());
+            checksum = Some(
+                "d8fe09b1cd24dfc821db3569a755c73a6a66b78968dd5cb5fd1dbd9971d8572f".to_string(),
+            );
         }
     } else {
         while let Some(c) = tail_drain.next() {

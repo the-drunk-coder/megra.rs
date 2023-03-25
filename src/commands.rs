@@ -1,10 +1,14 @@
 use parking_lot::Mutex;
+use std::env::temp_dir;
 use std::{
     collections::{BTreeSet, HashMap, HashSet},
     fs,
     path::Path,
     sync,
 };
+
+use sha256::try_digest;
+
 use vom_rs::pfa;
 
 use ruffbox_synth::{
@@ -46,14 +50,29 @@ pub fn fetch_sample_set<const BUFSIZE: usize, const NCHAN: usize>(
     base_dir: String,
     resource: SampleResource,
 ) {
-    fetch_url(
-        "https://github.com/the-drunk-coder/megra-public-samples/archive/refs/heads/master.zip"
-            .to_string(),
-        "default.zip".to_string(),
-    )
-    .unwrap();
+    let (fname, checksum) = match resource {
+        SampleResource::File(fpath, cs) => (std::path::Path::new(&fpath).to_path_buf(), cs),
+        SampleResource::Url(url, cs) => {
+            println!("downlading sample set from {url}");
+            // tmp file for download ...
+            let tmp_dl = temp_dir().join("download.zip");
+            fetch_url(url, tmp_dl.display().to_string()).unwrap();
+            (tmp_dl, cs)
+        }
+    };
 
-    let fname = std::path::Path::new("default.zip");
+    if let Some(cs) = checksum {
+        let val = try_digest(fname.as_path()).unwrap();
+        if val != cs {
+            // not loading anything, checksum error ...
+            println!("downloaded sample set has invalid checksum, deleting ...");
+            std::fs::remove_file(fname.as_path()).unwrap();
+            return;
+        } else {
+            println!("downloaded sample set has valid checksum, loading ...");
+        }
+    }
+
     let file = fs::File::open(fname).unwrap();
 
     let mut archive = zip::ZipArchive::new(file).unwrap();
