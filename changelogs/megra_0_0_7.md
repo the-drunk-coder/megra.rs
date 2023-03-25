@@ -10,3 +10,4 @@
 * `pear` with `dur` event is now applied to first transition
 * state preservation for named generator processors
 * optional id for `every`
+* sample import/download mechanism `import-sample-set`
