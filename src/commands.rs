@@ -65,11 +65,11 @@ pub fn fetch_sample_set<const BUFSIZE: usize, const NCHAN: usize>(
         let val = try_digest(fname.as_path()).unwrap();
         if val != cs {
             // not loading anything, checksum error ...
-            println!("downloaded sample set has invalid checksum, deleting ...");
+            println!("sample set archive has invalid checksum, deleting ...");
             std::fs::remove_file(fname.as_path()).unwrap();
             return;
         } else {
-            println!("downloaded sample set has valid checksum, loading ...");
+            println!("sample set archive has valid checksum, loading ...");
         }
     }
 
