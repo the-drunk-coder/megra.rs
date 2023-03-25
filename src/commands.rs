@@ -76,7 +76,6 @@ pub fn fetch_sample_set<const BUFSIZE: usize, const NCHAN: usize>(
     let file = fs::File::open(fname).unwrap();
 
     let mut archive = zip::ZipArchive::new(file).unwrap();
-    //let mut samples_to_import: Vec::new();
 
     for i in 0..archive.len() {
         let mut file = archive.by_index(i).unwrap();
@@ -160,8 +159,6 @@ pub fn fetch_sample_set<const BUFSIZE: usize, const NCHAN: usize>(
                 fs::set_permissions(&file_path, fs::Permissions::from_mode(mode)).unwrap();
             }
         }
-
-        //load_sample_sets()
     }
 }
 
