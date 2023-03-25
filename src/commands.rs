@@ -30,6 +30,7 @@ use std::sync::atomic::Ordering;
 
 use std::io;
 
+// helper method ...
 fn fetch_url(url: String, file_name: String) -> anyhow::Result<()> {
     let response = reqwest::blocking::get(url)?;
     let mut file = std::fs::File::create(file_name)?;
@@ -38,7 +39,13 @@ fn fetch_url(url: String, file_name: String) -> anyhow::Result<()> {
     Ok(())
 }
 
-pub fn fetch_sample_set(resource: SampleResource) {
+pub fn fetch_sample_set<const BUFSIZE: usize, const NCHAN: usize>(
+    function_map: &sync::Arc<Mutex<FunctionMap>>,
+    ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
+    sample_set: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
+    base_dir: String,
+    resource: SampleResource,
+) {
     fetch_url(
         "https://github.com/the-drunk-coder/megra-public-samples/archive/refs/heads/master.zip"
             .to_string(),
@@ -50,38 +57,79 @@ pub fn fetch_sample_set(resource: SampleResource) {
     let file = fs::File::open(fname).unwrap();
 
     let mut archive = zip::ZipArchive::new(file).unwrap();
+    //let mut samples_to_import: Vec::new();
 
     for i in 0..archive.len() {
         let mut file = archive.by_index(i).unwrap();
-        let outpath = match file.enclosed_name() {
-            Some(path) => path.to_owned(),
-            None => continue,
-        };
 
-        {
-            let comment = file.comment();
-            if !comment.is_empty() {
-                println!("File {i} comment: {comment}");
-            }
-        }
+        let sample_path = Path::new(&base_dir).join("samples");
+
+        // file name without enclosing zip folder ...
+        let mut file_comp = file.enclosed_name().unwrap().components();
+        file_comp.next();
+        let file_name = file_comp.as_path();
+        let file_path = sample_path.join(&file_name);
 
         if (*file.name()).ends_with('/') {
-            println!("File {} extracted to \"{}\"", i, outpath.display());
-            fs::create_dir_all(&outpath).unwrap();
-        } else {
+            if !file_path.exists() {
+                println!("Folder {} extracted to \"{}\"", i, file_path.display());
+                fs::create_dir_all(&file_path).unwrap();
+            } else {
+                println!("Folder {} already exists ...", file_path.display());
+            }
+        } else if !file_path.exists() {
             println!(
                 "File {} extracted to \"{}\" ({} bytes)",
                 i,
-                outpath.display(),
+                file_path.display(),
                 file.size()
             );
-            if let Some(p) = outpath.parent() {
+            if let Some(p) = file_path.parent() {
                 if !p.exists() {
                     fs::create_dir_all(p).unwrap();
                 }
             }
-            let mut outfile = fs::File::create(&outpath).unwrap();
+
+            // load sample
+            let mut cmp = file_name.components();
+            // only load wav or flac ...
+            // will fail if zip file isn't in the right format ...
+            let load_data = if (*file.name()).ends_with("flac") || (*file.name()).ends_with("wav") {
+                let set: String = cmp
+                    .next()
+                    .unwrap()
+                    .as_os_str()
+                    .to_str()
+                    .unwrap()
+                    .to_string();
+                let keyword: Vec<String> = vec![cmp
+                    .as_path()
+                    .file_stem()
+                    .unwrap()
+                    .to_str()
+                    .unwrap()
+                    .to_string()];
+                Some((set, keyword))
+            } else {
+                None
+            };
+
+            let mut outfile = fs::File::create(&file_path).unwrap();
             io::copy(&mut file, &mut outfile).unwrap();
+            if let Some((set, mut keyword)) = load_data {
+                load_sample(
+                    function_map,
+                    ruffbox,
+                    sample_set,
+                    set,
+                    &mut keyword,
+                    file_path.display().to_string(),
+                    false,
+                );
+            }
+        } else {
+            // don't overwrite files ...
+            println!("can't extract file, probably already exists ...");
         }
 
         // Get and Set permissions
@@ -90,9 +138,11 @@ pub fn fetch_sample_set(resource: SampleResource) {
             use std::os::unix::fs::PermissionsExt;
 
             if let Some(mode) = file.unix_mode() {
-                fs::set_permissions(&outpath, fs::Permissions::from_mode(mode)).unwrap();
+                fs::set_permissions(&file_path, fs::Permissions::from_mode(mode)).unwrap();
             }
         }
+
+        //load_sample_sets()
     }
 }
 

@@ -81,6 +81,10 @@ pub fn import_sample_set(
 
     // handle named sample sets ...
     if let Some(EvaluatedExpr::Symbol(s)) = tail_drain.peek() {
+        if s.as_str() == "tutorial" {
+            url = Some("https://github.com/the-drunk-coder/megra-public-samples/archive/refs/heads/master.zip"
+            .to_string());
+        }
     } else {
         while let Some(c) = tail_drain.next() {
             if let EvaluatedExpr::Keyword(k) = c {
