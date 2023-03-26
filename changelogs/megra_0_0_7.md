@@ -11,3 +11,4 @@
 * state preservation for named generator processors
 * optional id for `every`
 * sample import/download mechanism `import-sample-set`
+* simple cubic waveshaper

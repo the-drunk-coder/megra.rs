@@ -266,6 +266,7 @@ pub fn map_parameter(name: &str) -> SynthParameterLabel {
         "wt" | "wavetable" => SynthParameterLabel::Wavetable,
         "wm" | "wavematrix" => SynthParameterLabel::Wavematrix,
         "ti" | "tableindex" => SynthParameterLabel::WavematrixTableIndex,
+        "dist" => SynthParameterLabel::WaveshaperMix,
         _ => SynthParameterLabel::PitchFrequency,
     }
 }

@@ -159,6 +159,11 @@ fn synth_defaults(ev: &mut Event) {
         SynthParameterLabel::EnvelopeLevel,
         ParameterValue::Scalar(DynVal::with_value(0.5)),
     );
+    // no distortion per default ...
+    ev.params.insert(
+        SynthParameterLabel::WaveshaperMix,
+        ParameterValue::Scalar(DynVal::with_value(0.0)),
+    );
     ev.params.insert(
         SynthParameterLabel::OscillatorAmplitude,
         ParameterValue::Scalar(DynVal::with_value(0.6)),
@@ -186,6 +191,11 @@ fn sample_defaults(ev: &mut Event) {
     ev.params.insert(
         SynthParameterLabel::EnvelopeLevel,
         ParameterValue::Scalar(DynVal::with_value(0.5)),
+    );
+    // no distortion per default ...
+    ev.params.insert(
+        SynthParameterLabel::WaveshaperMix,
+        ParameterValue::Scalar(DynVal::with_value(0.0)),
     );
     ev.params.insert(
         SynthParameterLabel::OscillatorAmplitude,
