@@ -85,7 +85,7 @@ pub fn import_sample_set(
         if s.as_str() == "tutorial" {
             url = Some("https://github.com/the-drunk-coder/megra-public-samples/archive/refs/heads/master.zip".to_string());
             checksum = Some(
-                "d8fe09b1cd24dfc821db3569a755c73a6a66b78968dd5cb5fd1dbd9971d8572f".to_string(),
+		"7a339e8672511be64fa46961bbfdb3d6f797ebbd9572fc3adf551b737d3c4dcd".to_string(),
             );
         }
     } else {
