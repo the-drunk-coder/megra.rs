@@ -12,3 +12,4 @@
 * optional id for `every`
 * sample import/download mechanism `import-sample-set`
 * simple cubic waveshaper
+* got rid of annoying clicks when using live input
