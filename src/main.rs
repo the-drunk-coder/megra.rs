@@ -380,6 +380,7 @@ fn main() -> Result<(), anyhow::Error> {
                 cpal::SampleFormat::U16 => {
                     run::<u16, 2>(&input_device, &output_device, &out_conf, &in_conf, run_opts)?
                 }
+                _ => todo!(),
             }
         }
         OutputMode::FourChannel => {
@@ -397,6 +398,7 @@ fn main() -> Result<(), anyhow::Error> {
                 cpal::SampleFormat::U16 => {
                     run::<u16, 4>(&input_device, &output_device, &out_conf, &in_conf, run_opts)?
                 }
+                _ => todo!(),
             }
         }
         OutputMode::EightChannel => {
@@ -414,6 +416,7 @@ fn main() -> Result<(), anyhow::Error> {
                 cpal::SampleFormat::U16 => {
                     run::<u16, 8>(&input_device, &output_device, &out_conf, &in_conf, run_opts)?
                 }
+                _ => todo!(),
             }
         }
     }
@@ -514,6 +517,7 @@ where
             }
         },
         err_fn,
+        None,
     )?;
 
     #[cfg(feature = "ringbuffer")]
@@ -576,6 +580,7 @@ where
             }
         },
         err_fn,
+        None,
     )?;
 
     // main audio callback (plain)
@@ -605,6 +610,7 @@ where
             }
         },
         err_fn,
+        None,
     )?;
 
     // main audio callback (with )
@@ -703,6 +709,7 @@ where
                  */
         },
         err_fn,
+        None,
     )?;
 
     in_stream.play()?;

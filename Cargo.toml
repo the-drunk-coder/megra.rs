@@ -12,7 +12,7 @@ keywords = ["audio", "livecoding", "dsl", "sampler"]
 
 [dependencies]
 num = "0.4"
-cpal = { version="0.13", features = ["jack"] }
+cpal = { version="0.15", features = ["jack"] }
 directories-next = "2.0"
 anyhow = "1.0"
 crossbeam = "0.8"
