@@ -63,7 +63,6 @@ pub fn cyc(
 
     // collect final events in their position in the cycle
     let mut ev_vecs = Vec::new();
-    let mut cycle_string: String = "".to_string();
     let mut keep_root = false;
 
     while let Some(c) = tail_drain.next() {
@@ -149,8 +148,50 @@ pub fn cyc(
                 }
                 _ => println!("{k}"),
             },
+            EvaluatedExpr::BuiltIn(BuiltIn::SoundEvent(e)) => {
+                ev_vecs.push(vec![SourceEvent::Sound(e)]);
+            }
+            EvaluatedExpr::BuiltIn(BuiltIn::ControlEvent(e)) => {
+                ev_vecs.push(vec![SourceEvent::Control(e)]);
+            }
             EvaluatedExpr::String(d) => {
-                cycle_string = d.clone();
+                let mut parsed_cycle = cyc_parser::eval_cyc_from_str(
+                    &d,
+                    functions,
+                    sample_set,
+                    out_mode,
+                    &template_evs,
+                    &collected_mapping,
+                    global_parameters,
+                );
+                if parsed_cycle.is_empty() {
+                    println!("couldn't parse cycle");
+                }
+                for mut cyc_evs in parsed_cycle.drain(..) {
+                    match cyc_evs.as_slice() {
+                        [cyc_parser::CycleResult::Duration(_)] => {
+                            // ignore durations, as the cycle slices
+                            // the cycle according to the number of events ...
+                        }
+                        _ => {
+                            let mut pos_vec = Vec::new();
+
+                            for ev in cyc_evs.drain(..) {
+                                match ev {
+                                    cyc_parser::CycleResult::SoundEvent(s) => {
+                                        pos_vec.push(SourceEvent::Sound(s))
+                                    }
+                                    cyc_parser::CycleResult::ControlEvent(c) => {
+                                        pos_vec.push(SourceEvent::Control(c))
+                                    }
+                                    _ => {}
+                                }
+                            }
+
+                            ev_vecs.push(pos_vec);
+                        }
+                    }
+                }
             }
             _ => println! {"ignored"},
         }
@@ -159,46 +200,8 @@ pub fn cyc(
     let mut event_mapping = HashMap::<char, Vec<SourceEvent>>::new();
     let mut duration_mapping = HashMap::<(char, char), Event>::new();
 
-    // re-generate pfa if necessary
+    // re-generate pfa if necessary, now that we have collected all the info ...
     let pfa = if !keep_root {
-        let mut parsed_cycle = cyc_parser::eval_cyc_from_str(
-            &cycle_string,
-            functions,
-            sample_set,
-            out_mode,
-            &template_evs,
-            &collected_mapping,
-            global_parameters,
-        );
-        if parsed_cycle.is_empty() {
-            println!("couldn't parse cycle");
-        }
-        for mut cyc_evs in parsed_cycle.drain(..) {
-            match cyc_evs.as_slice() {
-                [cyc_parser::CycleResult::Duration(_)] => {
-                    // ignore durations, as the cycle slices
-                    // the cycle according to the number of events ...
-                }
-                _ => {
-                    let mut pos_vec = Vec::new();
-
-                    for ev in cyc_evs.drain(..) {
-                        match ev {
-                            cyc_parser::CycleResult::SoundEvent(s) => {
-                                pos_vec.push(SourceEvent::Sound(s))
-                            }
-                            cyc_parser::CycleResult::ControlEvent(c) => {
-                                pos_vec.push(SourceEvent::Control(c))
-                            }
-                            _ => {}
-                        }
-                    }
-
-                    ev_vecs.push(pos_vec);
-                }
-            }
-        }
-
         // generated ids
         let mut last_char: char = '1';
         let first_char = last_char;
