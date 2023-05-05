@@ -34,9 +34,10 @@ pub fn cyc(
         "".to_string()
     };
 
+    // get the default global duration ...
     let mut dur: DynVal = if let ConfigParameter::Numeric(d) = global_parameters
-        .entry(BuiltinGlobalParameters::DefaultDuration)
-        .or_insert(ConfigParameter::Numeric(200.0))
+        .entry(BuiltinGlobalParameters::DefaultCycleDuration)
+        .or_insert(ConfigParameter::Numeric(800.0)) // one "bar" in traditional terms ...
         .value()
     {
         DynVal::with_value(*d)
@@ -44,13 +45,14 @@ pub fn cyc(
         unreachable!()
     };
 
+    // chances for modifiers ...
     let mut repetition_chance: f32 = 0.0;
     let mut randomize_chance: f32 = 0.0;
     let mut max_repetitions: f32 = 0.0;
 
-    let mut dur_vec: Vec<DynVal> = Vec::new();
-
+    // collect event abbreviations ...
     let mut collect_events = false;
+    // get a template ...
     let mut collect_template = false;
     let mut template_evs = Vec::new();
 
@@ -173,14 +175,12 @@ pub fn cyc(
         }
         for mut cyc_evs in parsed_cycle.drain(..) {
             match cyc_evs.as_slice() {
-                [cyc_parser::CycleResult::Duration(d)] => {
-                    // only single durations count
-                    // slice pattern are awesome !
-                    *dur_vec.last_mut().unwrap() = DynVal::with_value(*d);
+                [cyc_parser::CycleResult::Duration(_)] => {
+                    // ignore durations, as the cycle slices
+                    // the cycle according to the number of events ...
                 }
                 _ => {
                     let mut pos_vec = Vec::new();
-                    dur_vec.push(dur.clone());
 
                     for ev in cyc_evs.drain(..) {
                         match ev {
@@ -277,7 +277,9 @@ pub fn cyc(
                     let mut dur_ev = Event::with_name("transition".to_string());
                     dur_ev.params.insert(
                         SynthParameterLabel::Duration,
-                        ParameterValue::Scalar(dur_vec[count].clone()),
+                        ParameterValue::Scalar(DynVal::with_value(
+                            dur.static_val / num_events as f32,
+                        )),
                     );
                     duration_mapping.insert((last_char, next_char), dur_ev);
                     last_char = next_char;
@@ -293,7 +295,7 @@ pub fn cyc(
             let mut dur_ev = Event::with_name("transition".to_string());
             dur_ev.params.insert(
                 SynthParameterLabel::Duration,
-                ParameterValue::Scalar(dur_vec.last().unwrap().clone()),
+                ParameterValue::Scalar(DynVal::with_value(dur.static_val / num_events as f32)),
             );
             duration_mapping.insert((last_char, first_char), dur_ev);
         }

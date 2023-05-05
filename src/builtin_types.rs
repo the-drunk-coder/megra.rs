@@ -27,9 +27,10 @@ pub enum ConfigParameter {
 #[derive(Clone, PartialEq, Eq, Hash)]
 pub enum BuiltinGlobalParameters {
     LifemodelGlobalResources,
-    GlobalTimeModifier,
-    GlobalLatency, // latency between language and dsp
-    DefaultDuration,
+    GlobalTimeModifier, // the global factor applied to all durations, usually 1.0
+    GlobalLatency,      // latency between language and dsp
+    DefaultDuration,    // default duration for two subsequent events (200ms usually)
+    DefaultCycleDuration, // defualt duration for a cycle (800ms, or four times the default event duration)
 }
 
 pub type GlobalParameters = DashMap<BuiltinGlobalParameters, ConfigParameter>;
