@@ -22,17 +22,19 @@ pub fn cyc(
     sample_set: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     out_mode: OutputMode,
 ) -> Option<EvaluatedExpr> {
-    let mut tail_drain = tail.drain(..);
+    let mut tail_drain = tail.drain(..).peekable();
 
     // ignore function name in this case
     tail_drain.next();
 
     // name is the first symbol
-    let name = if let Some(EvaluatedExpr::Symbol(n)) = tail_drain.next() {
-        n
+    let name = if let Some(EvaluatedExpr::Symbol(n)) = tail_drain.peek() {
+        n.clone()
     } else {
         "".to_string()
     };
+
+    tail_drain.next();
 
     // get the default global duration ...
     let mut dur: DynVal = if let ConfigParameter::Numeric(d) = global_parameters
@@ -119,18 +121,21 @@ pub fn cyc(
                     _ => {}
                 },
                 "rep" => {
-                    if let EvaluatedExpr::Float(n) = tail_drain.next().unwrap() {
-                        repetition_chance = n;
+                    if let Some(EvaluatedExpr::Float(n)) = tail_drain.peek() {
+                        repetition_chance = *n;
+                        tail_drain.next();
                     }
                 }
                 "rnd" => {
-                    if let EvaluatedExpr::Float(n) = tail_drain.next().unwrap() {
-                        randomize_chance = n;
+                    if let Some(EvaluatedExpr::Float(n)) = tail_drain.peek() {
+                        randomize_chance = *n;
+                        tail_drain.next();
                     }
                 }
                 "max-rep" => {
-                    if let EvaluatedExpr::Float(n) = tail_drain.next().unwrap() {
-                        max_repetitions = n;
+                    if let Some(EvaluatedExpr::Float(n)) = tail_drain.peek() {
+                        max_repetitions = *n;
+                        tail_drain.next();
                     }
                 }
                 "events" => {
@@ -142,8 +147,9 @@ pub fn cyc(
                     continue;
                 }
                 "keep" => {
-                    if let Some(EvaluatedExpr::Boolean(b)) = tail_drain.next() {
-                        keep_root = b;
+                    if let Some(EvaluatedExpr::Boolean(b)) = tail_drain.peek() {
+                        keep_root = *b;
+                        tail_drain.next();
                     }
                 }
                 _ => println!("{k}"),
