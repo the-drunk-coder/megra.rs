@@ -213,13 +213,6 @@ pub fn cyc(
 
             event_mapping.insert(last_char, ev);
 
-            let mut dur_ev = Event::with_name("transition".to_string());
-            dur_ev.params.insert(
-                SynthParameterLabel::Duration,
-                ParameterValue::Scalar(dur_vec[count].clone()),
-            );
-            duration_mapping.insert((last_char, next_char), dur_ev);
-
             if count < num_events {
                 if repetition_chance > 0.0 {
                     //println!("add rep chance");
@@ -280,7 +273,15 @@ pub fn cyc(
                     });
                 }
 
-                last_char = next_char;
+                if count < num_events - 1 {
+                    let mut dur_ev = Event::with_name("transition".to_string());
+                    dur_ev.params.insert(
+                        SynthParameterLabel::Duration,
+                        ParameterValue::Scalar(dur_vec[count].clone()),
+                    );
+                    duration_mapping.insert((last_char, next_char), dur_ev);
+                    last_char = next_char;
+                }
             }
 
             count += 1;
