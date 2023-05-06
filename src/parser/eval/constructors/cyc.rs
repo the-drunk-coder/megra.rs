@@ -206,6 +206,7 @@ pub fn cyc(
     let mut event_mapping = HashMap::<char, Vec<SourceEvent>>::new();
     let mut duration_mapping = HashMap::<(char, char), Event>::new();
 
+    let num_events = ev_vecs.len();
     // re-generate pfa if necessary, now that we have collected all the info ...
     let pfa = if !keep_root {
         // generated ids
@@ -216,7 +217,7 @@ pub fn cyc(
         let mut rules = Vec::new();
 
         let mut count = 0;
-        let num_events = ev_vecs.len();
+
         for ev in ev_vecs.drain(..) {
             let next_char: char = std::char::from_u32(last_char as u32 + 1).unwrap();
 
@@ -232,7 +233,11 @@ pub fn cyc(
                         probability: repetition_chance / 100.0,
                     });
 
-                    // keep the rhythmicity
+                    // keep the rhythmicity for repetitions
+                    // if there's no repetitions, this is dormant
+                    // if repetitions are added later on this will
+                    // keep the behaviour consistent
+                    // i.e (rep 80 2 (cyc ...)) vs (cyc 'foo :rep 80 :max-rep 2 ...)
                     let mut dur_ev = Event::with_name("transition".to_string());
                     dur_ev.params.insert(
                         SynthParameterLabel::Duration,
@@ -345,7 +350,7 @@ pub fn cyc(
             duration_mapping,
             modified: true,
             symbol_ages: HashMap::new(),
-            default_duration: dur.static_val as u64,
+            default_duration: (dur.static_val / num_events as f32) as u64,
             last_transition: None,
             last_symbol: None,
         },
