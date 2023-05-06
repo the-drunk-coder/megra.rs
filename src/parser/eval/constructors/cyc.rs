@@ -232,6 +232,16 @@ pub fn cyc(
                         probability: repetition_chance / 100.0,
                     });
 
+                    // keep the rhythmicity
+                    let mut dur_ev = Event::with_name("transition".to_string());
+                    dur_ev.params.insert(
+                        SynthParameterLabel::Duration,
+                        ParameterValue::Scalar(DynVal::with_value(
+                            dur.static_val / num_events as f32,
+                        )),
+                    );
+                    duration_mapping.insert((last_char, last_char), dur_ev);
+
                     // next rule
                     if count == num_events - 1 {
                         rules.push(Rule {
