@@ -83,6 +83,16 @@ pub fn facts(
                 ev_vecs.push(vec![SourceEvent::Sound(e)]);
                 continue;
             }
+            EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p)) => {
+                let mut e = Event::with_name_and_operation(
+                    format!("{param}-mul"),
+                    EventOperation::Multiply,
+                );
+                e.params
+                    .insert(map_parameter(&param), ParameterValue::Scalar(p));
+                ev_vecs.push(vec![SourceEvent::Sound(e)]);
+                continue;
+            }
             _ => {}
         }
     }
