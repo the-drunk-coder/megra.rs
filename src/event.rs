@@ -141,6 +141,26 @@ impl StaticEvent {
                     }
                 }
             }
+            (Some(my_lookup), Some(SampleLookup::Random(_)))
+                if matches!(other.op, EventOperation::Replace) =>
+            {
+                match my_lookup {
+                    // replace by randomness
+                    SampleLookup::Key(fname, _) => {
+                        *my_lookup = SampleLookup::Random(fname.to_string());
+                    }
+
+                    SampleLookup::FixedRandom(fname, _) => {
+                        *my_lookup = SampleLookup::Random(fname.to_string());
+                    }
+                    SampleLookup::Random(fname) => {
+                        *my_lookup = SampleLookup::Random(fname.to_string());
+                    }
+                    SampleLookup::N(fname, _) => {
+                        *my_lookup = SampleLookup::Random(fname.to_string());
+                    }
+                }
+            }
             _ => {}
         }
     }

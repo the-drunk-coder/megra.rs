@@ -264,6 +264,10 @@ pub fn define_standard_library() -> FunctionMap {
     standard_library.fmap.insert("keys".to_string(), eval::events::parameters::keys);
     standard_library.fmap.insert("keys-add".to_string(), eval::events::parameters::keys);
     standard_library.fmap.insert("keys-sub".to_string(), eval::events::parameters::keys);
+
+    standard_library.fmap.insert("random-sample".to_string(), eval::events::parameters::random_sample);
+    standard_library.fmap.insert("rands".to_string(), eval::events::parameters::random_sample);
+
         
     // some shorthands 
     standard_library.fmap.insert("transpose".to_string(), eval::events::parameters::transpose);
