@@ -259,7 +259,7 @@ impl Event {
             params: self.evaluate_parameters(),
             tags: self.tags.clone(),
             op: self.op,
-            sample_lookup: None,
+            sample_lookup: self.sample_lookup.clone(),
         }
     }
 }

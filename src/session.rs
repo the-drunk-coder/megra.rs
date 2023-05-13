@@ -17,6 +17,7 @@ use crate::parameter::*;
 use crate::real_time_streaming;
 use crate::scheduler::{Scheduler, SchedulerData};
 use crate::visualizer_client::VisualizerClient;
+use crate::SampleAndWavematrixSet;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum OutputMode {
@@ -216,11 +217,23 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
                     continue;
                 }
 
+                // if this is a sampler event and contains a sample lookup,
+                // resolve it NOW ... at the very end, finally ...
                 let mut bufnum: usize = 0;
-                if let Some(SynthParameterValue::ScalarUsize(b)) =
-                    s.params.get(&SynthParameterLabel::SampleBufferNumber)
-                {
-                    bufnum = *b;
+                if let Some(lookup) = s.sample_lookup.as_ref() {
+                    if let Some(sample_info) = data.sample_set.lock().resolve_lookup(lookup) {
+                        bufnum = sample_info.bufnum;
+                        // is this really needed ??
+                        s.params.insert(
+                            SynthParameterLabel::SampleBufferNumber,
+                            SynthParameterValue::ScalarUsize(sample_info.bufnum),
+                        );
+                        // here still in milliseconds, will be resolved later ...
+                        s.params.insert(
+                            SynthParameterLabel::Sustain,
+                            SynthParameterValue::ScalarF32((sample_info.duration - 2) as f32),
+                        );
+                    }
                 }
 
                 // prepare a single, self-contained envelope from
@@ -270,6 +283,7 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
                             &data.ruffbox,
                             &data.parts_store,
                             &data.global_parameters,
+                            &data.sample_set,
                             data.output_mode,
                         );
                     }
@@ -312,6 +326,7 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
                                     &data.ruffbox,
                                     &data.parts_store,
                                     &data.global_parameters,
+                                    &data.sample_set,
                                     &data.session,
                                     &mut s,
                                     &mut c,
@@ -349,6 +364,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
         ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
         parts_store: &sync::Arc<Mutex<PartsStore>>,
         global_parameters: &sync::Arc<GlobalParameters>,
+        sample_set: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
         output_mode: OutputMode,
     ) {
         // resolve part proxies ..
@@ -471,6 +487,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                         ruffbox,
                         parts_store,
                         global_parameters,
+                        sample_set,
                         output_mode,
                         ctx.shift as f64 * 0.001,
                         &ctx.block_tags,
@@ -504,6 +521,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                         ruffbox,
                         parts_store,
                         global_parameters,
+                        sample_set,
                         output_mode,
                         ctx.shift as f64 * 0.001,
                         &ctx.block_tags,
@@ -548,6 +566,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                             ruffbox,
                             parts_store,
                             global_parameters,
+                            sample_set,
                             output_mode,
                             ctx.shift as f64 * 0.001,
                             &ctx.block_tags,
@@ -589,6 +608,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
         ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
         parts_store: &sync::Arc<Mutex<PartsStore>>,
         global_parameters: &sync::Arc<GlobalParameters>,
+        sample_set: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
         output_mode: OutputMode,
         shift: f64,
         block_tags: &BTreeSet<String>,
@@ -623,6 +643,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                 ruffbox,
                 parts_store,
                 global_parameters,
+                sample_set,
                 output_mode,
                 shift,
                 block_tags,
@@ -786,6 +807,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
         ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
         parts_store: &sync::Arc<Mutex<PartsStore>>,
         global_parameters: &sync::Arc<GlobalParameters>,
+        sample_set: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
         output_mode: OutputMode,
         shift: f64,
         block_tags: &BTreeSet<String>,
@@ -806,6 +828,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
             ruffbox,
             parts_store,
             global_parameters,
+            sample_set,
             output_mode,
             SyncMode::NotOnSilence,
             block_tags,

@@ -734,6 +734,7 @@ where
         let session_midi = sync::Arc::clone(&session);
         let ruffbox_midi = sync::Arc::clone(&controls_arc);
         let glob_midi = sync::Arc::clone(&global_parameters);
+        let sam_midi = sync::Arc::clone(&sample_set);
         let parts_midi = sync::Arc::clone(&parts_store);
         thread::spawn(move || {
             midi_input::open_midi_input_port(
@@ -742,6 +743,7 @@ where
                 session_midi,
                 ruffbox_midi,
                 glob_midi,
+                sam_midi,
                 parts_midi,
                 options.mode,
             );

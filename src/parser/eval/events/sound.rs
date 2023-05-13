@@ -444,7 +444,10 @@ pub fn sound(
                     Some(EvaluatedExpr::Float(pos)) => {
                         Some(SampleLookup::N(fname.to_string(), *pos as usize))
                     }
-                    _ => Some(SampleLookup::Random(fname.to_string())),
+                    _ => {
+                        let info = sample_set.random(&fname).unwrap();
+                        Some(SampleLookup::FixedRandom(fname.to_string(), info.clone()))
+                    }
                 };
 
                 ev // return event

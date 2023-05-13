@@ -5,12 +5,14 @@ use std::collections::{HashMap, HashSet};
 /// the search request for a sample
 #[derive(Clone, Debug)]
 pub enum SampleLookup {
-    Key(String, HashSet<String>),
-    N(String, usize),
-    Random(String),
+    Key(String, HashSet<String>),    // lookup by key
+    N(String, usize),                // lookup by position
+    Random(String),                  // final random (different sample every time)
+    FixedRandom(String, SampleInfo), // parse-time random (random sample will be chosen at parsing time)
 }
 
 /// the resolved sample info
+#[derive(Debug, Clone)]
 pub struct SampleInfo {
     pub key: HashSet<String>, // the key this was stored with
     pub bufnum: usize,
@@ -102,5 +104,15 @@ impl SampleAndWavematrixSet {
         self.subsets
             .get(set)
             .map(|subset| subset.choose(&mut rand::thread_rng()).unwrap())
+    }
+
+    // needs lifetimes for the temp return of the info ...
+    pub fn resolve_lookup<'a>(&'a self, lookup: &'a SampleLookup) -> Option<&SampleInfo> {
+        match lookup {
+            SampleLookup::Key(fname, keywords) => self.keys(fname, keywords),
+            SampleLookup::N(fname, pos) => self.pos(fname, *pos),
+            SampleLookup::Random(fname) => self.random(fname),
+            SampleLookup::FixedRandom(_, info) => Some(info),
+        }
     }
 }

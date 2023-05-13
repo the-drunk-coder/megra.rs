@@ -5,6 +5,7 @@ use crate::visualizer_client::VisualizerClient;
 use parking_lot::Mutex;
 use ruffbox_synth::ruffbox::RuffboxControls;
 
+use crate::SampleAndWavematrixSet;
 use std::collections::BTreeSet;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::{Duration, Instant};
@@ -36,6 +37,7 @@ pub struct SchedulerData<const BUFSIZE: usize, const NCHAN: usize> {
     pub parts_store: sync::Arc<Mutex<PartsStore>>,
     pub visualizer_client: Option<sync::Arc<VisualizerClient>>,
     pub global_parameters: sync::Arc<GlobalParameters>,
+    pub sample_set: sync::Arc<Mutex<SampleAndWavematrixSet>>,
     pub output_mode: OutputMode,
     pub sync_mode: SyncMode,
     pub block_tags: BTreeSet<String>,
@@ -87,6 +89,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> SchedulerData<BUFSIZE, NCHAN> {
             visualizer_client: vca,
             global_parameters: sync::Arc::clone(&old.global_parameters),
             output_mode: old.output_mode,
+            sample_set: sync::Arc::clone(&old.sample_set),
             sync_mode: old.sync_mode,
             block_tags: block_tags.clone(),
             solo_tags: solo_tags.clone(),
@@ -126,6 +129,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> SchedulerData<BUFSIZE, NCHAN> {
             parts_store: sync::Arc::clone(parts_store),
             visualizer_client: vca,
             global_parameters: sync::Arc::clone(&old.global_parameters),
+            sample_set: sync::Arc::clone(&old.sample_set),
             output_mode: old.output_mode,
             sync_mode: old.sync_mode,
             block_tags: block_tags.clone(),
@@ -142,6 +146,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> SchedulerData<BUFSIZE, NCHAN> {
         ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
         parts_store: &sync::Arc<Mutex<PartsStore>>,
         global_parameters: &sync::Arc<GlobalParameters>,
+        sample_set: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
         output_mode: OutputMode,
         sync_mode: SyncMode,
         block_tags: &BTreeSet<String>,
@@ -172,6 +177,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> SchedulerData<BUFSIZE, NCHAN> {
             parts_store: sync::Arc::clone(parts_store),
             visualizer_client: vca,
             global_parameters: sync::Arc::clone(global_parameters),
+            sample_set: sync::Arc::clone(sample_set),
             output_mode,
             sync_mode,
             block_tags: block_tags.clone(),

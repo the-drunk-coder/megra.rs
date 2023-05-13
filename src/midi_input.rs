@@ -4,7 +4,7 @@ use parking_lot::Mutex;
 use std::collections::HashMap;
 use std::sync;
 
-use crate::{Command, GlobalParameters, OutputMode, PartsStore, Session};
+use crate::{Command, GlobalParameters, OutputMode, PartsStore, SampleAndWavematrixSet, Session};
 
 use crate::commands;
 
@@ -27,6 +27,7 @@ pub fn open_midi_input_port<const BUFSIZE: usize, const NCHAN: usize>(
     session: sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
     ruffbox: sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
     global_parameters: sync::Arc<GlobalParameters>,
+    sample_set: sync::Arc<Mutex<SampleAndWavematrixSet>>,
     parts_store: sync::Arc<Mutex<PartsStore>>,
     output_mode: OutputMode,
 ) {
@@ -56,6 +57,7 @@ pub fn open_midi_input_port<const BUFSIZE: usize, const NCHAN: usize>(
                             &session,
                             &ruffbox,
                             &global_parameters,
+                            &sample_set,
                             &parts_store,
                             output_mode,
                         );
@@ -79,6 +81,7 @@ fn interpret_midi_command<const BUFSIZE: usize, const NCHAN: usize>(
     session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
     ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
     global_parameters: &sync::Arc<GlobalParameters>,
+    sample_set: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     parts_store: &sync::Arc<Mutex<PartsStore>>,
     output_mode: OutputMode,
 ) {
@@ -89,6 +92,7 @@ fn interpret_midi_command<const BUFSIZE: usize, const NCHAN: usize>(
                 ruffbox,
                 parts_store,
                 global_parameters,
+                sample_set,
                 session,
                 &mut s,
                 &mut c,
@@ -100,6 +104,7 @@ fn interpret_midi_command<const BUFSIZE: usize, const NCHAN: usize>(
                 ruffbox,
                 parts_store,
                 global_parameters,
+                sample_set,
                 session,
                 output_mode,
                 name,

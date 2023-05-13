@@ -535,6 +535,7 @@ pub fn step_part<const BUFSIZE: usize, const NCHAN: usize>(
     ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
     parts_store: &sync::Arc<Mutex<PartsStore>>,
     global_parameters: &sync::Arc<GlobalParameters>,
+    sample_set: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
     output_mode: OutputMode,
     part_name: String,
@@ -563,6 +564,7 @@ pub fn step_part<const BUFSIZE: usize, const NCHAN: usize>(
         ruffbox,
         parts_store,
         global_parameters,
+        sample_set,
         session,
         &mut sound_events,
         &mut control_events,
@@ -679,6 +681,7 @@ pub fn once<const BUFSIZE: usize, const NCHAN: usize>(
     ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
     parts_store: &sync::Arc<Mutex<PartsStore>>,
     global_parameters: &sync::Arc<GlobalParameters>,
+    sample_set: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
     sound_events: &mut [StaticEvent],
     control_events: &mut [ControlEvent],
@@ -694,6 +697,7 @@ pub fn once<const BUFSIZE: usize, const NCHAN: usize>(
                     ruffbox,
                     parts_store,
                     global_parameters,
+                    sample_set,
                     output_mode,
                 );
             }

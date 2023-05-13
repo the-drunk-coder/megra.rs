@@ -150,6 +150,7 @@ pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
                 ruffbox,
                 parts_store,
                 global_parameters,
+                sample_set,
                 session,
                 &mut s,
                 &mut c,
@@ -161,6 +162,7 @@ pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
                 ruffbox,
                 parts_store,
                 global_parameters,
+                sample_set,
                 session,
                 output_mode,
                 name,
@@ -233,6 +235,7 @@ pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
                 ruffbox,
                 parts_store,
                 global_parameters,
+                sample_set,
                 output_mode,
             );
         }
