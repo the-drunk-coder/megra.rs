@@ -2,10 +2,61 @@ use crate::event::{Event, EventOperation};
 use crate::music_theory;
 use crate::parameter::{DynVal, ParameterValue};
 use crate::parser::{BuiltIn, EvaluatedExpr, FunctionMap};
+use crate::sample_set::SampleLookup;
 use crate::{GlobalParameters, OutputMode, SampleAndWavematrixSet};
 use parking_lot::Mutex;
 use ruffbox_synth::building_blocks::SynthParameterLabel;
+use std::collections::HashSet;
 use std::sync;
+
+pub fn keys(
+    _: &FunctionMap,
+    tail: &mut Vec<EvaluatedExpr>,
+    _: &sync::Arc<GlobalParameters>,
+    _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
+    _: OutputMode,
+) -> Option<EvaluatedExpr> {
+    let mut tail_drain = tail.drain(..);
+
+    // get function name, check which parameter we're dealing with
+    let op = if let Some(EvaluatedExpr::FunctionName(f)) = tail_drain.next() {
+        let parts: Vec<&str> = f.split('-').collect();
+        if parts.len() == 1 || parts.len() == 2 {
+            // operatron
+            if parts.len() == 2 {
+                match parts[1] {
+                    "add" => EventOperation::Add,
+                    "sub" => EventOperation::Subtract,
+                    _ => EventOperation::Replace,
+                }
+            } else {
+                EventOperation::Replace
+            }
+        } else {
+            EventOperation::Replace
+        }
+    } else {
+        return None;
+    };
+
+    let mut keyword_set = HashSet::new();
+
+    for p in tail_drain {
+        match p {
+            EvaluatedExpr::Symbol(s) => {
+                keyword_set.insert(s);
+            }
+            _ => { /* noop */ }
+        }
+    }
+
+    let mut ev = Event::with_name_and_operation("keys".to_string(), op);
+
+    // an "empty" lookup to be merged later down the line ...
+    ev.sample_lookup = Some(SampleLookup::Key("".to_string(), keyword_set));
+
+    Some(EvaluatedExpr::BuiltIn(BuiltIn::SoundEvent(ev)))
+}
 
 #[allow(clippy::excessive_precision)]
 pub fn transpose(

@@ -261,6 +261,11 @@ pub fn define_standard_library() -> FunctionMap {
     standard_library.fmap.insert("dist-sub".to_string(), eval::events::parameters::parameter);
     standard_library.fmap.insert("dist-div".to_string(), eval::events::parameters::parameter);
 
+    standard_library.fmap.insert("keys".to_string(), eval::events::parameters::keys);
+    standard_library.fmap.insert("keys-add".to_string(), eval::events::parameters::keys);
+    standard_library.fmap.insert("keys-sub".to_string(), eval::events::parameters::keys);
+        
+    // some shorthands 
     standard_library.fmap.insert("transpose".to_string(), eval::events::parameters::transpose);
     standard_library.fmap.insert("tpo".to_string(), eval::events::parameters::transpose);
 

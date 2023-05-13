@@ -102,6 +102,47 @@ impl StaticEvent {
                 self.params.insert(*k, v.clone());
             }
         }
+
+        // handle sample lookup "arithmetic"
+        match (self.sample_lookup.as_mut(), other.sample_lookup.as_ref()) {
+            (Some(my_lookup), Some(SampleLookup::Key(_, other_keys))) => {
+                match my_lookup {
+                    // key "arithmetic"
+                    SampleLookup::Key(_, my_keys) => {
+                        match other.op {
+                            EventOperation::Add => {
+                                // add all keys from the other set
+                                for key in other_keys.iter() {
+                                    my_keys.insert(key.clone());
+                                }
+                            }
+                            EventOperation::Subtract => {
+                                for key in other_keys.iter() {
+                                    my_keys.remove(key);
+                                }
+                            }
+                            _ => {
+                                my_keys.clear();
+                                for key in other_keys.iter() {
+                                    my_keys.insert(key.clone());
+                                }
+                            }
+                        }
+                    }
+                    // replace fixed random by keys
+                    SampleLookup::FixedRandom(fname, _) => {
+                        *my_lookup = SampleLookup::Key(fname.to_string(), other_keys.clone());
+                    }
+                    SampleLookup::Random(fname) => {
+                        *my_lookup = SampleLookup::Key(fname.to_string(), other_keys.clone());
+                    }
+                    SampleLookup::N(fname, _) => {
+                        *my_lookup = SampleLookup::Key(fname.to_string(), other_keys.clone());
+                    }
+                }
+            }
+            _ => {}
+        }
     }
 
     /// collect the envelope information and compile a
