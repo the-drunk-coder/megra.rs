@@ -261,9 +261,21 @@ pub fn define_standard_library() -> FunctionMap {
     standard_library.fmap.insert("dist-sub".to_string(), eval::events::parameters::parameter);
     standard_library.fmap.insert("dist-div".to_string(), eval::events::parameters::parameter);
 
-    standard_library.fmap.insert("keys".to_string(), eval::events::parameters::keys);
-    standard_library.fmap.insert("keys-add".to_string(), eval::events::parameters::keys);
-    standard_library.fmap.insert("keys-sub".to_string(), eval::events::parameters::keys);
+    standard_library.fmap.insert("keys".to_string(), eval::events::parameters::sample_keys);
+    standard_library.fmap.insert("keys-add".to_string(), eval::events::parameters::sample_keys);
+    standard_library.fmap.insert("keys-sub".to_string(), eval::events::parameters::sample_keys);
+
+    standard_library.fmap.insert("sample-number".to_string(), eval::events::parameters::sample_number);
+    standard_library.fmap.insert("sample-number-add".to_string(), eval::events::parameters::sample_number);
+    standard_library.fmap.insert("sample-number-mul".to_string(), eval::events::parameters::sample_number);
+    standard_library.fmap.insert("sample-number-sub".to_string(), eval::events::parameters::sample_number);
+    standard_library.fmap.insert("sample-number-div".to_string(), eval::events::parameters::sample_number);
+
+    standard_library.fmap.insert("sno".to_string(), eval::events::parameters::sample_number);
+    standard_library.fmap.insert("sno-add".to_string(), eval::events::parameters::sample_number);
+    standard_library.fmap.insert("sno-mul".to_string(), eval::events::parameters::sample_number);
+    standard_library.fmap.insert("sno-sub".to_string(), eval::events::parameters::sample_number);
+    standard_library.fmap.insert("sno-div".to_string(), eval::events::parameters::sample_number);
 
     standard_library.fmap.insert("random-sample".to_string(), eval::events::parameters::random_sample);
     standard_library.fmap.insert("rands".to_string(), eval::events::parameters::random_sample);

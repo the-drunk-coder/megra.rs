@@ -5,3 +5,4 @@
 * new and more flexible ways to work with samples:
   * `keys`, `keys-add`, `keys-sub` function to replace keys along the pipeline
   * `random-sample` with shorthand `rands` to choose a different, random sample every time
+  * `sample-number` (with `add`,`mul`,`sub` and `div`), with shorthand `sno` to modify sample numbers 

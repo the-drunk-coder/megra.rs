@@ -9,7 +9,7 @@ use ruffbox_synth::building_blocks::SynthParameterLabel;
 use std::collections::HashSet;
 use std::sync;
 
-pub fn keys(
+pub fn sample_keys(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<GlobalParameters>,
@@ -54,6 +54,52 @@ pub fn keys(
 
     // an "empty" lookup to be merged later down the line ...
     ev.sample_lookup = Some(SampleLookup::Key("".to_string(), keyword_set));
+
+    Some(EvaluatedExpr::BuiltIn(BuiltIn::SoundEvent(ev)))
+}
+
+pub fn sample_number(
+    _: &FunctionMap,
+    tail: &mut Vec<EvaluatedExpr>,
+    _: &sync::Arc<GlobalParameters>,
+    _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
+    _: OutputMode,
+) -> Option<EvaluatedExpr> {
+    let mut tail_drain = tail.drain(..);
+
+    // get function name, check which parameter we're dealing with
+    let op = if let Some(EvaluatedExpr::FunctionName(f)) = tail_drain.next() {
+        let parts: Vec<&str> = f.split('-').collect();
+        if parts.len() == 1 || parts.len() == 2 {
+            // operatron
+            if parts.len() == 2 {
+                match parts[1] {
+                    "add" => EventOperation::Add,
+                    "sub" => EventOperation::Subtract,
+                    "div" => EventOperation::Divide,
+                    "mul" => EventOperation::Multiply,
+                    _ => EventOperation::Replace,
+                }
+            } else {
+                EventOperation::Replace
+            }
+        } else {
+            EventOperation::Replace
+        }
+    } else {
+        return None;
+    };
+
+    let snum = if let Some(EvaluatedExpr::Float(f)) = tail_drain.next() {
+        f as usize
+    } else {
+        return None;
+    };
+
+    let mut ev = Event::with_name_and_operation("snum".to_string(), op);
+
+    // an "empty" lookup to be merged later down the line ...
+    ev.sample_lookup = Some(SampleLookup::N("".to_string(), snum));
 
     Some(EvaluatedExpr::BuiltIn(BuiltIn::SoundEvent(ev)))
 }

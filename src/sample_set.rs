@@ -90,7 +90,7 @@ impl SampleAndWavematrixSet {
     /// get a sample bufnum by
     pub fn pos(&self, set: &str, pos: usize) -> Option<&SampleInfo> {
         if let Some(subset) = self.subsets.get(set) {
-            if let Some(sample_info) = subset.get(pos) {
+            if let Some(sample_info) = subset.get(pos % subset.len()) {
                 Some(sample_info)
             } else {
                 subset.get(0)

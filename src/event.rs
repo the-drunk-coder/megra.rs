@@ -149,7 +149,6 @@ impl StaticEvent {
                     SampleLookup::Key(fname, _) => {
                         *my_lookup = SampleLookup::Random(fname.to_string());
                     }
-
                     SampleLookup::FixedRandom(fname, _) => {
                         *my_lookup = SampleLookup::Random(fname.to_string());
                     }
@@ -159,6 +158,42 @@ impl StaticEvent {
                     SampleLookup::N(fname, _) => {
                         *my_lookup = SampleLookup::Random(fname.to_string());
                     }
+                }
+            }
+            (Some(my_lookup), Some(SampleLookup::N(_, n))) => {
+                match my_lookup {
+                    // replace by randomness
+                    SampleLookup::Key(fname, _) => {
+                        *my_lookup = SampleLookup::N(fname.to_string(), *n);
+                    }
+
+                    SampleLookup::FixedRandom(fname, _) => {
+                        *my_lookup = SampleLookup::N(fname.to_string(), *n);
+                    }
+                    SampleLookup::Random(fname) => {
+                        *my_lookup = SampleLookup::N(fname.to_string(), *n);
+                    }
+                    SampleLookup::N(_, original_n) => match other.op {
+                        EventOperation::Add => {
+                            *original_n += *n;
+                        }
+                        EventOperation::Subtract => {
+                            if *original_n >= *n {
+                                *original_n -= *n;
+                            } else {
+                                *original_n = 0;
+                            }
+                        }
+                        EventOperation::Multiply => {
+                            *original_n *= *n;
+                        }
+                        EventOperation::Divide => {
+                            *original_n /= *n;
+                        }
+                        EventOperation::Replace => {
+                            *original_n = *n;
+                        }
+                    },
                 }
             }
             _ => {}
