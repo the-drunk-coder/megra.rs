@@ -2,8 +2,17 @@ use crate::parameter::DynVal;
 use rand::seq::SliceRandom;
 use std::collections::{HashMap, HashSet};
 
+/// the search request for a sample
+#[derive(Clone, Debug)]
+pub enum SampleLookup {
+    Key(String, HashSet<String>),
+    N(String, usize),
+    Random(String),
+}
+
+/// the resolved sample info
 pub struct SampleInfo {
-    pub key: HashSet<String>,
+    pub key: HashSet<String>, // the key this was stored with
     pub bufnum: usize,
     pub duration: usize, // duration in ms ..
 }
@@ -62,6 +71,7 @@ impl SampleAndWavematrixSet {
         self.subsets.contains_key(set) && !self.subsets.get(set).unwrap().is_empty()
     }
 
+    /// get a sample by a set of keys ...
     pub fn keys(&self, set: &str, keywords: &HashSet<String>) -> Option<&SampleInfo> {
         if let Some(subset) = self.subsets.get(set) {
             let choice: Vec<&SampleInfo> = subset.iter().filter(|i| i.matches(keywords)).collect();

@@ -6,6 +6,7 @@ use std::fmt::*;
 
 use crate::builtin_types::Command;
 use crate::parameter::{resolve_parameter, shake_parameter, ParameterValue};
+use crate::sample_set::SampleLookup;
 use crate::session::SyncContext;
 use crate::synth_parameter_value_arithmetic::*;
 
@@ -26,6 +27,9 @@ pub struct Event {
     pub params: HashMap<SynthParameterLabel, ParameterValue>,
     pub tags: BTreeSet<String>,
     pub op: EventOperation,
+    // sample lookup is handled apart from the
+    // parameters, as this makes things much easier ...
+    pub sample_lookup: Option<SampleLookup>,
 }
 
 impl Debug for Event {
@@ -45,6 +49,7 @@ pub struct StaticEvent {
     pub params: HashMap<SynthParameterLabel, SynthParameterValue>,
     pub tags: BTreeSet<String>,
     pub op: EventOperation,
+    pub sample_lookup: Option<SampleLookup>,
 }
 
 /// A ControlEvent can call any function when interpreted.
@@ -214,6 +219,7 @@ impl Event {
             params: HashMap::new(),
             tags,
             op,
+            sample_lookup: None,
         }
     }
 
@@ -225,6 +231,7 @@ impl Event {
             params: HashMap::new(),
             tags,
             op: EventOperation::Replace,
+            sample_lookup: None,
         }
     }
 
@@ -252,6 +259,7 @@ impl Event {
             params: self.evaluate_parameters(),
             tags: self.tags.clone(),
             op: self.op,
+            sample_lookup: None,
         }
     }
 }

@@ -3,6 +3,7 @@ use crate::event_helpers::map_parameter;
 use crate::music_theory;
 use crate::parameter::{DynVal, ParameterValue};
 use crate::parser::{BuiltIn, EvaluatedExpr, FunctionMap};
+use crate::sample_set::SampleLookup;
 use crate::{GlobalParameters, OutputMode, SampleAndWavematrixSet};
 use parking_lot::Mutex;
 use ruffbox_synth::building_blocks::{EnvelopeSegmentType, FilterType, SynthParameterLabel};
@@ -413,47 +414,38 @@ pub fn sound(
         }
         _ => {
             // check if it's a sample event
+            // to see whether it's a sample event,
+            // we check whether the function name represents
+            // a sample set ...
             let sample_set = sample_set_sync.lock();
             if sample_set.exists_not_empty(&fname) {
-                let mut keyword_set: HashSet<String> = HashSet::new();
+                let mut ev = Event::with_name("sampler".to_string());
 
-                let sample_info = match tail_drain.peek() {
+                // insert the function name as tag
+                ev.tags.insert(fname.clone());
+
+                // set some defaults
+                sample_defaults(&mut ev);
+
+                // instead of resolving the sample buffer number directly,
+                // we send the info down the line so it can be manipulated
+                // along the way and evaluated later on ..
+                ev.sample_lookup = match tail_drain.peek() {
                     Some(EvaluatedExpr::Symbol(s)) => {
+                        let mut keyword_set: HashSet<String> = HashSet::new();
                         keyword_set.insert(s.to_string());
+                        ev.tags.insert(s.to_string());
                         while let Some(EvaluatedExpr::Symbol(s)) = tail_drain.peek() {
                             keyword_set.insert(s.to_string());
                             tail_drain.next();
                         }
-                        sample_set.keys(&fname, &keyword_set).unwrap() // fallback
+                        Some(SampleLookup::Key(fname.to_string(), keyword_set))
                     }
                     Some(EvaluatedExpr::Float(pos)) => {
-                        sample_set.pos(&fname, *pos as usize).unwrap()
+                        Some(SampleLookup::N(fname.to_string(), *pos as usize))
                     }
-                    _ => {
-                        sample_set.random(&fname).unwrap() // fallback
-                    }
+                    _ => Some(SampleLookup::Random(fname.to_string())),
                 };
-
-                let mut ev = Event::with_name("sampler".to_string());
-                ev.tags.insert(fname);
-                if !keyword_set.is_empty() {
-                    for kw in keyword_set.drain() {
-                        ev.tags.insert(kw);
-                    }
-                }
-                for k in sample_info.key.iter() {
-                    ev.tags.insert(k.to_string());
-                }
-
-                ev.params.insert(
-                    SynthParameterLabel::SampleBufferNumber,
-                    ParameterValue::Scalar(DynVal::with_value(sample_info.bufnum as f32)),
-                );
-                ev.params.insert(
-                    SynthParameterLabel::Sustain,
-                    ParameterValue::Scalar(DynVal::with_value((sample_info.duration - 2) as f32)),
-                );
-                sample_defaults(&mut ev);
 
                 ev // return event
             } else {
