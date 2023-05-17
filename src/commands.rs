@@ -709,14 +709,31 @@ pub fn once<const BUFSIZE: usize, const NCHAN: usize>(
             continue;
         }
 
-        s.build_envelope(); // build consistent envelope before evaluating
-
+        // if this is a sampler event and contains a sample lookup,
+        // resolve it NOW ... at the very end, finally ...
         let mut bufnum: usize = 0;
-        if let Some(SynthParameterValue::ScalarUsize(b)) =
-            s.params.get(&SynthParameterLabel::SampleBufferNumber)
-        {
-            bufnum = *b;
+        if let Some(lookup) = s.sample_lookup.as_ref() {
+            if let Some(sample_info) = sample_set.lock().resolve_lookup(lookup) {
+                bufnum = sample_info.bufnum;
+                // is this really needed ??
+                s.params.insert(
+                    SynthParameterLabel::SampleBufferNumber,
+                    SynthParameterValue::ScalarUsize(sample_info.bufnum),
+                );
+
+                if !s.params.contains_key(&SynthParameterLabel::Sustain) {
+                    // here still in milliseconds, will be resolved later ...
+                    s.params.insert(
+                        SynthParameterLabel::Sustain,
+                        SynthParameterValue::ScalarF32((sample_info.duration - 2) as f32),
+                    );
+                }
+            }
         }
+
+        // prepare a single, self-contained envelope from
+        // the available information ...
+        s.build_envelope();
 
         // latency 0.05, should be made configurable later ...
         if let Some(mut inst) =
