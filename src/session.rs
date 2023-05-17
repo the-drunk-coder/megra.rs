@@ -228,11 +228,14 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
                             SynthParameterLabel::SampleBufferNumber,
                             SynthParameterValue::ScalarUsize(sample_info.bufnum),
                         );
-                        // here still in milliseconds, will be resolved later ...
-                        s.params.insert(
-                            SynthParameterLabel::Sustain,
-                            SynthParameterValue::ScalarF32((sample_info.duration - 2) as f32),
-                        );
+
+                        if !s.params.contains_key(&SynthParameterLabel::Sustain) {
+                            // here still in milliseconds, will be resolved later ...
+                            s.params.insert(
+                                SynthParameterLabel::Sustain,
+                                SynthParameterValue::ScalarF32((sample_info.duration - 2) as f32),
+                            );
+                        }
                     }
                 }
 
