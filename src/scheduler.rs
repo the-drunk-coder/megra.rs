@@ -35,6 +35,10 @@ pub struct SchedulerData<const BUFSIZE: usize, const NCHAN: usize> {
     pub ruffbox: sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
     pub session: sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
     pub parts_store: sync::Arc<Mutex<PartsStore>>,
+    // the visualize client reverence here might be a bit
+    // redundant, as there's already a reference in the
+    // session, but that way we can access the client without
+    // having to lock the session
     pub visualizer_client: Option<sync::Arc<VisualizerClient>>,
     pub global_parameters: sync::Arc<GlobalParameters>,
     pub sample_set: sync::Arc<Mutex<SampleAndWavematrixSet>>,
