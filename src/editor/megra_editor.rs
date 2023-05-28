@@ -260,7 +260,6 @@ impl eframe::App for MegraEditor {
             ui.separator();
 
             ScrollArea::vertical()
-                .always_show_scroll(true)
                 .show(ui, |ui| {
                     let num_lines = self.content.lines().count() + 1;
 
