@@ -109,22 +109,38 @@ fn get_pitch_param(
     ev: &mut Event,
     tail_drain: &mut std::iter::Peekable<std::vec::Drain<EvaluatedExpr>>,
 ) {
-    // first arg is always freq ...
+    // get pitch param if possible, or return a default
+    // it's not the most elegant solution to find out whether
+    // there's a pitch param or not ...
+    let mut advance = false;
     ev.params.insert(
         SynthParameterLabel::PitchFrequency,
-        match tail_drain.next() {
-            Some(EvaluatedExpr::BuiltIn(BuiltIn::Modulator(m))) => m,
-            Some(EvaluatedExpr::Float(n)) => ParameterValue::Scalar(DynVal::with_value(n)),
-            Some(EvaluatedExpr::BuiltIn(BuiltIn::Parameter(pl))) => ParameterValue::Scalar(pl),
+        match tail_drain.peek() {
+            Some(EvaluatedExpr::BuiltIn(BuiltIn::Modulator(m))) => {
+                advance = true;
+                m.clone()
+            }
+            Some(EvaluatedExpr::Float(n)) => {
+                advance = true;
+                ParameterValue::Scalar(DynVal::with_value(*n))
+            }
+            Some(EvaluatedExpr::BuiltIn(BuiltIn::Parameter(pl))) => {
+                advance = true;
+                ParameterValue::Scalar(pl.clone())
+            }
             Some(EvaluatedExpr::Symbol(s)) => {
+                advance = true;
                 ParameterValue::Scalar(DynVal::with_value(music_theory::to_freq(
-                    music_theory::from_string(&s),
+                    music_theory::from_string(s),
                     music_theory::Tuning::EqualTemperament,
                 )))
             }
             _ => ParameterValue::Scalar(DynVal::with_value(100.0)),
         },
     );
+    if advance {
+        tail_drain.next();
+    }
 }
 
 // optional bufnum param
