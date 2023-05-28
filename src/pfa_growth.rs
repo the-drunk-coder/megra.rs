@@ -46,20 +46,23 @@ pub fn grow_old(pfa: &mut Pfa<char>) -> Option<PfaOperationResult<char>> {
         pst::add_leaf(root, &rand_state);
     }
 
-    let mut additions = vec![
-        pfa.add_state_transition(
-            &rand_state,
-            &source_id,
-            0.05 + (rng.gen_range(0.0..20.0) / 100.0),
-            false,
-        ),
-        pfa.add_state_transition(
-            &rand_state,
-            &dest_id,
-            0.05 + (rng.gen_range(0.0..20.0) / 100.0),
-            false,
-        ),
-    ];
+    let mut additions = Vec::new();
+    if let Some(trans) = pfa.add_state_transition(
+        &rand_state,
+        &source_id,
+        0.05 + (rng.gen_range(0.0..20.0) / 100.0),
+        false,
+    ) {
+        additions.push(trans);
+    }
+    if let Some(trans) = pfa.add_state_transition(
+        &rand_state,
+        &dest_id,
+        0.05 + (rng.gen_range(0.0..20.0) / 100.0),
+        false,
+    ) {
+        additions.push(trans);
+    }
 
     additions.append(&mut pfa.add_symbol_transition(
         *source_id.first().unwrap(),
@@ -132,12 +135,15 @@ pub fn grow_flower(pfa: &mut Pfa<char>) -> Option<PfaOperationResult<char>> {
         pst::add_leaf(root, &rand_state);
     }
 
-    let mut additions = vec![pfa.add_state_transition(
+    let mut additions = Vec::new();
+    if let Some(trans) = pfa.add_state_transition(
         &rand_state,
         &source_id,
         0.2 + (rng.gen_range(0.0..20.0) / 100.0),
         false,
-    )];
+    ) {
+        additions.push(trans);
+    }
 
     additions.append(&mut pfa.add_symbol_transition(
         *source_id.first().unwrap(),
@@ -200,12 +206,15 @@ pub fn grow_triloop(pfa: &mut Pfa<char>) -> Option<PfaOperationResult<char>> {
         pst::add_leaf(root, &rand_state);
     }
 
-    let mut additions = vec![pfa.add_state_transition(
+    let mut additions = Vec::new();
+    if let Some(trans) = pfa.add_state_transition(
         &rand_state,
         &dest_id,
         0.2 + (rng.gen_range(0.0..20.0) / 100.0),
         false,
-    )];
+    ) {
+        additions.push(trans);
+    }
 
     additions.append(&mut pfa.add_symbol_transition(
         *source_id.first().unwrap(),
@@ -281,12 +290,15 @@ pub fn grow_loop(pfa: &mut Pfa<char>) -> Option<PfaOperationResult<char>> {
         false,
     ));
 
-    let mut additions = vec![pfa.add_state_transition(
+    let mut additions = Vec::new();
+    if let Some(trans) = pfa.add_state_transition(
         &rand_state,
         &dest_id,
         0.2 + (rng.gen_range(0.0..20.0) / 100.0),
         false,
-    )];
+    ) {
+        additions.push(trans);
+    }
 
     //println!("{:?}", pfa.alphabet);
 
@@ -353,12 +365,15 @@ pub fn grow_quadloop(pfa: &mut Pfa<char>) -> Option<PfaOperationResult<char>> {
         pst::add_leaf(root, &rand_state);
     }
 
-    let mut additions = vec![pfa.add_state_transition(
+    let mut additions = Vec::new();
+    if let Some(trans) = pfa.add_state_transition(
         &rand_state,
         &dest_id,
         0.2 + (rng.gen_range(0.0..20.0) / 100.0),
         false,
-    )];
+    ) {
+        additions.push(trans);
+    }
 
     additions.append(&mut pfa.add_symbol_transition(
         *source_id.first().unwrap(),
