@@ -259,47 +259,46 @@ impl eframe::App for MegraEditor {
 
             ui.separator();
 
-            ScrollArea::vertical()
-                .show(ui, |ui| {
-                    let num_lines = self.content.lines().count() + 1;
+            ScrollArea::vertical().show(ui, |ui| {
+                let num_lines = self.content.lines().count() + 1;
 
-                    let theme = CodeTheme::dark(self.font_size);
-                    let mut layouter = |ui: &egui::Ui, string: &str, _wrap_width: f32| {
-                        let layout_job = highlight(ui.ctx(), &theme, string);
-                        ui.fonts(|f| f.layout_job(layout_job))
-                    };
+                let theme = CodeTheme::dark(self.font_size);
+                let mut layouter = |ui: &egui::Ui, string: &str, _wrap_width: f32| {
+                    let layout_job = highlight(ui.ctx(), &theme, string);
+                    ui.fonts(|f| f.layout_job(layout_job))
+                };
 
-                    let tx = if let Some(cb) = self.callback.as_ref() {
-                        LivecodeTextEdit::multiline(&mut self.content)
-                            .desired_rows(30)
-                            //.reset_cursor(sketch_switched)
-                            .code_editor()
-                            .desired_width(800.0)
-                            .eval_callback(cb)
-                            .layouter(&mut layouter)
-                    } else {
-                        LivecodeTextEdit::multiline(&mut self.content)
-                            .desired_rows(30)
-                            .code_editor()
-                            //.reset_cursor(!sketch_switched)
-                            .desired_width(800.0)
-                            .layouter(&mut layouter)
-                    };
+                let tx = if let Some(cb) = self.callback.as_ref() {
+                    LivecodeTextEdit::multiline(&mut self.content)
+                        .desired_rows(30)
+                        //.reset_cursor(sketch_switched)
+                        .code_editor()
+                        .desired_width(800.0)
+                        .eval_callback(cb)
+                        .layouter(&mut layouter)
+                } else {
+                    LivecodeTextEdit::multiline(&mut self.content)
+                        .desired_rows(30)
+                        .code_editor()
+                        //.reset_cursor(!sketch_switched)
+                        .desired_width(800.0)
+                        .layouter(&mut layouter)
+                };
 
-                    let mut linenums = "".to_owned();
-                    for i in 1..num_lines {
-                        linenums.push_str(format!("{i}\n").as_str());
-                    }
+                let mut linenums = "".to_owned();
+                for i in 1..num_lines {
+                    linenums.push_str(format!("{i}\n").as_str());
+                }
 
-                    let ln = egui::Label::new(
-                        egui::RichText::new(linenums).font(FontId::monospace(self.font_size)),
-                    );
+                let ln = egui::Label::new(
+                    egui::RichText::new(linenums).font(FontId::monospace(self.font_size)),
+                );
 
-                    ui.horizontal(|ui| {
-                        ui.add(ln);
-                        ui.add(tx);
-                    });
+                ui.horizontal(|ui| {
+                    ui.add(ln);
+                    ui.add(tx);
                 });
+            });
         });
     }
 

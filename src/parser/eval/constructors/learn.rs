@@ -147,7 +147,7 @@ pub fn learn(
     let s_v: std::vec::Vec<char> = sample.chars().collect();
     let pfa = if !keep_root {
         // only regenerate if necessary
-        Pfa::<char>::learn(&s_v, bound, epsilon, pfa_size)
+        Pfa::<char>::learn(s_v, bound, epsilon, pfa_size)
     } else {
         Pfa::<char>::new()
     };
