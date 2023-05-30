@@ -17,11 +17,11 @@ directories-next = "2.0"
 anyhow = "1.0"
 crossbeam = "0.8"
 parking_lot = "0.12"
-#ruffbox_synth = "0.7"
-ruffbox_synth = { path = "../ruffbox-synth" }
+ruffbox_synth = "0.7.1"
+#ruffbox_synth = { path = "../ruffbox-synth" }
 nom = "7.1"
-#vom_rs = "0.3"
-vom_rs = { path = "../vom.rs" }
+vom_rs = "0.4"
+#vom_rs = { path = "../vom.rs" }
 rustyline = "9.1"
 claxon = "0.4"
 getopts = "0.2"
