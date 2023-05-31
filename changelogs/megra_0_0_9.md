@@ -8,3 +8,5 @@
   * `sample-number` (with `add`,`mul`,`sub` and `div`), with shorthand `sno` to modify sample numbers 
 * corrections in markov chain learning
 * short samples for `learn` don't cause a crash anymore
+* fixed crash in wavematrix generation
+* synth events now work properly without frequency argument
