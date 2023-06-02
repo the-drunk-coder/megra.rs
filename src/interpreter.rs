@@ -270,6 +270,22 @@ pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
         EvaluatedExpr::Boolean(b) => {
             println!("a boolean: {b}")
         }
+        EvaluatedExpr::Progn(exprs) => {
+            for expr in exprs {
+                interpret(
+                    expr,
+                    function_map,
+                    midi_callback_map,
+                    session,
+                    ruffbox,
+                    global_parameters,
+                    sample_set,
+                    parts_store,
+                    output_mode,
+                    base_dir.clone(),
+                );
+            }
+        }
         _ => println!("unknown"),
     }
 }

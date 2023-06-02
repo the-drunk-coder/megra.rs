@@ -101,6 +101,7 @@ pub enum EvaluatedExpr {
     Boolean(bool),
     FunctionName(String),
     BuiltIn(BuiltIn),
+    Progn(Vec<EvaluatedExpr>),
 }
 
 impl fmt::Debug for EvaluatedExpr {
@@ -113,6 +114,7 @@ impl fmt::Debug for EvaluatedExpr {
             EvaluatedExpr::Boolean(b) => write!(f, "EvaluatedExpr::Boolean({b})"),
             EvaluatedExpr::FunctionName(fna) => write!(f, "EvaluatedExpr::FunctionName({fna})"),
             EvaluatedExpr::BuiltIn(b) => write!(f, "EvaluatedExpr::BuiltIn({b:?})"),
+            EvaluatedExpr::Progn(_) => write!(f, "EvaluatedExpr::Progn"),
         }
     }
 }
