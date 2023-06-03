@@ -86,7 +86,7 @@ pub fn fetch_sample_set<const BUFSIZE: usize, const NCHAN: usize>(
         let mut file_comp = file.enclosed_name().unwrap().components();
         file_comp.next();
         let file_name = file_comp.as_path();
-        let file_path = sample_path.join(&file_name);
+        let file_path = sample_path.join(file_name);
 
         if (*file.name()).ends_with('/') {
             if !file_path.exists() {
@@ -712,13 +712,11 @@ pub fn once<const BUFSIZE: usize, const NCHAN: usize>(
                     SynthParameterValue::ScalarUsize(sample_info.bufnum),
                 );
 
-                if !s.params.contains_key(&SynthParameterLabel::Sustain) {
-                    // here still in milliseconds, will be resolved later ...
-                    s.params.insert(
-                        SynthParameterLabel::Sustain,
-                        SynthParameterValue::ScalarF32((sample_info.duration - 2) as f32),
-                    );
-                }
+                s.params
+                    .entry(SynthParameterLabel::Sustain)
+                    .or_insert_with(|| {
+                        SynthParameterValue::ScalarF32((sample_info.duration - 2) as f32)
+                    });
             }
         }
 

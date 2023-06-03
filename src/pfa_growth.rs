@@ -99,7 +99,7 @@ pub fn grow_flower(pfa: &mut Pfa<char>) -> Option<PfaOperationResult<char>> {
     }
 
     let mut source_id = Label::new();
-    while let Some(s) = pfa.history.iter().rev().next() {
+    while let Some(s) = pfa.history.iter().next_back() {
         source_id.insert(0, *s);
         let source_hash = calculate_hash(&source_id);
         if pfa.has_state_hash(source_hash) {

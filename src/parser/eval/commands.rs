@@ -115,12 +115,12 @@ pub fn import_sample_set(
         Some(EvaluatedExpr::BuiltIn(BuiltIn::Command(
             Command::ImportSampleSet(SampleResource::Url(url_string, checksum)),
         )))
-    } else if let Some(path_string) = file {
-        Some(EvaluatedExpr::BuiltIn(BuiltIn::Command(
-            Command::ImportSampleSet(SampleResource::File(path_string, checksum)),
-        )))
     } else {
-        None
+        file.map(|path_string| {
+            EvaluatedExpr::BuiltIn(BuiltIn::Command(Command::ImportSampleSet(
+                SampleResource::File(path_string, checksum),
+            )))
+        })
     }
 }
 
