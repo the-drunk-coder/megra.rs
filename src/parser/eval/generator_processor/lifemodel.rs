@@ -5,7 +5,9 @@ use crate::parameter::DynVal;
 
 use crate::parser::{BuiltIn, EvaluatedExpr};
 
-pub fn collect_lifemodel(tail: &mut Vec<EvaluatedExpr>) -> Box<dyn GeneratorProcessor + Send> {
+pub fn collect_lifemodel(
+    tail: &mut Vec<EvaluatedExpr>,
+) -> Box<dyn GeneratorProcessor + Send + Sync> {
     let mut tail_drain = tail.drain(..);
     tail_drain.next(); // skip function name
 

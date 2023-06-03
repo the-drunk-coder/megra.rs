@@ -407,9 +407,8 @@ pub fn load_sample_sets_path<const BUFSIZE: usize, const NCHAN: usize>(
     }
 }
 
-pub fn load_part(parts_store: &sync::Arc<Mutex<PartsStore>>, name: String, part: Part) {
-    let mut ps = parts_store.lock();
-    ps.insert(name, part);
+pub fn load_part(var_store: &sync::Arc<VariableStore>, name: String, part: Part) {
+    var_store.insert(VariableId::Custom(name), TypedVariable::Part(part));
 }
 
 /// start a recording of the output
@@ -533,8 +532,7 @@ pub fn stop_recording<const BUFSIZE: usize, const NCHAN: usize>(
 /// execute a pre-defined part step by step
 pub fn step_part<const BUFSIZE: usize, const NCHAN: usize>(
     ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
-    parts_store: &sync::Arc<Mutex<PartsStore>>,
-    global_parameters: &sync::Arc<GlobalParameters>,
+    var_store: &sync::Arc<VariableStore>,
     sample_set: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
     output_mode: OutputMode,
@@ -543,12 +541,11 @@ pub fn step_part<const BUFSIZE: usize, const NCHAN: usize>(
     let mut sound_events = Vec::new();
     let mut control_events = Vec::new();
 
-    {
-        let mut ps = parts_store.lock();
-        if let Some(Part::Combined(gens, _)) = ps.get_mut(&part_name) {
+    if let Some(mut thing) = var_store.get_mut(&VariableId::Custom(part_name)) {
+        if let TypedVariable::Part(Part::Combined(ref mut gens, _)) = thing.value_mut() {
             for gen in gens.iter_mut() {
-                gen.current_transition(global_parameters);
-                let mut current_events = gen.current_events(global_parameters);
+                gen.current_transition(var_store);
+                let mut current_events = gen.current_events(var_store);
                 for ev in current_events.drain(..) {
                     match ev {
                         InterpretableEvent::Control(c) => control_events.push(c),
@@ -562,8 +559,7 @@ pub fn step_part<const BUFSIZE: usize, const NCHAN: usize>(
     // execute retrieved events
     once(
         ruffbox,
-        parts_store,
-        global_parameters,
+        var_store,
         sample_set,
         session,
         &mut sound_events,
@@ -572,31 +568,31 @@ pub fn step_part<const BUFSIZE: usize, const NCHAN: usize>(
     );
 }
 
-pub fn set_global_tmod(global_parameters: &sync::Arc<GlobalParameters>, p: DynVal) {
-    global_parameters.insert(
-        BuiltinGlobalParameters::GlobalTimeModifier,
-        ConfigParameter::Dynamic(p),
+pub fn set_global_tmod(var_store: &sync::Arc<VariableStore>, p: DynVal) {
+    var_store.insert(
+        VariableId::GlobalTimeModifier,
+        TypedVariable::ConfigParameter(ConfigParameter::Dynamic(p)),
     ); // init on first attempt
 }
 
-pub fn set_global_latency(global_parameters: &sync::Arc<GlobalParameters>, p: DynVal) {
-    global_parameters.insert(
-        BuiltinGlobalParameters::GlobalLatency,
-        ConfigParameter::Dynamic(p),
+pub fn set_global_latency(var_store: &sync::Arc<VariableStore>, p: DynVal) {
+    var_store.insert(
+        VariableId::GlobalLatency,
+        TypedVariable::ConfigParameter(ConfigParameter::Dynamic(p)),
     ); // init on first attempt
 }
 
-pub fn set_default_duration(global_parameters: &sync::Arc<GlobalParameters>, n: f32) {
-    global_parameters.insert(
-        BuiltinGlobalParameters::DefaultDuration,
-        ConfigParameter::Numeric(n),
+pub fn set_default_duration(var_store: &sync::Arc<VariableStore>, n: f32) {
+    var_store.insert(
+        VariableId::DefaultDuration,
+        TypedVariable::ConfigParameter(ConfigParameter::Numeric(n)),
     ); // init on first attempt
 }
 
-pub fn set_global_lifemodel_resources(global_parameters: &sync::Arc<GlobalParameters>, val: f32) {
-    global_parameters.insert(
-        BuiltinGlobalParameters::LifemodelGlobalResources,
-        ConfigParameter::Numeric(val),
+pub fn set_global_lifemodel_resources(var_store: &sync::Arc<VariableStore>, val: f32) {
+    var_store.insert(
+        VariableId::LifemodelGlobalResources,
+        TypedVariable::ConfigParameter(ConfigParameter::Numeric(val)),
     ); // init on first attempt
 }
 
@@ -615,29 +611,26 @@ pub fn export_dot_static(filename: &str, generator: &Generator) {
     fs::write(filename, dot_string).expect("Unable to write file");
 }
 
-pub fn export_dot_part(
-    filename: &str,
-    part_name: &str,
-    parts_store: &sync::Arc<Mutex<PartsStore>>,
-) {
-    let ps = parts_store.lock();
-    if let Some(Part::Combined(gens, _)) = ps.get(part_name) {
-        // write generators to dot strings ...
-        for gen in gens.iter() {
-            let mut filename_tagged = filename.to_string();
-            filename_tagged.push('_');
-            filename_tagged.push_str(part_name);
-            filename_tagged.push('_');
-            for tag in gen.id_tags.iter() {
-                filename_tagged.push_str(tag);
+pub fn export_dot_part(filename: &str, part_name: String, var_store: &sync::Arc<VariableStore>) {
+    if let Some(thing) = var_store.get(&VariableId::Custom(part_name.clone())) {
+        if let TypedVariable::Part(Part::Combined(gens, _)) = thing.value() {
+            // write generators to dot strings ...
+            for gen in gens.iter() {
+                let mut filename_tagged = filename.to_string();
                 filename_tagged.push('_');
+                filename_tagged.push_str(&part_name);
+                filename_tagged.push('_');
+                for tag in gen.id_tags.iter() {
+                    filename_tagged.push_str(tag);
+                    filename_tagged.push('_');
+                }
+                // remove trailing _
+                filename_tagged = filename_tagged[..filename_tagged.len() - 1].to_string();
+                filename_tagged.push_str(".dot");
+                let dot_string = pfa::to_dot::<char>(&gen.root_generator.generator);
+                println!("export to {filename_tagged}");
+                fs::write(filename_tagged, dot_string).expect("Unable to write file");
             }
-            // remove trailing _
-            filename_tagged = filename_tagged[..filename_tagged.len() - 1].to_string();
-            filename_tagged.push_str(".dot");
-            let dot_string = pfa::to_dot::<char>(&gen.root_generator.generator);
-            println!("export to {filename_tagged}");
-            fs::write(filename_tagged, dot_string).expect("Unable to write file");
         }
     }
 }
@@ -679,8 +672,7 @@ pub fn export_dot_running<const BUFSIZE: usize, const NCHAN: usize>(
 
 pub fn once<const BUFSIZE: usize, const NCHAN: usize>(
     ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
-    parts_store: &sync::Arc<Mutex<PartsStore>>,
-    global_parameters: &sync::Arc<GlobalParameters>,
+    var_store: &sync::Arc<VariableStore>,
     sample_set: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
     sound_events: &mut [StaticEvent],
@@ -695,8 +687,7 @@ pub fn once<const BUFSIZE: usize, const NCHAN: usize>(
                     &mut sx,
                     session,
                     ruffbox,
-                    parts_store,
-                    global_parameters,
+                    var_store,
                     sample_set,
                     output_mode,
                 );

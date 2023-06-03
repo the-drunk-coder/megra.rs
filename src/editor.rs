@@ -23,9 +23,8 @@ pub fn run_editor<const BUFSIZE: usize, const NCHAN: usize>(
     midi_callback_map: &sync::Arc<Mutex<HashMap<u8, Command>>>,
     session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
     ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
-    global_parameters: &sync::Arc<GlobalParameters>,
     sample_set: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
-    parts_store: &sync::Arc<Mutex<PartsStore>>,
+    var_store: &sync::Arc<VariableStore>,
     base_dir: String,
     create_sketch: bool,
     mode: OutputMode,
@@ -37,19 +36,13 @@ pub fn run_editor<const BUFSIZE: usize, const NCHAN: usize>(
     let midi_callback_map2 = sync::Arc::clone(midi_callback_map);
     let ruffbox2 = sync::Arc::clone(ruffbox);
     let sample_set2 = sync::Arc::clone(sample_set);
-    let global_parameters2 = sync::Arc::clone(global_parameters);
-    let parts_store2 = sync::Arc::clone(parts_store);
+    let var_store2 = sync::Arc::clone(var_store);
     let base_dir_2 = base_dir.clone();
 
     let callback_ref: sync::Arc<Mutex<dyn FnMut(&String)>> =
         sync::Arc::new(Mutex::new(move |text: &String| {
-            let pfa_in = parser::eval_from_str(
-                text,
-                &function_map2.lock(),
-                &global_parameters2,
-                &sample_set2,
-                mode,
-            );
+            let pfa_in =
+                parser::eval_from_str(text, &function_map2.lock(), &var_store2, &sample_set2, mode);
             match pfa_in {
                 Ok(pfa) => {
                     interpreter::interpret(
@@ -58,9 +51,8 @@ pub fn run_editor<const BUFSIZE: usize, const NCHAN: usize>(
                         &midi_callback_map2,
                         &session2,
                         &ruffbox2,
-                        &global_parameters2,
                         &sample_set2,
-                        &parts_store2,
+                        &var_store2,
                         mode,
                         base_dir_2.to_string(),
                     );

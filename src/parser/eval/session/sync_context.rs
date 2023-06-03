@@ -10,7 +10,7 @@ use std::sync;
 pub fn sync_context(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
-    _: &sync::Arc<GlobalParameters>,
+    _: &sync::Arc<VariableStore>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
@@ -157,7 +157,7 @@ mod tests {
             Some(EvaluatedExpr::String("bd".to_string()))
         });
 
-        let globals = sync::Arc::new(GlobalParameters::new());
+        let globals = sync::Arc::new(VariableStore::new());
 
         match eval_from_str(
             snippet,

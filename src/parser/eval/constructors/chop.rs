@@ -16,7 +16,7 @@ use parking_lot::Mutex;
 pub fn chop(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
-    global_parameters: &sync::Arc<GlobalParameters>,
+    var_store: &sync::Arc<VariableStore>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
@@ -37,10 +37,13 @@ pub fn chop(
         8
     };
 
-    let mut dur: DynVal = if let ConfigParameter::Numeric(d) = global_parameters
-        .entry(BuiltinGlobalParameters::DefaultDuration)
-        .or_insert(ConfigParameter::Numeric(200.0))
-        .value()
+    let mut dur: DynVal = if let TypedVariable::ConfigParameter(ConfigParameter::Numeric(d)) =
+        var_store
+            .entry(VariableId::DefaultDuration)
+            .or_insert(TypedVariable::ConfigParameter(ConfigParameter::Numeric(
+                200.0,
+            )))
+            .value()
     {
         DynVal::with_value(*d)
     } else {

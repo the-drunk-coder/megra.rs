@@ -3,7 +3,7 @@ use crate::generator::Generator;
 use crate::markov_sequence_generator::Rule;
 use crate::parameter::{DynVal, ParameterValue};
 use crate::session::SyncContext;
-use crate::{Command, GeneratorProcessorOrModifier, GlobalParameters, PartProxy};
+use crate::{Command, GeneratorProcessorOrModifier, PartProxy, VariableStore};
 use crate::{OutputMode, SampleAndWavematrixSet};
 use nom::{
     branch::alt,
@@ -125,7 +125,7 @@ pub struct FunctionMap {
         fn(
             &FunctionMap,
             &mut Vec<EvaluatedExpr>,
-            &sync::Arc<GlobalParameters>,
+            &sync::Arc<VariableStore>,
             &sync::Arc<Mutex<SampleAndWavematrixSet>>,
             OutputMode,
         ) -> Option<EvaluatedExpr>,
@@ -288,7 +288,7 @@ pub fn parse_expr(i: &str) -> IResult<&str, Expr, VerboseError<&str>> {
 pub fn eval_expression(
     e: &Expr,
     functions: &FunctionMap,
-    globals: &sync::Arc<GlobalParameters>,
+    globals: &sync::Arc<VariableStore>,
     sample_set: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     out_mode: OutputMode,
 ) -> Option<EvaluatedExpr> {
@@ -327,7 +327,7 @@ pub fn eval_expression(
 pub fn eval_from_str(
     src: &str,
     functions: &FunctionMap,
-    globals: &sync::Arc<GlobalParameters>,
+    globals: &sync::Arc<VariableStore>,
     sample_set: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     out_mode: OutputMode,
 ) -> Result<EvaluatedExpr, String> {
@@ -352,7 +352,7 @@ mod tests {
         let snippet = "(text 'tar :lvl 1.0 :global #t :relate #f :boost (bounce 0 400))";
 
         let mut functions = FunctionMap::new();
-        let globals = sync::Arc::new(GlobalParameters::new());
+        let globals = sync::Arc::new(VariableStore::new());
         let sample_set = sync::Arc::new(Mutex::new(SampleAndWavematrixSet::new()));
 
         functions

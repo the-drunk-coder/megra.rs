@@ -12,10 +12,9 @@ pub enum Part {
     Combined(Vec<Generator>, Vec<PartProxy>),
 }
 
-pub type PartsStore = HashMap<String, Part>;
-
 // might be unified with event parameters at some point but
 // i'm not sure how yet ...
+
 #[derive(Clone)]
 pub enum ConfigParameter {
     Numeric(f32),
@@ -23,17 +22,23 @@ pub enum ConfigParameter {
     Symbolic(String),
 }
 
-// only one so far
+#[derive(Clone)]
+pub enum TypedVariable {
+    Part(Part),
+    ConfigParameter(ConfigParameter),
+}
+
 #[derive(Clone, PartialEq, Eq, Hash)]
-pub enum BuiltinGlobalParameters {
+pub enum VariableId {
     LifemodelGlobalResources,
     GlobalTimeModifier, // the global factor applied to all durations, usually 1.0
     GlobalLatency,      // latency between language and dsp
     DefaultDuration,    // default duration for two subsequent events (200ms usually)
     DefaultCycleDuration, // defualt duration for a cycle (800ms, or four times the default event duration)
+    Custom(String),
 }
 
-pub type GlobalParameters = DashMap<BuiltinGlobalParameters, ConfigParameter>;
+pub type VariableStore = DashMap<VariableId, TypedVariable>;
 
 #[derive(Clone)]
 pub enum SampleResource {
@@ -75,7 +80,7 @@ pub enum PartProxy {
 
 #[derive(Clone)]
 pub enum GeneratorProcessorOrModifier {
-    GeneratorProcessor(Box<dyn GeneratorProcessor + Send>),
+    GeneratorProcessor(Box<dyn GeneratorProcessor + Send + Sync>),
     GeneratorModifierFunction(
         (
             GenModFun,

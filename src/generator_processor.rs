@@ -5,7 +5,7 @@ use crate::visualizer_client::VisualizerClient;
 use std::sync;
 
 use crate::{
-    builtin_types::{ConfigParameter, GlobalParameters},
+    builtin_types::{ConfigParameter, VariableStore},
     event::{Event, InterpretableEvent, StaticEvent},
     generator::GenModFun,
     generator::Generator,
@@ -32,17 +32,13 @@ pub trait GeneratorProcessor: GeneratorProcessorClone {
     fn process_events(
         &mut self,
         _events: &mut Vec<InterpretableEvent>,
-        _global_parameters: &Arc<GlobalParameters>,
+        _var_store: &Arc<VariableStore>,
     ) {
         /* pass by default */
     }
     /// implement this if you need to modify the previous
     /// processor's structure
-    fn process_generator(
-        &mut self,
-        _generator: &mut Generator,
-        _global_parameters: &Arc<GlobalParameters>,
-    ) {
+    fn process_generator(&mut self, _generator: &mut Generator, _var_store: &Arc<VariableStore>) {
         /* pass by default */
     }
     /// implement this if you need to modify the transitions
@@ -50,7 +46,7 @@ pub trait GeneratorProcessor: GeneratorProcessorClone {
     fn process_transition(
         &mut self,
         _transition: &mut StaticEvent,
-        _global_parameters: &Arc<GlobalParameters>,
+        _var_store: &Arc<VariableStore>,
     ) {
         /* pass by default */
     }
@@ -81,20 +77,20 @@ pub trait GeneratorProcessor: GeneratorProcessorClone {
 }
 
 pub trait GeneratorProcessorClone {
-    fn clone_box(&self) -> Box<dyn GeneratorProcessor + Send>;
+    fn clone_box(&self) -> Box<dyn GeneratorProcessor + Sync + Send>;
 }
 
 impl<T> GeneratorProcessorClone for T
 where
-    T: 'static + GeneratorProcessor + Clone + Send,
+    T: 'static + GeneratorProcessor + Clone + Sync + Send,
 {
-    fn clone_box(&self) -> Box<dyn GeneratorProcessor + Send> {
+    fn clone_box(&self) -> Box<dyn GeneratorProcessor + Sync + Send> {
         Box::new(self.clone())
     }
 }
 
-impl Clone for Box<dyn GeneratorProcessor + Send> {
-    fn clone(&self) -> Box<dyn GeneratorProcessor + Send> {
+impl Clone for Box<dyn GeneratorProcessor + Sync + Send> {
+    fn clone(&self) -> Box<dyn GeneratorProcessor + Sync + Send> {
         self.clone_box()
     }
 }

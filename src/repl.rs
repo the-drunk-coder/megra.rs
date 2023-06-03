@@ -20,9 +20,8 @@ pub fn start_repl<const BUFSIZE: usize, const NCHAN: usize>(
     midi_callback_map: &sync::Arc<Mutex<HashMap<u8, Command>>>,
     session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
     ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
-    global_parameters: &sync::Arc<GlobalParameters>,
     sample_set: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
-    parts_store: &sync::Arc<Mutex<PartsStore>>,
+    var_store: &sync::Arc<VariableStore>,
     mode: OutputMode,
     base_dir: String,
 ) -> Result<(), anyhow::Error> {
@@ -44,7 +43,7 @@ pub fn start_repl<const BUFSIZE: usize, const NCHAN: usize>(
                 let pfa_in = parser::eval_from_str(
                     line.as_str(),
                     &function_map.lock(),
-                    global_parameters,
+                    var_store,
                     sample_set,
                     mode,
                 );
@@ -68,7 +67,7 @@ pub fn start_repl<const BUFSIZE: usize, const NCHAN: usize>(
                                         let inner_pfa_in = parser::eval_from_str(
                                             line_buffer.as_str(),
                                             &function_map.lock(),
-                                            global_parameters,
+                                            var_store,
                                             sample_set,
                                             mode,
                                         );
@@ -80,9 +79,8 @@ pub fn start_repl<const BUFSIZE: usize, const NCHAN: usize>(
                                                     midi_callback_map,
                                                     session,
                                                     ruffbox,
-                                                    global_parameters,
                                                     sample_set,
-                                                    parts_store,
+                                                    var_store,
                                                     mode,
                                                     base_dir.clone(),
                                                 );
@@ -111,9 +109,8 @@ pub fn start_repl<const BUFSIZE: usize, const NCHAN: usize>(
                             midi_callback_map,
                             session,
                             ruffbox,
-                            global_parameters,
                             sample_set,
-                            parts_store,
+                            var_store,
                             mode,
                             base_dir.clone(),
                         );

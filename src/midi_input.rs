@@ -4,7 +4,7 @@ use parking_lot::Mutex;
 use std::collections::HashMap;
 use std::sync;
 
-use crate::{Command, GlobalParameters, OutputMode, PartsStore, SampleAndWavematrixSet, Session};
+use crate::{Command, OutputMode, SampleAndWavematrixSet, Session, VariableStore};
 
 use crate::commands;
 
@@ -26,9 +26,8 @@ pub fn open_midi_input_port<const BUFSIZE: usize, const NCHAN: usize>(
     in_port_num: usize,
     session: sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
     ruffbox: sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
-    global_parameters: sync::Arc<GlobalParameters>,
     sample_set: sync::Arc<Mutex<SampleAndWavematrixSet>>,
-    parts_store: sync::Arc<Mutex<PartsStore>>,
+    var_store: sync::Arc<VariableStore>,
     output_mode: OutputMode,
 ) {
     let mut midi_in = MidiInput::new("midir reading input").unwrap();
@@ -56,9 +55,8 @@ pub fn open_midi_input_port<const BUFSIZE: usize, const NCHAN: usize>(
                             command.clone(),
                             &session,
                             &ruffbox,
-                            &global_parameters,
                             &sample_set,
-                            &parts_store,
+                            &var_store,
                             output_mode,
                         );
                     } else {
@@ -80,9 +78,8 @@ fn interpret_midi_command<const BUFSIZE: usize, const NCHAN: usize>(
     c: Command,
     session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
     ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
-    global_parameters: &sync::Arc<GlobalParameters>,
     sample_set: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
-    parts_store: &sync::Arc<Mutex<PartsStore>>,
+    var_store: &sync::Arc<VariableStore>,
     output_mode: OutputMode,
 ) {
     match c {
@@ -90,8 +87,7 @@ fn interpret_midi_command<const BUFSIZE: usize, const NCHAN: usize>(
         Command::Once((mut s, mut c)) => {
             commands::once(
                 ruffbox,
-                parts_store,
-                global_parameters,
+                var_store,
                 sample_set,
                 session,
                 &mut s,
@@ -100,15 +96,7 @@ fn interpret_midi_command<const BUFSIZE: usize, const NCHAN: usize>(
             );
         }
         Command::StepPart(name) => {
-            commands::step_part(
-                ruffbox,
-                parts_store,
-                global_parameters,
-                sample_set,
-                session,
-                output_mode,
-                name,
-            );
+            commands::step_part(ruffbox, var_store, sample_set, session, output_mode, name);
         }
         _ => {
             println!("this command isn't midi-enabled !")

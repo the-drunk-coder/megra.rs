@@ -1,7 +1,7 @@
 use std::sync::*;
 
 use crate::{
-    builtin_types::GlobalParameters,
+    builtin_types::VariableStore,
     event::{InterpretableEvent, StaticEvent},
     generator::Generator,
     generator_processor::*,
@@ -48,11 +48,7 @@ impl GeneratorProcessor for GeneratorWrapperProcessor {
     }
 
     // another pure event-stream processor
-    fn process_events(
-        &mut self,
-        events: &mut Vec<InterpretableEvent>,
-        _glob: &Arc<GlobalParameters>,
-    ) {
+    fn process_events(&mut self, events: &mut Vec<InterpretableEvent>, _glob: &Arc<VariableStore>) {
         for ev in self.current_events.iter_mut() {
             if let InterpretableEvent::Sound(sev) = ev {
                 for in_ev in events.iter_mut() {
@@ -70,7 +66,7 @@ impl GeneratorProcessor for GeneratorWrapperProcessor {
         }
     }
 
-    fn process_transition(&mut self, trans: &mut StaticEvent, glob: &Arc<GlobalParameters>) {
+    fn process_transition(&mut self, trans: &mut StaticEvent, glob: &Arc<VariableStore>) {
         self.wrapped_generator.current_transition(glob);
 
         // already get current events here so we have the same execution

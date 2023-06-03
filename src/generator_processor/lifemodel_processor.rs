@@ -5,7 +5,7 @@ use std::{collections::HashSet, sync::*};
 use ruffbox_synth::building_blocks::SynthParameterLabel;
 
 use crate::{
-    builtin_types::{BuiltinGlobalParameters, GlobalParameters},
+    builtin_types::{TypedVariable, VariableId, VariableStore},
     generator::modifier_functions_raw::*,
     generator::Generator,
     generator_processor::*,
@@ -84,11 +84,7 @@ impl GeneratorProcessor for LifemodelProcessor {
     // I'm a bit surprises this one's stateless ...
 
     // this one only processes the generators ...
-    fn process_generator(
-        &mut self,
-        gen: &mut Generator,
-        global_parameters: &Arc<GlobalParameters>,
-    ) {
+    fn process_generator(&mut self, gen: &mut Generator, var_store: &Arc<VariableStore>) {
         // check if we need to grow ...
         let mut something_happened = false;
         if self.step_count >= self.growth_cycle {
@@ -100,11 +96,13 @@ impl GeneratorProcessor for LifemodelProcessor {
                 // first, draw from local resources if possible
                 self.local_resources -= self.growth_cost;
                 true
-            } else if let ConfigParameter::Numeric(global_resources) = global_parameters
-                .entry(BuiltinGlobalParameters::LifemodelGlobalResources)
-                .or_insert(ConfigParameter::Numeric(
+            } else if let TypedVariable::ConfigParameter(ConfigParameter::Numeric(
+                global_resources,
+            )) = var_store
+                .entry(VariableId::LifemodelGlobalResources)
+                .or_insert(TypedVariable::ConfigParameter(ConfigParameter::Numeric(
                     LifemodelDefaults::GLOBAL_INIT_RESOURCES,
-                )) // init on first attempt
+                ))) // init on first attempt
                 .value_mut()
             {
                 // get global resources, init value if it doesn't exist
@@ -145,10 +143,14 @@ impl GeneratorProcessor for LifemodelProcessor {
                         shrink_raw(&mut gen.root_generator, r2, false);
 
                         if self.global_contrib {
-                            if let ConfigParameter::Numeric(global_resources) = global_parameters
-                                .entry(BuiltinGlobalParameters::LifemodelGlobalResources)
-                                .or_insert(ConfigParameter::Numeric(
-                                    LifemodelDefaults::GLOBAL_INIT_RESOURCES,
+                            if let TypedVariable::ConfigParameter(ConfigParameter::Numeric(
+                                global_resources,
+                            )) = var_store
+                                .entry(VariableId::LifemodelGlobalResources)
+                                .or_insert(TypedVariable::ConfigParameter(
+                                    ConfigParameter::Numeric(
+                                        LifemodelDefaults::GLOBAL_INIT_RESOURCES,
+                                    ),
                                 )) // init on first attempt
                                 .value_mut()
                             {
@@ -192,11 +194,13 @@ impl GeneratorProcessor for LifemodelProcessor {
                 //println!("lm apop {} {:?}", symbol_to_remove, gen.root_generator.generator.alphabet);
                 shrink_raw(&mut gen.root_generator, symbol_to_remove, false);
                 if self.global_contrib {
-                    if let ConfigParameter::Numeric(global_resources) = global_parameters
-                        .entry(BuiltinGlobalParameters::LifemodelGlobalResources)
-                        .or_insert(ConfigParameter::Numeric(
+                    if let TypedVariable::ConfigParameter(ConfigParameter::Numeric(
+                        global_resources,
+                    )) = var_store
+                        .entry(VariableId::LifemodelGlobalResources)
+                        .or_insert(TypedVariable::ConfigParameter(ConfigParameter::Numeric(
                             LifemodelDefaults::GLOBAL_INIT_RESOURCES,
-                        )) // init on first attempt
+                        ))) // init on first attempt
                         .value_mut()
                     {
                         // get global resources, init value if it doesn't exist

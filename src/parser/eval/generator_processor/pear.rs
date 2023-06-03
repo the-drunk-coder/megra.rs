@@ -5,7 +5,7 @@ use crate::parameter::DynVal;
 
 use crate::parser::{BuiltIn, EvaluatedExpr};
 
-pub fn collect_pear(tail: &mut Vec<EvaluatedExpr>) -> Box<dyn GeneratorProcessor + Send> {
+pub fn collect_pear(tail: &mut Vec<EvaluatedExpr>) -> Box<dyn GeneratorProcessor + Send + Sync> {
     let mut tail_drain = tail.drain(..).skip(1); // skip function name
 
     let mut proc = PearProcessor::new();

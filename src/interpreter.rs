@@ -18,18 +18,17 @@ pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
     function_map: &sync::Arc<Mutex<FunctionMap>>,
     session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
     ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
-    global_parameters: &sync::Arc<GlobalParameters>,
     sample_set: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
-    parts_store: &sync::Arc<Mutex<PartsStore>>,
+    var_store: &sync::Arc<VariableStore>,
     output_mode: OutputMode,
     base_dir: String,
 ) {
     match c {
         Command::Clear => {
             let session2 = sync::Arc::clone(session);
-            let parts_store2 = sync::Arc::clone(parts_store);
+            let var_store2 = sync::Arc::clone(var_store);
             thread::spawn(move || {
-                Session::clear_session(&session2, &parts_store2);
+                Session::clear_session(&session2, &var_store2);
                 println!("a command (stop session)");
             });
         }
@@ -111,7 +110,7 @@ pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
             });
         }
         Command::LoadPart((name, part)) => {
-            commands::load_part(parts_store, name, part);
+            commands::load_part(var_store, name, part);
             println!("a command (load part)");
         }
         Command::FreezeBuffer(freezbuf, inbuf) => {
@@ -119,19 +118,19 @@ pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
             println!("freeze buffer");
         }
         Command::Tmod(p) => {
-            commands::set_global_tmod(global_parameters, p);
+            commands::set_global_tmod(var_store, p);
         }
         Command::Latency(p) => {
-            commands::set_global_latency(global_parameters, p);
+            commands::set_global_latency(var_store, p);
         }
         Command::DefaultDuration(d) => {
-            commands::set_default_duration(global_parameters, d);
+            commands::set_default_duration(var_store, d);
         }
         Command::Bpm(b) => {
-            commands::set_default_duration(global_parameters, b);
+            commands::set_default_duration(var_store, b);
         }
         Command::GlobRes(v) => {
-            commands::set_global_lifemodel_resources(global_parameters, v);
+            commands::set_global_lifemodel_resources(var_store, v);
         }
         Command::GlobalRuffboxParams(mut m) => {
             commands::set_global_ruffbox_parameters(ruffbox, &mut m);
@@ -143,13 +142,12 @@ pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
             commands::export_dot_running(&f, &t, session);
         }
         Command::ExportDotPart((f, p)) => {
-            commands::export_dot_part(&f, &p, parts_store);
+            commands::export_dot_part(&f, p, var_store);
         }
         Command::Once((mut s, mut c)) => {
             commands::once(
                 ruffbox,
-                parts_store,
-                global_parameters,
+                var_store,
                 sample_set,
                 session,
                 &mut s,
@@ -158,15 +156,7 @@ pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
             );
         }
         Command::StepPart(name) => {
-            commands::step_part(
-                ruffbox,
-                parts_store,
-                global_parameters,
-                sample_set,
-                session,
-                output_mode,
-                name,
-            );
+            commands::step_part(ruffbox, var_store, sample_set, session, output_mode, name);
         }
     };
 }
@@ -178,9 +168,8 @@ pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
     midi_callback_map: &sync::Arc<Mutex<HashMap<u8, Command>>>,
     session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
     ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
-    global_parameters: &sync::Arc<GlobalParameters>,
     sample_set: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
-    parts_store: &sync::Arc<Mutex<PartsStore>>,
+    var_store: &sync::Arc<VariableStore>,
     output_mode: OutputMode,
     base_dir: String,
 ) {
@@ -229,15 +218,7 @@ pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
                 "\n\n############### a context called \'{}\' ###############",
                 s.name
             );
-            Session::handle_context(
-                &mut s,
-                session,
-                ruffbox,
-                parts_store,
-                global_parameters,
-                sample_set,
-                output_mode,
-            );
+            Session::handle_context(&mut s, session, ruffbox, var_store, sample_set, output_mode);
         }
         EvaluatedExpr::BuiltIn(BuiltIn::Command(c)) => {
             interpret_command(
@@ -245,9 +226,8 @@ pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
                 function_map,
                 session,
                 ruffbox,
-                global_parameters,
                 sample_set,
-                parts_store,
+                var_store,
                 output_mode,
                 base_dir,
             );
@@ -278,9 +258,8 @@ pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
                     midi_callback_map,
                     session,
                     ruffbox,
-                    global_parameters,
                     sample_set,
-                    parts_store,
+                    var_store,
                     output_mode,
                     base_dir.clone(),
                 );

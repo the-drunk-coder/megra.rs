@@ -721,9 +721,9 @@ where
     raw_session.rec_control = Some(rec_control);
     let session = sync::Arc::new(Mutex::new(raw_session));
 
-    let global_parameters = sync::Arc::new(GlobalParameters::with_capacity(1));
+    let var_store = sync::Arc::new(VariableStore::new());
     let sample_set = sync::Arc::new(Mutex::new(SampleAndWavematrixSet::new()));
-    let parts_store = sync::Arc::new(Mutex::new(PartsStore::new()));
+
     // define the "standard library"
     let stdlib = sync::Arc::new(Mutex::new(define_standard_library()));
     let controls_arc = sync::Arc::new(controls);
@@ -734,18 +734,16 @@ where
         let cb_2 = sync::Arc::clone(&midi_callback_map);
         let session_midi = sync::Arc::clone(&session);
         let ruffbox_midi = sync::Arc::clone(&controls_arc);
-        let glob_midi = sync::Arc::clone(&global_parameters);
         let sam_midi = sync::Arc::clone(&sample_set);
-        let parts_midi = sync::Arc::clone(&parts_store);
+        let var_midi = sync::Arc::clone(&var_store);
         thread::spawn(move || {
             midi_input::open_midi_input_port(
                 cb_2,
                 midi_in_port,
                 session_midi,
                 ruffbox_midi,
-                glob_midi,
                 sam_midi,
-                parts_midi,
+                var_midi,
                 options.mode,
             );
         });
@@ -825,9 +823,8 @@ where
             &midi_callback_map,
             &session,
             &controls_arc,
-            &global_parameters,
             &sample_set,
-            &parts_store,
+            &var_store,
             base_dir.display().to_string(),
             options.create_sketch,
             options.mode,
@@ -843,9 +840,8 @@ where
             &midi_callback_map,
             &session,
             &controls_arc,
-            &global_parameters,
             &sample_set,
-            &parts_store,
+            &var_store,
             options.mode,
             base_dir.display().to_string(),
         )

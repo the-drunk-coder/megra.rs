@@ -1,5 +1,5 @@
 use crate::{
-    builtin_types::GlobalParameters,
+    builtin_types::VariableStore,
     event::{EventOperation, InterpretableEvent, StaticEvent},
     generator_processor::GeneratorProcessor,
     markov_sequence_generator::MarkovSequenceGenerator,
@@ -42,7 +42,7 @@ pub struct Generator {
     // processors modify the root generator or the emitted events ...
     // could use a map but typically this will be 2 or three, rarely more, so linear
     // search is no drawback here.
-    pub processors: Vec<(Option<String>, Box<dyn GeneratorProcessor + Send>)>,
+    pub processors: Vec<(Option<String>, Box<dyn GeneratorProcessor + Send + Sync>)>,
     // time mods manipulate the evaluation timing ...
     pub time_mods: Vec<TimeMod>,
     // the keep_root flag determines whether we replace the root at
@@ -77,10 +77,7 @@ impl Generator {
         self.root_generator.reached_end_state()
     }
 
-    pub fn current_events(
-        &mut self,
-        global_parameters: &Arc<GlobalParameters>,
-    ) -> Vec<InterpretableEvent> {
+    pub fn current_events(&mut self, var_store: &Arc<VariableStore>) -> Vec<InterpretableEvent> {
         let mut events = self.root_generator.current_events();
 
         for ev in events.iter_mut() {
@@ -96,8 +93,8 @@ impl Generator {
         tmp_procs.append(&mut self.processors);
 
         for (_, proc) in tmp_procs.iter_mut() {
-            proc.process_events(&mut events, global_parameters);
-            proc.process_generator(self, global_parameters);
+            proc.process_events(&mut events, var_store);
+            proc.process_generator(self, var_store);
         }
 
         // and back home ...
@@ -110,10 +107,10 @@ impl Generator {
         events
     }
 
-    pub fn current_transition(&mut self, global_parameters: &Arc<GlobalParameters>) -> StaticEvent {
+    pub fn current_transition(&mut self, var_store: &Arc<VariableStore>) -> StaticEvent {
         let mut trans = self.root_generator.current_transition();
         for (_, proc) in self.processors.iter_mut() {
-            proc.process_transition(&mut trans, global_parameters);
+            proc.process_transition(&mut trans, var_store);
         }
         if let Some(tmod) = self.time_mods.pop() {
             //println!("apply time mod");

@@ -6,8 +6,8 @@ use ruffbox_synth::building_blocks::{SynthParameterLabel, SynthParameterValue};
 use ruffbox_synth::ruffbox::RuffboxControls;
 
 use crate::builtin_types::{
-    BuiltinGlobalParameters, Command, ConfigParameter, GeneratorProcessorOrModifier,
-    GlobalParameters, Part, PartProxy, PartsStore,
+    Command, ConfigParameter, GeneratorProcessorOrModifier, Part, PartProxy, VariableId,
+    VariableStore,
 };
 use crate::commands;
 use crate::event::InterpretableEvent;
@@ -18,6 +18,7 @@ use crate::real_time_streaming;
 use crate::scheduler::{Scheduler, SchedulerData};
 use crate::visualizer_client::VisualizerClient;
 use crate::SampleAndWavematrixSet;
+use crate::TypedVariable;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum OutputMode {
@@ -65,34 +66,20 @@ pub struct Session<const BUFSIZE: usize, const NCHAN: usize> {
 }
 
 // basically a bfs on a dag !
-fn resolve_proxy(parts_store: &PartsStore, proxy: PartProxy, generators: &mut Vec<Generator>) {
+fn resolve_proxy(
+    var_store: &sync::Arc<VariableStore>,
+    proxy: PartProxy,
+    generators: &mut Vec<Generator>,
+) {
     match proxy {
         PartProxy::Proxy(s, procs) => {
             //visited.push(s);
-            if let Some(Part::Combined(part_generators, proxies)) = parts_store.get(&s) {
-                // this can be done for sure ...
-                for mut gen in part_generators.clone().drain(..) {
-                    let mut procs_clone = procs.clone();
-                    for gpom in procs_clone.drain(..) {
-                        match gpom {
-                            GeneratorProcessorOrModifier::GeneratorProcessor(gp) => {
-                                gen.processors.push((gp.get_id(), gp))
-                            }
-                            GeneratorProcessorOrModifier::GeneratorModifierFunction((
-                                fun,
-                                pos,
-                                named,
-                            )) => fun(&mut gen, &pos, &named),
-                        }
-                    }
-                    //gen.id_tags.insert(s.clone());
-                    generators.push(gen);
-                }
-
-                for sub_proxy in proxies.clone().drain(..) {
-                    let mut sub_gens = Vec::new();
-                    resolve_proxy(parts_store, sub_proxy, &mut sub_gens);
-                    for mut gen in sub_gens.drain(..) {
+            // dashmap access is a bit awkward ...
+            if let Some(thing) = var_store.get(&VariableId::Custom(s)) {
+                if let TypedVariable::Part(Part::Combined(part_generators, proxies)) = thing.value()
+                {
+                    // this can be done for sure ...
+                    for mut gen in part_generators.clone().drain(..) {
                         let mut procs_clone = procs.clone();
                         for gpom in procs_clone.drain(..) {
                             match gpom {
@@ -108,6 +95,28 @@ fn resolve_proxy(parts_store: &PartsStore, proxy: PartProxy, generators: &mut Ve
                         }
                         //gen.id_tags.insert(s.clone());
                         generators.push(gen);
+                    }
+
+                    for sub_proxy in proxies.clone().drain(..) {
+                        let mut sub_gens = Vec::new();
+                        resolve_proxy(var_store, sub_proxy, &mut sub_gens);
+                        for mut gen in sub_gens.drain(..) {
+                            let mut procs_clone = procs.clone();
+                            for gpom in procs_clone.drain(..) {
+                                match gpom {
+                                    GeneratorProcessorOrModifier::GeneratorProcessor(gp) => {
+                                        gen.processors.push((gp.get_id(), gp))
+                                    }
+                                    GeneratorProcessorOrModifier::GeneratorModifierFunction((
+                                        fun,
+                                        pos,
+                                        named,
+                                    )) => fun(&mut gen, &pos, &named),
+                                }
+                            }
+                            //gen.id_tags.insert(s.clone());
+                            generators.push(gen);
+                        }
                     }
                 }
             }
@@ -129,19 +138,23 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
     let mut tmod: f64 = 1.0;
     let mut latency: f64 = 0.05;
 
-    if let ConfigParameter::Dynamic(global_tmod) = data
-        .global_parameters
-        .entry(BuiltinGlobalParameters::GlobalTimeModifier)
-        .or_insert(ConfigParameter::Dynamic(DynVal::with_value(1.0))) // init on first attempt
+    if let TypedVariable::ConfigParameter(ConfigParameter::Dynamic(global_tmod)) = data
+        .var_store
+        .entry(VariableId::GlobalTimeModifier) // fixed variable ID
+        .or_insert(TypedVariable::ConfigParameter(ConfigParameter::Dynamic(
+            DynVal::with_value(1.0),
+        ))) // init on first attempt
         .value_mut()
     {
         tmod = global_tmod.evaluate_numerical() as f64;
     }
 
-    if let ConfigParameter::Dynamic(global_latency) = data
-        .global_parameters
-        .entry(BuiltinGlobalParameters::GlobalLatency)
-        .or_insert(ConfigParameter::Dynamic(DynVal::with_value(0.05))) // init on first attempt
+    if let TypedVariable::ConfigParameter(ConfigParameter::Dynamic(global_latency)) = data
+        .var_store
+        .entry(VariableId::GlobalLatency)
+        .or_insert(TypedVariable::ConfigParameter(ConfigParameter::Dynamic(
+            DynVal::with_value(0.05),
+        ))) // init on first attempt
         .value_mut()
     {
         latency = global_latency.evaluate_numerical() as f64;
@@ -158,10 +171,8 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
         }
     }
 
-    let time = if let SynthParameterValue::ScalarF32(t) = data
-        .generator
-        .current_transition(&data.global_parameters)
-        .params[&SynthParameterLabel::Duration]
+    let time = if let SynthParameterValue::ScalarF32(t) =
+        data.generator.current_transition(&data.var_store).params[&SynthParameterLabel::Duration]
     {
         (t * 0.001) as f64 * tmod
     } else {
@@ -169,7 +180,7 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
     };
 
     // retrieve the current events
-    let mut events = data.generator.current_events(&data.global_parameters);
+    let mut events = data.generator.current_events(&data.var_store);
     //if events.is_empty() {
     //    println!("really no events");
     //}
@@ -284,8 +295,7 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
                             &mut sx,
                             &data.session,
                             &data.ruffbox,
-                            &data.parts_store,
-                            &data.global_parameters,
+                            &data.var_store,
                             &data.sample_set,
                             data.output_mode,
                         );
@@ -296,7 +306,7 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
                     for c in commands.drain(..) {
                         match c {
                             Command::LoadPart((name, part)) => {
-                                commands::load_part(&data.parts_store, name, part);
+                                commands::load_part(&data.var_store, name, part);
                                 println!("a command (load part)");
                             }
                             Command::FreezeBuffer(freezbuf, inbuf) => {
@@ -304,22 +314,19 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
                                 println!("freeze buffer");
                             }
                             Command::Tmod(p) => {
-                                commands::set_global_tmod(&data.global_parameters, p);
+                                commands::set_global_tmod(&data.var_store, p);
                             }
                             Command::GlobRes(v) => {
-                                commands::set_global_lifemodel_resources(
-                                    &data.global_parameters,
-                                    v,
-                                );
+                                commands::set_global_lifemodel_resources(&data.var_store, v);
                             }
                             Command::GlobalRuffboxParams(mut m) => {
                                 commands::set_global_ruffbox_parameters(&data.ruffbox, &mut m);
                             }
                             Command::Clear => {
                                 let session2 = sync::Arc::clone(&data.session);
-                                let parts_store2 = sync::Arc::clone(&data.parts_store);
+                                let var_store2 = sync::Arc::clone(&data.var_store);
                                 thread::spawn(move || {
-                                    Session::clear_session(&session2, &parts_store2);
+                                    Session::clear_session(&session2, &var_store2);
                                     println!("a command (stop session)");
                                 });
                             }
@@ -327,8 +334,7 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
                                 //println!("handle once from gen");
                                 commands::once(
                                     &data.ruffbox,
-                                    &data.parts_store,
-                                    &data.global_parameters,
+                                    &data.var_store,
                                     &data.sample_set,
                                     &data.session,
                                     &mut s,
@@ -365,8 +371,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
         ctx: &mut SyncContext,
         session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
         ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
-        parts_store: &sync::Arc<Mutex<PartsStore>>,
-        global_parameters: &sync::Arc<GlobalParameters>,
+        var_store: &sync::Arc<VariableStore>,
         sample_set: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
         output_mode: OutputMode,
     ) {
@@ -377,9 +382,8 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
         {
             let mut gens = Vec::new();
 
-            let ps = parts_store.lock();
             for p in ctx.part_proxies.drain(..) {
-                resolve_proxy(&ps, p, &mut gens);
+                resolve_proxy(var_store, p, &mut gens);
             }
 
             for (i, gen) in gens.iter_mut().enumerate() {
@@ -488,8 +492,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                         Box::new(gen),
                         session,
                         ruffbox,
-                        parts_store,
-                        global_parameters,
+                        var_store,
                         sample_set,
                         output_mode,
                         ctx.shift as f64 * 0.001,
@@ -508,7 +511,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                         Box::new(gen),
                         session,
                         ruffbox,
-                        parts_store,
+                        var_store,
                         &ext_sync,
                         ctx.shift as f64 * 0.001,
                         &ctx.block_tags,
@@ -522,8 +525,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                         Box::new(gen),
                         session,
                         ruffbox,
-                        parts_store,
-                        global_parameters,
+                        var_store,
                         sample_set,
                         output_mode,
                         ctx.shift as f64 * 0.001,
@@ -567,8 +569,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                             Box::new(gen),
                             session,
                             ruffbox,
-                            parts_store,
-                            global_parameters,
+                            var_store,
                             sample_set,
                             output_mode,
                             ctx.shift as f64 * 0.001,
@@ -609,8 +610,8 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
         gen: Box<Generator>,
         session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
         ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
-        parts_store: &sync::Arc<Mutex<PartsStore>>,
-        global_parameters: &sync::Arc<GlobalParameters>,
+        var_store: &sync::Arc<VariableStore>,
+
         sample_set: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
         output_mode: OutputMode,
         shift: f64,
@@ -644,8 +645,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                 gen,
                 session,
                 ruffbox,
-                parts_store,
-                global_parameters,
+                var_store,
                 sample_set,
                 output_mode,
                 shift,
@@ -670,7 +670,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                     gen,
                     ruffbox,
                     session,
-                    parts_store,
+                    var_store,
                     block_tags,
                     solo_tags,
                 );
@@ -684,7 +684,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
         gen: Box<Generator>,
         session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
         ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
-        parts_store: &sync::Arc<Mutex<PartsStore>>,
+        var_store: &sync::Arc<VariableStore>,
         sync_tags: &BTreeSet<String>,
         shift: f64,
         block_tags: &BTreeSet<String>,
@@ -718,7 +718,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                     gen,
                     ruffbox,
                     session,
-                    parts_store,
+                    var_store,
                     block_tags,
                     solo_tags,
                 );
@@ -737,7 +737,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                     gen,
                     ruffbox,
                     session,
-                    parts_store,
+                    var_store,
                     block_tags,
                     solo_tags,
                 );
@@ -769,7 +769,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                 gen,
                 &data.ruffbox,
                 &data.session,
-                &data.parts_store,
+                &data.var_store,
                 block_tags,
                 solo_tags,
             )));
@@ -808,8 +808,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
         gen: Box<Generator>,
         session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
         ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
-        parts_store: &sync::Arc<Mutex<PartsStore>>,
-        global_parameters: &sync::Arc<GlobalParameters>,
+        var_store: &sync::Arc<VariableStore>,
         sample_set: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
         output_mode: OutputMode,
         shift: f64,
@@ -829,8 +828,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
             shift,
             session,
             ruffbox,
-            parts_store,
-            global_parameters,
+            var_store,
             sample_set,
             output_mode,
             SyncMode::NotOnSilence,
@@ -959,7 +957,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
 
     pub fn clear_session(
         session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
-        parts_store: &sync::Arc<Mutex<PartsStore>>,
+        var_store: &sync::Arc<VariableStore>,
     ) {
         let mut sess = session.lock();
         for (_, (sched, _)) in sess.schedulers.iter_mut() {
@@ -987,7 +985,9 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
 
         sess.schedulers = HashMap::new();
         sess.contexts = HashMap::new();
-        let mut ps = parts_store.lock();
-        *ps = HashMap::new();
+
+        // remove parts and variables,
+        // leave global parameters intact
+        var_store.retain(|_, v| !matches!(v, TypedVariable::Part(_)));
     }
 }

@@ -18,7 +18,7 @@ use parking_lot::Mutex;
 pub fn cyc(
     functions: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
-    global_parameters: &sync::Arc<GlobalParameters>,
+    var_store: &sync::Arc<VariableStore>,
     sample_set: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     out_mode: OutputMode,
 ) -> Option<EvaluatedExpr> {
@@ -37,10 +37,13 @@ pub fn cyc(
     tail_drain.next();
 
     // get the default global duration ...
-    let mut dur: DynVal = if let ConfigParameter::Numeric(d) = global_parameters
-        .entry(BuiltinGlobalParameters::DefaultCycleDuration)
-        .or_insert(ConfigParameter::Numeric(800.0)) // one "bar" in traditional terms ...
-        .value()
+    let mut dur: DynVal = if let TypedVariable::ConfigParameter(ConfigParameter::Numeric(d)) =
+        var_store
+            .entry(VariableId::DefaultCycleDuration)
+            .or_insert(TypedVariable::ConfigParameter(ConfigParameter::Numeric(
+                800.0,
+            )))
+            .value()
     {
         DynVal::with_value(*d)
     } else {
@@ -168,7 +171,7 @@ pub fn cyc(
                     out_mode,
                     &template_evs,
                     &collected_mapping,
-                    global_parameters,
+                    var_store,
                 );
                 if parsed_cycle.is_empty() {
                     println!("couldn't parse cycle");

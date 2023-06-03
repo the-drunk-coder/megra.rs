@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use std::sync::*;
 
 use crate::{
-    builtin_types::GlobalParameters,
+    builtin_types::VariableStore,
     event::{InterpretableEvent, StaticEvent},
     generator_processor::*,
     parameter::DynVal,
@@ -28,7 +28,7 @@ impl PearProcessor {
 // zip mode etc seem to be outdated ... going for any mode for now
 impl GeneratorProcessor for PearProcessor {
     // this one only processes the event stream ...
-    fn process_events(&mut self, events: &mut Vec<InterpretableEvent>, _: &Arc<GlobalParameters>) {
+    fn process_events(&mut self, events: &mut Vec<InterpretableEvent>, _: &Arc<VariableStore>) {
         self.last_static.clear();
         let mut rng = rand::thread_rng();
         // the four nested loops are intimidating but keep in mind that the
@@ -61,7 +61,7 @@ impl GeneratorProcessor for PearProcessor {
         }
     }
     // .. including transition events
-    fn process_transition(&mut self, trans: &mut StaticEvent, g: &Arc<GlobalParameters>) {
+    fn process_transition(&mut self, trans: &mut StaticEvent, g: &Arc<VariableStore>) {
         // init last_static so it can be applied to the first transition,
         // giving more predictable behaviour ...
         if self.last_static.is_empty() {
