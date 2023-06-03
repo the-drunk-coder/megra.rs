@@ -105,7 +105,7 @@ impl Highlighter {
                 text = &text[end..];
             } else if text.starts_with(|c: char| c.is_ascii_alphanumeric()) {
                 let end = text[1..]
-                    .find(|c: char| !parser::valid_function_name_char(c))
+                    .find(|c: char| !parser::valid_identifier_name_char(c))
                     .map_or_else(|| text.len(), |i| i + 1);
                 let word = &text[..end];
                 let tt = if is_function(word) {

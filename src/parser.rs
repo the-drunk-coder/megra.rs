@@ -171,7 +171,7 @@ fn valid_string_char(chr: char) -> bool {
 }
 
 /// valid chars for a function name, symbol or keyword
-pub fn valid_function_name_char(chr: char) -> bool {
+pub fn valid_identifier_name_char(chr: char) -> bool {
     chr == '_' || chr == '~' || chr == '-' || is_alphanumeric(chr as u8)
 }
 
@@ -196,7 +196,7 @@ fn parse_keyword(i: &str) -> IResult<&str, Atom, VerboseError<&str>> {
     map(
         context(
             "keyword",
-            preceded(tag(":"), take_while(valid_function_name_char)),
+            preceded(tag(":"), take_while(valid_identifier_name_char)),
         ),
         |sym_str: &str| Atom::Keyword(sym_str.to_string()),
     )(i)
@@ -207,7 +207,7 @@ pub fn parse_symbol(i: &str) -> IResult<&str, Atom, VerboseError<&str>> {
     map(
         context(
             "symbol",
-            preceded(tag("'"), take_while(valid_function_name_char)),
+            preceded(tag("'"), take_while(valid_identifier_name_char)),
         ),
         |sym_str: &str| Atom::Symbol(sym_str.to_string()),
     )(i)
@@ -216,7 +216,7 @@ pub fn parse_symbol(i: &str) -> IResult<&str, Atom, VerboseError<&str>> {
 /// function names are language constructs that contain allowed function name chars
 fn parse_identifier(i: &str) -> IResult<&str, Atom, VerboseError<&str>> {
     map(
-        context("identifer", take_while1(valid_function_name_char)),
+        context("identifer", take_while1(valid_identifier_name_char)),
         |sym_str: &str| Atom::Identifier(sym_str.to_string()),
     )(i)
 }

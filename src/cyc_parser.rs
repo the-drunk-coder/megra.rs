@@ -54,7 +54,7 @@ fn parse_cyc_named_parameter<'a>(i: &'a str) -> IResult<&'a str, CycleItem, Verb
             map(
                 context(
                     "custom_cycle_fun",
-                    cut(take_while(valid_function_name_char)),
+                    cut(take_while(valid_identifier_name_char)),
                 ),
                 |fun_str: &str| fun_str.to_string(),
             ),
@@ -113,7 +113,7 @@ fn parse_cyc_application<'a>(i: &'a str) -> IResult<&'a str, CycleItem, VerboseE
                 map(
                     context(
                         "custom_cycle_fun",
-                        cut(take_while(valid_function_name_char)),
+                        cut(take_while(valid_identifier_name_char)),
                     ),
                     |fun_str: &str| fun_str.to_string(),
                 ),
