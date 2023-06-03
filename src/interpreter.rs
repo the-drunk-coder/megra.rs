@@ -250,6 +250,9 @@ pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
         EvaluatedExpr::Boolean(b) => {
             println!("a boolean: {b}")
         }
+        EvaluatedExpr::Definition => {
+            println!("a definition")
+        }
         EvaluatedExpr::Progn(exprs) => {
             for expr in exprs {
                 interpret(

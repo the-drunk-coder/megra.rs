@@ -28,7 +28,7 @@ pub mod eval;
 /// These are the basic building blocks of our casual lisp language.
 /// You might notice that there's no lists in this lisp ... not sure
 /// what to call it in that case ...
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Atom {
     Float(f32),
     String(String),
@@ -39,10 +39,13 @@ pub enum Atom {
 }
 
 /// Expression Type
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Expr {
+    FunctionDefinition,
+    VariableDefinition,
     Constant(Atom),
     Application(Box<Expr>, Vec<Expr>),
+    Definition(Box<Expr>, Vec<Expr>),
 }
 
 pub enum BuiltIn {
@@ -102,6 +105,7 @@ pub enum EvaluatedExpr {
     Identifier(String),
     BuiltIn(BuiltIn),
     Progn(Vec<EvaluatedExpr>),
+    Definition,
 }
 
 impl fmt::Debug for EvaluatedExpr {
@@ -115,6 +119,7 @@ impl fmt::Debug for EvaluatedExpr {
             EvaluatedExpr::Identifier(fna) => write!(f, "EvaluatedExpr::Identifier({fna})"),
             EvaluatedExpr::BuiltIn(b) => write!(f, "EvaluatedExpr::BuiltIn({b:?})"),
             EvaluatedExpr::Progn(_) => write!(f, "EvaluatedExpr::Progn"),
+            EvaluatedExpr::Definition => write!(f, "EvaluatedExpr::Definition"),
         }
     }
 }
@@ -122,20 +127,11 @@ impl fmt::Debug for EvaluatedExpr {
 // std_lib are hard-coded,
 // usr_lib is for user-defined functions ...
 pub struct FunctionMap {
-    pub usr_lib: HashMap<
-        String,
-        fn(
-            &FunctionMap,
-            &mut Vec<EvaluatedExpr>,
-            &sync::Arc<VariableStore>,
-            &sync::Arc<Mutex<SampleAndWavematrixSet>>,
-            OutputMode,
-        ) -> Option<EvaluatedExpr>,
-    >,
+    pub usr_lib: HashMap<String, Vec<Expr>>,
     pub std_lib: HashMap<
         String,
         fn(
-            &FunctionMap,
+            &mut FunctionMap,
             &mut Vec<EvaluatedExpr>,
             &sync::Arc<VariableStore>,
             &sync::Arc<Mutex<SampleAndWavematrixSet>>,
@@ -188,6 +184,13 @@ fn parse_boolean(i: &str) -> IResult<&str, Atom, VerboseError<&str>> {
     alt((
         map(tag("#t"), |_| Atom::Boolean(true)),
         map(tag("#f"), |_| Atom::Boolean(false)),
+    ))(i)
+}
+
+fn parse_definition(i: &str) -> IResult<&str, Expr, VerboseError<&str>> {
+    alt((
+        map(tag("function"), |_| Expr::FunctionDefinition),
+        map(tag("let"), |_| Expr::VariableDefinition),
     ))(i)
 }
 
@@ -285,7 +288,11 @@ fn parse_application(i: &str) -> IResult<&str, Expr, VerboseError<&str>> {
                 preceded(multispace1, parse_constant), // constants are delimited by at least one whitespace
             ))),
         )),
-        |(head, tail)| Expr::Application(Box::new(head), tail),
+        |(head, tail)| match head {
+            Expr::FunctionDefinition => Expr::Definition(Box::new(head), tail),
+            Expr::VariableDefinition => Expr::Definition(Box::new(head), tail),
+            _ => Expr::Application(Box::new(head), tail),
+        },
     );
     // finally, we wrap it in an s-expression
     s_exp(application_inner)(i)
@@ -294,13 +301,13 @@ fn parse_application(i: &str) -> IResult<&str, Expr, VerboseError<&str>> {
 /// We tie them all together again, making a top-level expression parser!
 /// This one generates the abstract syntax tree
 pub fn parse_expr(i: &str) -> IResult<&str, Expr, VerboseError<&str>> {
-    alt((parse_application, parse_constant))(i)
+    alt((parse_definition, parse_application, parse_constant))(i)
 }
 
 /// This one reduces the abstract syntax tree ...
 pub fn eval_expression(
     e: &Expr,
-    functions: &FunctionMap,
+    functions: &mut FunctionMap,
     globals: &sync::Arc<VariableStore>,
     sample_set: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     out_mode: OutputMode,
@@ -334,19 +341,15 @@ pub fn eval_expression(
                         out_mode,
                     )
                 } else if functions.usr_lib.contains_key(&f) {
-                    let mut reduced_tail = tail
+                    let fun_expr = functions.usr_lib.get(&f).unwrap().clone();
+
+                    let fun_tail = fun_expr
                         .iter()
                         .map(|expr| eval_expression(expr, functions, globals, sample_set, out_mode))
-                        .collect::<Option<Vec<EvaluatedExpr>>>()?;
-                    // push function name
-                    reduced_tail.insert(0, EvaluatedExpr::Identifier(f.clone()));
-                    functions.usr_lib[&f](
-                        functions,
-                        &mut reduced_tail,
-                        globals,
-                        sample_set,
-                        out_mode,
-                    )
+                        .collect::<Option<Vec<EvaluatedExpr>>>();
+
+                    // return last form result, cl-style
+                    fun_tail?.pop()
                 } else {
                     None
                 }
@@ -354,12 +357,34 @@ pub fn eval_expression(
                 None
             }
         }
+        Expr::Definition(head, tail) => {
+            match **head {
+                Expr::FunctionDefinition => {
+                    if let Some(EvaluatedExpr::Identifier(i)) =
+                        eval_expression(&tail[0], functions, globals, sample_set, out_mode)
+                    {
+                        let mut tail_clone = tail.clone();
+                        tail_clone.remove(0);
+                        functions.usr_lib.insert(i, tail_clone);
+                    }
+                }
+                Expr::VariableDefinition => {
+                    println!("define a variable");
+                }
+                _ => {
+                    unreachable!()
+                }
+            }
+
+            Some(EvaluatedExpr::Definition)
+        }
+        _ => None,
     }
 }
 
 pub fn eval_from_str(
     src: &str,
-    functions: &FunctionMap,
+    functions: &mut FunctionMap,
     globals: &sync::Arc<VariableStore>,
     sample_set: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     out_mode: OutputMode,

@@ -14,7 +14,7 @@ use crate::{OutputMode, SampleAndWavematrixSet};
 use parking_lot::Mutex;
 
 pub fn rule(
-    _: &FunctionMap,
+    _: &mut FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     var_store: &sync::Arc<VariableStore>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
@@ -68,7 +68,7 @@ pub fn rule(
 }
 
 pub fn infer(
-    _: &FunctionMap,
+    _: &mut FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     var_store: &sync::Arc<VariableStore>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,

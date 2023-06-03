@@ -16,7 +16,7 @@ use crate::parser::{BuiltIn, EvaluatedExpr, FunctionMap};
 use crate::{OutputMode, SampleAndWavematrixSet};
 
 pub fn facts(
-    _: &FunctionMap,
+    _: &mut FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     var_store: &sync::Arc<VariableStore>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,

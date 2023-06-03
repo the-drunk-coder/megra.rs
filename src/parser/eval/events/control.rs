@@ -6,7 +6,7 @@ use std::collections::BTreeSet;
 use std::sync;
 
 pub fn control(
-    _: &FunctionMap,
+    _: &mut FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<VariableStore>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,

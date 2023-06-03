@@ -7,7 +7,7 @@ use ruffbox_synth::building_blocks::ValOp;
 use std::sync;
 
 pub fn lin_ramp_modulator(
-    _: &FunctionMap,
+    _: &mut FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<VariableStore>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
@@ -68,7 +68,7 @@ pub fn lin_ramp_modulator(
 }
 
 pub fn log_ramp_modulator(
-    _: &FunctionMap,
+    _: &mut FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<VariableStore>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
@@ -128,7 +128,7 @@ pub fn log_ramp_modulator(
 }
 
 pub fn exp_ramp_modulator(
-    _: &FunctionMap,
+    _: &mut FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<VariableStore>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
@@ -188,7 +188,7 @@ pub fn exp_ramp_modulator(
 }
 
 pub fn multi_point_envelope_modulator(
-    _: &FunctionMap,
+    _: &mut FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<VariableStore>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
@@ -277,7 +277,7 @@ pub fn multi_point_envelope_modulator(
 }
 
 pub fn lfo_modulator(
-    _: &FunctionMap,
+    _: &mut FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<VariableStore>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
@@ -400,7 +400,7 @@ pub fn lfo_modulator(
 }
 
 pub fn lfsaw_modulator(
-    _: &FunctionMap,
+    _: &mut FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<VariableStore>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
@@ -528,7 +528,7 @@ pub fn lfsaw_modulator(
 }
 
 pub fn lfrsaw_modulator(
-    _: &FunctionMap,
+    _: &mut FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<VariableStore>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
@@ -651,7 +651,7 @@ pub fn lfrsaw_modulator(
 }
 
 pub fn lftri_modulator(
-    _: &FunctionMap,
+    _: &mut FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<VariableStore>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
@@ -779,7 +779,7 @@ pub fn lftri_modulator(
 }
 
 pub fn lfsquare_modulator(
-    _: &FunctionMap,
+    _: &mut FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<VariableStore>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,

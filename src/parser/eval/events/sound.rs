@@ -293,7 +293,7 @@ fn nofilter_defaults(ev: &mut Event) {
 }
 
 pub fn sound(
-    _: &FunctionMap,
+    _: &mut FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<VariableStore>,
     sample_set_sync: &sync::Arc<Mutex<SampleAndWavematrixSet>>,

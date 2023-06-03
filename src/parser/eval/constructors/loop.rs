@@ -16,7 +16,7 @@ use crate::parser::{BuiltIn, EvaluatedExpr, FunctionMap};
 use parking_lot::Mutex;
 
 pub fn a_loop(
-    functions: &FunctionMap,
+    functions: &mut FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     var_store: &sync::Arc<VariableStore>,
     sample_set: &sync::Arc<Mutex<SampleAndWavematrixSet>>,

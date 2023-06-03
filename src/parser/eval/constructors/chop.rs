@@ -14,7 +14,7 @@ use vom_rs::pfa::{Pfa, Rule};
 use parking_lot::Mutex;
 
 pub fn chop(
-    _: &FunctionMap,
+    _: &mut FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     var_store: &sync::Arc<VariableStore>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,

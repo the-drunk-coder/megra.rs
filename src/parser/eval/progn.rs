@@ -5,7 +5,7 @@ use parking_lot::Mutex;
 use std::sync;
 
 pub fn progn(
-    _: &FunctionMap,
+    _: &mut FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<VariableStore>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
