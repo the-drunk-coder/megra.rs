@@ -14,7 +14,6 @@ pub enum Part {
 
 // might be unified with event parameters at some point but
 // i'm not sure how yet ...
-
 #[derive(Clone)]
 pub enum ConfigParameter {
     Numeric(f32),

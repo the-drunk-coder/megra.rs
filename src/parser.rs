@@ -119,8 +119,20 @@ impl fmt::Debug for EvaluatedExpr {
     }
 }
 
+// std_lib are hard-coded,
+// usr_lib is for user-defined functions ...
 pub struct FunctionMap {
-    pub fmap: HashMap<
+    pub usr_lib: HashMap<
+        String,
+        fn(
+            &FunctionMap,
+            &mut Vec<EvaluatedExpr>,
+            &sync::Arc<VariableStore>,
+            &sync::Arc<Mutex<SampleAndWavematrixSet>>,
+            OutputMode,
+        ) -> Option<EvaluatedExpr>,
+    >,
+    pub std_lib: HashMap<
         String,
         fn(
             &FunctionMap,
@@ -135,7 +147,8 @@ pub struct FunctionMap {
 impl FunctionMap {
     pub fn new() -> Self {
         FunctionMap {
-            fmap: HashMap::new(),
+            std_lib: HashMap::new(),
+            usr_lib: HashMap::new(),
         }
     }
 }
@@ -306,14 +319,34 @@ pub fn eval_expression(
                 eval_expression(head, functions, globals, sample_set, out_mode)
             {
                 // check if we have this function ...
-                if functions.fmap.contains_key(&f) {
+                if functions.std_lib.contains_key(&f) {
                     let mut reduced_tail = tail
                         .iter()
                         .map(|expr| eval_expression(expr, functions, globals, sample_set, out_mode))
                         .collect::<Option<Vec<EvaluatedExpr>>>()?;
                     // push function name
                     reduced_tail.insert(0, EvaluatedExpr::FunctionName(f.clone()));
-                    functions.fmap[&f](functions, &mut reduced_tail, globals, sample_set, out_mode)
+                    functions.std_lib[&f](
+                        functions,
+                        &mut reduced_tail,
+                        globals,
+                        sample_set,
+                        out_mode,
+                    )
+                } else if functions.usr_lib.contains_key(&f) {
+                    let mut reduced_tail = tail
+                        .iter()
+                        .map(|expr| eval_expression(expr, functions, globals, sample_set, out_mode))
+                        .collect::<Option<Vec<EvaluatedExpr>>>()?;
+                    // push function name
+                    reduced_tail.insert(0, EvaluatedExpr::FunctionName(f.clone()));
+                    functions.usr_lib[&f](
+                        functions,
+                        &mut reduced_tail,
+                        globals,
+                        sample_set,
+                        out_mode,
+                    )
                 } else {
                     None
                 }

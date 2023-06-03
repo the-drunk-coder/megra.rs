@@ -311,7 +311,7 @@ pub fn load_sample<const BUFSIZE: usize, const NCHAN: usize>(
             .insert(set.clone(), keyword_set, bufnum, duration);
         function_map
             .lock()
-            .fmap
+            .std_lib // add sample functions to std lib for now ...
             .insert(set, eval::events::sound::sound);
     } else {
         println!("can't load sample {path}");
