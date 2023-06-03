@@ -19,7 +19,7 @@ pub fn sample_keys(
     let mut tail_drain = tail.drain(..);
 
     // get function name, check which parameter we're dealing with
-    let op = if let Some(EvaluatedExpr::FunctionName(f)) = tail_drain.next() {
+    let op = if let Some(EvaluatedExpr::Identifier(f)) = tail_drain.next() {
         let parts: Vec<&str> = f.split('-').collect();
         if parts.len() == 1 || parts.len() == 2 {
             // operatron
@@ -68,7 +68,7 @@ pub fn sample_number(
     let mut tail_drain = tail.drain(..);
 
     // get function name, check which parameter we're dealing with
-    let op = if let Some(EvaluatedExpr::FunctionName(f)) = tail_drain.next() {
+    let op = if let Some(EvaluatedExpr::Identifier(f)) = tail_drain.next() {
         let parts: Vec<&str> = f.split('-').collect();
         if parts.len() == 1 || parts.len() == 2 {
             // operatron
@@ -166,7 +166,7 @@ pub fn parameter(
     let mut tail_drain = tail.drain(..);
 
     // get function name, check which parameter we're dealing with
-    if let Some(EvaluatedExpr::FunctionName(f)) = tail_drain.next() {
+    if let Some(EvaluatedExpr::Identifier(f)) = tail_drain.next() {
         let parts: Vec<&str> = f.split('-').collect();
         if parts.len() == 1 || parts.len() == 2 {
             // operatron

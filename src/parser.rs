@@ -35,7 +35,7 @@ pub enum Atom {
     Keyword(String),
     Symbol(String),
     Boolean(bool),
-    Function(String),
+    Identifier(String),
 }
 
 /// Expression Type
@@ -99,7 +99,7 @@ pub enum EvaluatedExpr {
     Keyword(String),
     String(String),
     Boolean(bool),
-    FunctionName(String),
+    Identifier(String),
     BuiltIn(BuiltIn),
     Progn(Vec<EvaluatedExpr>),
 }
@@ -112,7 +112,7 @@ impl fmt::Debug for EvaluatedExpr {
             EvaluatedExpr::Keyword(k) => write!(f, "EvaluatedExpr::Keyword({k})"),
             EvaluatedExpr::String(s) => write!(f, "EvaluatedExpr::String({s})"),
             EvaluatedExpr::Boolean(b) => write!(f, "EvaluatedExpr::Boolean({b})"),
-            EvaluatedExpr::FunctionName(fna) => write!(f, "EvaluatedExpr::FunctionName({fna})"),
+            EvaluatedExpr::Identifier(fna) => write!(f, "EvaluatedExpr::Identifier({fna})"),
             EvaluatedExpr::BuiltIn(b) => write!(f, "EvaluatedExpr::BuiltIn({b:?})"),
             EvaluatedExpr::Progn(_) => write!(f, "EvaluatedExpr::Progn"),
         }
@@ -214,10 +214,10 @@ pub fn parse_symbol(i: &str) -> IResult<&str, Atom, VerboseError<&str>> {
 }
 
 /// function names are language constructs that contain allowed function name chars
-fn parse_function(i: &str) -> IResult<&str, Atom, VerboseError<&str>> {
+fn parse_identifier(i: &str) -> IResult<&str, Atom, VerboseError<&str>> {
     map(
-        context("function", take_while1(valid_function_name_char)),
-        |sym_str: &str| Atom::Function(sym_str.to_string()),
+        context("identifer", take_while1(valid_function_name_char)),
+        |sym_str: &str| Atom::Identifier(sym_str.to_string()),
     )(i)
 }
 
@@ -248,7 +248,7 @@ fn parse_constant(i: &str) -> IResult<&str, Expr, VerboseError<&str>> {
             parse_keyword,
             parse_symbol,
             parse_string,
-            parse_function,
+            parse_identifier,
         )),
         Expr::Constant,
     )(i)
@@ -312,10 +312,10 @@ pub fn eval_expression(
             Atom::Keyword(k) => EvaluatedExpr::Keyword(k.to_string()),
             Atom::String(s) => EvaluatedExpr::String(s.to_string()),
             Atom::Boolean(b) => EvaluatedExpr::Boolean(*b),
-            Atom::Function(f) => EvaluatedExpr::FunctionName(f.to_string()),
+            Atom::Identifier(f) => EvaluatedExpr::Identifier(f.to_string()),
         }),
         Expr::Application(head, tail) => {
-            if let Some(EvaluatedExpr::FunctionName(f)) =
+            if let Some(EvaluatedExpr::Identifier(f)) =
                 eval_expression(head, functions, globals, sample_set, out_mode)
             {
                 // check if we have this function ...
@@ -325,7 +325,7 @@ pub fn eval_expression(
                         .map(|expr| eval_expression(expr, functions, globals, sample_set, out_mode))
                         .collect::<Option<Vec<EvaluatedExpr>>>()?;
                     // push function name
-                    reduced_tail.insert(0, EvaluatedExpr::FunctionName(f.clone()));
+                    reduced_tail.insert(0, EvaluatedExpr::Identifier(f.clone()));
                     functions.std_lib[&f](
                         functions,
                         &mut reduced_tail,
@@ -339,7 +339,7 @@ pub fn eval_expression(
                         .map(|expr| eval_expression(expr, functions, globals, sample_set, out_mode))
                         .collect::<Option<Vec<EvaluatedExpr>>>()?;
                     // push function name
-                    reduced_tail.insert(0, EvaluatedExpr::FunctionName(f.clone()));
+                    reduced_tail.insert(0, EvaluatedExpr::Identifier(f.clone()));
                     functions.usr_lib[&f](
                         functions,
                         &mut reduced_tail,
@@ -581,7 +581,7 @@ mod tests {
         if let Ok(("", Expr::Application(head, tail))) =
             parse_expr("(text 'tar :lvl 1.0 :global #t :relate #f :boost (bounce 0 400))")
         {
-            if let Expr::Constant(Atom::Function(function_name)) = *head {
+            if let Expr::Constant(Atom::Identifier(function_name)) = *head {
                 assert!(function_name == "text");
             } else {
                 panic!()
@@ -641,7 +641,7 @@ mod tests {
 
             // APPLICATION
             if let Expr::Application(head2, tail2) = &tail[8] {
-                if let Expr::Constant(Atom::Function(function_name2)) = &**head2 {
+                if let Expr::Constant(Atom::Identifier(function_name2)) = &**head2 {
                     assert!(function_name2 == "bounce")
                 } else {
                     panic!()

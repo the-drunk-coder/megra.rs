@@ -302,7 +302,7 @@ pub fn sound(
     let mut tail_drain = tail.drain(..).peekable();
 
     // get the function name ...
-    let fname = if let Some(EvaluatedExpr::FunctionName(f)) = tail_drain.next() {
+    let fname = if let Some(EvaluatedExpr::Identifier(f)) = tail_drain.next() {
         f
     } else {
         // nothing to do ...
