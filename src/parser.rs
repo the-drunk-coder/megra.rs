@@ -105,7 +105,8 @@ pub enum EvaluatedExpr {
     Identifier(String),
     BuiltIn(BuiltIn),
     Progn(Vec<EvaluatedExpr>),
-    Definition,
+    FunctionDefinition,
+    VariableDefinition,
 }
 
 impl fmt::Debug for EvaluatedExpr {
@@ -119,7 +120,8 @@ impl fmt::Debug for EvaluatedExpr {
             EvaluatedExpr::Identifier(fna) => write!(f, "EvaluatedExpr::Identifier({fna})"),
             EvaluatedExpr::BuiltIn(b) => write!(f, "EvaluatedExpr::BuiltIn({b:?})"),
             EvaluatedExpr::Progn(_) => write!(f, "EvaluatedExpr::Progn"),
-            EvaluatedExpr::Definition => write!(f, "EvaluatedExpr::Definition"),
+            EvaluatedExpr::FunctionDefinition => write!(f, "EvaluatedExpr::FunctionDefinition"),
+            EvaluatedExpr::VariableDefinition => write!(f, "EvaluatedExpr::VariableDefinition"),
         }
     }
 }
@@ -357,27 +359,20 @@ pub fn eval_expression(
                 None
             }
         }
-        Expr::Definition(head, tail) => {
-            match **head {
-                Expr::FunctionDefinition => {
-                    if let Some(EvaluatedExpr::Identifier(i)) =
-                        eval_expression(&tail[0], functions, globals, sample_set, out_mode)
-                    {
-                        let mut tail_clone = tail.clone();
-                        tail_clone.remove(0);
-                        functions.usr_lib.insert(i, tail_clone);
-                    }
+        Expr::Definition(head, tail) => match **head {
+            Expr::FunctionDefinition => {
+                if let Some(EvaluatedExpr::Identifier(i)) =
+                    eval_expression(&tail[0], functions, globals, sample_set, out_mode)
+                {
+                    let mut tail_clone = tail.clone();
+                    tail_clone.remove(0);
+                    functions.usr_lib.insert(i, tail_clone);
                 }
-                Expr::VariableDefinition => {
-                    println!("define a variable");
-                }
-                _ => {
-                    unreachable!()
-                }
+                Some(EvaluatedExpr::FunctionDefinition)
             }
-
-            Some(EvaluatedExpr::Definition)
-        }
+            Expr::VariableDefinition => Some(EvaluatedExpr::VariableDefinition),
+            _ => None,
+        },
         _ => None,
     }
 }
