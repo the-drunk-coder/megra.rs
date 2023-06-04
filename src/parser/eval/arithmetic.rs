@@ -7,6 +7,9 @@ use std::sync;
 // some simple arithmetic functions, to bring megra a bit closer to
 // a regular lisp ...
 
+// now, with variables, if there's in-time evaluation, we'd need to return a function in case
+// there's an identifier in there ... hmpf ...
+
 pub fn add(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
