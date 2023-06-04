@@ -1,10 +1,3 @@
-use crate::event::{ControlEvent, Event};
-use crate::generator::Generator;
-use crate::markov_sequence_generator::Rule;
-use crate::parameter::{DynVal, ParameterValue};
-use crate::session::SyncContext;
-use crate::{Command, GeneratorProcessorOrModifier, PartProxy, VariableStore};
-use crate::{OutputMode, SampleAndWavematrixSet};
 use nom::{
     branch::alt,
     bytes::complete::{tag, take_while, take_while1},
@@ -17,11 +10,21 @@ use nom::{
     sequence::{delimited, preceded, tuple},
     Err, IResult, Parser,
 };
+
 use parking_lot::Mutex;
 use regex::Regex;
 use std::collections::HashMap;
-use std::fmt;
-use std::sync;
+use std::{fmt, sync};
+
+use crate::event::{ControlEvent, Event};
+use crate::generator::Generator;
+use crate::markov_sequence_generator::Rule;
+use crate::parameter::{DynVal, ParameterValue};
+use crate::session::SyncContext;
+use crate::{
+    Command, GeneratorProcessorOrModifier, OutputMode, PartProxy, SampleAndWavematrixSet,
+    TypedVariable, VariableId, VariableStore,
+};
 
 pub mod eval;
 
@@ -108,8 +111,10 @@ pub enum EvaluatedExpr {
     // I don't really have an idea how to make functions,
     // so for now I'll just store the non-evaluated Exprs
     // and reduce them once the user calls the function ...
+    // that might make them macros rather than functions?
+    // Not sure ...
     FunctionDefinition(String, Vec<Expr>),
-    VariableDefinition,
+    VariableDefinition(String, TypedVariable),
 }
 
 impl fmt::Debug for EvaluatedExpr {
@@ -126,7 +131,9 @@ impl fmt::Debug for EvaluatedExpr {
             EvaluatedExpr::FunctionDefinition(_, _) => {
                 write!(f, "EvaluatedExpr::FunctionDefinition")
             }
-            EvaluatedExpr::VariableDefinition => write!(f, "EvaluatedExpr::VariableDefinition"),
+            EvaluatedExpr::VariableDefinition(_, _) => {
+                write!(f, "EvaluatedExpr::VariableDefinition")
+            }
         }
     }
 }
@@ -369,15 +376,36 @@ pub fn eval_expression(
                 if let Some(EvaluatedExpr::Identifier(i)) =
                     eval_expression(&tail[0], functions, globals, sample_set, out_mode)
                 {
-                    //MOVE THIS TO INTERPRETER !!
+                    // i hate this clone ...
                     let mut tail_clone = tail.clone();
+                    // remove function name
                     tail_clone.remove(0);
                     Some(EvaluatedExpr::FunctionDefinition(i, tail_clone))
                 } else {
                     None
                 }
             }
-            Expr::VariableDefinition => Some(EvaluatedExpr::VariableDefinition),
+            Expr::VariableDefinition => {
+                if let Some(EvaluatedExpr::Identifier(i)) =
+                    eval_expression(&tail[0], functions, globals, sample_set, out_mode)
+                {
+                    let reduced_tail = tail
+                        .iter()
+                        .map(|expr| eval_expression(expr, functions, globals, sample_set, out_mode))
+                        .collect::<Option<Vec<EvaluatedExpr>>>()?;
+
+                    if let Some(EvaluatedExpr::Float(f)) = reduced_tail.get(1) {
+                        Some(EvaluatedExpr::VariableDefinition(
+                            i,
+                            TypedVariable::Number(*f),
+                        ))
+                    } else {
+                        None
+                    }
+                } else {
+                    None
+                }
+            }
             _ => None,
         },
         _ => None,

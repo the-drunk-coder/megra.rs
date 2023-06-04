@@ -25,6 +25,7 @@ pub enum ConfigParameter {
 pub enum TypedVariable {
     Part(Part),
     ConfigParameter(ConfigParameter),
+    Number(f32),
 }
 
 #[derive(Clone, PartialEq, Eq, Hash)]
