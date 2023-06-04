@@ -169,7 +169,7 @@ fn parse_cyc<'a>(i: &'a str) -> IResult<&'a str, Vec<Vec<CycleItem>>, VerboseErr
 /// adapt items to results ...
 pub fn eval_cyc_from_str(
     src: &str,
-    functions: &mut FunctionMap,
+    functions: &FunctionMap,
     sample_set: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     out_mode: OutputMode,
     template_events: &[String],

@@ -105,7 +105,10 @@ pub enum EvaluatedExpr {
     Identifier(String),
     BuiltIn(BuiltIn),
     Progn(Vec<EvaluatedExpr>),
-    FunctionDefinition,
+    // I don't really have an idea how to make functions,
+    // so for now I'll just store the non-evaluated Exprs
+    // and reduce them once the user calls the function ...
+    FunctionDefinition(String, Vec<Expr>),
     VariableDefinition,
 }
 
@@ -120,7 +123,9 @@ impl fmt::Debug for EvaluatedExpr {
             EvaluatedExpr::Identifier(fna) => write!(f, "EvaluatedExpr::Identifier({fna})"),
             EvaluatedExpr::BuiltIn(b) => write!(f, "EvaluatedExpr::BuiltIn({b:?})"),
             EvaluatedExpr::Progn(_) => write!(f, "EvaluatedExpr::Progn"),
-            EvaluatedExpr::FunctionDefinition => write!(f, "EvaluatedExpr::FunctionDefinition"),
+            EvaluatedExpr::FunctionDefinition(_, _) => {
+                write!(f, "EvaluatedExpr::FunctionDefinition")
+            }
             EvaluatedExpr::VariableDefinition => write!(f, "EvaluatedExpr::VariableDefinition"),
         }
     }
@@ -133,7 +138,7 @@ pub struct FunctionMap {
     pub std_lib: HashMap<
         String,
         fn(
-            &mut FunctionMap,
+            &FunctionMap,
             &mut Vec<EvaluatedExpr>,
             &sync::Arc<VariableStore>,
             &sync::Arc<Mutex<SampleAndWavematrixSet>>,
@@ -309,7 +314,7 @@ pub fn parse_expr(i: &str) -> IResult<&str, Expr, VerboseError<&str>> {
 /// This one reduces the abstract syntax tree ...
 pub fn eval_expression(
     e: &Expr,
-    functions: &mut FunctionMap,
+    functions: &FunctionMap,
     globals: &sync::Arc<VariableStore>,
     sample_set: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     out_mode: OutputMode,
@@ -364,11 +369,13 @@ pub fn eval_expression(
                 if let Some(EvaluatedExpr::Identifier(i)) =
                     eval_expression(&tail[0], functions, globals, sample_set, out_mode)
                 {
+                    //MOVE THIS TO INTERPRETER !!
                     let mut tail_clone = tail.clone();
                     tail_clone.remove(0);
-                    functions.usr_lib.insert(i, tail_clone);
+                    Some(EvaluatedExpr::FunctionDefinition(i, tail_clone))
+                } else {
+                    None
                 }
-                Some(EvaluatedExpr::FunctionDefinition)
             }
             Expr::VariableDefinition => Some(EvaluatedExpr::VariableDefinition),
             _ => None,
@@ -379,7 +386,7 @@ pub fn eval_expression(
 
 pub fn eval_from_str(
     src: &str,
-    functions: &mut FunctionMap,
+    functions: &FunctionMap,
     globals: &sync::Arc<VariableStore>,
     sample_set: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     out_mode: OutputMode,

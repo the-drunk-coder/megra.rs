@@ -8,7 +8,7 @@ use std::sync;
 // a regular lisp ...
 
 pub fn add(
-    _: &mut FunctionMap,
+    _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<VariableStore>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
@@ -27,7 +27,7 @@ pub fn add(
 }
 
 pub fn sub(
-    _: &mut FunctionMap,
+    _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<VariableStore>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
@@ -52,7 +52,7 @@ pub fn sub(
 }
 
 pub fn mul(
-    _: &mut FunctionMap,
+    _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<VariableStore>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
@@ -77,7 +77,7 @@ pub fn mul(
 }
 
 pub fn div(
-    _: &mut FunctionMap,
+    _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<VariableStore>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
@@ -102,7 +102,7 @@ pub fn div(
 }
 
 pub fn modulo(
-    _: &mut FunctionMap,
+    _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<VariableStore>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
@@ -123,7 +123,7 @@ pub fn modulo(
 }
 
 pub fn pow(
-    _: &mut FunctionMap,
+    _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<VariableStore>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,

@@ -16,7 +16,7 @@ use parking_lot::Mutex;
 type Collector = fn(&mut Vec<EvaluatedExpr>) -> Box<dyn GeneratorProcessor + Send + Sync>;
 
 pub fn eval_pear(
-    _: &mut FunctionMap,
+    _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<VariableStore>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
@@ -26,7 +26,7 @@ pub fn eval_pear(
 }
 
 pub fn eval_inhibit(
-    _: &mut FunctionMap,
+    _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<VariableStore>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
@@ -36,7 +36,7 @@ pub fn eval_inhibit(
 }
 
 pub fn eval_exhibit(
-    _: &mut FunctionMap,
+    _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<VariableStore>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
@@ -46,7 +46,7 @@ pub fn eval_exhibit(
 }
 
 pub fn eval_apple(
-    _: &mut FunctionMap,
+    _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<VariableStore>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
@@ -56,7 +56,7 @@ pub fn eval_apple(
 }
 
 pub fn eval_every(
-    _: &mut FunctionMap,
+    _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<VariableStore>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
@@ -66,7 +66,7 @@ pub fn eval_every(
 }
 
 pub fn eval_lifemodel(
-    _: &mut FunctionMap,
+    _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<VariableStore>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,

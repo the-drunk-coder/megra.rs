@@ -6,7 +6,7 @@ use crate::{OutputMode, SampleAndWavematrixSet};
 use parking_lot::Mutex;
 
 pub fn generator_list(
-    _: &mut FunctionMap,
+    _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<VariableStore>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,

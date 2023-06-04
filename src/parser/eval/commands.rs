@@ -13,7 +13,7 @@ use parking_lot::Mutex;
 use std::sync;
 
 pub fn load_part(
-    _: &mut FunctionMap,
+    _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<VariableStore>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
@@ -45,7 +45,7 @@ pub fn load_part(
 }
 
 pub fn define_midi_callback(
-    _: &mut FunctionMap,
+    _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<VariableStore>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
@@ -67,7 +67,7 @@ pub fn define_midi_callback(
 }
 
 pub fn import_sample_set(
-    _: &mut FunctionMap,
+    _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<VariableStore>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
@@ -126,7 +126,7 @@ pub fn import_sample_set(
 
 #[allow(clippy::unnecessary_unwrap)]
 pub fn load_sample_as_wavematrix(
-    _: &mut FunctionMap,
+    _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<VariableStore>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
@@ -192,7 +192,7 @@ pub fn load_sample_as_wavematrix(
 }
 
 pub fn freeze_buffer(
-    _: &mut FunctionMap,
+    _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<VariableStore>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
@@ -233,7 +233,7 @@ pub fn freeze_buffer(
 }
 
 pub fn load_sample(
-    _: &mut FunctionMap,
+    _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<VariableStore>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
@@ -290,7 +290,7 @@ pub fn load_sample(
 }
 
 pub fn load_sample_sets(
-    _: &mut FunctionMap,
+    _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<VariableStore>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
@@ -318,7 +318,7 @@ pub fn load_sample_sets(
 }
 
 pub fn load_sample_set(
-    _: &mut FunctionMap,
+    _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<VariableStore>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
@@ -346,7 +346,7 @@ pub fn load_sample_set(
 }
 
 pub fn tmod(
-    _: &mut FunctionMap,
+    _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<VariableStore>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
@@ -363,7 +363,7 @@ pub fn tmod(
 }
 
 pub fn latency(
-    _: &mut FunctionMap,
+    _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<VariableStore>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
@@ -380,7 +380,7 @@ pub fn latency(
 }
 
 pub fn bpm(
-    _: &mut FunctionMap,
+    _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<VariableStore>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
@@ -396,7 +396,7 @@ pub fn bpm(
 }
 
 pub fn default_duration(
-    _: &mut FunctionMap,
+    _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<VariableStore>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
@@ -412,7 +412,7 @@ pub fn default_duration(
 }
 
 pub fn globres(
-    _: &mut FunctionMap,
+    _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<VariableStore>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
@@ -428,7 +428,7 @@ pub fn globres(
 }
 
 pub fn reverb(
-    _: &mut FunctionMap,
+    _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<VariableStore>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
@@ -477,7 +477,7 @@ pub fn reverb(
 }
 
 pub fn delay(
-    _: &mut FunctionMap,
+    _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<VariableStore>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
@@ -579,7 +579,7 @@ pub fn delay(
 }
 
 pub fn export_dot(
-    _: &mut FunctionMap,
+    _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<VariableStore>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
@@ -629,7 +629,7 @@ pub fn export_dot(
 }
 
 pub fn once(
-    _: &mut FunctionMap,
+    _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<VariableStore>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
@@ -656,7 +656,7 @@ pub fn once(
 }
 
 pub fn step_part(
-    _: &mut FunctionMap,
+    _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<VariableStore>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
@@ -673,7 +673,7 @@ pub fn step_part(
 }
 
 pub fn clear(
-    _: &mut FunctionMap,
+    _: &FunctionMap,
     _: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<VariableStore>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
@@ -683,7 +683,7 @@ pub fn clear(
 }
 
 pub fn connect_visualizer(
-    _: &mut FunctionMap,
+    _: &FunctionMap,
     _: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<VariableStore>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
@@ -695,7 +695,7 @@ pub fn connect_visualizer(
 }
 
 pub fn start_recording(
-    _: &mut FunctionMap,
+    _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<VariableStore>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
@@ -726,7 +726,7 @@ pub fn start_recording(
 }
 
 pub fn stop_recording(
-    _: &mut FunctionMap,
+    _: &FunctionMap,
     _: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<VariableStore>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,

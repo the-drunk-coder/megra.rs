@@ -10,7 +10,7 @@ use std::collections::HashSet;
 use std::sync;
 
 pub fn sample_keys(
-    _: &mut FunctionMap,
+    _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<VariableStore>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
@@ -59,7 +59,7 @@ pub fn sample_keys(
 }
 
 pub fn sample_number(
-    _: &mut FunctionMap,
+    _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<VariableStore>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
@@ -105,7 +105,7 @@ pub fn sample_number(
 }
 
 pub fn random_sample(
-    _: &mut FunctionMap,
+    _: &FunctionMap,
     _: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<VariableStore>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
@@ -121,7 +121,7 @@ pub fn random_sample(
 
 #[allow(clippy::excessive_precision)]
 pub fn transpose(
-    _: &mut FunctionMap,
+    _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<VariableStore>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
@@ -157,7 +157,7 @@ pub fn transpose(
 }
 
 pub fn parameter(
-    _: &mut FunctionMap,
+    _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<VariableStore>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,

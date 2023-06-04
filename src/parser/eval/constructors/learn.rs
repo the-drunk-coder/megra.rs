@@ -13,7 +13,7 @@ use crate::{OutputMode, SampleAndWavematrixSet};
 use parking_lot::Mutex;
 
 pub fn learn(
-    _: &mut FunctionMap,
+    _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     var_store: &sync::Arc<VariableStore>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
