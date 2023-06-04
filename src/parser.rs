@@ -23,7 +23,7 @@ use crate::parameter::{DynVal, ParameterValue};
 use crate::session::SyncContext;
 use crate::{
     Command, GeneratorProcessorOrModifier, OutputMode, PartProxy, SampleAndWavematrixSet,
-    TypedVariable, VariableId, VariableStore,
+    TypedVariable, VariableStore,
 };
 
 pub mod eval;
