@@ -1,4 +1,5 @@
 use crate::event::{Event, InterpretableEvent, SourceEvent, StaticEvent};
+use crate::VariableStore;
 use ruffbox_synth::building_blocks::{SynthParameterLabel, SynthParameterValue};
 use std::collections::HashMap;
 use vom_rs::pfa;
@@ -41,7 +42,10 @@ impl MarkovSequenceGenerator {
         }
     }
 
-    pub fn current_events(&mut self) -> Vec<InterpretableEvent> {
+    pub fn current_events(
+        &mut self,
+        globals: &std::sync::Arc<VariableStore>,
+    ) -> Vec<InterpretableEvent> {
         let mut interpretable_events = Vec::new();
 
         if let Some(last_symbol) = &self.last_symbol {
@@ -52,7 +56,7 @@ impl MarkovSequenceGenerator {
             if let Some(events) = self.event_mapping.get_mut(last_symbol) {
                 for e in events.iter_mut() {
                     interpretable_events.push(match e {
-                        SourceEvent::Sound(e) => InterpretableEvent::Sound(e.get_static()),
+                        SourceEvent::Sound(e) => InterpretableEvent::Sound(e.get_static(globals)),
                         // this is quite an effort to copy the whole sync ctx all the time.
                         // i hope i can find a mor efficient method later ...
                         SourceEvent::Control(e) => InterpretableEvent::Control(e.clone()),
@@ -72,7 +76,7 @@ impl MarkovSequenceGenerator {
         interpretable_events
     }
 
-    pub fn current_transition(&mut self) -> StaticEvent {
+    pub fn current_transition(&mut self, globals: &std::sync::Arc<VariableStore>) -> StaticEvent {
         // keep in case there's no next transition because
         // the generator has reached it's end ...
         let tmp_next = if self.last_transition.is_some() {
@@ -90,9 +94,9 @@ impl MarkovSequenceGenerator {
                 .duration_mapping
                 .get_mut(&(trans.last_symbol, trans.next_symbol))
             {
-                dur.get_static()
+                dur.get_static(globals)
             } else {
-                let mut t = Event::with_name("transition".to_string()).get_static();
+                let mut t = Event::with_name("transition".to_string()).get_static(globals);
                 t.params.insert(
                     SynthParameterLabel::Duration,
                     SynthParameterValue::ScalarF32(self.default_duration as f32),
@@ -102,7 +106,7 @@ impl MarkovSequenceGenerator {
         } else {
             self.last_symbol = tmp_next;
             // these double else blocks doing the same thing sometimes make rust ugly
-            let mut t = Event::with_name("transition".to_string()).get_static();
+            let mut t = Event::with_name("transition".to_string()).get_static(globals);
             t.params.insert(
                 SynthParameterLabel::Duration,
                 SynthParameterValue::ScalarF32(self.default_duration as f32),

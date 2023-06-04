@@ -9,6 +9,7 @@ use crate::parameter::{resolve_parameter, shake_parameter, ParameterValue};
 use crate::sample_set::SampleLookup;
 use crate::session::SyncContext;
 use crate::synth_parameter_value_arithmetic::*;
+use crate::VariableStore;
 
 /// Events can represent arithmetic operations.
 #[derive(Clone, Copy, Debug)]
@@ -331,11 +332,14 @@ impl Event {
         }
     }
 
-    pub fn evaluate_parameters(&mut self) -> HashMap<SynthParameterLabel, SynthParameterValue> {
+    pub fn evaluate_parameters(
+        &mut self,
+        globals: &std::sync::Arc<VariableStore>,
+    ) -> HashMap<SynthParameterLabel, SynthParameterValue> {
         let mut map = HashMap::new();
 
         for (k, v) in self.params.iter_mut() {
-            map.insert(*k, resolve_parameter(*k, v));
+            map.insert(*k, resolve_parameter(*k, v, globals));
         }
 
         map
@@ -349,10 +353,10 @@ impl Event {
         }
     }
 
-    pub fn get_static(&mut self) -> StaticEvent {
+    pub fn get_static(&mut self, globals: &std::sync::Arc<VariableStore>) -> StaticEvent {
         StaticEvent {
             name: self.name.clone(),
-            params: self.evaluate_parameters(),
+            params: self.evaluate_parameters(globals),
             tags: self.tags.clone(),
             op: self.op,
             sample_lookup: self.sample_lookup.clone(),

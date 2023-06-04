@@ -90,7 +90,7 @@ fn resolve_proxy(
                                     fun,
                                     pos,
                                     named,
-                                )) => fun(&mut gen, &pos, &named),
+                                )) => fun(&mut gen, &pos, &named, var_store),
                             }
                         }
                         //gen.id_tags.insert(s.clone());
@@ -111,7 +111,7 @@ fn resolve_proxy(
                                         fun,
                                         pos,
                                         named,
-                                    )) => fun(&mut gen, &pos, &named),
+                                    )) => fun(&mut gen, &pos, &named, var_store),
                                 }
                             }
                             //gen.id_tags.insert(s.clone());
@@ -318,7 +318,11 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
                                 commands::set_global_lifemodel_resources(&data.var_store, v);
                             }
                             Command::GlobalRuffboxParams(mut m) => {
-                                commands::set_global_ruffbox_parameters(&data.ruffbox, &mut m);
+                                commands::set_global_ruffbox_parameters(
+                                    &data.ruffbox,
+                                    &data.var_store,
+                                    &mut m,
+                                );
                             }
                             Command::Clear => {
                                 let session2 = sync::Arc::clone(&data.session);

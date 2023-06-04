@@ -134,6 +134,7 @@ pub fn eval_multiplyer(
     proxy_spread: ProxySpreader,
     tail: &mut Vec<EvaluatedExpr>,
     out_mode: OutputMode,
+    globals: &std::sync::Arc<VariableStore>,
 ) -> Option<EvaluatedExpr> {
     let last = tail.pop(); // generator or generator list ...
 
@@ -233,7 +234,7 @@ pub fn eval_multiplyer(
                             fun,
                             pos,
                             named,
-                        )) => fun(&mut pclone, &pos, &named),
+                        )) => fun(&mut pclone, &pos, &named, globals),
                     }
                 }
 
@@ -280,7 +281,7 @@ pub fn eval_multiplyer(
                                 fun,
                                 pos,
                                 named,
-                            )) => fun(&mut pclone, &pos, &named),
+                            )) => fun(&mut pclone, &pos, &named, globals),
                         }
                     }
 
@@ -298,19 +299,19 @@ pub fn eval_multiplyer(
 pub fn eval_xspread(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
-    _: &sync::Arc<VariableStore>,
+    globals: &sync::Arc<VariableStore>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     out_mode: OutputMode,
 ) -> Option<EvaluatedExpr> {
-    eval_multiplyer(spread_gens, spread_proxies, tail, out_mode)
+    eval_multiplyer(spread_gens, spread_proxies, tail, out_mode, globals)
 }
 
 pub fn eval_xdup(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
-    _: &sync::Arc<VariableStore>,
+    globals: &sync::Arc<VariableStore>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     out_mode: OutputMode,
 ) -> Option<EvaluatedExpr> {
-    eval_multiplyer(|_, _| {}, |_, _| {}, tail, out_mode)
+    eval_multiplyer(|_, _| {}, |_, _| {}, tail, out_mode, globals)
 }

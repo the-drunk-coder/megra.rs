@@ -4,7 +4,7 @@ use crate::music_theory;
 use crate::parameter::{DynVal, ParameterValue};
 use crate::parser::{BuiltIn, EvaluatedExpr, FunctionMap};
 use crate::sample_set::SampleLookup;
-use crate::{OutputMode, SampleAndWavematrixSet, VariableStore};
+use crate::{OutputMode, SampleAndWavematrixSet, VariableId, VariableStore};
 use parking_lot::Mutex;
 use ruffbox_synth::building_blocks::{EnvelopeSegmentType, FilterType, SynthParameterLabel};
 use std::collections::HashSet;
@@ -134,6 +134,10 @@ fn get_pitch_param(
                     music_theory::from_string(s),
                     music_theory::Tuning::EqualTemperament,
                 )))
+            }
+            Some(EvaluatedExpr::Identifier(i)) => {
+                advance = true;
+                ParameterValue::Placeholder(VariableId::Custom(i.to_string()))
             }
             _ => ParameterValue::Scalar(DynVal::with_value(100.0)),
         },

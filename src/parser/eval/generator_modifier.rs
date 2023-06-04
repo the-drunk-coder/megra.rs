@@ -36,154 +36,158 @@ fn get_args(
 pub fn eval_haste(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
-    _: &sync::Arc<VariableStore>,
+    globals: &sync::Arc<VariableStore>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
-    eval_generator_modifier(haste, tail)
+    eval_generator_modifier(haste, tail, globals)
 }
 
 pub fn eval_keep(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
-    _: &sync::Arc<VariableStore>,
+    globals: &sync::Arc<VariableStore>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
-    eval_generator_modifier(keep, tail)
+    eval_generator_modifier(keep, tail, globals)
 }
 
 pub fn eval_relax(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
-    _: &sync::Arc<VariableStore>,
+    globals: &sync::Arc<VariableStore>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
-    eval_generator_modifier(relax, tail)
+    eval_generator_modifier(relax, tail, globals)
 }
 
 pub fn eval_blur(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
-    _: &sync::Arc<VariableStore>,
+    globals: &sync::Arc<VariableStore>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
-    eval_generator_modifier(blur, tail)
+    eval_generator_modifier(blur, tail, globals)
 }
 
 pub fn eval_sharpen(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
-    _: &sync::Arc<VariableStore>,
+    globals: &sync::Arc<VariableStore>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
-    eval_generator_modifier(sharpen, tail)
+    eval_generator_modifier(sharpen, tail, globals)
 }
 
 pub fn eval_solidify(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
-    _: &sync::Arc<VariableStore>,
+    globals: &sync::Arc<VariableStore>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
-    eval_generator_modifier(solidify, tail)
+    eval_generator_modifier(solidify, tail, globals)
 }
 
 pub fn eval_rep(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
-    _: &sync::Arc<VariableStore>,
+    globals: &sync::Arc<VariableStore>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
-    eval_generator_modifier(rep, tail)
+    eval_generator_modifier(rep, tail, globals)
 }
 
 pub fn eval_shake(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
-    _: &sync::Arc<VariableStore>,
+    globals: &sync::Arc<VariableStore>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
-    eval_generator_modifier(shake, tail)
+    eval_generator_modifier(shake, tail, globals)
 }
 
 pub fn eval_skip(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
-    _: &sync::Arc<VariableStore>,
+    globals: &sync::Arc<VariableStore>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
-    eval_generator_modifier(skip, tail)
+    eval_generator_modifier(skip, tail, globals)
 }
 
 pub fn eval_rewind(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
-    _: &sync::Arc<VariableStore>,
+    globals: &sync::Arc<VariableStore>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
-    eval_generator_modifier(rewind, tail)
+    eval_generator_modifier(rewind, tail, globals)
 }
 
 pub fn eval_rnd(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
-    _: &sync::Arc<VariableStore>,
+    globals: &sync::Arc<VariableStore>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
-    eval_generator_modifier(rnd, tail)
+    eval_generator_modifier(rnd, tail, globals)
 }
 
 pub fn eval_grow(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
-    _: &sync::Arc<VariableStore>,
+    globals: &sync::Arc<VariableStore>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
-    eval_generator_modifier(grow, tail)
+    eval_generator_modifier(grow, tail, globals)
 }
 
 pub fn eval_grown(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
-    _: &sync::Arc<VariableStore>,
+    globals: &sync::Arc<VariableStore>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
-    eval_generator_modifier(grown, tail)
+    eval_generator_modifier(grown, tail, globals)
 }
 
 pub fn eval_shrink(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
-    _: &sync::Arc<VariableStore>,
+    globals: &sync::Arc<VariableStore>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
-    eval_generator_modifier(shrink, tail)
+    eval_generator_modifier(shrink, tail, globals)
 }
 
 pub fn eval_reverse(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
-    _: &sync::Arc<VariableStore>,
+    globals: &sync::Arc<VariableStore>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
-    eval_generator_modifier(reverse, tail)
+    eval_generator_modifier(reverse, tail, globals)
 }
 
-fn eval_generator_modifier(fun: GenModFun, tail: &mut Vec<EvaluatedExpr>) -> Option<EvaluatedExpr> {
+fn eval_generator_modifier(
+    fun: GenModFun,
+    tail: &mut Vec<EvaluatedExpr>,
+    globals: &std::sync::Arc<VariableStore>,
+) -> Option<EvaluatedExpr> {
     let last = tail.pop();
     Some(match last {
         Some(EvaluatedExpr::BuiltIn(BuiltIn::Generator(mut g))) => {
@@ -191,7 +195,7 @@ fn eval_generator_modifier(fun: GenModFun, tail: &mut Vec<EvaluatedExpr>) -> Opt
             tail_drain.next();
             let (pos_args, named_args) = get_args(&mut tail_drain);
             // apply to generator
-            fun(&mut g, &pos_args, &named_args);
+            fun(&mut g, &pos_args, &named_args, globals);
             EvaluatedExpr::BuiltIn(BuiltIn::Generator(g))
         }
         Some(EvaluatedExpr::BuiltIn(BuiltIn::GeneratorProcessorOrModifier(gpom))) => {

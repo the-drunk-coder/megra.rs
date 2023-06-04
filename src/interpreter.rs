@@ -133,7 +133,7 @@ pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
             commands::set_global_lifemodel_resources(var_store, v);
         }
         Command::GlobalRuffboxParams(mut m) => {
-            commands::set_global_ruffbox_parameters(ruffbox, &mut m);
+            commands::set_global_ruffbox_parameters(ruffbox, var_store, &mut m);
         }
         Command::ExportDotStatic((f, g)) => {
             commands::export_dot_static(&f, &g);

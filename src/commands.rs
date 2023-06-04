@@ -598,10 +598,11 @@ pub fn set_global_lifemodel_resources(var_store: &sync::Arc<VariableStore>, val:
 
 pub fn set_global_ruffbox_parameters<const BUFSIZE: usize, const NCHAN: usize>(
     ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
+    globals: &sync::Arc<VariableStore>,
     params: &mut HashMap<SynthParameterLabel, ParameterValue>,
 ) {
     for (k, v) in params.iter_mut() {
-        ruffbox.set_master_parameter(*k, resolve_parameter(*k, v))
+        ruffbox.set_master_parameter(*k, resolve_parameter(*k, v, globals))
     }
 }
 

@@ -33,7 +33,7 @@ fn collect_compose(tail: &mut Vec<EvaluatedExpr>) -> Vec<GeneratorProcessorOrMod
 pub fn compose(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
-    _: &sync::Arc<VariableStore>,
+    globals: &sync::Arc<VariableStore>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
@@ -66,7 +66,7 @@ pub fn compose(
                         procs.push((gp.get_id(), gp))
                     }
                     GeneratorProcessorOrModifier::GeneratorModifierFunction((fun, pos, named)) => {
-                        fun(&mut g, &pos, &named)
+                        fun(&mut g, &pos, &named, globals)
                     }
                 }
             }
@@ -86,7 +86,7 @@ pub fn compose(
                             fun,
                             pos,
                             named,
-                        )) => fun(gen, pos, named),
+                        )) => fun(gen, pos, named, globals),
                     }
                 }
             }

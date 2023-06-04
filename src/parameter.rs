@@ -8,6 +8,8 @@ use std::fmt::*;
 use ruffbox_synth::building_blocks::{EnvelopeSegmentInfo, EnvelopeSegmentType};
 use ruffbox_synth::building_blocks::{FilterType, SynthParameterLabel, SynthParameterValue, ValOp};
 
+use crate::{TypedVariable, VariableId, VariableStore};
+
 #[derive(Clone)]
 #[rustfmt::skip]
 pub enum ParameterValue {
@@ -25,6 +27,7 @@ pub enum ParameterValue {
     ExpRamp(DynVal, DynVal, DynVal, ValOp),                        // from, to, time, op
     EnvelopeSegmentType(EnvelopeSegmentType),
     MultiPointEnvelope(Vec<DynVal>, Vec<DynVal>, Vec<EnvelopeSegmentType>, bool, ValOp), // levels, times, loop, op
+    Placeholder(VariableId)
 }
 
 pub fn shake_parameter(v: &mut ParameterValue, factor: f32) {
@@ -198,8 +201,21 @@ pub fn translate_stereo(val: SynthParameterValue) -> SynthParameterValue {
     }
 }
 
-pub fn resolve_parameter(k: SynthParameterLabel, v: &mut ParameterValue) -> SynthParameterValue {
+pub fn resolve_parameter(
+    k: SynthParameterLabel,
+    v: &mut ParameterValue,
+    globals: &std::sync::Arc<VariableStore>,
+) -> SynthParameterValue {
     match v {
+        // resolve params
+        ParameterValue::Placeholder(id) => {
+            if let Some(thing) = globals.get(id) {
+                if let TypedVariable::Number(n) = thing.value() {
+                    return SynthParameterValue::ScalarF32(*n);
+                }
+            }
+            panic!();
+        }
         ParameterValue::FilterType(t) => SynthParameterValue::FilterType(*t),
         ParameterValue::Scalar(val) => {
             if k == SynthParameterLabel::SampleBufferNumber {
@@ -240,55 +256,80 @@ pub fn resolve_parameter(k: SynthParameterLabel, v: &mut ParameterValue) -> Synt
         }
         ParameterValue::Lfo(init, freq, eff_phase, amp, add, op) => SynthParameterValue::Lfo(
             init.evaluate_numerical(),
-            Box::new(resolve_parameter(SynthParameterLabel::PitchFrequency, freq)),
+            Box::new(resolve_parameter(
+                SynthParameterLabel::PitchFrequency,
+                freq,
+                globals,
+            )),
             eff_phase.evaluate_numerical(),
             Box::new(resolve_parameter(
                 SynthParameterLabel::OscillatorAmplitude,
                 amp,
+                globals,
             )),
             add.evaluate_numerical(),
             *op,
         ),
         ParameterValue::LFSaw(init, freq, eff_phase, amp, add, op) => SynthParameterValue::LFSaw(
             init.evaluate_numerical(),
-            Box::new(resolve_parameter(SynthParameterLabel::PitchFrequency, freq)),
+            Box::new(resolve_parameter(
+                SynthParameterLabel::PitchFrequency,
+                freq,
+                globals,
+            )),
             eff_phase.evaluate_numerical(),
             Box::new(resolve_parameter(
                 SynthParameterLabel::OscillatorAmplitude,
                 amp,
+                globals,
             )),
             add.evaluate_numerical(),
             *op,
         ),
         ParameterValue::LFRSaw(init, freq, eff_phase, amp, add, op) => SynthParameterValue::LFRSaw(
             init.evaluate_numerical(),
-            Box::new(resolve_parameter(SynthParameterLabel::PitchFrequency, freq)),
+            Box::new(resolve_parameter(
+                SynthParameterLabel::PitchFrequency,
+                freq,
+                globals,
+            )),
             eff_phase.evaluate_numerical(),
             Box::new(resolve_parameter(
                 SynthParameterLabel::OscillatorAmplitude,
                 amp,
+                globals,
             )),
             add.evaluate_numerical(),
             *op,
         ),
         ParameterValue::LFTri(init, freq, eff_phase, amp, add, op) => SynthParameterValue::LFTri(
             init.evaluate_numerical(),
-            Box::new(resolve_parameter(SynthParameterLabel::PitchFrequency, freq)),
+            Box::new(resolve_parameter(
+                SynthParameterLabel::PitchFrequency,
+                freq,
+                globals,
+            )),
             eff_phase.evaluate_numerical(),
             Box::new(resolve_parameter(
                 SynthParameterLabel::OscillatorAmplitude,
                 amp,
+                globals,
             )),
             add.evaluate_numerical(),
             *op,
         ),
         ParameterValue::LFSquare(init, freq, pw, amp, add, op) => SynthParameterValue::LFSquare(
             init.evaluate_numerical(),
-            Box::new(resolve_parameter(SynthParameterLabel::PitchFrequency, freq)),
+            Box::new(resolve_parameter(
+                SynthParameterLabel::PitchFrequency,
+                freq,
+                globals,
+            )),
             pw.evaluate_numerical(),
             Box::new(resolve_parameter(
                 SynthParameterLabel::OscillatorAmplitude,
                 amp,
+                globals,
             )),
             add.evaluate_numerical(),
             *op,

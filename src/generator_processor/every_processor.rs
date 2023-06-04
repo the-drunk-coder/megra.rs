@@ -44,7 +44,11 @@ impl GeneratorProcessor for EveryProcessor {
     }
 
     // this one
-    fn process_events(&mut self, events: &mut Vec<InterpretableEvent>, _: &Arc<VariableStore>) {
+    fn process_events(
+        &mut self,
+        events: &mut Vec<InterpretableEvent>,
+        globals: &Arc<VariableStore>,
+    ) {
         self.last_static.clear();
         for (step, filtered_events, _) in self.things_to_be_applied.iter_mut() {
             // genmodfuns not needed here ...
@@ -54,7 +58,7 @@ impl GeneratorProcessor for EveryProcessor {
                 for (filter, (mode, evs)) in filtered_events.iter_mut() {
                     let mut evs_static = Vec::new();
                     for ev in evs.iter_mut() {
-                        let ev_static = ev.get_static();
+                        let ev_static = ev.get_static(globals);
                         for in_ev in events.iter_mut() {
                             match in_ev {
                                 InterpretableEvent::Sound(s) => {
@@ -74,13 +78,13 @@ impl GeneratorProcessor for EveryProcessor {
         }
     }
 
-    fn process_generator(&mut self, gen: &mut Generator, _: &Arc<VariableStore>) {
+    fn process_generator(&mut self, gen: &mut Generator, globals: &Arc<VariableStore>) {
         for (step, _, gen_mods) in self.things_to_be_applied.iter_mut() {
             // genmodfuns not needed here ...
             let cur_step: usize = (step.static_val as usize) % 101;
             if self.step_count % cur_step == 0 {
                 for (gen_mod_fun, pos_args, named_args) in gen_mods.iter() {
-                    gen_mod_fun(gen, pos_args, named_args)
+                    gen_mod_fun(gen, pos_args, named_args, globals)
                 }
             }
         }

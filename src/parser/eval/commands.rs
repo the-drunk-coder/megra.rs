@@ -631,7 +631,7 @@ pub fn export_dot(
 pub fn once(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
-    _: &sync::Arc<VariableStore>,
+    globals: &sync::Arc<VariableStore>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
@@ -642,7 +642,7 @@ pub fn once(
     for c in tail_drain {
         match c {
             EvaluatedExpr::BuiltIn(BuiltIn::SoundEvent(mut e)) => {
-                sound_events.push(e.get_static());
+                sound_events.push(e.get_static(globals));
             }
             EvaluatedExpr::BuiltIn(BuiltIn::ControlEvent(c)) => control_events.push(c),
             _ => {}

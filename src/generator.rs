@@ -78,7 +78,7 @@ impl Generator {
     }
 
     pub fn current_events(&mut self, var_store: &Arc<VariableStore>) -> Vec<InterpretableEvent> {
-        let mut events = self.root_generator.current_events();
+        let mut events = self.root_generator.current_events(var_store);
 
         for ev in events.iter_mut() {
             if let InterpretableEvent::Sound(s) = ev {
@@ -108,7 +108,7 @@ impl Generator {
     }
 
     pub fn current_transition(&mut self, var_store: &Arc<VariableStore>) -> StaticEvent {
-        let mut trans = self.root_generator.current_transition();
+        let mut trans = self.root_generator.current_transition(var_store);
         for (_, proc) in self.processors.iter_mut() {
             proc.process_transition(&mut trans, var_store);
         }

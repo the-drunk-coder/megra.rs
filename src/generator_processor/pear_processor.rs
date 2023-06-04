@@ -28,7 +28,11 @@ impl PearProcessor {
 // zip mode etc seem to be outdated ... going for any mode for now
 impl GeneratorProcessor for PearProcessor {
     // this one only processes the event stream ...
-    fn process_events(&mut self, events: &mut Vec<InterpretableEvent>, _: &Arc<VariableStore>) {
+    fn process_events(
+        &mut self,
+        events: &mut Vec<InterpretableEvent>,
+        globals: &Arc<VariableStore>,
+    ) {
         self.last_static.clear();
         let mut rng = rand::thread_rng();
         // the four nested loops are intimidating but keep in mind that the
@@ -40,7 +44,7 @@ impl GeneratorProcessor for PearProcessor {
             for (filter, (mode, evs)) in filtered_events.iter_mut() {
                 let mut evs_static = Vec::new();
                 for ev in evs.iter_mut() {
-                    let ev_static = ev.get_static();
+                    let ev_static = ev.get_static(globals);
                     for in_ev in events.iter_mut() {
                         match in_ev {
                             InterpretableEvent::Sound(s) => {
