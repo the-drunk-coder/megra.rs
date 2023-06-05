@@ -250,9 +250,9 @@ pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
         EvaluatedExpr::Boolean(b) => {
             println!("a boolean: {b}")
         }
-        EvaluatedExpr::FunctionDefinition(name, body) => {
-            println!("a function definition: {name}");
-            function_map.lock().usr_lib.insert(name, body);
+        EvaluatedExpr::FunctionDefinition(name, pos_args, body) => {
+            println!("a function definition: {name} positional args: {pos_args:?}");
+            function_map.lock().usr_lib.insert(name, (pos_args, body));
         }
         EvaluatedExpr::VariableDefinition(name, var) => {
             println!("a variable definition {name}");

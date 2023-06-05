@@ -51,6 +51,7 @@ pub enum Expr {
     Definition(Box<Expr>, Vec<Expr>),
 }
 
+#[derive(Clone)]
 pub enum BuiltIn {
     Rule(Rule),
     Command(Command),
@@ -99,6 +100,7 @@ impl fmt::Debug for BuiltIn {
     }
 }
 
+#[derive(Clone)]
 pub enum EvaluatedExpr {
     Float(f32),
     Symbol(String),
@@ -113,7 +115,7 @@ pub enum EvaluatedExpr {
     // and reduce them once the user calls the function ...
     // that might make them macros rather than functions?
     // Not sure ...
-    FunctionDefinition(String, Vec<Expr>),
+    FunctionDefinition(String, Vec<String>, Vec<Expr>),
     VariableDefinition(String, TypedVariable),
 }
 
@@ -128,7 +130,7 @@ impl fmt::Debug for EvaluatedExpr {
             EvaluatedExpr::Identifier(fna) => write!(f, "EvaluatedExpr::Identifier({fna})"),
             EvaluatedExpr::BuiltIn(b) => write!(f, "EvaluatedExpr::BuiltIn({b:?})"),
             EvaluatedExpr::Progn(_) => write!(f, "EvaluatedExpr::Progn"),
-            EvaluatedExpr::FunctionDefinition(_, _) => {
+            EvaluatedExpr::FunctionDefinition(_, _, _) => {
                 write!(f, "EvaluatedExpr::FunctionDefinition")
             }
             EvaluatedExpr::VariableDefinition(_, _) => {
@@ -141,7 +143,7 @@ impl fmt::Debug for EvaluatedExpr {
 // std_lib are hard-coded,
 // usr_lib is for user-defined functions ...
 pub struct FunctionMap {
-    pub usr_lib: HashMap<String, Vec<Expr>>,
+    pub usr_lib: HashMap<String, (Vec<String>, Vec<Expr>)>,
     pub std_lib: HashMap<
         String,
         fn(
@@ -203,7 +205,7 @@ fn parse_boolean(i: &str) -> IResult<&str, Atom, VerboseError<&str>> {
 
 fn parse_definition(i: &str) -> IResult<&str, Expr, VerboseError<&str>> {
     alt((
-        map(tag("function"), |_| Expr::FunctionDefinition),
+        map(tag("fun"), |_| Expr::FunctionDefinition),
         map(tag("let"), |_| Expr::VariableDefinition),
     ))(i)
 }
@@ -323,6 +325,7 @@ pub fn eval_expression(
     e: &Expr,
     functions: &FunctionMap,
     globals: &sync::Arc<VariableStore>,
+    locals: Option<&HashMap<String, EvaluatedExpr>>,
     sample_set: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     out_mode: OutputMode,
 ) -> Option<EvaluatedExpr> {
@@ -333,17 +336,30 @@ pub fn eval_expression(
             Atom::Keyword(k) => EvaluatedExpr::Keyword(k.to_string()),
             Atom::String(s) => EvaluatedExpr::String(s.to_string()),
             Atom::Boolean(b) => EvaluatedExpr::Boolean(*b),
-            Atom::Identifier(f) => EvaluatedExpr::Identifier(f.to_string()),
+            Atom::Identifier(f) => {
+                // eval local vars at eval time ???
+                if let Some(loc) = locals {
+                    if let Some(arg) = loc.get(f) {
+                        arg.clone()
+                    } else {
+                        EvaluatedExpr::Identifier(f.to_string())
+                    }
+                } else {
+                    EvaluatedExpr::Identifier(f.to_string())
+                }
+            }
         }),
         Expr::Application(head, tail) => {
             if let Some(EvaluatedExpr::Identifier(f)) =
-                eval_expression(head, functions, globals, sample_set, out_mode)
+                eval_expression(head, functions, globals, locals, sample_set, out_mode)
             {
                 // check if we have this function ...
                 if functions.std_lib.contains_key(&f) {
                     let mut reduced_tail = tail
                         .iter()
-                        .map(|expr| eval_expression(expr, functions, globals, sample_set, out_mode))
+                        .map(|expr| {
+                            eval_expression(expr, functions, globals, locals, sample_set, out_mode)
+                        })
                         .collect::<Option<Vec<EvaluatedExpr>>>()?;
                     // push function name
                     reduced_tail.insert(0, EvaluatedExpr::Identifier(f.clone()));
@@ -355,15 +371,41 @@ pub fn eval_expression(
                         out_mode,
                     )
                 } else if functions.usr_lib.contains_key(&f) {
-                    let fun_expr = functions.usr_lib.get(&f).unwrap().clone();
+                    let (fun_arg_names, fun_expr) = functions.usr_lib.get(&f).unwrap().clone();
 
-                    let fun_tail = fun_expr
+                    if fun_arg_names.len() > tail.len() {
+                        // not enough arguments
+                        return None;
+                    }
+
+                    // FIRST, eval local args,
+                    // manual zip
+                    let mut local_args = HashMap::new();
+                    for (i, expr) in tail[..fun_arg_names.len()].iter().enumerate() {
+                        if let Some(res) =
+                            eval_expression(&expr, functions, globals, None, sample_set, out_mode)
+                        {
+                            local_args.insert(fun_arg_names[i].clone(), res);
+                        }
+                    }
+
+                    // THIRD
+                    let mut fun_tail = fun_expr
                         .iter()
-                        .map(|expr| eval_expression(expr, functions, globals, sample_set, out_mode))
-                        .collect::<Option<Vec<EvaluatedExpr>>>();
+                        .map(|expr| {
+                            eval_expression(
+                                expr,
+                                functions,
+                                globals,
+                                Some(&local_args),
+                                sample_set,
+                                out_mode,
+                            )
+                        })
+                        .collect::<Option<Vec<EvaluatedExpr>>>()?;
 
                     // return last form result, cl-style
-                    fun_tail?.pop()
+                    fun_tail.pop()
                 } else {
                     None
                 }
@@ -374,24 +416,69 @@ pub fn eval_expression(
         Expr::Definition(head, tail) => match **head {
             Expr::FunctionDefinition => {
                 if let Some(EvaluatedExpr::Identifier(i)) =
-                    eval_expression(&tail[0], functions, globals, sample_set, out_mode)
+                    eval_expression(&tail[0], functions, globals, None, sample_set, out_mode)
                 {
                     // i hate this clone ...
                     let mut tail_clone = tail.clone();
+
                     // remove function name
                     tail_clone.remove(0);
-                    Some(EvaluatedExpr::FunctionDefinition(i, tail_clone))
+
+                    let mut positional_args = Vec::new();
+                    let mut rem_args = false;
+                    if let Some(Expr::Application(head, fun_tail)) = tail_clone.get(0) {
+                        if let Some(EvaluatedExpr::Identifier(f)) =
+                            eval_expression(head, functions, globals, None, sample_set, out_mode)
+                        {
+                            // only assume it's positional args when it's not a known function ...
+                            // that way, the definition becomes optional
+                            if !(functions.std_lib.contains_key(&f)
+                                || functions.usr_lib.contains_key(&f))
+                            {
+                                positional_args.push(f);
+
+                                let reduced_tail = fun_tail
+                                    .iter()
+                                    .map(|expr| {
+                                        eval_expression(
+                                            expr, functions, globals, None, sample_set, out_mode,
+                                        )
+                                    })
+                                    .collect::<Option<Vec<EvaluatedExpr>>>()?;
+
+                                for ee in reduced_tail {
+                                    if let EvaluatedExpr::Identifier(ff) = ee {
+                                        positional_args.push(ff);
+                                    }
+                                }
+
+                                rem_args = true;
+                            }
+                        }
+                    }
+
+                    if rem_args {
+                        tail_clone.remove(0);
+                    }
+
+                    Some(EvaluatedExpr::FunctionDefinition(
+                        i,
+                        positional_args,
+                        tail_clone,
+                    ))
                 } else {
                     None
                 }
             }
             Expr::VariableDefinition => {
                 if let Some(EvaluatedExpr::Identifier(i)) =
-                    eval_expression(&tail[0], functions, globals, sample_set, out_mode)
+                    eval_expression(&tail[0], functions, globals, None, sample_set, out_mode)
                 {
                     let reduced_tail = tail
                         .iter()
-                        .map(|expr| eval_expression(expr, functions, globals, sample_set, out_mode))
+                        .map(|expr| {
+                            eval_expression(expr, functions, globals, None, sample_set, out_mode)
+                        })
                         .collect::<Option<Vec<EvaluatedExpr>>>()?;
 
                     if let Some(EvaluatedExpr::Float(f)) = reduced_tail.get(1) {
@@ -425,7 +512,7 @@ pub fn eval_from_str(
     parse_expr(&src_nocomment)
         .map_err(|e: nom::Err<VerboseError<&str>>| format!("{e:#?}"))
         .and_then(|(_, exp)| {
-            eval_expression(&exp, functions, globals, sample_set, out_mode)
+            eval_expression(&exp, functions, globals, None, sample_set, out_mode)
                 .ok_or_else(|| "eval failed".to_string())
         })
 }
