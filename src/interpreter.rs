@@ -1,4 +1,5 @@
 use parking_lot::Mutex;
+use rosc::OscType;
 use std::collections::HashMap;
 use std::sync;
 use std::thread;
@@ -166,9 +167,18 @@ pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
                 &session.lock().osc_client.custom,
             );
         }
-        Command::OscSendMessage(client_name, osc_addr) => {
+        Command::OscSendMessage(client_name, osc_addr, args) => {
+            let mut osc_args = Vec::new();
+            for arg in args.iter() {
+                match arg {
+                    TypedVariable::Number(n) => osc_args.push(OscType::Float(*n)),
+                    TypedVariable::String(s) => osc_args.push(OscType::String(s.to_string())),
+                    TypedVariable::Symbol(s) => osc_args.push(OscType::String(s.to_string())),
+                    _ => {}
+                }
+            }
             if let Some(thing) = &session.lock().osc_client.custom.get(&client_name) {
-                let _ = thing.value().send_message(osc_addr, vec![]);
+                let _ = thing.value().send_message(osc_addr, osc_args);
             }
             //println!("send msg {client_name} {osc_addr}");
         }

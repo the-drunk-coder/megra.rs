@@ -50,7 +50,17 @@ pub fn osc_send(
         return None;
     };
 
+    let mut args = Vec::new();
+    while let Some(thing) = tail_drain.next() {
+        match thing {
+            EvaluatedExpr::Float(f) => args.push(TypedVariable::Number(f)),
+            EvaluatedExpr::Symbol(s) => args.push(TypedVariable::Symbol(s)),
+            EvaluatedExpr::String(s) => args.push(TypedVariable::String(s)),
+            _ => {}
+        }
+    }
+
     Some(EvaluatedExpr::BuiltIn(BuiltIn::Command(
-        Command::OscSendMessage(sender_name, addr),
+        Command::OscSendMessage(sender_name, addr, args),
     )))
 }

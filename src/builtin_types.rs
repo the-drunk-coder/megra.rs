@@ -26,6 +26,8 @@ pub enum TypedVariable {
     Part(Part),
     ConfigParameter(ConfigParameter),
     Number(f32),
+    String(String),
+    Symbol(String),
 }
 
 #[derive(Clone, PartialEq, Eq, Hash)]
@@ -71,7 +73,7 @@ pub enum Command {
     StartRecording(Option<String>, bool),          // start recording, prefix, input
     StopRecording,                                 // stop recording ...
     OscDefineClient(String, String),
-    OscSendMessage(String, String),
+    OscSendMessage(String, String, Vec<TypedVariable>),
 }
 
 #[derive(Clone)]
