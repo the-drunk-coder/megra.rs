@@ -32,6 +32,7 @@ pub mod synth_parameter_value_arithmetic;
 #[rustfmt::skip]
 mod standard_library;
 
+mod osc_receiver;
 mod osc_sender;
 mod visualizer_client;
 
