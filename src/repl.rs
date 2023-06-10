@@ -42,7 +42,7 @@ pub fn start_repl<const BUFSIZE: usize, const NCHAN: usize>(
 
                 let pfa_in = parser::eval_from_str(
                     line.as_str(),
-                    &mut function_map.lock(),
+                    &function_map.lock(),
                     var_store,
                     sample_set,
                     mode,
@@ -66,7 +66,7 @@ pub fn start_repl<const BUFSIZE: usize, const NCHAN: usize>(
                                         line_buffer.push_str(line.as_str());
                                         let inner_pfa_in = parser::eval_from_str(
                                             line_buffer.as_str(),
-                                            &mut function_map.lock(),
+                                            &function_map.lock(),
                                             var_store,
                                             sample_set,
                                             mode,

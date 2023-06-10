@@ -42,11 +42,8 @@ pub fn sample_keys(
     let mut keyword_set = HashSet::new();
 
     for p in tail_drain {
-        match p {
-            EvaluatedExpr::Symbol(s) => {
-                keyword_set.insert(s);
-            }
-            _ => { /* noop */ }
+        if let EvaluatedExpr::Symbol(s) = p {
+            keyword_set.insert(s);
         }
     }
 
