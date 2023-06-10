@@ -13,10 +13,10 @@ use crate::commands;
 use crate::event::InterpretableEvent;
 use crate::event_helpers::*;
 use crate::generator::Generator;
+use crate::osc_client::OscClient;
 use crate::parameter::*;
 use crate::real_time_streaming;
 use crate::scheduler::{Scheduler, SchedulerData};
-use crate::visualizer_client::VisualizerClient;
 use crate::SampleAndWavematrixSet;
 use crate::TypedVariable;
 
@@ -61,7 +61,7 @@ pub struct Session<const BUFSIZE: usize, const NCHAN: usize> {
         ),
     >,
     contexts: HashMap<String, BTreeSet<BTreeSet<String>>>,
-    pub visualizer_client: Option<sync::Arc<VisualizerClient>>,
+    pub osc_client: OscClient,
     pub rec_control: Option<real_time_streaming::RecordingControl<BUFSIZE, NCHAN>>,
 }
 
@@ -160,7 +160,7 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
         latency = global_latency.evaluate_numerical() as f64;
     }
 
-    if let Some(vc) = &data.visualizer_client {
+    if let Some(vc) = &data.osc_client.vis {
         if data.generator.root_generator.is_modified() {
             vc.create_or_update(&data.generator);
             data.generator.root_generator.clear_modified()
@@ -364,7 +364,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
         Session {
             schedulers: HashMap::new(),
             contexts: HashMap::new(),
-            visualizer_client: None,
+            osc_client: OscClient::new(),
             rec_control: None,
         }
     }
@@ -897,7 +897,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
         {
             let mut sess = session.lock();
             sched_prox = sess.schedulers.remove(gen_name);
-            if let Some(c) = &sess.visualizer_client {
+            if let Some(c) = &sess.osc_client.vis {
                 c.clear(gen_name);
             }
         }
@@ -911,7 +911,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
             }
             println!("\'");
             let sess = session.lock();
-            if let Some(c) = &sess.visualizer_client {
+            if let Some(c) = &sess.osc_client.vis {
                 let d = data.lock();
                 for (_, proc) in d.generator.processors.iter() {
                     proc.clear_visualization(c);
@@ -930,7 +930,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
             let mut sess = session.lock();
             for name in gen_names.iter() {
                 sched_proxies.push(sess.schedulers.remove(name));
-                if let Some(c) = &sess.visualizer_client {
+                if let Some(c) = &sess.osc_client.vis {
                     c.clear(name);
                 }
             }
@@ -943,7 +943,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
             sched.stop();
             sched_proxies2.push(sched);
             let sess = session.lock();
-            if let Some(c) = &sess.visualizer_client {
+            if let Some(c) = &sess.osc_client.vis {
                 let d = data.lock();
                 for (_, proc) in d.generator.processors.iter() {
                     proc.clear_visualization(c);
@@ -975,7 +975,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
             println!("\'");
         }
 
-        if let Some(c) = &sess.visualizer_client {
+        if let Some(c) = &sess.osc_client.vis {
             for (k, (_, data)) in sess.schedulers.iter() {
                 c.clear(k);
                 let d = data.lock();

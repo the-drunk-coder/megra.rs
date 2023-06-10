@@ -1,7 +1,7 @@
 use crate::builtin_types::*;
 use crate::generator::Generator;
+use crate::osc_client::OscClient;
 use crate::session::{OutputMode, Session, SyncMode};
-use crate::visualizer_client::VisualizerClient;
 use parking_lot::Mutex;
 use ruffbox_synth::ruffbox::RuffboxControls;
 
@@ -35,11 +35,11 @@ pub struct SchedulerData<const BUFSIZE: usize, const NCHAN: usize> {
     pub ruffbox: sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
     pub session: sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
     pub var_store: sync::Arc<VariableStore>,
-    // the visualize client reverence here might be a bit
+    // the osc client reverence here might be a bit
     // redundant, as there's already a reference in the
     // session, but that way we can access the client without
     // having to lock the session
-    pub visualizer_client: Option<sync::Arc<VisualizerClient>>,
+    pub osc_client: OscClient,
     pub sample_set: sync::Arc<Mutex<SampleAndWavematrixSet>>,
     pub output_mode: OutputMode,
     pub sync_mode: SyncMode,
@@ -70,13 +70,6 @@ impl<const BUFSIZE: usize, const NCHAN: usize> SchedulerData<BUFSIZE, NCHAN> {
             data.root_generator = old.generator.root_generator.clone();
         }
 
-        // keep scheduling, retain data
-        let vca = if let Some(vc) = &old.visualizer_client {
-            Some(sync::Arc::clone(vc))
-        } else {
-            None
-        };
-
         SchedulerData {
             start_time: old.start_time,
             stream_time: old.stream_time + shift_diff,
@@ -89,7 +82,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> SchedulerData<BUFSIZE, NCHAN> {
             ruffbox: sync::Arc::clone(ruffbox),
             session: sync::Arc::clone(session),
             var_store: sync::Arc::clone(var_store),
-            visualizer_client: vca,
+            osc_client: old.osc_client.clone(),
             output_mode: old.output_mode,
             sample_set: sync::Arc::clone(&old.sample_set),
             sync_mode: old.sync_mode,
@@ -111,11 +104,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> SchedulerData<BUFSIZE, NCHAN> {
         solo_tags: &BTreeSet<String>,
     ) -> Self {
         let shift_diff = shift - old.shift;
-        let vca = if let Some(vc) = &old.visualizer_client {
-            Some(sync::Arc::clone(vc))
-        } else {
-            None
-        };
+
         // keep scheduling, retain time
         SchedulerData {
             start_time: old.start_time,
@@ -129,7 +118,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> SchedulerData<BUFSIZE, NCHAN> {
             ruffbox: sync::Arc::clone(ruffbox),
             session: sync::Arc::clone(session),
             var_store: sync::Arc::clone(var_store),
-            visualizer_client: vca,
+            osc_client: old.osc_client.clone(),
             sample_set: sync::Arc::clone(&old.sample_set),
             output_mode: old.output_mode,
             sync_mode: old.sync_mode,
@@ -154,15 +143,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> SchedulerData<BUFSIZE, NCHAN> {
     ) -> Self {
         // get logical time since start from ruffbox
         let stream_time = ruffbox.get_now();
-        let vca;
-        {
-            let sess = session.lock();
-            vca = if let Some(vc) = &sess.visualizer_client {
-                Some(sync::Arc::clone(vc))
-            } else {
-                None
-            };
-        }
+
         SchedulerData {
             start_time: Instant::now(),
             stream_time: stream_time + shift,
@@ -175,7 +156,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> SchedulerData<BUFSIZE, NCHAN> {
             ruffbox: sync::Arc::clone(ruffbox),
             session: sync::Arc::clone(session),
             var_store: sync::Arc::clone(var_store),
-            visualizer_client: vca,
+            osc_client: session.lock().osc_client.clone(),
             sample_set: sync::Arc::clone(sample_set),
             output_mode,
             sync_mode,

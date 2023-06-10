@@ -34,8 +34,8 @@ pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
         }
         Command::ConnectVisualizer => {
             let mut session = session.lock();
-            if session.visualizer_client.is_none() {
-                session.visualizer_client = Some(sync::Arc::new(VisualizerClient::start()));
+            if session.osc_client.vis.is_none() {
+                session.osc_client.vis = Some(sync::Arc::new(VisualizerClient::start()));
             } else {
                 println!("visualizer already connected !");
             }

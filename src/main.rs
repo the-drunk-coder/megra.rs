@@ -17,6 +17,7 @@ pub mod load_audio_file;
 pub mod markov_sequence_generator;
 pub mod midi_input;
 pub mod music_theory;
+pub mod osc_client;
 pub mod parameter;
 pub mod parser;
 pub mod pfa_growth;
@@ -101,6 +102,7 @@ fn main() -> Result<(), anyhow::Error> {
     let program = argv.next().unwrap();
 
     let mut opts = Options::new();
+
     opts.optflag("v", "version", "Print version");
     opts.optflag(
         "r",
