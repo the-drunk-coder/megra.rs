@@ -1,3 +1,4 @@
+use dashmap::DashMap;
 use parking_lot::Mutex;
 use std::env::temp_dir;
 use std::{
@@ -21,6 +22,7 @@ use crate::event::*;
 use crate::event_helpers::*;
 use crate::generator::*;
 use crate::load_audio_file;
+use crate::osc_sender::OscSender;
 use crate::parameter::*;
 use crate::parser::eval;
 use crate::parser::FunctionMap;
@@ -780,5 +782,16 @@ pub fn once<const BUFSIZE: usize, const NCHAN: usize>(
         } else {
             println!("can't prepare this instance !");
         }
+    }
+}
+
+pub fn define_osc_client(
+    name: String,
+    target: String,
+    host: String,
+    clients: &sync::Arc<DashMap<String, OscSender>>,
+) {
+    if let Ok(cl) = OscSender::start(target, host) {
+        clients.insert(name, cl);
     }
 }

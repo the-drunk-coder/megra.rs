@@ -33,7 +33,7 @@ pub enum VariableId {
     LifemodelGlobalResources,
     GlobalTimeModifier, // the global factor applied to all durations, usually 1.0
     GlobalLatency,      // latency between language and dsp
-    DefaultDuration,    // default duration for two subsequent events (200ms usually)
+    DefaultDuration,    // default duration for two subsequent events (200ms usuallyd)
     DefaultCycleDuration, // defualt duration for a cycle (800ms, or four times the default event duration)
     Custom(String),
 }
@@ -70,6 +70,8 @@ pub enum Command {
     ConnectVisualizer,                             // connect visualizer
     StartRecording(Option<String>, bool),          // start recording, prefix, input
     StopRecording,                                 // stop recording ...
+    OscDefineClient(String, String),
+    OscSendMessage(String, String),
 }
 
 #[derive(Clone)]

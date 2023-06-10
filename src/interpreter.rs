@@ -158,6 +158,20 @@ pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
         Command::StepPart(name) => {
             commands::step_part(ruffbox, var_store, sample_set, session, output_mode, name);
         }
+        Command::OscDefineClient(client_name, host) => {
+            commands::define_osc_client(
+                client_name,
+                host,
+                "127.0.0.1:51580".to_string(),
+                &session.lock().osc_client.custom,
+            );
+        }
+        Command::OscSendMessage(client_name, osc_addr) => {
+            if let Some(thing) = &session.lock().osc_client.custom.get(&client_name) {
+                let _ = thing.value().send_message(osc_addr, vec![]);
+            }
+            //println!("send msg {client_name} {osc_addr}");
+        }
     };
 }
 
