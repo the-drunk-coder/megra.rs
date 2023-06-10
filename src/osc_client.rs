@@ -20,11 +20,7 @@ impl OscClient {
 impl Clone for OscClient {
     fn clone(&self) -> OscClient {
         OscClient {
-            vis: if let Some(v) = self.vis.as_ref() {
-                Some(sync::Arc::clone(v))
-            } else {
-                None
-            },
+            vis: self.vis.as_ref().map(|v| sync::Arc::clone(v)),
             custom: sync::Arc::clone(&self.custom),
         }
     }

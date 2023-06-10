@@ -383,7 +383,7 @@ pub fn eval_expression(
                     let mut local_args = HashMap::new();
                     for (i, expr) in tail[..fun_arg_names.len()].iter().enumerate() {
                         if let Some(res) =
-                            eval_expression(&expr, functions, globals, None, sample_set, out_mode)
+                            eval_expression(expr, functions, globals, None, sample_set, out_mode)
                         {
                             local_args.insert(fun_arg_names[i].clone(), res);
                         }
