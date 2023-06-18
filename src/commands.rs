@@ -409,10 +409,6 @@ pub fn load_sample_sets_path<const BUFSIZE: usize, const NCHAN: usize>(
     }
 }
 
-pub fn load_part(var_store: &sync::Arc<VariableStore>, name: String, part: Part) {
-    var_store.insert(VariableId::Custom(name), TypedEntity::Part(part));
-}
-
 /// start a recording of the output
 pub fn start_recording<const BUFSIZE: usize, const NCHAN: usize>(
     session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
@@ -544,7 +540,7 @@ pub fn step_part<const BUFSIZE: usize, const NCHAN: usize>(
     let mut control_events = Vec::new();
 
     if let Some(mut thing) = var_store.get_mut(&VariableId::Custom(part_name)) {
-        if let TypedEntity::Part(Part::Combined(ref mut gens, _)) = thing.value_mut() {
+        if let TypedEntity::GeneratorList(ref mut gens) = thing.value_mut() {
             for gen in gens.iter_mut() {
                 gen.current_transition(var_store);
                 let mut current_events = gen.current_events(var_store);
@@ -553,6 +549,15 @@ pub fn step_part<const BUFSIZE: usize, const NCHAN: usize>(
                         InterpretableEvent::Control(c) => control_events.push(c),
                         InterpretableEvent::Sound(s) => sound_events.push(s),
                     }
+                }
+            }
+        } else if let TypedEntity::Generator(ref mut gen) = thing.value_mut() {
+            gen.current_transition(var_store);
+            let mut current_events = gen.current_events(var_store);
+            for ev in current_events.drain(..) {
+                match ev {
+                    InterpretableEvent::Control(c) => control_events.push(c),
+                    InterpretableEvent::Sound(s) => sound_events.push(s),
                 }
             }
         }
@@ -612,30 +617,6 @@ pub fn export_dot_static(filename: &str, generator: &Generator) {
     let dot_string = pfa::to_dot::<char>(&generator.root_generator.generator);
     println!("export to {filename}");
     fs::write(filename, dot_string).expect("Unable to write file");
-}
-
-pub fn export_dot_part(filename: &str, part_name: String, var_store: &sync::Arc<VariableStore>) {
-    if let Some(thing) = var_store.get(&VariableId::Custom(part_name.clone())) {
-        if let TypedEntity::Part(Part::Combined(gens, _)) = thing.value() {
-            // write generators to dot strings ...
-            for gen in gens.iter() {
-                let mut filename_tagged = filename.to_string();
-                filename_tagged.push('_');
-                filename_tagged.push_str(&part_name);
-                filename_tagged.push('_');
-                for tag in gen.id_tags.iter() {
-                    filename_tagged.push_str(tag);
-                    filename_tagged.push('_');
-                }
-                // remove trailing _
-                filename_tagged = filename_tagged[..filename_tagged.len() - 1].to_string();
-                filename_tagged.push_str(".dot");
-                let dot_string = pfa::to_dot::<char>(&gen.root_generator.generator);
-                println!("export to {filename_tagged}");
-                fs::write(filename_tagged, dot_string).expect("Unable to write file");
-            }
-        }
-    }
 }
 
 pub fn export_dot_running<const BUFSIZE: usize, const NCHAN: usize>(

@@ -240,10 +240,6 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
                     // this is the worst clone ....
                     for c in commands.drain(..) {
                         match c {
-                            Command::LoadPart((name, part)) => {
-                                commands::load_part(&data.var_store, name, part);
-                                println!("a command (load part)");
-                            }
                             Command::FreezeBuffer(freezbuf, inbuf) => {
                                 commands::freeze_buffer(&data.ruffbox, freezbuf, inbuf);
                                 println!("freeze buffer");
@@ -263,9 +259,8 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
                             }
                             Command::Clear => {
                                 let session2 = sync::Arc::clone(&data.session);
-                                let var_store2 = sync::Arc::clone(&data.var_store);
                                 thread::spawn(move || {
-                                    Session::clear_session(&session2, &var_store2);
+                                    Session::clear_session(&session2);
                                     println!("a command (stop session)");
                                 });
                             }
@@ -875,10 +870,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
         }
     }
 
-    pub fn clear_session(
-        session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
-        var_store: &sync::Arc<VariableStore>,
-    ) {
+    pub fn clear_session(session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>) {
         let mut sess = session.lock();
         for (_, (sched, _)) in sess.schedulers.iter_mut() {
             sched.stop();
@@ -905,9 +897,5 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
 
         sess.schedulers = HashMap::new();
         sess.contexts = HashMap::new();
-
-        // remove parts and variables,
-        // leave global parameters intact
-        var_store.retain(|_, v| !matches!(v, TypedEntity::Part(_)));
     }
 }

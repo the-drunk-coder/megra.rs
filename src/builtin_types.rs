@@ -8,11 +8,6 @@ use std::collections::{BTreeSet, HashMap};
 
 use ruffbox_synth::building_blocks::SynthParameterLabel;
 
-#[derive(Clone)]
-pub enum Part {
-    Combined(Vec<Generator>, Vec<PartProxy>),
-}
-
 // might be unified with event parameters at some point but
 // i'm not sure how yet ...
 #[derive(Clone)]
@@ -29,7 +24,6 @@ pub enum TypedEntity {
     Symbol(String),
     Character(char),
     Boolean(bool),
-    Part(Part),
     ConfigParameter(ConfigParameter),
     Generator(Generator),
     GeneratorProcessorOrModifier(GeneratorProcessorOrModifier),
@@ -78,12 +72,10 @@ pub enum Command {
     LoadSample(String, Vec<String>, String, bool), // set (events), keyword, path, downmix_stereo
     LoadSampleSet(String, bool),                   // set path, downmix stereo
     LoadSampleSets(String, bool),                  // top level sets set path
-    LoadPart((String, Part)),                      // set (events), keyword, path
     StepPart(String),                              // step through specified path
     FreezeBuffer(usize, usize),                    // freeze live buffer
     ExportDotStatic((String, Generator)),          // filename, generator
     ExportDotRunning((String, BTreeSet<String>)),  // filename, generator id
-    ExportDotPart((String, String)),               // filename, part name
     Once((Vec<StaticEvent>, Vec<ControlEvent>)),   // execute event(s) once
     ConnectVisualizer,                             // connect visualizer
     StartRecording(Option<String>, bool),          // start recording, prefix, input

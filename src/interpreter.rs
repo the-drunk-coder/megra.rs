@@ -28,9 +28,8 @@ pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
     match c {
         Command::Clear => {
             let session2 = sync::Arc::clone(session);
-            let var_store2 = sync::Arc::clone(var_store);
             thread::spawn(move || {
-                Session::clear_session(&session2, &var_store2);
+                Session::clear_session(&session2);
                 println!("a command (stop session)");
             });
         }
@@ -111,10 +110,6 @@ pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
                 println!("a command (load sample sets)");
             });
         }
-        Command::LoadPart((name, part)) => {
-            commands::load_part(var_store, name, part);
-            println!("a command (load part)");
-        }
         Command::FreezeBuffer(freezbuf, inbuf) => {
             commands::freeze_buffer(ruffbox, freezbuf, inbuf);
             println!("freeze buffer");
@@ -142,9 +137,6 @@ pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
         }
         Command::ExportDotRunning((f, t)) => {
             commands::export_dot_running(&f, &t, session);
-        }
-        Command::ExportDotPart((f, p)) => {
-            commands::export_dot_part(&f, p, var_store);
         }
         Command::Once((mut s, mut c)) => {
             commands::once(

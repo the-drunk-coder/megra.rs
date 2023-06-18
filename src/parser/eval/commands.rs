@@ -575,18 +575,6 @@ pub fn export_dot(
         )),
         Some(EvaluatedExpr::Keyword(k)) => {
             match k.as_str() {
-                "part" => {
-                    if let Some(EvaluatedExpr::Typed(TypedEntity::Symbol(part_name))) =
-                        tail_drain.next()
-                    {
-                        // collect next symbols
-                        Some(EvaluatedExpr::Command(Command::ExportDotPart((
-                            filename, part_name,
-                        ))))
-                    } else {
-                        None
-                    }
-                }
                 "live" => {
                     let mut id_tags = BTreeSet::new();
                     // expect more tags
