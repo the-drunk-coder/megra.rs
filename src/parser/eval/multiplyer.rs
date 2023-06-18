@@ -12,6 +12,8 @@ use crate::parser::{EvaluatedExpr, FunctionMap};
 use crate::{OutputMode, SampleAndWavematrixSet};
 use parking_lot::Mutex;
 
+use super::resolver::resolve_globals;
+
 pub type GenSpreader = fn(&mut [Generator], &OutputMode);
 
 fn spread_gens(gens: &mut [Generator], out_mode: &OutputMode) {
@@ -200,6 +202,7 @@ pub fn eval_xspread(
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     out_mode: OutputMode,
 ) -> Option<EvaluatedExpr> {
+    resolve_globals(&mut tail[1..], globals);
     eval_multiplyer(spread_gens, tail, out_mode, globals)
 }
 
@@ -210,5 +213,6 @@ pub fn eval_xdup(
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     out_mode: OutputMode,
 ) -> Option<EvaluatedExpr> {
+    resolve_globals(&mut tail[1..], globals);
     eval_multiplyer(|_, _| {}, tail, out_mode, globals)
 }
