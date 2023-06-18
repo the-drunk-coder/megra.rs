@@ -3,7 +3,7 @@ use crate::event::*;
 use crate::generator::Generator;
 use crate::markov_sequence_generator::MarkovSequenceGenerator;
 use crate::parameter::*;
-use crate::parser::{BuiltIn, EvaluatedExpr, FunctionMap};
+use crate::parser::{EvaluatedExpr, FunctionMap};
 use crate::{OutputMode, SampleAndWavematrixSet};
 
 use ruffbox_synth::building_blocks::SynthParameterLabel;
@@ -24,23 +24,24 @@ pub fn chop(
     let mut tail_drain = tail.drain(..).skip(1);
 
     // name is the first symbol
-    let name = if let Some(EvaluatedExpr::Symbol(n)) = tail_drain.next() {
+    let name = if let Some(EvaluatedExpr::Typed(TypedEntity::Symbol(n))) = tail_drain.next() {
         n
     } else {
         "".to_string()
     };
 
     // name is the first symbol
-    let slices: usize = if let Some(EvaluatedExpr::Float(n)) = tail_drain.next() {
+    let slices: usize = if let Some(EvaluatedExpr::Typed(TypedEntity::Float(n))) = tail_drain.next()
+    {
         n as usize
     } else {
         8
     };
 
-    let mut dur: DynVal = if let TypedVariable::ConfigParameter(ConfigParameter::Numeric(d)) =
+    let mut dur: DynVal = if let TypedEntity::ConfigParameter(ConfigParameter::Numeric(d)) =
         var_store
             .entry(VariableId::DefaultDuration)
-            .or_insert(TypedVariable::ConfigParameter(ConfigParameter::Numeric(
+            .or_insert(TypedEntity::ConfigParameter(ConfigParameter::Numeric(
                 200.0,
             )))
             .value()
@@ -58,36 +59,36 @@ pub fn chop(
 
     while let Some(c) = tail_drain.next() {
         match c {
-            EvaluatedExpr::BuiltIn(BuiltIn::SoundEvent(e)) => {
+            EvaluatedExpr::Typed(TypedEntity::SoundEvent(e)) => {
                 events.push(e);
             }
             EvaluatedExpr::Keyword(k) => match k.as_str() {
                 "dur" => match tail_drain.next() {
-                    Some(EvaluatedExpr::Float(n)) => {
+                    Some(EvaluatedExpr::Typed(TypedEntity::Float(n))) => {
                         dur = DynVal::with_value(n);
                     }
-                    Some(EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p))) => {
+                    Some(EvaluatedExpr::Typed(TypedEntity::Parameter(p))) => {
                         dur = p;
                     }
                     _ => {}
                 },
                 "rep" => {
-                    if let Some(EvaluatedExpr::Float(n)) = tail_drain.next() {
+                    if let Some(EvaluatedExpr::Typed(TypedEntity::Float(n))) = tail_drain.next() {
                         repetition_chance = n;
                     }
                 }
                 "rnd" => {
-                    if let Some(EvaluatedExpr::Float(n)) = tail_drain.next() {
+                    if let Some(EvaluatedExpr::Typed(TypedEntity::Float(n))) = tail_drain.next() {
                         randomize_chance = n;
                     }
                 }
                 "max-rep" => {
-                    if let Some(EvaluatedExpr::Float(n)) = tail_drain.next() {
+                    if let Some(EvaluatedExpr::Typed(TypedEntity::Float(n))) = tail_drain.next() {
                         max_repetitions = n;
                     }
                 }
                 "keep" => {
-                    if let Some(EvaluatedExpr::Boolean(b)) = tail_drain.next() {
+                    if let Some(EvaluatedExpr::Typed(TypedEntity::Boolean(b))) = tail_drain.next() {
                         keep_root = b;
                     }
                 }
@@ -227,7 +228,7 @@ pub fn chop(
     let mut id_tags = BTreeSet::new();
     id_tags.insert(name.clone());
 
-    Some(EvaluatedExpr::BuiltIn(BuiltIn::Generator(Generator {
+    Some(EvaluatedExpr::Typed(TypedEntity::Generator(Generator {
         id_tags,
         root_generator: MarkovSequenceGenerator {
             name,

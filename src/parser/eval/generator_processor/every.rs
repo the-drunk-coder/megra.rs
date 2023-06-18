@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use crate::builtin_types::*;
 use crate::generator_processor::*;
 use crate::parameter::DynVal;
-use crate::parser::{BuiltIn, EvaluatedExpr};
+use crate::parser::EvaluatedExpr;
 
 pub fn collect_every(tail: &mut Vec<EvaluatedExpr>) -> Box<dyn GeneratorProcessor + Send + Sync> {
     let mut tail_drain = tail.drain(..);
@@ -20,13 +20,13 @@ pub fn collect_every(tail: &mut Vec<EvaluatedExpr>) -> Box<dyn GeneratorProcesso
 
     while let Some(c) = tail_drain.next() {
         match c {
-            EvaluatedExpr::BuiltIn(BuiltIn::GeneratorProcessorOrModifier(
+            EvaluatedExpr::Typed(TypedEntity::GeneratorProcessorOrModifier(
                 GeneratorProcessorOrModifier::GeneratorModifierFunction(gmf),
             )) => {
                 gen_mod_funs.push(gmf);
                 collect_filters = false;
             }
-            EvaluatedExpr::BuiltIn(BuiltIn::GeneratorModifierList(mut ml)) => {
+            EvaluatedExpr::Typed(TypedEntity::GeneratorModifierList(mut ml)) => {
                 for gpom in ml.drain(..) {
                     if let GeneratorProcessorOrModifier::GeneratorModifierFunction(gmf) = gpom {
                         gen_mod_funs.push(gmf);
@@ -34,11 +34,11 @@ pub fn collect_every(tail: &mut Vec<EvaluatedExpr>) -> Box<dyn GeneratorProcesso
                 }
                 collect_filters = false;
             }
-            EvaluatedExpr::BuiltIn(BuiltIn::SoundEvent(e)) => {
+            EvaluatedExpr::Typed(TypedEntity::SoundEvent(e)) => {
                 events.push(e);
                 collect_filters = false;
             }
-            EvaluatedExpr::Symbol(s) => {
+            EvaluatedExpr::Typed(TypedEntity::Symbol(s)) => {
                 if collect_filters {
                     last_filters.push(s)
                 }
@@ -94,8 +94,10 @@ pub fn collect_every(tail: &mut Vec<EvaluatedExpr>) -> Box<dyn GeneratorProcesso
                         }
                         // grab new probability
                         cur_step = match tail_drain.next() {
-                            Some(EvaluatedExpr::Float(f)) => DynVal::with_value(f),
-                            Some(EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p))) => p,
+                            Some(EvaluatedExpr::Typed(TypedEntity::Float(f))) => {
+                                DynVal::with_value(f)
+                            }
+                            Some(EvaluatedExpr::Typed(TypedEntity::Parameter(p))) => p,
                             _ => DynVal::with_value(1.0),
                         };
 
@@ -103,7 +105,9 @@ pub fn collect_every(tail: &mut Vec<EvaluatedExpr>) -> Box<dyn GeneratorProcesso
                     }
                     "id" => {
                         // should be peek, really
-                        if let Some(EvaluatedExpr::Symbol(s)) = tail_drain.next() {
+                        if let Some(EvaluatedExpr::Typed(TypedEntity::Symbol(s))) =
+                            tail_drain.next()
+                        {
                             proc.id = Some(s)
                         }
                     }

@@ -9,7 +9,7 @@ use crate::builtin_types::*;
 use crate::generator_processor::GeneratorProcessor;
 use std::sync;
 
-use crate::parser::{BuiltIn, EvaluatedExpr, FunctionMap};
+use crate::parser::{EvaluatedExpr, FunctionMap};
 use crate::{OutputMode, SampleAndWavematrixSet};
 use parking_lot::Mutex;
 
@@ -82,26 +82,26 @@ fn eval_generator_processor(
 ) -> Option<EvaluatedExpr> {
     let last = tail.pop();
     Some(match last {
-        Some(EvaluatedExpr::BuiltIn(BuiltIn::Generator(mut g))) => {
+        Some(EvaluatedExpr::Typed(TypedEntity::Generator(mut g))) => {
             let gp = collector(tail);
             g.processors.push((gp.get_id(), gp));
-            EvaluatedExpr::BuiltIn(BuiltIn::Generator(g))
+            EvaluatedExpr::Typed(TypedEntity::Generator(g))
         }
-        Some(EvaluatedExpr::Symbol(s)) => {
+        Some(EvaluatedExpr::Typed(TypedEntity::Symbol(s))) => {
             // check if previous is a keyword ...
             // if not, assume it's a part proxy
             let prev = tail.pop();
             match prev {
                 Some(EvaluatedExpr::Keyword(_)) => {
                     tail.push(prev.unwrap()); // push back for further processing
-                    tail.push(EvaluatedExpr::Symbol(s));
-                    EvaluatedExpr::BuiltIn(BuiltIn::GeneratorProcessorOrModifier(
+                    tail.push(EvaluatedExpr::Typed(TypedEntity::Symbol(s)));
+                    EvaluatedExpr::Typed(TypedEntity::GeneratorProcessorOrModifier(
                         GeneratorProcessorOrModifier::GeneratorProcessor(collector(tail)),
                     ))
                 }
                 _ => {
                     tail.push(prev.unwrap()); // push back for further processing
-                    EvaluatedExpr::BuiltIn(BuiltIn::PartProxy(PartProxy::Proxy(
+                    EvaluatedExpr::Typed(TypedEntity::PartProxy(PartProxy::Proxy(
                         s,
                         vec![GeneratorProcessorOrModifier::GeneratorProcessor(collector(
                             tail,
@@ -110,13 +110,13 @@ fn eval_generator_processor(
                 }
             }
         }
-        Some(EvaluatedExpr::BuiltIn(BuiltIn::PartProxy(PartProxy::Proxy(s, mut proxy_mods)))) => {
+        Some(EvaluatedExpr::Typed(TypedEntity::PartProxy(PartProxy::Proxy(s, mut proxy_mods)))) => {
             proxy_mods.push(GeneratorProcessorOrModifier::GeneratorProcessor(collector(
                 tail,
             )));
-            EvaluatedExpr::BuiltIn(BuiltIn::PartProxy(PartProxy::Proxy(s, proxy_mods)))
+            EvaluatedExpr::Typed(TypedEntity::PartProxy(PartProxy::Proxy(s, proxy_mods)))
         }
-        Some(EvaluatedExpr::BuiltIn(BuiltIn::ProxyList(mut l))) => {
+        Some(EvaluatedExpr::Typed(TypedEntity::ProxyList(mut l))) => {
             let gp = collector(tail);
             let mut pdrain = l.drain(..);
             let mut new_list = Vec::new();
@@ -124,16 +124,16 @@ fn eval_generator_processor(
                 proxy_mods.push(GeneratorProcessorOrModifier::GeneratorProcessor(gp.clone()));
                 new_list.push(PartProxy::Proxy(s, proxy_mods));
             }
-            EvaluatedExpr::BuiltIn(BuiltIn::ProxyList(new_list))
+            EvaluatedExpr::Typed(TypedEntity::ProxyList(new_list))
         }
-        Some(EvaluatedExpr::BuiltIn(BuiltIn::GeneratorList(mut gl))) => {
+        Some(EvaluatedExpr::Typed(TypedEntity::GeneratorList(mut gl))) => {
             let gp = collector(tail);
             for gen in gl.iter_mut() {
                 gen.processors.push((gp.get_id(), gp.clone()));
             }
-            EvaluatedExpr::BuiltIn(BuiltIn::GeneratorList(gl))
+            EvaluatedExpr::Typed(TypedEntity::GeneratorList(gl))
         }
-        Some(EvaluatedExpr::BuiltIn(BuiltIn::GeneratorProcessorOrModifier(gp))) => {
+        Some(EvaluatedExpr::Typed(TypedEntity::GeneratorProcessorOrModifier(gp))) => {
             match gp {
                 GeneratorProcessorOrModifier::GeneratorModifierFunction(gmf) => {
                     // if it's a generator modifier function, such as shrink or skip,
@@ -142,37 +142,37 @@ fn eval_generator_processor(
                     // this should be applied by the every processor.
                     // it does lead to some not-so-nice ambiguities but i guess that's
                     // what we have to deal with ... can't be decided really
-                    tail.push(EvaluatedExpr::BuiltIn(
-                        BuiltIn::GeneratorProcessorOrModifier(
+                    tail.push(EvaluatedExpr::Typed(
+                        TypedEntity::GeneratorProcessorOrModifier(
                             GeneratorProcessorOrModifier::GeneratorModifierFunction(gmf),
                         ),
                     ));
-                    EvaluatedExpr::BuiltIn(BuiltIn::GeneratorProcessorOrModifier(
+                    EvaluatedExpr::Typed(TypedEntity::GeneratorProcessorOrModifier(
                         GeneratorProcessorOrModifier::GeneratorProcessor(collector(tail)),
                     ))
                 }
-                _ => EvaluatedExpr::BuiltIn(BuiltIn::GeneratorProcessorOrModifierList(vec![
+                _ => EvaluatedExpr::Typed(TypedEntity::GeneratorProcessorOrModifierList(vec![
                     gp,
                     GeneratorProcessorOrModifier::GeneratorProcessor(collector(tail)),
                 ])),
             }
         }
-        Some(EvaluatedExpr::BuiltIn(BuiltIn::GeneratorProcessorOrModifierList(mut l))) => {
+        Some(EvaluatedExpr::Typed(TypedEntity::GeneratorProcessorOrModifierList(mut l))) => {
             l.push(GeneratorProcessorOrModifier::GeneratorProcessor(collector(
                 tail,
             )));
-            EvaluatedExpr::BuiltIn(BuiltIn::GeneratorProcessorOrModifierList(l))
+            EvaluatedExpr::Typed(TypedEntity::GeneratorProcessorOrModifierList(l))
         }
         // pure modifier lists are handled differently
-        Some(EvaluatedExpr::BuiltIn(BuiltIn::GeneratorModifierList(ml))) => {
-            tail.push(EvaluatedExpr::BuiltIn(BuiltIn::GeneratorModifierList(ml)));
-            EvaluatedExpr::BuiltIn(BuiltIn::GeneratorProcessorOrModifier(
+        Some(EvaluatedExpr::Typed(TypedEntity::GeneratorModifierList(ml))) => {
+            tail.push(EvaluatedExpr::Typed(TypedEntity::GeneratorModifierList(ml)));
+            EvaluatedExpr::Typed(TypedEntity::GeneratorProcessorOrModifier(
                 GeneratorProcessorOrModifier::GeneratorProcessor(collector(tail)),
             ))
         }
         Some(l) => {
             tail.push(l);
-            EvaluatedExpr::BuiltIn(BuiltIn::GeneratorProcessorOrModifier(
+            EvaluatedExpr::Typed(TypedEntity::GeneratorProcessorOrModifier(
                 GeneratorProcessorOrModifier::GeneratorProcessor(collector(tail)),
             ))
         }

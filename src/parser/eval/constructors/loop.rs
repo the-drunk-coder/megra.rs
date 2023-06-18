@@ -11,7 +11,7 @@ use std::collections::{BTreeSet, HashMap};
 use std::sync;
 use vom_rs::pfa::{Pfa, Rule};
 
-use crate::parser::{BuiltIn, EvaluatedExpr, FunctionMap};
+use crate::parser::{EvaluatedExpr, FunctionMap};
 
 use parking_lot::Mutex;
 
@@ -28,7 +28,7 @@ pub fn a_loop(
     tail_drain.next();
 
     // name is the first symbol
-    let name = if let Some(EvaluatedExpr::Symbol(n)) = tail_drain.peek() {
+    let name = if let Some(EvaluatedExpr::Typed(TypedEntity::Symbol(n))) = tail_drain.peek() {
         n.clone()
     } else {
         "".to_string()
@@ -37,10 +37,10 @@ pub fn a_loop(
     tail_drain.next();
 
     // get the default global duration ...
-    let mut dur: DynVal = if let TypedVariable::ConfigParameter(ConfigParameter::Numeric(d)) =
+    let mut dur: DynVal = if let TypedEntity::ConfigParameter(ConfigParameter::Numeric(d)) =
         var_store
             .entry(VariableId::DefaultDuration)
-            .or_insert(TypedVariable::ConfigParameter(ConfigParameter::Numeric(
+            .or_insert(TypedEntity::ConfigParameter(ConfigParameter::Numeric(
                 200.0,
             )))
             .value()
@@ -75,7 +75,7 @@ pub fn a_loop(
     while let Some(c) = tail_drain.next() {
         if collect_template {
             match c {
-                EvaluatedExpr::Symbol(s) => {
+                EvaluatedExpr::Typed(TypedEntity::Symbol(s)) => {
                     template_evs.push(s);
                     continue;
                 }
@@ -87,7 +87,7 @@ pub fn a_loop(
 
         if collect_events {
             match c {
-                EvaluatedExpr::Symbol(ref s) => {
+                EvaluatedExpr::Typed(TypedEntity::Symbol(ref s)) => {
                     if !cur_key.is_empty() && !collected_evs.is_empty() {
                         //println!("found event {}", cur_key);
                         collected_mapping.insert(cur_key.clone(), collected_evs.clone());
@@ -96,11 +96,11 @@ pub fn a_loop(
                     cur_key = s.clone();
                     continue;
                 }
-                EvaluatedExpr::BuiltIn(BuiltIn::SoundEvent(e)) => {
+                EvaluatedExpr::Typed(TypedEntity::SoundEvent(e)) => {
                     collected_evs.push(SourceEvent::Sound(e));
                     continue;
                 }
-                EvaluatedExpr::BuiltIn(BuiltIn::ControlEvent(e)) => {
+                EvaluatedExpr::Typed(TypedEntity::ControlEvent(e)) => {
                     collected_evs.push(SourceEvent::Control(e));
                     continue;
                 }
@@ -117,28 +117,28 @@ pub fn a_loop(
         match c {
             EvaluatedExpr::Keyword(k) => match k.as_str() {
                 "dur" => match tail_drain.next() {
-                    Some(EvaluatedExpr::Float(n)) => {
+                    Some(EvaluatedExpr::Typed(TypedEntity::Float(n))) => {
                         dur = DynVal::with_value(n);
                     }
-                    Some(EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p))) => {
+                    Some(EvaluatedExpr::Typed(TypedEntity::Parameter(p))) => {
                         dur = p;
                     }
                     _ => {}
                 },
                 "rep" => {
-                    if let Some(EvaluatedExpr::Float(n)) = tail_drain.peek() {
+                    if let Some(EvaluatedExpr::Typed(TypedEntity::Float(n))) = tail_drain.peek() {
                         repetition_chance = *n;
                         tail_drain.next();
                     }
                 }
                 "rnd" => {
-                    if let Some(EvaluatedExpr::Float(n)) = tail_drain.peek() {
+                    if let Some(EvaluatedExpr::Typed(TypedEntity::Float(n))) = tail_drain.peek() {
                         randomize_chance = *n;
                         tail_drain.next();
                     }
                 }
                 "max-rep" => {
-                    if let Some(EvaluatedExpr::Float(n)) = tail_drain.peek() {
+                    if let Some(EvaluatedExpr::Typed(TypedEntity::Float(n))) = tail_drain.peek() {
                         max_repetitions = *n;
                         tail_drain.next();
                     }
@@ -152,31 +152,31 @@ pub fn a_loop(
                     continue;
                 }
                 "keep" => {
-                    if let Some(EvaluatedExpr::Boolean(b)) = tail_drain.peek() {
+                    if let Some(EvaluatedExpr::Typed(TypedEntity::Boolean(b))) = tail_drain.peek() {
                         keep_root = *b;
                         tail_drain.next();
                     }
                 }
                 _ => println!("{k}"),
             },
-            EvaluatedExpr::BuiltIn(BuiltIn::SoundEvent(e)) => {
+            EvaluatedExpr::Typed(TypedEntity::SoundEvent(e)) => {
                 ev_vecs.push(vec![SourceEvent::Sound(e)]);
                 // one duration for every event
                 dur_vec.push(dur.clone());
             }
-            EvaluatedExpr::BuiltIn(BuiltIn::ControlEvent(e)) => {
+            EvaluatedExpr::Typed(TypedEntity::ControlEvent(e)) => {
                 ev_vecs.push(vec![SourceEvent::Control(e)]);
                 // one duration for every event
                 dur_vec.push(dur.clone());
             }
-            EvaluatedExpr::Float(f) => {
+            EvaluatedExpr::Typed(TypedEntity::Float(f)) => {
                 if !dur_vec.is_empty() {
                     *dur_vec.last_mut().unwrap() = DynVal::with_value(f);
                 } else {
                     dur_vec.push(DynVal::with_value(f));
                 }
             }
-            EvaluatedExpr::String(d) => {
+            EvaluatedExpr::Typed(TypedEntity::String(d)) => {
                 let mut parsed_cycle = cyc_parser::eval_cyc_from_str(
                     &d,
                     functions,
@@ -342,7 +342,7 @@ pub fn a_loop(
     let mut id_tags = BTreeSet::new();
     id_tags.insert(name.clone());
 
-    Some(EvaluatedExpr::BuiltIn(BuiltIn::Generator(Generator {
+    Some(EvaluatedExpr::Typed(TypedEntity::Generator(Generator {
         id_tags,
         root_generator: MarkovSequenceGenerator {
             name,

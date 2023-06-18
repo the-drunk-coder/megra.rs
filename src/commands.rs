@@ -410,7 +410,7 @@ pub fn load_sample_sets_path<const BUFSIZE: usize, const NCHAN: usize>(
 }
 
 pub fn load_part(var_store: &sync::Arc<VariableStore>, name: String, part: Part) {
-    var_store.insert(VariableId::Custom(name), TypedVariable::Part(part));
+    var_store.insert(VariableId::Custom(name), TypedEntity::Part(part));
 }
 
 /// start a recording of the output
@@ -544,7 +544,7 @@ pub fn step_part<const BUFSIZE: usize, const NCHAN: usize>(
     let mut control_events = Vec::new();
 
     if let Some(mut thing) = var_store.get_mut(&VariableId::Custom(part_name)) {
-        if let TypedVariable::Part(Part::Combined(ref mut gens, _)) = thing.value_mut() {
+        if let TypedEntity::Part(Part::Combined(ref mut gens, _)) = thing.value_mut() {
             for gen in gens.iter_mut() {
                 gen.current_transition(var_store);
                 let mut current_events = gen.current_events(var_store);
@@ -573,28 +573,28 @@ pub fn step_part<const BUFSIZE: usize, const NCHAN: usize>(
 pub fn set_global_tmod(var_store: &sync::Arc<VariableStore>, p: DynVal) {
     var_store.insert(
         VariableId::GlobalTimeModifier,
-        TypedVariable::ConfigParameter(ConfigParameter::Dynamic(p)),
+        TypedEntity::ConfigParameter(ConfigParameter::Dynamic(p)),
     ); // init on first attempt
 }
 
 pub fn set_global_latency(var_store: &sync::Arc<VariableStore>, p: DynVal) {
     var_store.insert(
         VariableId::GlobalLatency,
-        TypedVariable::ConfigParameter(ConfigParameter::Dynamic(p)),
+        TypedEntity::ConfigParameter(ConfigParameter::Dynamic(p)),
     ); // init on first attempt
 }
 
 pub fn set_default_duration(var_store: &sync::Arc<VariableStore>, n: f32) {
     var_store.insert(
         VariableId::DefaultDuration,
-        TypedVariable::ConfigParameter(ConfigParameter::Numeric(n)),
+        TypedEntity::ConfigParameter(ConfigParameter::Numeric(n)),
     ); // init on first attempt
 }
 
 pub fn set_global_lifemodel_resources(var_store: &sync::Arc<VariableStore>, val: f32) {
     var_store.insert(
         VariableId::LifemodelGlobalResources,
-        TypedVariable::ConfigParameter(ConfigParameter::Numeric(val)),
+        TypedEntity::ConfigParameter(ConfigParameter::Numeric(val)),
     ); // init on first attempt
 }
 
@@ -616,7 +616,7 @@ pub fn export_dot_static(filename: &str, generator: &Generator) {
 
 pub fn export_dot_part(filename: &str, part_name: String, var_store: &sync::Arc<VariableStore>) {
     if let Some(thing) = var_store.get(&VariableId::Custom(part_name.clone())) {
-        if let TypedVariable::Part(Part::Combined(gens, _)) = thing.value() {
+        if let TypedEntity::Part(Part::Combined(gens, _)) = thing.value() {
             // write generators to dot strings ...
             for gen in gens.iter() {
                 let mut filename_tagged = filename.to_string();

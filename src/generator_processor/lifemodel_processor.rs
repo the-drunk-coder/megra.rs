@@ -5,7 +5,7 @@ use std::{collections::HashSet, sync::*};
 use ruffbox_synth::building_blocks::SynthParameterLabel;
 
 use crate::{
-    builtin_types::{TypedVariable, VariableId, VariableStore},
+    builtin_types::{TypedEntity, VariableId, VariableStore},
     generator::modifier_functions_raw::*,
     generator::Generator,
     generator_processor::*,
@@ -96,14 +96,13 @@ impl GeneratorProcessor for LifemodelProcessor {
                 // first, draw from local resources if possible
                 self.local_resources -= self.growth_cost;
                 true
-            } else if let TypedVariable::ConfigParameter(ConfigParameter::Numeric(
-                global_resources,
-            )) = var_store
-                .entry(VariableId::LifemodelGlobalResources)
-                .or_insert(TypedVariable::ConfigParameter(ConfigParameter::Numeric(
-                    LifemodelDefaults::GLOBAL_INIT_RESOURCES,
-                ))) // init on first attempt
-                .value_mut()
+            } else if let TypedEntity::ConfigParameter(ConfigParameter::Numeric(global_resources)) =
+                var_store
+                    .entry(VariableId::LifemodelGlobalResources)
+                    .or_insert(TypedEntity::ConfigParameter(ConfigParameter::Numeric(
+                        LifemodelDefaults::GLOBAL_INIT_RESOURCES,
+                    ))) // init on first attempt
+                    .value_mut()
             {
                 // get global resources, init value if it doesn't exist
                 if *global_resources >= self.growth_cost {
@@ -143,15 +142,13 @@ impl GeneratorProcessor for LifemodelProcessor {
                         shrink_raw(&mut gen.root_generator, r2, false);
 
                         if self.global_contrib {
-                            if let TypedVariable::ConfigParameter(ConfigParameter::Numeric(
+                            if let TypedEntity::ConfigParameter(ConfigParameter::Numeric(
                                 global_resources,
                             )) = var_store
                                 .entry(VariableId::LifemodelGlobalResources)
-                                .or_insert(TypedVariable::ConfigParameter(
-                                    ConfigParameter::Numeric(
-                                        LifemodelDefaults::GLOBAL_INIT_RESOURCES,
-                                    ),
-                                )) // init on first attempt
+                                .or_insert(TypedEntity::ConfigParameter(ConfigParameter::Numeric(
+                                    LifemodelDefaults::GLOBAL_INIT_RESOURCES,
+                                ))) // init on first attempt
                                 .value_mut()
                             {
                                 // get global resources, init value if it doesn't exist
@@ -194,11 +191,11 @@ impl GeneratorProcessor for LifemodelProcessor {
                 //println!("lm apop {} {:?}", symbol_to_remove, gen.root_generator.generator.alphabet);
                 shrink_raw(&mut gen.root_generator, symbol_to_remove, false);
                 if self.global_contrib {
-                    if let TypedVariable::ConfigParameter(ConfigParameter::Numeric(
+                    if let TypedEntity::ConfigParameter(ConfigParameter::Numeric(
                         global_resources,
                     )) = var_store
                         .entry(VariableId::LifemodelGlobalResources)
-                        .or_insert(TypedVariable::ConfigParameter(ConfigParameter::Numeric(
+                        .or_insert(TypedEntity::ConfigParameter(ConfigParameter::Numeric(
                             LifemodelDefaults::GLOBAL_INIT_RESOURCES,
                         ))) // init on first attempt
                         .value_mut()

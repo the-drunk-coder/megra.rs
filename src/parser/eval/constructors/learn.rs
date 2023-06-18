@@ -8,7 +8,7 @@ use std::collections::{BTreeSet, HashMap};
 use std::sync;
 use vom_rs::pfa::Pfa;
 
-use crate::parser::{BuiltIn, EvaluatedExpr, FunctionMap};
+use crate::parser::{EvaluatedExpr, FunctionMap};
 use crate::{OutputMode, SampleAndWavematrixSet};
 use parking_lot::Mutex;
 
@@ -25,7 +25,7 @@ pub fn learn(
     tail_drain.next();
 
     // name is the first symbol
-    let name = if let Some(EvaluatedExpr::Symbol(n)) = tail_drain.next() {
+    let name = if let Some(EvaluatedExpr::Typed(TypedEntity::Symbol(n))) = tail_drain.next() {
         n
     } else {
         "".to_string()
@@ -39,10 +39,10 @@ pub fn learn(
     let mut bound = 3;
     let mut epsilon = 0.01;
     let mut pfa_size = 30;
-    let mut dur: DynVal = if let TypedVariable::ConfigParameter(ConfigParameter::Numeric(d)) =
+    let mut dur: DynVal = if let TypedEntity::ConfigParameter(ConfigParameter::Numeric(d)) =
         var_store
             .entry(VariableId::DefaultDuration)
-            .or_insert(TypedVariable::ConfigParameter(ConfigParameter::Numeric(
+            .or_insert(TypedEntity::ConfigParameter(ConfigParameter::Numeric(
                 200.0,
             )))
             .value()
@@ -60,7 +60,7 @@ pub fn learn(
     while let Some(c) = tail_drain.next() {
         if collect_events {
             match c {
-                EvaluatedExpr::Symbol(ref s) => {
+                EvaluatedExpr::Typed(TypedEntity::Symbol(ref s)) => {
                     if !cur_key.is_empty() && !ev_vec.is_empty() {
                         //println!("found event {}", cur_key);
                         event_mapping.insert(cur_key.chars().next().unwrap(), ev_vec.clone());
@@ -69,11 +69,11 @@ pub fn learn(
                     cur_key = s.clone();
                     continue;
                 }
-                EvaluatedExpr::BuiltIn(BuiltIn::SoundEvent(e)) => {
+                EvaluatedExpr::Typed(TypedEntity::SoundEvent(e)) => {
                     ev_vec.push(SourceEvent::Sound(e));
                     continue;
                 }
-                EvaluatedExpr::BuiltIn(BuiltIn::ControlEvent(e)) => {
+                EvaluatedExpr::Typed(TypedEntity::ControlEvent(e)) => {
                     ev_vec.push(SourceEvent::Control(e));
                     continue;
                 }
@@ -91,7 +91,8 @@ pub fn learn(
         match c {
             EvaluatedExpr::Keyword(k) => match k.as_str() {
                 "sample" => {
-                    if let Some(EvaluatedExpr::String(desc)) = tail_drain.next() {
+                    if let Some(EvaluatedExpr::Typed(TypedEntity::String(desc))) = tail_drain.next()
+                    {
                         sample = desc.to_string();
                         sample.retain(|c| !c.is_whitespace());
                     }
@@ -101,36 +102,36 @@ pub fn learn(
                     continue;
                 }
                 "dur" => match tail_drain.next() {
-                    Some(EvaluatedExpr::Float(n)) => {
+                    Some(EvaluatedExpr::Typed(TypedEntity::Float(n))) => {
                         dur = DynVal::with_value(n);
                     }
-                    Some(EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p))) => {
+                    Some(EvaluatedExpr::Typed(TypedEntity::Parameter(p))) => {
                         dur = p;
                     }
                     _ => {}
                 },
                 "bound" => {
-                    if let Some(EvaluatedExpr::Float(n)) = tail_drain.next() {
+                    if let Some(EvaluatedExpr::Typed(TypedEntity::Float(n))) = tail_drain.next() {
                         bound = n as usize;
                     }
                 }
                 "epsilon" => {
-                    if let Some(EvaluatedExpr::Float(n)) = tail_drain.next() {
+                    if let Some(EvaluatedExpr::Typed(TypedEntity::Float(n))) = tail_drain.next() {
                         epsilon = n;
                     }
                 }
                 "size" => {
-                    if let Some(EvaluatedExpr::Float(n)) = tail_drain.next() {
+                    if let Some(EvaluatedExpr::Typed(TypedEntity::Float(n))) = tail_drain.next() {
                         pfa_size = n as usize;
                     }
                 }
                 "autosilence" => {
-                    if let Some(EvaluatedExpr::Boolean(b)) = tail_drain.next() {
+                    if let Some(EvaluatedExpr::Typed(TypedEntity::Boolean(b))) = tail_drain.next() {
                         autosilence = b;
                     }
                 }
                 "keep" => {
-                    if let Some(EvaluatedExpr::Boolean(b)) = tail_drain.next() {
+                    if let Some(EvaluatedExpr::Typed(TypedEntity::Boolean(b))) = tail_drain.next() {
                         keep_root = b;
                     }
                 }
@@ -157,7 +158,7 @@ pub fn learn(
     let mut id_tags = BTreeSet::new();
     id_tags.insert(name.clone());
 
-    Some(EvaluatedExpr::BuiltIn(BuiltIn::Generator(Generator {
+    Some(EvaluatedExpr::Typed(TypedEntity::Generator(Generator {
         id_tags,
         root_generator: MarkovSequenceGenerator {
             name,

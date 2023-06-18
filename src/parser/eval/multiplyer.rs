@@ -8,7 +8,7 @@ use crate::generator::Generator;
 use crate::generator_processor::{GeneratorProcessor, GeneratorWrapperProcessor, PearProcessor};
 use crate::parameter::{DynVal, ParameterValue};
 
-use crate::parser::{BuiltIn, EvaluatedExpr, FunctionMap};
+use crate::parser::{EvaluatedExpr, FunctionMap};
 use crate::{OutputMode, SampleAndWavematrixSet};
 use parking_lot::Mutex;
 
@@ -143,17 +143,17 @@ pub fn eval_multiplyer(
     for c in tail.drain(..).skip(1) {
         // ignore function name
         match c {
-            EvaluatedExpr::BuiltIn(BuiltIn::GeneratorProcessorOrModifierList(gpl)) => {
+            EvaluatedExpr::Typed(TypedEntity::GeneratorProcessorOrModifierList(gpl)) => {
                 gen_proc_list_list.push(gpl);
             }
-            EvaluatedExpr::BuiltIn(BuiltIn::GeneratorModifierList(gml)) => {
+            EvaluatedExpr::Typed(TypedEntity::GeneratorModifierList(gml)) => {
                 gen_proc_list_list.push(gml);
             }
-            EvaluatedExpr::BuiltIn(BuiltIn::GeneratorProcessorOrModifier(gp)) => {
+            EvaluatedExpr::Typed(TypedEntity::GeneratorProcessorOrModifier(gp)) => {
                 let gpl = vec![gp];
                 gen_proc_list_list.push(gpl);
             }
-            EvaluatedExpr::BuiltIn(BuiltIn::Generator(g)) => {
+            EvaluatedExpr::Typed(TypedEntity::Generator(g)) => {
                 gen_proc_list_list.push(vec![GeneratorProcessorOrModifier::GeneratorProcessor(
                     Box::new(GeneratorWrapperProcessor::with_generator(g)),
                 )]);
@@ -166,7 +166,7 @@ pub fn eval_multiplyer(
 
     Some(match last {
         // create a proxy ...
-        Some(EvaluatedExpr::Symbol(s)) => {
+        Some(EvaluatedExpr::Typed(TypedEntity::Symbol(s))) => {
             println!("create proxy {s}");
             let mut proxies = Vec::new();
             for gpl in gen_proc_list_list.drain(..) {
@@ -175,9 +175,9 @@ pub fn eval_multiplyer(
             proxies.push(PartProxy::Proxy(s, Vec::new()));
             // return early, this will be resolved in session handling !
             proxy_spread(&mut proxies, &out_mode);
-            EvaluatedExpr::BuiltIn(BuiltIn::ProxyList(proxies))
+            EvaluatedExpr::Typed(TypedEntity::ProxyList(proxies))
         }
-        Some(EvaluatedExpr::BuiltIn(BuiltIn::PartProxy(PartProxy::Proxy(s, procs)))) => {
+        Some(EvaluatedExpr::Typed(TypedEntity::PartProxy(PartProxy::Proxy(s, procs)))) => {
             println!("create proxy list from proxy {s}");
             let mut proxies = Vec::new();
             for mut gpl in gen_proc_list_list.drain(..) {
@@ -187,9 +187,9 @@ pub fn eval_multiplyer(
             }
             proxies.push(PartProxy::Proxy(s, procs));
             proxy_spread(&mut proxies, &out_mode);
-            EvaluatedExpr::BuiltIn(BuiltIn::ProxyList(proxies))
+            EvaluatedExpr::Typed(TypedEntity::ProxyList(proxies))
         }
-        Some(EvaluatedExpr::BuiltIn(BuiltIn::ProxyList(mut l))) => {
+        Some(EvaluatedExpr::Typed(TypedEntity::ProxyList(mut l))) => {
             println!("propagate proxy list");
             let mut proxies = Vec::new();
             for prox in l.iter() {
@@ -205,9 +205,9 @@ pub fn eval_multiplyer(
             }
             proxies.append(&mut l);
             proxy_spread(&mut proxies, &out_mode);
-            EvaluatedExpr::BuiltIn(BuiltIn::ProxyList(proxies))
+            EvaluatedExpr::Typed(TypedEntity::ProxyList(proxies))
         }
-        Some(EvaluatedExpr::BuiltIn(BuiltIn::Generator(g))) => {
+        Some(EvaluatedExpr::Typed(TypedEntity::Generator(g))) => {
             let mut gens = Vec::new();
             let mut idx: usize = 0;
 
@@ -242,9 +242,9 @@ pub fn eval_multiplyer(
             }
             gens.push(g);
             gen_spread(&mut gens, &out_mode);
-            EvaluatedExpr::BuiltIn(BuiltIn::GeneratorList(gens))
+            EvaluatedExpr::Typed(TypedEntity::GeneratorList(gens))
         }
-        Some(EvaluatedExpr::BuiltIn(BuiltIn::GeneratorList(mut gl))) => {
+        Some(EvaluatedExpr::Typed(TypedEntity::GeneratorList(mut gl))) => {
             let mut gens = Vec::new();
 
             // collect tags ... make sure the multiplying process leaves
@@ -290,7 +290,7 @@ pub fn eval_multiplyer(
                 gens.push(gen);
                 gen_spread(&mut gens, &out_mode);
             }
-            EvaluatedExpr::BuiltIn(BuiltIn::GeneratorList(gens))
+            EvaluatedExpr::Typed(TypedEntity::GeneratorList(gens))
         }
         _ => return None,
     })

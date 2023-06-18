@@ -9,7 +9,7 @@ use std::collections::{BTreeSet, HashMap};
 use std::sync;
 use vom_rs::pfa;
 
-use crate::parser::{BuiltIn, EvaluatedExpr, FunctionMap};
+use crate::parser::{EvaluatedExpr, FunctionMap};
 use crate::{OutputMode, SampleAndWavematrixSet};
 use parking_lot::Mutex;
 
@@ -22,44 +22,45 @@ pub fn rule(
 ) -> Option<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..).skip(1);
 
-    let source_vec: Vec<char> = if let Some(EvaluatedExpr::Symbol(s)) = tail_drain.next() {
-        s.chars().collect()
-    } else {
-        return None;
-    };
+    let source_vec: Vec<char> =
+        if let Some(EvaluatedExpr::Typed(TypedEntity::Symbol(s))) = tail_drain.next() {
+            s.chars().collect()
+        } else {
+            return None;
+        };
 
-    let sym_vec: Vec<char> = if let Some(EvaluatedExpr::Symbol(s)) = tail_drain.next() {
-        s.chars().collect()
-    } else {
-        return None;
-    };
+    let sym_vec: Vec<char> =
+        if let Some(EvaluatedExpr::Typed(TypedEntity::Symbol(s))) = tail_drain.next() {
+            s.chars().collect()
+        } else {
+            return None;
+        };
 
-    let def_dur: f32 = if let TypedVariable::ConfigParameter(ConfigParameter::Numeric(d)) =
-        var_store
-            .entry(VariableId::DefaultDuration)
-            .or_insert(TypedVariable::ConfigParameter(ConfigParameter::Numeric(
-                200.0,
-            )))
-            .value()
+    let def_dur: f32 = if let TypedEntity::ConfigParameter(ConfigParameter::Numeric(d)) = var_store
+        .entry(VariableId::DefaultDuration)
+        .or_insert(TypedEntity::ConfigParameter(ConfigParameter::Numeric(
+            200.0,
+        )))
+        .value()
     {
         *d
     } else {
         unreachable!()
     };
 
-    let probability = if let Some(EvaluatedExpr::Float(p)) = tail_drain.next() {
+    let probability = if let Some(EvaluatedExpr::Typed(TypedEntity::Float(p))) = tail_drain.next() {
         p / 100.0
     } else {
         1.0
     };
 
-    let duration = if let Some(EvaluatedExpr::Float(f)) = tail_drain.next() {
+    let duration = if let Some(EvaluatedExpr::Typed(TypedEntity::Float(f))) = tail_drain.next() {
         f as u64
     } else {
         def_dur as u64
     };
 
-    Some(EvaluatedExpr::BuiltIn(BuiltIn::Rule(Rule {
+    Some(EvaluatedExpr::Typed(TypedEntity::Rule(Rule {
         source: source_vec,
         symbol: sym_vec[0],
         probability,
@@ -80,7 +81,7 @@ pub fn infer(
     tail_drain.next();
 
     // name is the first symbol
-    let name = if let Some(EvaluatedExpr::Symbol(n)) = tail_drain.next() {
+    let name = if let Some(EvaluatedExpr::Typed(TypedEntity::Symbol(n))) = tail_drain.next() {
         n
     } else {
         "".to_string()
@@ -93,10 +94,10 @@ pub fn infer(
     let mut collect_events = false;
     let mut collect_rules = false;
 
-    let mut dur: DynVal = if let TypedVariable::ConfigParameter(ConfigParameter::Numeric(d)) =
+    let mut dur: DynVal = if let TypedEntity::ConfigParameter(ConfigParameter::Numeric(d)) =
         var_store
             .entry(VariableId::DefaultDuration)
-            .or_insert(TypedVariable::ConfigParameter(ConfigParameter::Numeric(
+            .or_insert(TypedEntity::ConfigParameter(ConfigParameter::Numeric(
                 200.0,
             )))
             .value()
@@ -113,7 +114,7 @@ pub fn infer(
     while let Some(c) = tail_drain.next() {
         if collect_events {
             match c {
-                EvaluatedExpr::Symbol(ref s) => {
+                EvaluatedExpr::Typed(TypedEntity::Symbol(ref s)) => {
                     if !cur_key.is_empty() && !ev_vec.is_empty() {
                         //println!("found event {}", cur_key);
                         event_mapping.insert(cur_key.chars().next().unwrap(), ev_vec.clone());
@@ -122,11 +123,11 @@ pub fn infer(
                     cur_key = s.clone();
                     continue;
                 }
-                EvaluatedExpr::BuiltIn(BuiltIn::SoundEvent(e)) => {
+                EvaluatedExpr::Typed(TypedEntity::SoundEvent(e)) => {
                     ev_vec.push(SourceEvent::Sound(e));
                     continue;
                 }
-                EvaluatedExpr::BuiltIn(BuiltIn::ControlEvent(e)) => {
+                EvaluatedExpr::Typed(TypedEntity::ControlEvent(e)) => {
                     ev_vec.push(SourceEvent::Control(e));
                     continue;
                 }
@@ -141,7 +142,7 @@ pub fn infer(
         }
 
         if collect_rules {
-            if let EvaluatedExpr::BuiltIn(BuiltIn::Rule(s)) = c {
+            if let EvaluatedExpr::Typed(TypedEntity::Rule(s)) = c {
                 let mut dur_ev = Event::with_name("transition".to_string());
                 dur_ev.params.insert(
                     SynthParameterLabel::Duration,
@@ -166,16 +167,16 @@ pub fn infer(
                     continue;
                 }
                 "dur" => match tail_drain.next() {
-                    Some(EvaluatedExpr::Float(n)) => {
+                    Some(EvaluatedExpr::Typed(TypedEntity::Float(n))) => {
                         dur = DynVal::with_value(n);
                     }
-                    Some(EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p))) => {
+                    Some(EvaluatedExpr::Typed(TypedEntity::Parameter(p))) => {
                         dur = p;
                     }
                     _ => {}
                 },
                 "keep" => {
-                    if let Some(EvaluatedExpr::Boolean(b)) = tail_drain.next() {
+                    if let Some(EvaluatedExpr::Typed(TypedEntity::Boolean(b))) = tail_drain.next() {
                         keep_root = b;
                     }
                 }
@@ -195,7 +196,7 @@ pub fn infer(
     let mut id_tags = BTreeSet::new();
     id_tags.insert(name.clone());
 
-    Some(EvaluatedExpr::BuiltIn(BuiltIn::Generator(Generator {
+    Some(EvaluatedExpr::Typed(TypedEntity::Generator(Generator {
         id_tags,
         root_generator: MarkovSequenceGenerator {
             name,

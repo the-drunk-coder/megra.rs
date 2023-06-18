@@ -9,7 +9,7 @@ use std::collections::{BTreeSet, HashMap};
 use std::sync;
 use vom_rs::pfa::{Pfa, Rule};
 
-use crate::parser::{BuiltIn, EvaluatedExpr, FunctionMap};
+use crate::parser::{EvaluatedExpr, FunctionMap};
 use crate::{OutputMode, SampleAndWavematrixSet};
 use parking_lot::Mutex;
 
@@ -26,7 +26,7 @@ pub fn flower(
     tail_drain.next();
 
     // name is the first symbol
-    let name = if let Some(EvaluatedExpr::Symbol(n)) = tail_drain.next() {
+    let name = if let Some(EvaluatedExpr::Typed(TypedEntity::Symbol(n))) = tail_drain.next() {
         n
     } else {
         "".to_string()
@@ -46,10 +46,10 @@ pub fn flower(
     let mut last_char: char = 'a'; // label chars
     let mut petal_labels = Vec::new();
 
-    let mut dur: DynVal = if let TypedVariable::ConfigParameter(ConfigParameter::Numeric(d)) =
+    let mut dur: DynVal = if let TypedEntity::ConfigParameter(ConfigParameter::Numeric(d)) =
         var_store
             .entry(VariableId::DefaultDuration)
-            .or_insert(TypedVariable::ConfigParameter(ConfigParameter::Numeric(
+            .or_insert(TypedEntity::ConfigParameter(ConfigParameter::Numeric(
                 200.0,
             )))
             .value()
@@ -67,7 +67,7 @@ pub fn flower(
     while let Some(c) = tail_drain.next() {
         if collect_labeled {
             match c {
-                EvaluatedExpr::Symbol(ref s) => {
+                EvaluatedExpr::Typed(TypedEntity::Symbol(ref s)) => {
                     if !cur_key.is_empty() && !collected_evs.is_empty() {
                         collected_mapping
                             .insert(cur_key.chars().next().unwrap(), collected_evs.clone());
@@ -76,11 +76,11 @@ pub fn flower(
                     cur_key = s.clone();
                     continue;
                 }
-                EvaluatedExpr::BuiltIn(BuiltIn::SoundEvent(e)) => {
+                EvaluatedExpr::Typed(TypedEntity::SoundEvent(e)) => {
                     collected_evs.push(SourceEvent::Sound(e));
                     continue;
                 }
-                EvaluatedExpr::BuiltIn(BuiltIn::ControlEvent(e)) => {
+                EvaluatedExpr::Typed(TypedEntity::ControlEvent(e)) => {
                     collected_evs.push(SourceEvent::Control(e));
                     continue;
                 }
@@ -101,16 +101,16 @@ pub fn flower(
             let mut final_vec = Vec::new();
 
             match c {
-                EvaluatedExpr::Symbol(ref s) => {
+                EvaluatedExpr::Typed(TypedEntity::Symbol(ref s)) => {
                     let label = s.chars().next().unwrap();
                     if collected_mapping.contains_key(&label) {
                         final_vec.append(&mut collected_mapping.get(&label).unwrap().clone());
                     }
                 }
-                EvaluatedExpr::BuiltIn(BuiltIn::SoundEvent(e)) => {
+                EvaluatedExpr::Typed(TypedEntity::SoundEvent(e)) => {
                     final_vec.push(SourceEvent::Sound(e));
                 }
-                EvaluatedExpr::BuiltIn(BuiltIn::ControlEvent(e)) => {
+                EvaluatedExpr::Typed(TypedEntity::ControlEvent(e)) => {
                     final_vec.push(SourceEvent::Control(e));
                 }
                 _ => {}
@@ -123,10 +123,10 @@ pub fn flower(
         if let EvaluatedExpr::Keyword(k) = c {
             match k.as_str() {
                 "dur" => match tail_drain.next() {
-                    Some(EvaluatedExpr::Float(n)) => {
+                    Some(EvaluatedExpr::Typed(TypedEntity::Float(n))) => {
                         dur = DynVal::with_value(n);
                     }
-                    Some(EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p))) => {
+                    Some(EvaluatedExpr::Typed(TypedEntity::Parameter(p))) => {
                         dur = p;
                     }
                     _ => {}
@@ -136,7 +136,7 @@ pub fn flower(
                     continue;
                 }
                 "layers" => {
-                    if let Some(EvaluatedExpr::Float(n)) = tail_drain.next() {
+                    if let Some(EvaluatedExpr::Typed(TypedEntity::Float(n))) = tail_drain.next() {
                         num_layers = n as usize;
                     }
                 }
@@ -145,7 +145,7 @@ pub fn flower(
                         let mut final_vec = Vec::new();
 
                         match c {
-                            EvaluatedExpr::Symbol(ref s) => {
+                            EvaluatedExpr::Typed(TypedEntity::Symbol(ref s)) => {
                                 let label = s.chars().next().unwrap();
                                 if collected_mapping.contains_key(&label) {
                                     final_vec.append(
@@ -153,10 +153,10 @@ pub fn flower(
                                     );
                                 }
                             }
-                            EvaluatedExpr::BuiltIn(BuiltIn::SoundEvent(e)) => {
+                            EvaluatedExpr::Typed(TypedEntity::SoundEvent(e)) => {
                                 final_vec.push(SourceEvent::Sound(e));
                             }
-                            EvaluatedExpr::BuiltIn(BuiltIn::ControlEvent(e)) => {
+                            EvaluatedExpr::Typed(TypedEntity::ControlEvent(e)) => {
                                 final_vec.push(SourceEvent::Control(e));
                             }
                             _ => {}
@@ -171,22 +171,25 @@ pub fn flower(
                     continue;
                 }
                 "rep" => {
-                    if let EvaluatedExpr::Float(n) = tail_drain.next().unwrap() {
+                    if let EvaluatedExpr::Typed(TypedEntity::Float(n)) = tail_drain.next().unwrap()
+                    {
                         repetition_chance = n;
                     }
                 }
                 "rnd" => {
-                    if let EvaluatedExpr::Float(n) = tail_drain.next().unwrap() {
+                    if let EvaluatedExpr::Typed(TypedEntity::Float(n)) = tail_drain.next().unwrap()
+                    {
                         randomize_chance = n;
                     }
                 }
                 "max-rep" => {
-                    if let EvaluatedExpr::Float(n) = tail_drain.next().unwrap() {
+                    if let EvaluatedExpr::Typed(TypedEntity::Float(n)) = tail_drain.next().unwrap()
+                    {
                         max_repetitions = n;
                     }
                 }
                 "keep" => {
-                    if let Some(EvaluatedExpr::Boolean(b)) = tail_drain.next() {
+                    if let Some(EvaluatedExpr::Typed(TypedEntity::Boolean(b))) = tail_drain.next() {
                         keep_root = b;
                     }
                 }
@@ -350,7 +353,7 @@ pub fn flower(
     let mut id_tags = BTreeSet::new();
     id_tags.insert(name.clone());
 
-    Some(EvaluatedExpr::BuiltIn(BuiltIn::Generator(Generator {
+    Some(EvaluatedExpr::Typed(TypedEntity::Generator(Generator {
         id_tags,
         root_generator: MarkovSequenceGenerator {
             name,

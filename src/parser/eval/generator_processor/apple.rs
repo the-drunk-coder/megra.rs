@@ -1,7 +1,7 @@
 use crate::builtin_types::*;
 use crate::generator_processor::*;
 use crate::parameter::DynVal;
-use crate::parser::{BuiltIn, EvaluatedExpr};
+use crate::parser::EvaluatedExpr;
 
 pub fn collect_apple(tail: &mut Vec<EvaluatedExpr>) -> Box<dyn GeneratorProcessor + Send + Sync> {
     let mut tail_drain = tail.drain(..);
@@ -14,12 +14,12 @@ pub fn collect_apple(tail: &mut Vec<EvaluatedExpr>) -> Box<dyn GeneratorProcesso
 
     while let Some(c) = tail_drain.next() {
         match c {
-            EvaluatedExpr::BuiltIn(BuiltIn::GeneratorProcessorOrModifier(
+            EvaluatedExpr::Typed(TypedEntity::GeneratorProcessorOrModifier(
                 GeneratorProcessorOrModifier::GeneratorModifierFunction(gmf),
             )) => {
                 gen_mod_funs.push(gmf);
             }
-            EvaluatedExpr::BuiltIn(BuiltIn::GeneratorModifierList(mut ml)) => {
+            EvaluatedExpr::Typed(TypedEntity::GeneratorModifierList(mut ml)) => {
                 for gpom in ml.drain(..) {
                     if let GeneratorProcessorOrModifier::GeneratorModifierFunction(gmf) = gpom {
                         gen_mod_funs.push(gmf);
@@ -37,8 +37,8 @@ pub fn collect_apple(tail: &mut Vec<EvaluatedExpr>) -> Box<dyn GeneratorProcesso
 
                     // grab new probability
                     cur_prob = match tail_drain.next() {
-                        Some(EvaluatedExpr::Float(f)) => DynVal::with_value(f),
-                        Some(EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p))) => p,
+                        Some(EvaluatedExpr::Typed(TypedEntity::Float(f))) => DynVal::with_value(f),
+                        Some(EvaluatedExpr::Typed(TypedEntity::Parameter(p))) => p,
                         _ => DynVal::with_value(1.0),
                     };
                 }

@@ -228,7 +228,7 @@ pub fn eval_cyc_from_str(
                             //println!("{}", name);
                             match parse_expr(name.trim()) {
                                 Ok((_, expr)) => {
-                                    if let Some(EvaluatedExpr::BuiltIn(BuiltIn::SoundEvent(e))) =
+                                    if let Some(EvaluatedExpr::Typed(TypedEntity::SoundEvent(e))) =
                                         eval_expression(
                                             &expr, functions, globals, None, sample_set, out_mode,
                                         )
@@ -296,7 +296,7 @@ pub fn eval_cyc_from_str(
                         ev_name = format!("({ev_name})");
                         match parse_expr(ev_name.trim()) {
                             Ok((_, expr)) => {
-                                if let Some(EvaluatedExpr::BuiltIn(BuiltIn::SoundEvent(e))) =
+                                if let Some(EvaluatedExpr::Typed(TypedEntity::SoundEvent(e))) =
                                     eval_expression(
                                         &expr, functions, globals, None, sample_set, out_mode,
                                     )

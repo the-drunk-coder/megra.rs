@@ -4,7 +4,7 @@ use std::sync;
 use crate::builtin_types::*;
 use crate::parameter::*;
 
-use crate::parser::{BuiltIn, EvaluatedExpr, FunctionMap};
+use crate::parser::{EvaluatedExpr, FunctionMap};
 use crate::{OutputMode, SampleAndWavematrixSet};
 
 pub fn vec(
@@ -20,17 +20,17 @@ pub fn vec(
 
     for p in tail_drain {
         match p {
-            EvaluatedExpr::Float(f) => {
+            EvaluatedExpr::Typed(TypedEntity::Float(f)) => {
                 pvec.push(DynVal::with_value(f));
             }
-            EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p)) => {
+            EvaluatedExpr::Typed(TypedEntity::Parameter(p)) => {
                 pvec.push(p);
             }
             _ => {}
         }
     }
 
-    Some(EvaluatedExpr::BuiltIn(BuiltIn::Vector(
+    Some(EvaluatedExpr::Typed(TypedEntity::ParameterValue(
         ParameterValue::Vector(pvec),
     )))
 }
@@ -58,10 +58,10 @@ pub fn mat(
                     }
                 }
             }
-            EvaluatedExpr::Float(f) => {
+            EvaluatedExpr::Typed(TypedEntity::Float(f)) => {
                 row.push(DynVal::with_value(f));
             }
-            EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p)) => {
+            EvaluatedExpr::Typed(TypedEntity::Parameter(p)) => {
                 row.push(p);
             }
             _ => {}
@@ -72,7 +72,7 @@ pub fn mat(
         pmat.push(row.clone());
     }
 
-    Some(EvaluatedExpr::BuiltIn(BuiltIn::Matrix(
+    Some(EvaluatedExpr::Typed(TypedEntity::ParameterValue(
         ParameterValue::Matrix(pmat),
     )))
 }

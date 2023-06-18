@@ -8,7 +8,7 @@ use std::collections::{BTreeSet, HashMap};
 use std::sync;
 use vom_rs::pfa::{Pfa, Rule};
 
-use crate::parser::{BuiltIn, EvaluatedExpr, FunctionMap};
+use crate::parser::{EvaluatedExpr, FunctionMap};
 use crate::{OutputMode, SampleAndWavematrixSet};
 use parking_lot::Mutex;
 
@@ -25,7 +25,7 @@ pub fn fully(
     tail_drain.next();
 
     // name is the first symbol
-    let name = if let Some(EvaluatedExpr::Symbol(n)) = tail_drain.next() {
+    let name = if let Some(EvaluatedExpr::Typed(TypedEntity::Symbol(n))) = tail_drain.next() {
         n
     } else {
         "".to_string()
@@ -43,10 +43,10 @@ pub fn fully(
     let mut last_char: char = 'a'; // label chars
     let mut labels = Vec::new();
 
-    let mut dur: DynVal = if let TypedVariable::ConfigParameter(ConfigParameter::Numeric(d)) =
+    let mut dur: DynVal = if let TypedEntity::ConfigParameter(ConfigParameter::Numeric(d)) =
         var_store
             .entry(VariableId::DefaultDuration)
-            .or_insert(TypedVariable::ConfigParameter(ConfigParameter::Numeric(
+            .or_insert(TypedEntity::ConfigParameter(ConfigParameter::Numeric(
                 200.0,
             )))
             .value()
@@ -59,7 +59,7 @@ pub fn fully(
     while let Some(c) = tail_drain.next() {
         /*if collect_labeled {
             match c {
-                EvaluatedExpr::Symbol(ref s) => {
+                EvaluatedExpr::Typed(TypedEntity::Symbol(ref s)) => {
                     if !cur_key.is_empty() && !collected_evs.is_empty() {
                         //println!("found event {}", cur_key);
                         collected_mapping
@@ -69,11 +69,11 @@ pub fn fully(
                     cur_key = s.clone();
                     continue;
                 }
-                EvaluatedExpr::BuiltIn(BuiltIn::SoundEvent(e)) => {
+                EvaluatedExpr::Typed(TypedEntity::SoundEvent(e)) => {
                     collected_evs.push(SourceEvent::Sound(e));
                     continue;
                 }
-                EvaluatedExpr::BuiltIn(BuiltIn::ControlEvent(e)) => {
+                EvaluatedExpr::Typed(TypedEntity::ControlEvent(e)) => {
                     collected_evs.push(SourceEvent::Control(e));
                     continue;
                 }
@@ -89,7 +89,7 @@ pub fn fully(
         }*/
 
         match c {
-            /*EvaluatedExpr::Symbol(ref s) => {
+            /*EvaluatedExpr::Typed(TypedEntity::Symbol(ref s)) => {
                 let mut final_vec = Vec::new();
                 let label = s.chars().next().unwrap();
                 if collected_mapping.contains_key(&label) {
@@ -97,14 +97,14 @@ pub fn fully(
                 }
                 final_mapping.insert(label, final_vec);
             }*/
-            EvaluatedExpr::BuiltIn(BuiltIn::SoundEvent(e)) => {
+            EvaluatedExpr::Typed(TypedEntity::SoundEvent(e)) => {
                 let next_char: char = std::char::from_u32(last_char as u32 + 1).unwrap();
                 last_char = next_char;
                 labels.push(next_char);
                 let final_vec = vec![SourceEvent::Sound(e)];
                 final_mapping.insert(next_char, final_vec);
             }
-            EvaluatedExpr::BuiltIn(BuiltIn::ControlEvent(e)) => {
+            EvaluatedExpr::Typed(TypedEntity::ControlEvent(e)) => {
                 let next_char: char = std::char::from_u32(last_char as u32 + 1).unwrap();
                 last_char = next_char;
                 labels.push(next_char);
@@ -113,10 +113,10 @@ pub fn fully(
             }
             EvaluatedExpr::Keyword(k) => match k.as_str() {
                 "dur" => match tail_drain.next() {
-                    Some(EvaluatedExpr::Float(n)) => {
+                    Some(EvaluatedExpr::Typed(TypedEntity::Float(n))) => {
                         dur = DynVal::with_value(n);
                     }
-                    Some(EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p))) => {
+                    Some(EvaluatedExpr::Typed(TypedEntity::Parameter(p))) => {
                         dur = p;
                     }
                     _ => {}
@@ -126,7 +126,7 @@ pub fn fully(
                 //    continue;
                 //}
                 "keep" => {
-                    if let Some(EvaluatedExpr::Boolean(b)) = tail_drain.next() {
+                    if let Some(EvaluatedExpr::Typed(TypedEntity::Boolean(b))) = tail_drain.next() {
                         keep_root = b;
                     }
                 }
@@ -167,7 +167,7 @@ pub fn fully(
     let mut id_tags = BTreeSet::new();
     id_tags.insert(name.clone());
 
-    Some(EvaluatedExpr::BuiltIn(BuiltIn::Generator(Generator {
+    Some(EvaluatedExpr::Typed(TypedEntity::Generator(Generator {
         id_tags,
         root_generator: MarkovSequenceGenerator {
             name,

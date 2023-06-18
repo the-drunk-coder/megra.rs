@@ -9,7 +9,7 @@ use std::collections::{BTreeSet, HashMap};
 use std::sync;
 use vom_rs::pfa::{Pfa, Rule};
 
-use crate::parser::{BuiltIn, EvaluatedExpr, FunctionMap};
+use crate::parser::{EvaluatedExpr, FunctionMap};
 use crate::{OutputMode, SampleAndWavematrixSet};
 use parking_lot::Mutex;
 
@@ -26,7 +26,7 @@ pub fn stages(
     tail_drain.next();
 
     // name is the first symbol
-    let name = if let Some(EvaluatedExpr::Symbol(n)) = tail_drain.next() {
+    let name = if let Some(EvaluatedExpr::Typed(TypedEntity::Symbol(n))) = tail_drain.next() {
         n
     } else {
         "".to_string()
@@ -34,10 +34,10 @@ pub fn stages(
 
     let mut collected_evs = Vec::new();
 
-    let mut dur: DynVal = if let TypedVariable::ConfigParameter(ConfigParameter::Numeric(d)) =
+    let mut dur: DynVal = if let TypedEntity::ConfigParameter(ConfigParameter::Numeric(d)) =
         var_store
             .entry(VariableId::DefaultDuration)
-            .or_insert(TypedVariable::ConfigParameter(ConfigParameter::Numeric(
+            .or_insert(TypedEntity::ConfigParameter(ConfigParameter::Numeric(
                 200.0,
             )))
             .value()
@@ -57,46 +57,47 @@ pub fn stages(
         match c {
             EvaluatedExpr::Keyword(k) => match k.as_str() {
                 "cyc" => {
-                    if let Some(EvaluatedExpr::Boolean(b)) = tail_drain.next() {
+                    if let Some(EvaluatedExpr::Typed(TypedEntity::Boolean(b))) = tail_drain.next() {
                         cyclical = b;
                     }
                 }
                 "dur" => match tail_drain.next() {
-                    Some(EvaluatedExpr::Float(n)) => {
+                    Some(EvaluatedExpr::Typed(TypedEntity::Float(n))) => {
                         dur = DynVal::with_value(n);
                     }
-                    Some(EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p))) => {
+                    Some(EvaluatedExpr::Typed(TypedEntity::Parameter(p))) => {
                         dur = p;
                     }
                     _ => {}
                 },
                 "pnext" => {
-                    if let Some(EvaluatedExpr::Float(n)) = tail_drain.next() {
+                    if let Some(EvaluatedExpr::Typed(TypedEntity::Float(n))) = tail_drain.next() {
                         pnext = n / 100.0;
                     }
                 }
                 "pprev" => {
-                    if let Some(EvaluatedExpr::Float(n)) = tail_drain.next() {
+                    if let Some(EvaluatedExpr::Typed(TypedEntity::Float(n))) = tail_drain.next() {
                         pprev = n / 100.0;
                     }
                 }
                 "rnd" => {
-                    if let EvaluatedExpr::Float(n) = tail_drain.next().unwrap() {
+                    if let EvaluatedExpr::Typed(TypedEntity::Float(n)) = tail_drain.next().unwrap()
+                    {
                         randomize_chance = n;
                     }
                 }
                 "keep" => {
-                    if let Some(EvaluatedExpr::Boolean(b)) = tail_drain.next() {
+                    if let Some(EvaluatedExpr::Typed(TypedEntity::Boolean(b))) = tail_drain.next() {
                         keep_root = b;
                     }
                 }
                 _ => println!("{k}"),
             },
-            EvaluatedExpr::BuiltIn(BuiltIn::SoundEvent(e)) => {
+            EvaluatedExpr::Typed(TypedEntity::SoundEvent(e)) => {
                 collected_evs.push(SourceEvent::Sound(e));
                 continue;
             }
-            EvaluatedExpr::BuiltIn(BuiltIn::ControlEvent(e)) => {
+            EvaluatedExpr::Typed(TypedEntity::ControlEvent(e)) => {
                 collected_evs.push(SourceEvent::Control(e));
                 continue;
             }
@@ -261,7 +262,7 @@ pub fn stages(
     let mut id_tags = BTreeSet::new();
     id_tags.insert(name.clone());
 
-    Some(EvaluatedExpr::BuiltIn(BuiltIn::Generator(Generator {
+    Some(EvaluatedExpr::Typed(TypedEntity::Generator(Generator {
         id_tags,
         root_generator: MarkovSequenceGenerator {
             name,

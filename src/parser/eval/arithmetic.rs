@@ -1,3 +1,4 @@
+use crate::builtin_types::TypedEntity;
 use crate::parser::{EvaluatedExpr, FunctionMap};
 use crate::{OutputMode, SampleAndWavematrixSet, VariableStore};
 
@@ -22,11 +23,11 @@ pub fn add(
 
     let mut result = 0.0;
     for n in tail_drain {
-        if let EvaluatedExpr::Float(f) = n {
+        if let EvaluatedExpr::Typed(TypedEntity::Float(f)) = n {
             result += f;
         }
     }
-    Some(EvaluatedExpr::Float(result))
+    Some(EvaluatedExpr::Typed(TypedEntity::Float(result)))
 }
 
 pub fn sub(
@@ -39,19 +40,19 @@ pub fn sub(
     let mut tail_drain = tail.drain(..);
     tail_drain.next(); // don't need the function name
 
-    let mut result = if let Some(EvaluatedExpr::Float(f)) = tail_drain.next() {
+    let mut result = if let Some(EvaluatedExpr::Typed(TypedEntity::Float(f))) = tail_drain.next() {
         f
     } else {
         0.0
     };
 
     for n in tail_drain {
-        if let EvaluatedExpr::Float(f) = n {
+        if let EvaluatedExpr::Typed(TypedEntity::Float(f)) = n {
             result -= f;
         }
     }
 
-    Some(EvaluatedExpr::Float(result))
+    Some(EvaluatedExpr::Typed(TypedEntity::Float(result)))
 }
 
 pub fn mul(
@@ -64,19 +65,19 @@ pub fn mul(
     let mut tail_drain = tail.drain(..);
     tail_drain.next(); // don't need the function name
 
-    let mut result = if let Some(EvaluatedExpr::Float(f)) = tail_drain.next() {
+    let mut result = if let Some(EvaluatedExpr::Typed(TypedEntity::Float(f))) = tail_drain.next() {
         f
     } else {
         0.0
     };
 
     for n in tail_drain {
-        if let EvaluatedExpr::Float(f) = n {
+        if let EvaluatedExpr::Typed(TypedEntity::Float(f)) = n {
             result *= f;
         }
     }
 
-    Some(EvaluatedExpr::Float(result))
+    Some(EvaluatedExpr::Typed(TypedEntity::Float(result)))
 }
 
 pub fn div(
@@ -89,19 +90,19 @@ pub fn div(
     let mut tail_drain = tail.drain(..);
     tail_drain.next(); // don't need the function name
 
-    let mut result = if let Some(EvaluatedExpr::Float(f)) = tail_drain.next() {
+    let mut result = if let Some(EvaluatedExpr::Typed(TypedEntity::Float(f))) = tail_drain.next() {
         f
     } else {
         0.0
     };
 
     for n in tail_drain {
-        if let EvaluatedExpr::Float(f) = n {
+        if let EvaluatedExpr::Typed(TypedEntity::Float(f)) = n {
             result /= f;
         }
     }
 
-    Some(EvaluatedExpr::Float(result))
+    Some(EvaluatedExpr::Typed(TypedEntity::Float(result)))
 }
 
 pub fn modulo(
@@ -114,9 +115,9 @@ pub fn modulo(
     let mut tail_drain = tail.drain(..);
     tail_drain.next(); // don't need the function name
 
-    if let Some(EvaluatedExpr::Float(a)) = tail_drain.next() {
-        if let Some(EvaluatedExpr::Float(b)) = tail_drain.next() {
-            Some(EvaluatedExpr::Float(a % b))
+    if let Some(EvaluatedExpr::Typed(TypedEntity::Float(a))) = tail_drain.next() {
+        if let Some(EvaluatedExpr::Typed(TypedEntity::Float(b))) = tail_drain.next() {
+            Some(EvaluatedExpr::Typed(TypedEntity::Float(a % b)))
         } else {
             None
         }
@@ -135,9 +136,9 @@ pub fn pow(
     let mut tail_drain = tail.drain(..);
     tail_drain.next(); // don't need the function name
 
-    if let Some(EvaluatedExpr::Float(a)) = tail_drain.next() {
-        if let Some(EvaluatedExpr::Float(b)) = tail_drain.next() {
-            Some(EvaluatedExpr::Float(a.powf(b)))
+    if let Some(EvaluatedExpr::Typed(TypedEntity::Float(a))) = tail_drain.next() {
+        if let Some(EvaluatedExpr::Typed(TypedEntity::Float(b))) = tail_drain.next() {
+            Some(EvaluatedExpr::Typed(TypedEntity::Float(a.powf(b))))
         } else {
             None
         }

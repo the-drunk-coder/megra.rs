@@ -3,7 +3,7 @@ use crate::generator::*;
 use std::collections::HashMap;
 use std::sync;
 
-use crate::parser::{BuiltIn, EvaluatedExpr, FunctionMap};
+use crate::parser::{EvaluatedExpr, FunctionMap};
 use crate::{OutputMode, SampleAndWavematrixSet};
 use parking_lot::Mutex;
 
@@ -16,13 +16,19 @@ fn get_args(
 
     while let Some(c) = tail_drain.next() {
         match c {
-            EvaluatedExpr::Float(f) => pos_args.push(ConfigParameter::Numeric(f)),
+            EvaluatedExpr::Typed(TypedEntity::Float(f)) => {
+                pos_args.push(ConfigParameter::Numeric(f))
+            }
             EvaluatedExpr::Keyword(k) => {
                 named_args.insert(
                     k,
                     match tail_drain.next() {
-                        Some(EvaluatedExpr::Float(f)) => ConfigParameter::Numeric(f),
-                        Some(EvaluatedExpr::Symbol(s)) => ConfigParameter::Symbolic(s),
+                        Some(EvaluatedExpr::Typed(TypedEntity::Float(f))) => {
+                            ConfigParameter::Numeric(f)
+                        }
+                        Some(EvaluatedExpr::Typed(TypedEntity::Symbol(s))) => {
+                            ConfigParameter::Symbolic(s)
+                        }
                         _ => ConfigParameter::Numeric(0.0), // dumb placeholder
                     },
                 );
@@ -190,21 +196,21 @@ fn eval_generator_modifier(
 ) -> Option<EvaluatedExpr> {
     let last = tail.pop();
     Some(match last {
-        Some(EvaluatedExpr::BuiltIn(BuiltIn::Generator(mut g))) => {
+        Some(EvaluatedExpr::Typed(TypedEntity::Generator(mut g))) => {
             let mut tail_drain = tail.drain(..);
             tail_drain.next();
             let (pos_args, named_args) = get_args(&mut tail_drain);
             // apply to generator
             fun(&mut g, &pos_args, &named_args, globals);
-            EvaluatedExpr::BuiltIn(BuiltIn::Generator(g))
+            EvaluatedExpr::Typed(TypedEntity::Generator(g))
         }
-        Some(EvaluatedExpr::BuiltIn(BuiltIn::GeneratorProcessorOrModifier(gpom))) => {
+        Some(EvaluatedExpr::Typed(TypedEntity::GeneratorProcessorOrModifier(gpom))) => {
             let mut tail_drain = tail.drain(..);
             tail_drain.next(); // ignore function name
             let (pos_args, named_args) = get_args(&mut tail_drain);
             match gpom {
                 GeneratorProcessorOrModifier::GeneratorProcessor(_) => {
-                    EvaluatedExpr::BuiltIn(BuiltIn::GeneratorProcessorOrModifierList(vec![
+                    EvaluatedExpr::Typed(TypedEntity::GeneratorProcessorOrModifierList(vec![
                         gpom,
                         GeneratorProcessorOrModifier::GeneratorModifierFunction((
                             fun, pos_args, named_args,
@@ -212,7 +218,7 @@ fn eval_generator_modifier(
                     ]))
                 }
                 GeneratorProcessorOrModifier::GeneratorModifierFunction(_) => {
-                    EvaluatedExpr::BuiltIn(BuiltIn::GeneratorModifierList(vec![
+                    EvaluatedExpr::Typed(TypedEntity::GeneratorModifierList(vec![
                         gpom,
                         GeneratorProcessorOrModifier::GeneratorModifierFunction((
                             fun, pos_args, named_args,
@@ -221,36 +227,36 @@ fn eval_generator_modifier(
                 }
             }
         }
-        Some(EvaluatedExpr::BuiltIn(BuiltIn::GeneratorProcessorOrModifierList(mut gpoml))) => {
+        Some(EvaluatedExpr::Typed(TypedEntity::GeneratorProcessorOrModifierList(mut gpoml))) => {
             let mut tail_drain = tail.drain(..);
             tail_drain.next(); // ignore function name
             let (pos_args, named_args) = get_args(&mut tail_drain);
             gpoml.push(GeneratorProcessorOrModifier::GeneratorModifierFunction((
                 fun, pos_args, named_args,
             )));
-            EvaluatedExpr::BuiltIn(BuiltIn::GeneratorProcessorOrModifierList(gpoml))
+            EvaluatedExpr::Typed(TypedEntity::GeneratorProcessorOrModifierList(gpoml))
         }
-        Some(EvaluatedExpr::BuiltIn(BuiltIn::GeneratorModifierList(mut gpoml))) => {
+        Some(EvaluatedExpr::Typed(TypedEntity::GeneratorModifierList(mut gpoml))) => {
             let mut tail_drain = tail.drain(..);
             tail_drain.next(); // ignore function name
             let (pos_args, named_args) = get_args(&mut tail_drain);
             gpoml.push(GeneratorProcessorOrModifier::GeneratorModifierFunction((
                 fun, pos_args, named_args,
             )));
-            EvaluatedExpr::BuiltIn(BuiltIn::GeneratorModifierList(gpoml))
+            EvaluatedExpr::Typed(TypedEntity::GeneratorModifierList(gpoml))
         }
         Some(l) => {
             tail.push(l);
             let mut tail_drain = tail.drain(..);
             tail_drain.next(); // ignore function name
             let (pos_args, named_args) = get_args(&mut tail_drain);
-            EvaluatedExpr::BuiltIn(BuiltIn::GeneratorProcessorOrModifier(
+            EvaluatedExpr::Typed(TypedEntity::GeneratorProcessorOrModifier(
                 GeneratorProcessorOrModifier::GeneratorModifierFunction((
                     fun, pos_args, named_args,
                 )),
             ))
         }
-        None => EvaluatedExpr::BuiltIn(BuiltIn::GeneratorProcessorOrModifier(
+        None => EvaluatedExpr::Typed(TypedEntity::GeneratorProcessorOrModifier(
             GeneratorProcessorOrModifier::GeneratorModifierFunction((
                 fun,
                 Vec::new(),

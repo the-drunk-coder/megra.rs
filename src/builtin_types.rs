@@ -1,6 +1,7 @@
 use crate::event::*;
 use crate::generator::{GenModFun, Generator};
 use crate::generator_processor::GeneratorProcessor;
+use crate::markov_sequence_generator::Rule;
 use crate::parameter::*;
 use dashmap::DashMap;
 use std::collections::{BTreeSet, HashMap};
@@ -22,12 +23,28 @@ pub enum ConfigParameter {
 }
 
 #[derive(Clone)]
-pub enum TypedVariable {
-    Part(Part),
-    ConfigParameter(ConfigParameter),
-    Number(f32),
+pub enum TypedEntity {
+    Float(f32),
     String(String),
     Symbol(String),
+    Character(char),
+    Boolean(bool),
+    Part(Part),
+    ConfigParameter(ConfigParameter),
+    PartProxy(PartProxy),
+    Generator(Generator),
+    GeneratorProcessorOrModifier(GeneratorProcessorOrModifier),
+    ControlEvent(ControlEvent),
+    SoundEvent(Event),
+    Parameter(DynVal),
+    ParameterValue(ParameterValue),
+    Rule(Rule),
+    // compound types, some specialized for convenience
+    Vec(Vec<Box<TypedEntity>>),
+    ProxyList(Vec<PartProxy>),
+    GeneratorList(Vec<Generator>),
+    GeneratorProcessorOrModifierList(Vec<GeneratorProcessorOrModifier>),
+    GeneratorModifierList(Vec<GeneratorProcessorOrModifier>),
 }
 
 #[derive(Clone, PartialEq, Eq, Hash)]
@@ -36,11 +53,11 @@ pub enum VariableId {
     GlobalTimeModifier, // the global factor applied to all durations, usually 1.0
     GlobalLatency,      // latency between language and dsp
     DefaultDuration,    // default duration for two subsequent events (200ms usuallyd)
-    DefaultCycleDuration, // defualt duration for a cycle (800ms, or four times the default event duration)
+    DefaultCycleDuration, // default duration for a cycle (800ms, or four times the default event duration)
     Custom(String),
 }
 
-pub type VariableStore = DashMap<VariableId, TypedVariable>;
+pub type VariableStore = DashMap<VariableId, TypedEntity>;
 
 #[derive(Clone)]
 pub enum SampleResource {
@@ -73,7 +90,8 @@ pub enum Command {
     StartRecording(Option<String>, bool),          // start recording, prefix, input
     StopRecording,                                 // stop recording ...
     OscDefineClient(String, String),
-    OscSendMessage(String, String, Vec<TypedVariable>),
+    OscSendMessage(String, String, Vec<TypedEntity>),
+    DefineMidiCallback(u8, Box<Command>),
 }
 
 #[derive(Clone)]

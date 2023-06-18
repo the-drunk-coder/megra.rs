@@ -1,8 +1,9 @@
+use crate::builtin_types::TypedEntity;
 use crate::event::{Event, EventOperation};
 use crate::event_helpers::map_parameter;
 use crate::music_theory;
 use crate::parameter::{DynVal, ParameterValue};
-use crate::parser::{BuiltIn, EvaluatedExpr, FunctionMap};
+use crate::parser::{EvaluatedExpr, FunctionMap};
 use crate::sample_set::SampleLookup;
 use crate::{OutputMode, SampleAndWavematrixSet, VariableId, VariableStore};
 use parking_lot::Mutex;
@@ -57,12 +58,12 @@ fn collect_param_value(
     let mut par_vec = Vec::new();
     while let Some(e) = tail_drain.peek() {
         match e {
-            EvaluatedExpr::Float(f) => {
+            EvaluatedExpr::Typed(TypedEntity::Float(f)) => {
                 par_vec.push(DynVal::with_value(*f));
                 tail_drain.next();
             }
 
-            EvaluatedExpr::Symbol(s) => {
+            EvaluatedExpr::Typed(TypedEntity::Symbol(s)) => {
                 if let Some(p) = map_symbolic_param_value(s) {
                     let pc = p;
                     tail_drain.next();
@@ -71,22 +72,12 @@ fn collect_param_value(
                     break;
                 }
             }
-            EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p)) => {
+            EvaluatedExpr::Typed(TypedEntity::Parameter(p)) => {
                 // this is an annoying clone, really ...
                 par_vec.push(p.clone());
                 tail_drain.next();
             }
-            EvaluatedExpr::BuiltIn(BuiltIn::Modulator(m)) => {
-                let mc = m.clone();
-                tail_drain.next();
-                return mc;
-            }
-            EvaluatedExpr::BuiltIn(BuiltIn::Vector(v)) => {
-                let vc = v.clone();
-                tail_drain.next();
-                return vc;
-            }
-            EvaluatedExpr::BuiltIn(BuiltIn::Matrix(m)) => {
+            EvaluatedExpr::Typed(TypedEntity::ParameterValue(m)) => {
                 let mc = m.clone();
                 tail_drain.next();
                 return mc;
@@ -116,19 +107,19 @@ fn get_pitch_param(
     ev.params.insert(
         SynthParameterLabel::PitchFrequency,
         match tail_drain.peek() {
-            Some(EvaluatedExpr::BuiltIn(BuiltIn::Modulator(m))) => {
+            Some(EvaluatedExpr::Typed(TypedEntity::ParameterValue(m))) => {
                 advance = true;
                 m.clone()
             }
-            Some(EvaluatedExpr::Float(n)) => {
+            Some(EvaluatedExpr::Typed(TypedEntity::Float(n))) => {
                 advance = true;
                 ParameterValue::Scalar(DynVal::with_value(*n))
             }
-            Some(EvaluatedExpr::BuiltIn(BuiltIn::Parameter(pl))) => {
+            Some(EvaluatedExpr::Typed(TypedEntity::Parameter(pl))) => {
                 advance = true;
                 ParameterValue::Scalar(pl.clone())
             }
-            Some(EvaluatedExpr::Symbol(s)) => {
+            Some(EvaluatedExpr::Typed(TypedEntity::Symbol(s))) => {
                 advance = true;
                 ParameterValue::Scalar(DynVal::with_value(music_theory::to_freq(
                     music_theory::from_string(s),
@@ -155,7 +146,7 @@ fn get_bufnum_param(
     ev.params.insert(
         SynthParameterLabel::SampleBufferNumber,
         ParameterValue::Scalar(match tail_drain.peek() {
-            Some(EvaluatedExpr::Float(n)) => {
+            Some(EvaluatedExpr::Typed(TypedEntity::Float(n))) => {
                 let nn = *n;
                 tail_drain.next();
                 if nn as usize > 0 {
@@ -164,7 +155,7 @@ fn get_bufnum_param(
                     DynVal::with_value(0.0)
                 }
             }
-            Some(EvaluatedExpr::BuiltIn(BuiltIn::Parameter(pl))) => {
+            Some(EvaluatedExpr::Typed(TypedEntity::Parameter(pl))) => {
                 let p = pl.clone();
                 tail_drain.next();
                 p
@@ -451,17 +442,19 @@ pub fn sound(
                 // we send the info down the line so it can be manipulated
                 // along the way and evaluated later on ..
                 ev.sample_lookup = match tail_drain.peek() {
-                    Some(EvaluatedExpr::Symbol(s)) => {
+                    Some(EvaluatedExpr::Typed(TypedEntity::Symbol(s))) => {
                         let mut keyword_set: HashSet<String> = HashSet::new();
                         keyword_set.insert(s.to_string());
                         ev.tags.insert(s.to_string());
-                        while let Some(EvaluatedExpr::Symbol(s)) = tail_drain.peek() {
+                        while let Some(EvaluatedExpr::Typed(TypedEntity::Symbol(s))) =
+                            tail_drain.peek()
+                        {
                             keyword_set.insert(s.to_string());
                             tail_drain.next();
                         }
                         Some(SampleLookup::Key(fname.to_string(), keyword_set))
                     }
-                    Some(EvaluatedExpr::Float(pos)) => {
+                    Some(EvaluatedExpr::Typed(TypedEntity::Float(pos))) => {
                         Some(SampleLookup::N(fname.to_string(), *pos as usize))
                     }
                     _ => {
@@ -480,13 +473,13 @@ pub fn sound(
     // collect keyword params
     while let Some(EvaluatedExpr::Keyword(k)) = tail_drain.next() {
         if k == "tags" {
-            while let Some(EvaluatedExpr::Symbol(s)) = tail_drain.peek() {
+            while let Some(EvaluatedExpr::Typed(TypedEntity::Symbol(s))) = tail_drain.peek() {
                 ev.tags.insert(s.clone());
                 tail_drain.next();
             }
         } else if k == "wm" {
             // wavematrix lookup
-            if let Some(EvaluatedExpr::Symbol(s)) = tail_drain.peek() {
+            if let Some(EvaluatedExpr::Typed(TypedEntity::Symbol(s))) = tail_drain.peek() {
                 if let Some(wavematrix) = sample_set_sync.lock().get_wavematrix(s) {
                     //println!("found wavematrix {}", s);
                     ev.params.insert(
@@ -507,7 +500,7 @@ pub fn sound(
         }
     }
 
-    Some(EvaluatedExpr::BuiltIn(BuiltIn::SoundEvent(ev)))
+    Some(EvaluatedExpr::Typed(TypedEntity::SoundEvent(ev)))
 }
 
 #[cfg(test)]
@@ -538,7 +531,7 @@ mod tests {
             Ok(res) => {
                 assert!(matches!(
                     res,
-                    EvaluatedExpr::BuiltIn(BuiltIn::SoundEvent(_))
+                    EvaluatedExpr::Typed(TypedEntity::SoundEvent(_))
                 ));
             }
             Err(e) => {

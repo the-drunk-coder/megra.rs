@@ -1,5 +1,6 @@
+use crate::builtin_types::TypedEntity;
 use crate::event::*;
-use crate::parser::{BuiltIn, EvaluatedExpr, FunctionMap};
+use crate::parser::{EvaluatedExpr, FunctionMap};
 use crate::{OutputMode, SampleAndWavematrixSet, VariableStore};
 use parking_lot::Mutex;
 use std::collections::BTreeSet;
@@ -17,17 +18,17 @@ pub fn control(
 
     for c in tail.drain(..) {
         match c {
-            EvaluatedExpr::BuiltIn(BuiltIn::SyncContext(s)) => {
+            EvaluatedExpr::SyncContext(s) => {
                 sync_contexts.push(s);
             }
-            EvaluatedExpr::BuiltIn(BuiltIn::Command(c)) => {
+            EvaluatedExpr::Command(c) => {
                 commands.push(c);
             }
             _ => {} // not controllable
         }
     }
 
-    Some(EvaluatedExpr::BuiltIn(BuiltIn::ControlEvent(
+    Some(EvaluatedExpr::Typed(TypedEntity::ControlEvent(
         ControlEvent {
             tags: BTreeSet::new(),
             ctx: if sync_contexts.is_empty() {
@@ -81,7 +82,7 @@ mod tests {
             Ok(res) => {
                 assert!(matches!(
                     res,
-                    EvaluatedExpr::BuiltIn(BuiltIn::ControlEvent(_))
+                    EvaluatedExpr::Typed(TypedEntity::ControlEvent(_))
                 ));
             }
             Err(e) => {

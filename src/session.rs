@@ -18,7 +18,7 @@ use crate::parameter::*;
 use crate::real_time_streaming;
 use crate::scheduler::{Scheduler, SchedulerData};
 use crate::SampleAndWavematrixSet;
-use crate::TypedVariable;
+use crate::TypedEntity;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum OutputMode {
@@ -76,8 +76,7 @@ fn resolve_proxy(
             //visited.push(s);
             // dashmap access is a bit awkward ...
             if let Some(thing) = var_store.get(&VariableId::Custom(s)) {
-                if let TypedVariable::Part(Part::Combined(part_generators, proxies)) = thing.value()
-                {
+                if let TypedEntity::Part(Part::Combined(part_generators, proxies)) = thing.value() {
                     // this can be done for sure ...
                     for mut gen in part_generators.clone().drain(..) {
                         let mut procs_clone = procs.clone();
@@ -138,10 +137,10 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
     let mut tmod: f64 = 1.0;
     let mut latency: f64 = 0.05;
 
-    if let TypedVariable::ConfigParameter(ConfigParameter::Dynamic(global_tmod)) = data
+    if let TypedEntity::ConfigParameter(ConfigParameter::Dynamic(global_tmod)) = data
         .var_store
         .entry(VariableId::GlobalTimeModifier) // fixed variable ID
-        .or_insert(TypedVariable::ConfigParameter(ConfigParameter::Dynamic(
+        .or_insert(TypedEntity::ConfigParameter(ConfigParameter::Dynamic(
             DynVal::with_value(1.0),
         ))) // init on first attempt
         .value_mut()
@@ -149,10 +148,10 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
         tmod = global_tmod.evaluate_numerical() as f64;
     }
 
-    if let TypedVariable::ConfigParameter(ConfigParameter::Dynamic(global_latency)) = data
+    if let TypedEntity::ConfigParameter(ConfigParameter::Dynamic(global_latency)) = data
         .var_store
         .entry(VariableId::GlobalLatency)
-        .or_insert(TypedVariable::ConfigParameter(ConfigParameter::Dynamic(
+        .or_insert(TypedEntity::ConfigParameter(ConfigParameter::Dynamic(
             DynVal::with_value(0.05),
         ))) // init on first attempt
         .value_mut()
@@ -990,6 +989,6 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
 
         // remove parts and variables,
         // leave global parameters intact
-        var_store.retain(|_, v| !matches!(v, TypedVariable::Part(_)));
+        var_store.retain(|_, v| !matches!(v, TypedEntity::Part(_)));
     }
 }

@@ -1,7 +1,7 @@
 use crate::builtin_types::*;
 use std::sync;
 
-use crate::parser::{BuiltIn, EvaluatedExpr, FunctionMap};
+use crate::parser::{EvaluatedExpr, FunctionMap};
 use crate::{OutputMode, SampleAndWavematrixSet};
 use parking_lot::Mutex;
 
@@ -19,10 +19,10 @@ pub fn generator_list(
 
     for c in tail_drain {
         match c {
-            EvaluatedExpr::BuiltIn(BuiltIn::Generator(g)) => {
+            EvaluatedExpr::Typed(TypedEntity::Generator(g)) => {
                 gen_list.push(g);
             }
-            EvaluatedExpr::BuiltIn(BuiltIn::GeneratorList(mut gl)) => {
+            EvaluatedExpr::Typed(TypedEntity::GeneratorList(mut gl)) => {
                 gen_list.append(&mut gl);
             }
             _ => {
@@ -31,5 +31,5 @@ pub fn generator_list(
         }
     }
 
-    Some(EvaluatedExpr::BuiltIn(BuiltIn::GeneratorList(gen_list)))
+    Some(EvaluatedExpr::Typed(TypedEntity::GeneratorList(gen_list)))
 }

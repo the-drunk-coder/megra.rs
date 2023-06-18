@@ -23,7 +23,7 @@ use crate::parameter::{DynVal, ParameterValue};
 use crate::session::SyncContext;
 use crate::{
     Command, GeneratorProcessorOrModifier, OutputMode, PartProxy, SampleAndWavematrixSet,
-    TypedVariable, VariableStore,
+    TypedEntity, VariableStore,
 };
 
 pub mod eval;
@@ -52,63 +52,15 @@ pub enum Expr {
 }
 
 #[derive(Clone)]
-pub enum BuiltIn {
-    Rule(Rule),
-    Command(Command),
-    DefineMidiCallback(u8, Command),
-    PartProxy(PartProxy),
-    ProxyList(Vec<PartProxy>),
-    Generator(Generator),
-    GeneratorList(Vec<Generator>),
-    GeneratorProcessorOrModifier(GeneratorProcessorOrModifier),
-    GeneratorProcessorOrModifierList(Vec<GeneratorProcessorOrModifier>),
-    GeneratorModifierList(Vec<GeneratorProcessorOrModifier>),
-    SoundEvent(Event),
-    Parameter(DynVal),
-    Modulator(ParameterValue),
-    Matrix(ParameterValue),
-    Vector(ParameterValue),
-    ControlEvent(ControlEvent),
-    SyncContext(SyncContext),
-}
-
-impl fmt::Debug for BuiltIn {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        match self {
-            BuiltIn::Rule(_) => write!(f, "BuiltIn::Rule(..)"),
-            BuiltIn::Command(_) => write!(f, "BuiltIn::Command(..)"),
-            BuiltIn::DefineMidiCallback(_, _) => write!(f, "BuiltIn::DefineMidiCallback(..)"),
-            BuiltIn::PartProxy(_) => write!(f, "BuiltIn::PartProxy(..)"),
-            BuiltIn::ProxyList(_) => write!(f, "BuiltIn::ProxyList(..)"),
-            BuiltIn::Generator(g) => write!(f, "BuiltIn::Generator({:?})", g.id_tags),
-            BuiltIn::GeneratorList(_) => write!(f, "BuiltIn::GeneratorList(..)"),
-            BuiltIn::GeneratorProcessorOrModifier(_) => {
-                write!(f, "BuiltIn::GeneratorProcessorOrModifier(..)")
-            }
-            BuiltIn::GeneratorProcessorOrModifierList(_) => {
-                write!(f, "BuiltIn::GeneratorProcessorOrModifierList(..)")
-            }
-            BuiltIn::GeneratorModifierList(_) => write!(f, "BuiltIn::GeneratorModifierList(..)"),
-            BuiltIn::SoundEvent(_) => write!(f, "BuiltIn::SoundEvent(..)"),
-            BuiltIn::Parameter(_) => write!(f, "BuiltIn::Parameter(..)"),
-            BuiltIn::Modulator(_) => write!(f, "BuiltIn::Modulator(..)"),
-            BuiltIn::Vector(_) => write!(f, "BuiltIn::Vector(..)"),
-            BuiltIn::Matrix(_) => write!(f, "BuiltIn::Matrix(..)"),
-            BuiltIn::ControlEvent(_) => write!(f, "BuiltIn::ControlEvent(..)"),
-            BuiltIn::SyncContext(_) => write!(f, "BuiltIn::SyncContext(..)"),
-        }
-    }
-}
-
-#[derive(Clone)]
 pub enum EvaluatedExpr {
-    Float(f32),
-    Symbol(String),
+    // keywords and identifiers are untyped language constructs
     Keyword(String),
-    String(String),
-    Boolean(bool),
     Identifier(String),
-    BuiltIn(BuiltIn),
+    // commands, sync contexts and progns are also
+    // top-level language constructs, as well as definitions
+    // (see below)
+    Command(Command),
+    SyncContext(SyncContext),
     Progn(Vec<EvaluatedExpr>),
     // I don't really have an idea how to make functions,
     // so for now I'll just store the non-evaluated Exprs
@@ -116,19 +68,19 @@ pub enum EvaluatedExpr {
     // that might make them macros rather than functions?
     // Not sure ...
     FunctionDefinition(String, Vec<String>, Vec<Expr>),
-    VariableDefinition(String, TypedVariable),
+    VariableDefinition(String, TypedEntity),
+    // everything else is a typed entity
+    Typed(TypedEntity),
 }
 
 impl fmt::Debug for EvaluatedExpr {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            EvaluatedExpr::Float(fl) => write!(f, "EvaluatedExpr::Float({fl})"),
-            EvaluatedExpr::Symbol(s) => write!(f, "EvaluatedExpr::Symbol({s})"),
-            EvaluatedExpr::Keyword(k) => write!(f, "EvaluatedExpr::Keyword({k})"),
-            EvaluatedExpr::String(s) => write!(f, "EvaluatedExpr::String({s})"),
-            EvaluatedExpr::Boolean(b) => write!(f, "EvaluatedExpr::Boolean({b})"),
+            EvaluatedExpr::Typed(_) => write!(f, "EvaluatedExpr::Typed(_)"),
             EvaluatedExpr::Identifier(fna) => write!(f, "EvaluatedExpr::Identifier({fna})"),
-            EvaluatedExpr::BuiltIn(b) => write!(f, "EvaluatedExpr::BuiltIn({b:?})"),
+            EvaluatedExpr::Command(_) => write!(f, "EvaluatedExpr::Command"),
+            EvaluatedExpr::Keyword(k) => write!(f, "EvaluatedExpr::Keyword({k})"),
+            EvaluatedExpr::SyncContext(_) => write!(f, "EvaluatedExpr::SyncContext(_)"),
             EvaluatedExpr::Progn(_) => write!(f, "EvaluatedExpr::Progn"),
             EvaluatedExpr::FunctionDefinition(_, _, _) => {
                 write!(f, "EvaluatedExpr::FunctionDefinition")
@@ -331,11 +283,11 @@ pub fn eval_expression(
 ) -> Option<EvaluatedExpr> {
     match e {
         Expr::Constant(c) => Some(match c {
-            Atom::Float(f) => EvaluatedExpr::Float(*f),
-            Atom::Symbol(s) => EvaluatedExpr::Symbol(s.to_string()),
+            Atom::Float(f) => EvaluatedExpr::Typed(TypedEntity::Float(*f)),
+            Atom::Symbol(s) => EvaluatedExpr::Typed(TypedEntity::Symbol(s.to_string())),
             Atom::Keyword(k) => EvaluatedExpr::Keyword(k.to_string()),
-            Atom::String(s) => EvaluatedExpr::String(s.to_string()),
-            Atom::Boolean(b) => EvaluatedExpr::Boolean(*b),
+            Atom::String(s) => EvaluatedExpr::Typed(TypedEntity::String(s.to_string())),
+            Atom::Boolean(b) => EvaluatedExpr::Typed(TypedEntity::Boolean(*b)),
             Atom::Identifier(f) => {
                 // eval local vars at eval time ???
                 if let Some(loc) = locals {
@@ -474,18 +426,15 @@ pub fn eval_expression(
                 if let Some(EvaluatedExpr::Identifier(i)) =
                     eval_expression(&tail[0], functions, globals, None, sample_set, out_mode)
                 {
-                    let reduced_tail = tail
+                    let mut reduced_tail = tail
                         .iter()
                         .map(|expr| {
                             eval_expression(expr, functions, globals, None, sample_set, out_mode)
                         })
                         .collect::<Option<Vec<EvaluatedExpr>>>()?;
 
-                    if let Some(EvaluatedExpr::Float(f)) = reduced_tail.get(1) {
-                        Some(EvaluatedExpr::VariableDefinition(
-                            i,
-                            TypedVariable::Number(*f),
-                        ))
+                    if let Some(EvaluatedExpr::Typed(te)) = reduced_tail.pop() {
+                        Some(EvaluatedExpr::VariableDefinition(i, te))
                     } else {
                         None
                     }
@@ -534,7 +483,7 @@ mod tests {
             .fmap
             .insert("text".to_string(), |_, tail, _, _, _| {
                 // SYMBOLS
-                if let EvaluatedExpr::Symbol(s) = &tail[1] {
+                if let EvaluatedExpr::Typed(TypedEntity::Symbol(s)) = &tail[1] {
                     assert!(s == "tar");
                 } else {
                     panic!();
@@ -566,37 +515,37 @@ mod tests {
                 }
 
                 // BOOLEANS
-                if let EvaluatedExpr::Boolean(b) = &tail[5] {
+                if let EvaluatedExpr::Typed(TypedEntity::Boolean(b)) = &tail[5] {
                     assert!(b);
                 } else {
                     panic!();
                 }
 
-                if let EvaluatedExpr::Boolean(b) = &tail[7] {
+                if let EvaluatedExpr::Typed(TypedEntity::Boolean(b)) = &tail[7] {
                     assert!(!b);
                 } else {
                     panic!();
                 }
 
-                // FLOAT
-                if let EvaluatedExpr::Float(f) = &tail[3] {
-                    assert!(*f == 1.0);
+                // FLOA
+                if let EvaluatedExpr::Typed(TypedEntity::Float(f)) = &tail[3] {
+                    assert!(f == 1.0);
                 } else {
                     panic!();
                 }
 
-                Some(EvaluatedExpr::Boolean(true))
+                Some(EvaluatedExpr::Typed(TypedEntity::Boolean(true)))
             });
 
         functions
             .fmap
             .insert("bounce".to_string(), |_, tail, _, _, _| {
-                if let EvaluatedExpr::Float(f) = &tail[1] {
+                if let EvaluatedExpr::Typed(TypedEntity::Float(f)) = &tail[1] {
                     assert!(*f == 0.0);
                 } else {
                     panic!();
                 }
-                if let EvaluatedExpr::Float(f) = &tail[2] {
+                if let EvaluatedExpr::Typed(TypedEntity::Float(f)) = &tail[2] {
                     assert!(*f == 400.0);
                 } else {
                     panic!();

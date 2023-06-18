@@ -1,10 +1,11 @@
 use ruffbox_synth::building_blocks::SynthParameterLabel;
 use std::collections::HashMap;
 
+use crate::builtin_types::TypedEntity;
 use crate::event::*;
 use crate::generator_processor::*;
 use crate::parameter::{DynVal, ParameterValue};
-use crate::parser::{BuiltIn, EvaluatedExpr};
+use crate::parser::EvaluatedExpr;
 
 // this is basically a shorthand for a pear processor
 pub fn collect_exhibit(tail: &mut Vec<EvaluatedExpr>) -> Box<dyn GeneratorProcessor + Send + Sync> {
@@ -28,7 +29,7 @@ pub fn collect_exhibit(tail: &mut Vec<EvaluatedExpr>) -> Box<dyn GeneratorProces
 
     while let Some(c) = tail_drain.next() {
         match c {
-            EvaluatedExpr::BuiltIn(BuiltIn::SoundEvent(e)) => {
+            EvaluatedExpr::Typed(TypedEntity::SoundEvent(e)) => {
                 evs.push(e);
                 if collect_filters {
                     collect_filters = false;
@@ -48,8 +49,10 @@ pub fn collect_exhibit(tail: &mut Vec<EvaluatedExpr>) -> Box<dyn GeneratorProces
                         }
                         // grab new probability
                         cur_prob = match tail_drain.next() {
-                            Some(EvaluatedExpr::Float(f)) => DynVal::with_value(f),
-                            Some(EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p))) => p,
+                            Some(EvaluatedExpr::Typed(TypedEntity::Float(f))) => {
+                                DynVal::with_value(f)
+                            }
+                            Some(EvaluatedExpr::Typed(TypedEntity::Parameter(p))) => p,
                             _ => DynVal::with_value(1.0),
                         };
                         collect_filters = false;
@@ -70,7 +73,7 @@ pub fn collect_exhibit(tail: &mut Vec<EvaluatedExpr>) -> Box<dyn GeneratorProces
                     _ => {}
                 }
             }
-            EvaluatedExpr::Symbol(s) => {
+            EvaluatedExpr::Typed(TypedEntity::Symbol(s)) => {
                 if collect_filters {
                     //println!("found filter {}", s);
                     last_filters.push(s)

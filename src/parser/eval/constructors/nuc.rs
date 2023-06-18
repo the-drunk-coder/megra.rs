@@ -9,7 +9,7 @@ use std::collections::{BTreeSet, HashMap};
 use std::sync;
 use vom_rs::pfa::{Pfa, Rule};
 
-use crate::parser::{BuiltIn, EvaluatedExpr, FunctionMap};
+use crate::parser::{EvaluatedExpr, FunctionMap};
 use crate::{OutputMode, SampleAndWavematrixSet};
 use parking_lot::Mutex;
 
@@ -26,7 +26,7 @@ pub fn nuc(
     tail_drain.next();
 
     // name is the first symbol
-    let name = if let Some(EvaluatedExpr::Symbol(n)) = tail_drain.next() {
+    let name = if let Some(EvaluatedExpr::Typed(TypedEntity::Symbol(n))) = tail_drain.next() {
         n
     } else {
         "".to_string()
@@ -36,10 +36,10 @@ pub fn nuc(
     let mut duration_mapping = HashMap::<(char, char), Event>::new();
     let mut rules = Vec::new();
 
-    let mut dur: DynVal = if let TypedVariable::ConfigParameter(ConfigParameter::Numeric(d)) =
+    let mut dur: DynVal = if let TypedEntity::ConfigParameter(ConfigParameter::Numeric(d)) =
         var_store
             .entry(VariableId::DefaultDuration)
-            .or_insert(TypedVariable::ConfigParameter(ConfigParameter::Numeric(
+            .or_insert(TypedEntity::ConfigParameter(ConfigParameter::Numeric(
                 200.0,
             )))
             .value()
@@ -54,22 +54,22 @@ pub fn nuc(
 
     while let Some(c) = tail_drain.next() {
         match c {
-            EvaluatedExpr::BuiltIn(BuiltIn::SoundEvent(e)) => ev_vec.push(SourceEvent::Sound(e)),
-            EvaluatedExpr::BuiltIn(BuiltIn::ControlEvent(c)) => {
+            EvaluatedExpr::Typed(TypedEntity::SoundEvent(e)) => ev_vec.push(SourceEvent::Sound(e)),
+            EvaluatedExpr::Typed(TypedEntity::ControlEvent(c)) => {
                 ev_vec.push(SourceEvent::Control(c))
             }
             EvaluatedExpr::Keyword(k) => match k.as_str() {
                 "dur" => match tail_drain.next() {
-                    Some(EvaluatedExpr::Float(n)) => {
+                    Some(EvaluatedExpr::Typed(TypedEntity::Float(n))) => {
                         dur = DynVal::with_value(n);
                     }
-                    Some(EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p))) => {
+                    Some(EvaluatedExpr::Typed(TypedEntity::Parameter(p))) => {
                         dur = p;
                     }
                     _ => {}
                 },
                 "keep" => {
-                    if let Some(EvaluatedExpr::Boolean(b)) = tail_drain.next() {
+                    if let Some(EvaluatedExpr::Typed(TypedEntity::Boolean(b))) = tail_drain.next() {
                         keep_root = b;
                     }
                 }
@@ -104,7 +104,7 @@ pub fn nuc(
     let mut id_tags = BTreeSet::new();
     id_tags.insert(name.clone());
 
-    Some(EvaluatedExpr::BuiltIn(BuiltIn::Generator(Generator {
+    Some(EvaluatedExpr::Typed(TypedEntity::Generator(Generator {
         id_tags,
         root_generator: MarkovSequenceGenerator {
             name,
@@ -152,7 +152,10 @@ mod tests {
             OutputMode::Stereo,
         ) {
             Ok(res) => {
-                assert!(matches!(res, EvaluatedExpr::BuiltIn(BuiltIn::Generator(_))));
+                assert!(matches!(
+                    res,
+                    EvaluatedExpr::Typed(TypedEntity::Generator(_))
+                ));
             }
             Err(e) => {
                 println!("err {e}");

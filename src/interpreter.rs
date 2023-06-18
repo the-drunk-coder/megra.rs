@@ -8,7 +8,7 @@ use ruffbox_synth::ruffbox::RuffboxControls;
 
 use crate::builtin_types::*;
 use crate::commands;
-use crate::parser::{BuiltIn, EvaluatedExpr, FunctionMap};
+use crate::parser::{EvaluatedExpr, FunctionMap};
 use crate::sample_set::SampleAndWavematrixSet;
 use crate::session::{OutputMode, Session};
 use crate::visualizer_client::VisualizerClient;
@@ -17,6 +17,7 @@ use crate::visualizer_client::VisualizerClient;
 pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
     c: Command,
     function_map: &sync::Arc<Mutex<FunctionMap>>,
+    midi_callback_map: &sync::Arc<Mutex<HashMap<u8, Command>>>,
     session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
     ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
     sample_set: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
@@ -159,6 +160,9 @@ pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
         Command::StepPart(name) => {
             commands::step_part(ruffbox, var_store, sample_set, session, output_mode, name);
         }
+        Command::DefineMidiCallback(key, c) => {
+            midi_callback_map.lock().insert(key, *c);
+        }
         Command::OscDefineClient(client_name, host) => {
             commands::define_osc_client(
                 client_name,
@@ -171,9 +175,9 @@ pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
             let mut osc_args = Vec::new();
             for arg in args.iter() {
                 match arg {
-                    TypedVariable::Number(n) => osc_args.push(OscType::Float(*n)),
-                    TypedVariable::String(s) => osc_args.push(OscType::String(s.to_string())),
-                    TypedVariable::Symbol(s) => osc_args.push(OscType::String(s.to_string())),
+                    TypedEntity::Float(n) => osc_args.push(OscType::Float(*n)),
+                    TypedEntity::String(s) => osc_args.push(OscType::String(s.to_string())),
+                    TypedEntity::Symbol(s) => osc_args.push(OscType::String(s.to_string())),
                     _ => {}
                 }
             }
@@ -198,36 +202,36 @@ pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
     base_dir: String,
 ) {
     match parsed_in {
-        EvaluatedExpr::BuiltIn(BuiltIn::Generator(g)) => {
+        EvaluatedExpr::Typed(TypedEntity::Generator(g)) => {
             print!("a generator called \'");
             for tag in g.id_tags.iter() {
                 print!("{tag} ");
             }
             println!("\'");
         }
-        EvaluatedExpr::BuiltIn(BuiltIn::Parameter(_)) => {
+        EvaluatedExpr::Typed(TypedEntity::Parameter(_)) => {
             println!("a parameter");
         }
-        EvaluatedExpr::BuiltIn(BuiltIn::Modulator(_)) => {
-            println!("a modulator");
+        EvaluatedExpr::Typed(TypedEntity::ParameterValue(_)) => {
+            println!("a parameter value");
         }
-        EvaluatedExpr::BuiltIn(BuiltIn::SoundEvent(_)) => {
+        EvaluatedExpr::Typed(TypedEntity::SoundEvent(_)) => {
             println!("a sound event");
         }
-        EvaluatedExpr::BuiltIn(BuiltIn::ControlEvent(_)) => {
+        EvaluatedExpr::Typed(TypedEntity::ControlEvent(_)) => {
             println!("a control event");
         }
-        EvaluatedExpr::BuiltIn(BuiltIn::GeneratorProcessorOrModifier(
+        EvaluatedExpr::Typed(TypedEntity::GeneratorProcessorOrModifier(
             GeneratorProcessorOrModifier::GeneratorModifierFunction(_),
         )) => {
             println!("a gen mod fun");
         }
-        EvaluatedExpr::BuiltIn(BuiltIn::GeneratorProcessorOrModifier(
+        EvaluatedExpr::Typed(TypedEntity::GeneratorProcessorOrModifier(
             GeneratorProcessorOrModifier::GeneratorProcessor(_),
         )) => {
             println!("a gen proc");
         }
-        EvaluatedExpr::BuiltIn(BuiltIn::GeneratorList(gl)) => {
+        EvaluatedExpr::Typed(TypedEntity::GeneratorList(gl)) => {
             println!("a gen list");
             for gen in gl.iter() {
                 print!("--- a generator called \'");
@@ -237,17 +241,18 @@ pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
                 println!("\'");
             }
         }
-        EvaluatedExpr::BuiltIn(BuiltIn::SyncContext(mut s)) => {
+        EvaluatedExpr::SyncContext(mut s) => {
             println!(
                 "\n\n############### a context called \'{}\' ###############",
                 s.name
             );
             Session::handle_context(&mut s, session, ruffbox, var_store, sample_set, output_mode);
         }
-        EvaluatedExpr::BuiltIn(BuiltIn::Command(c)) => {
+        EvaluatedExpr::Command(c) => {
             interpret_command(
                 c,
                 function_map,
+                midi_callback_map,
                 session,
                 ruffbox,
                 sample_set,
@@ -256,22 +261,19 @@ pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
                 base_dir,
             );
         }
-        EvaluatedExpr::BuiltIn(BuiltIn::DefineMidiCallback(key, c)) => {
-            midi_callback_map.lock().insert(key, c);
-        }
-        EvaluatedExpr::Float(f) => {
+        EvaluatedExpr::Typed(TypedEntity::Float(f)) => {
             println!("a number: {f}")
         }
-        EvaluatedExpr::Symbol(s) => {
+        EvaluatedExpr::Typed(TypedEntity::Symbol(s)) => {
             println!("a symbol: {s}")
         }
-        EvaluatedExpr::String(s) => {
+        EvaluatedExpr::Typed(TypedEntity::String(s)) => {
             println!("a string: {s}")
         }
         EvaluatedExpr::Keyword(k) => {
             println!("a keyword: {k}")
         }
-        EvaluatedExpr::Boolean(b) => {
+        EvaluatedExpr::Typed(TypedEntity::Boolean(b)) => {
             println!("a boolean: {b}")
         }
         EvaluatedExpr::FunctionDefinition(name, pos_args, body) => {

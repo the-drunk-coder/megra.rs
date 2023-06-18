@@ -12,7 +12,7 @@ use crate::event_helpers::map_parameter;
 use crate::generator::Generator;
 use crate::markov_sequence_generator::MarkovSequenceGenerator;
 use crate::parameter::*;
-use crate::parser::{BuiltIn, EvaluatedExpr, FunctionMap};
+use crate::parser::{EvaluatedExpr, FunctionMap};
 use crate::{OutputMode, SampleAndWavematrixSet};
 
 pub fn facts(
@@ -28,22 +28,22 @@ pub fn facts(
     tail_drain.next();
 
     // name is the first symbol
-    let name = if let Some(EvaluatedExpr::Symbol(n)) = tail_drain.next() {
+    let name = if let Some(EvaluatedExpr::Typed(TypedEntity::Symbol(n))) = tail_drain.next() {
         n
     } else {
         return None;
     };
 
     // the param to be factorized
-    let param = if let Some(EvaluatedExpr::Symbol(n)) = tail_drain.next() {
+    let param = if let Some(EvaluatedExpr::Typed(TypedEntity::Symbol(n))) = tail_drain.next() {
         n
     } else {
         return None;
     };
 
-    let dur: DynVal = if let TypedVariable::ConfigParameter(ConfigParameter::Numeric(d)) = var_store
+    let dur: DynVal = if let TypedEntity::ConfigParameter(ConfigParameter::Numeric(d)) = var_store
         .entry(VariableId::DefaultDuration)
-        .or_insert(TypedVariable::ConfigParameter(ConfigParameter::Numeric(
+        .or_insert(TypedEntity::ConfigParameter(ConfigParameter::Numeric(
             200.0,
         )))
         .value()
@@ -62,18 +62,19 @@ pub fn facts(
         match c {
             EvaluatedExpr::Keyword(k) => match k.as_str() {
                 "rnd" => {
-                    if let EvaluatedExpr::Float(n) = tail_drain.next().unwrap() {
+                    if let EvaluatedExpr::Typed(TypedEntity::Float(n)) = tail_drain.next().unwrap()
+                    {
                         randomize_chance = n;
                     }
                 }
                 "keep" => {
-                    if let Some(EvaluatedExpr::Boolean(b)) = tail_drain.next() {
+                    if let Some(EvaluatedExpr::Typed(TypedEntity::Boolean(b))) = tail_drain.next() {
                         keep_root = b;
                     }
                 }
                 _ => println!("{k}"),
             },
-            EvaluatedExpr::Float(f) => {
+            EvaluatedExpr::Typed(TypedEntity::Float(f)) => {
                 let mut e = Event::with_name_and_operation(
                     format!("{param}-mul"),
                     EventOperation::Multiply,
@@ -85,7 +86,7 @@ pub fn facts(
                 ev_vecs.push(vec![SourceEvent::Sound(e)]);
                 continue;
             }
-            EvaluatedExpr::BuiltIn(BuiltIn::Parameter(p)) => {
+            EvaluatedExpr::Typed(TypedEntity::Parameter(p)) => {
                 let mut e = Event::with_name_and_operation(
                     format!("{param}-mul"),
                     EventOperation::Multiply,
@@ -175,7 +176,7 @@ pub fn facts(
     let mut id_tags = BTreeSet::new();
     id_tags.insert(name.clone());
 
-    Some(EvaluatedExpr::BuiltIn(BuiltIn::Generator(Generator {
+    Some(EvaluatedExpr::Typed(TypedEntity::Generator(Generator {
         id_tags,
         root_generator: MarkovSequenceGenerator {
             name,

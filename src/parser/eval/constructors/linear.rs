@@ -9,7 +9,7 @@ use std::collections::{BTreeSet, HashMap};
 use std::sync;
 use vom_rs::pfa::{Pfa, Rule};
 
-use crate::parser::{BuiltIn, EvaluatedExpr, FunctionMap};
+use crate::parser::{EvaluatedExpr, FunctionMap};
 use crate::{OutputMode, SampleAndWavematrixSet};
 use parking_lot::Mutex;
 
@@ -26,7 +26,7 @@ pub fn linear(
     tail_drain.next();
 
     // name is the first symbol
-    let name = if let Some(EvaluatedExpr::Symbol(n)) = tail_drain.next() {
+    let name = if let Some(EvaluatedExpr::Typed(TypedEntity::Symbol(n))) = tail_drain.next() {
         n
     } else {
         "".to_string()
@@ -36,9 +36,9 @@ pub fn linear(
     let mut ev_vecs = Vec::new();
     let mut dur_vec: Vec<DynVal> = Vec::new();
 
-    let dur: DynVal = if let TypedVariable::ConfigParameter(ConfigParameter::Numeric(d)) = var_store
+    let dur: DynVal = if let TypedEntity::ConfigParameter(ConfigParameter::Numeric(d)) = var_store
         .entry(VariableId::DefaultDuration)
-        .or_insert(TypedVariable::ConfigParameter(ConfigParameter::Numeric(
+        .or_insert(TypedEntity::ConfigParameter(ConfigParameter::Numeric(
             200.0,
         )))
         .value()
@@ -50,17 +50,17 @@ pub fn linear(
 
     for c in tail_drain {
         match c {
-            EvaluatedExpr::BuiltIn(BuiltIn::SoundEvent(e)) => {
+            EvaluatedExpr::Typed(TypedEntity::SoundEvent(e)) => {
                 ev_vecs.push(vec![SourceEvent::Sound(e)]);
                 dur_vec.push(dur.clone());
                 continue;
             }
-            EvaluatedExpr::BuiltIn(BuiltIn::ControlEvent(e)) => {
+            EvaluatedExpr::Typed(TypedEntity::ControlEvent(e)) => {
                 ev_vecs.push(vec![SourceEvent::Control(e)]);
                 dur_vec.push(dur.clone());
                 continue;
             }
-            EvaluatedExpr::Float(f) => {
+            EvaluatedExpr::Typed(TypedEntity::Float(f)) => {
                 *dur_vec.last_mut().unwrap() = DynVal::with_value(f);
             }
             _ => println! {"ignored"},
@@ -107,7 +107,7 @@ pub fn linear(
     let mut id_tags = BTreeSet::new();
     id_tags.insert(name.clone());
 
-    Some(EvaluatedExpr::BuiltIn(BuiltIn::Generator(Generator {
+    Some(EvaluatedExpr::Typed(TypedEntity::Generator(Generator {
         id_tags,
         root_generator: MarkovSequenceGenerator {
             name,

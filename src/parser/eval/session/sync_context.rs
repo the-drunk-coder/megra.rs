@@ -1,6 +1,6 @@
 use crate::builtin_types::*;
 use crate::generator::Generator;
-use crate::parser::{BuiltIn, EvaluatedExpr, FunctionMap};
+use crate::parser::{EvaluatedExpr, FunctionMap};
 use crate::session::SyncContext;
 use crate::{OutputMode, SampleAndWavematrixSet};
 use parking_lot::Mutex;
@@ -19,20 +19,20 @@ pub fn sync_context(
     tail_drain.next();
     // name is the first symbol
     // name is the first symbol
-    let name = if let Some(EvaluatedExpr::Symbol(n)) = tail_drain.next() {
-        n
+    let name = if let Some(EvaluatedExpr::Typed(TypedEntity::Symbol(s))) = tail_drain.next() {
+        s
     } else {
         "".to_string()
     };
 
-    let active = if let Some(EvaluatedExpr::Boolean(b)) = tail_drain.next() {
+    let active = if let Some(EvaluatedExpr::Typed(TypedEntity::Boolean(b))) = tail_drain.next() {
         b
     } else {
         false
     };
 
     if !active {
-        return Some(EvaluatedExpr::BuiltIn(BuiltIn::SyncContext(SyncContext {
+        return Some(EvaluatedExpr::SyncContext(SyncContext {
             name,
             generators: Vec::new(),
             part_proxies: Vec::new(),
@@ -41,7 +41,7 @@ pub fn sync_context(
             shift: 0,
             block_tags: BTreeSet::new(),
             solo_tags: BTreeSet::new(),
-        })));
+        }));
     }
 
     let mut gens: Vec<Generator> = Vec::new();
@@ -60,14 +60,18 @@ pub fn sync_context(
                     "sync" => {
                         collect_solo_tags = false;
                         collect_block_tags = false;
-                        if let EvaluatedExpr::Symbol(sync) = tail_drain.next().unwrap() {
+                        if let EvaluatedExpr::Typed(TypedEntity::Symbol(sync)) =
+                            tail_drain.next().unwrap()
+                        {
                             sync_to = Some(sync);
                         }
                     }
                     "shift" => {
                         collect_solo_tags = false;
                         collect_block_tags = false;
-                        if let EvaluatedExpr::Float(f) = tail_drain.next().unwrap() {
+                        if let EvaluatedExpr::Typed(TypedEntity::Float(f)) =
+                            tail_drain.next().unwrap()
+                        {
                             shift = f as i32;
                         }
                     }
@@ -82,7 +86,7 @@ pub fn sync_context(
                     _ => {} // ignore
                 }
             }
-            EvaluatedExpr::Symbol(s) => {
+            EvaluatedExpr::Typed(TypedEntity::Symbol(s)) => {
                 if collect_solo_tags {
                     solo_tags.insert(s);
                 } else if collect_block_tags {
@@ -93,25 +97,25 @@ pub fn sync_context(
                     proxies.push(PartProxy::Proxy(s, Vec::new()));
                 }
             }
-            EvaluatedExpr::BuiltIn(BuiltIn::PartProxy(p)) => {
+            EvaluatedExpr::Typed(TypedEntity::PartProxy(p)) => {
                 collect_solo_tags = false;
                 collect_block_tags = false;
                 // part proxy without additional modifiers
                 proxies.push(p);
             }
-            EvaluatedExpr::BuiltIn(BuiltIn::ProxyList(mut l)) => {
+            EvaluatedExpr::Typed(TypedEntity::ProxyList(mut l)) => {
                 collect_solo_tags = false;
                 collect_block_tags = false;
                 // part proxy without additional modifiers
                 proxies.append(&mut l);
             }
-            EvaluatedExpr::BuiltIn(BuiltIn::Generator(mut k)) => {
+            EvaluatedExpr::Typed(TypedEntity::Generator(mut k)) => {
                 collect_solo_tags = false;
                 collect_block_tags = false;
                 k.id_tags.insert(name.clone());
                 gens.push(k);
             }
-            EvaluatedExpr::BuiltIn(BuiltIn::GeneratorList(mut kl)) => {
+            EvaluatedExpr::Typed(TypedEntity::GeneratorList(mut kl)) => {
                 collect_solo_tags = false;
                 collect_block_tags = false;
                 for k in kl.iter_mut() {
@@ -123,7 +127,7 @@ pub fn sync_context(
         }
     }
 
-    Some(EvaluatedExpr::BuiltIn(BuiltIn::SyncContext(SyncContext {
+    Some(EvaluatedExpr::SyncContext(SyncContext {
         name,
         generators: gens,
         part_proxies: proxies,
@@ -132,7 +136,7 @@ pub fn sync_context(
         shift,
         block_tags,
         solo_tags,
-    })))
+    }))
 }
 
 #[cfg(test)]
@@ -154,7 +158,7 @@ mod tests {
             .fmap
             .insert("nuc".to_string(), eval::constructors::nuc::nuc);
         functions.fmap.insert("bd".to_string(), |_, _, _, _, _| {
-            Some(EvaluatedExpr::String("bd".to_string()))
+            Some(EvaluatedExpr::Typed(TypedEntity::String("bd".to_string())))
         });
 
         let globals = sync::Arc::new(VariableStore::new());
@@ -167,10 +171,7 @@ mod tests {
             OutputMode::Stereo,
         ) {
             Ok(res) => {
-                assert!(matches!(
-                    res,
-                    EvaluatedExpr::BuiltIn(BuiltIn::SyncContext(_))
-                ));
+                assert!(matches!(res, EvaluatedExpr::SyncContext(_)));
             }
             Err(e) => {
                 println!("err {e}");

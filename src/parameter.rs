@@ -8,7 +8,7 @@ use std::fmt::*;
 use ruffbox_synth::building_blocks::{EnvelopeSegmentInfo, EnvelopeSegmentType};
 use ruffbox_synth::building_blocks::{FilterType, SynthParameterLabel, SynthParameterValue, ValOp};
 
-use crate::{TypedVariable, VariableId, VariableStore};
+use crate::{TypedEntity, VariableId, VariableStore};
 
 #[derive(Clone)]
 #[rustfmt::skip]
@@ -210,7 +210,7 @@ pub fn resolve_parameter(
         // resolve params
         ParameterValue::Placeholder(id) => {
             if let Some(thing) = globals.get(id) {
-                if let TypedVariable::Number(n) = thing.value() {
+                if let TypedEntity::Float(n) = thing.value() {
                     return SynthParameterValue::ScalarF32(*n);
                 }
             }
