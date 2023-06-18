@@ -4,7 +4,7 @@ pub enum Tuning {
     EqualTemperament,
 }
 
-pub fn from_string(string: &str) -> Note {
+pub fn from_string(string: &str) -> Option<Note> {
     let mut pitch = "".to_string();
     let mut oct = "".to_string();
     for c in string.chars() {
@@ -14,15 +14,11 @@ pub fn from_string(string: &str) -> Note {
             pitch.push(c);
         }
     }
-    if let Some(n) = PitchClass::from_str(&pitch) {
-        if let Ok(o) = oct.parse::<u8>() {
-            Note::new(n, o)
-        } else {
-            Note::new(PitchClass::from_str("a").unwrap(), 4)
-        }
-    } else {
-        Note::new(PitchClass::from_str("a").unwrap(), 4)
-    }
+
+    let n = PitchClass::from_str(&pitch)?;
+    let o = oct.parse::<u8>().ok()?;
+
+    Some(Note::new(n, o))
 }
 
 pub fn from_note_nr(nr: u8) -> Note {

@@ -104,35 +104,41 @@ fn get_pitch_param(
     // it's not the most elegant solution to find out whether
     // there's a pitch param or not ...
     let mut advance = false;
-    ev.params.insert(
-        SynthParameterLabel::PitchFrequency,
-        match tail_drain.peek() {
-            Some(EvaluatedExpr::Typed(TypedEntity::ParameterValue(m))) => {
-                advance = true;
-                m.clone()
-            }
-            Some(EvaluatedExpr::Typed(TypedEntity::Float(n))) => {
-                advance = true;
-                ParameterValue::Scalar(DynVal::with_value(*n))
-            }
-            Some(EvaluatedExpr::Typed(TypedEntity::Parameter(pl))) => {
-                advance = true;
-                ParameterValue::Scalar(pl.clone())
-            }
-            Some(EvaluatedExpr::Typed(TypedEntity::Symbol(s))) => {
-                advance = true;
-                ParameterValue::Scalar(DynVal::with_value(music_theory::to_freq(
-                    music_theory::from_string(s),
-                    music_theory::Tuning::EqualTemperament,
+    let par = match tail_drain.peek() {
+        Some(EvaluatedExpr::Typed(TypedEntity::ParameterValue(m))) => {
+            advance = true;
+            Some(m.clone())
+        }
+        Some(EvaluatedExpr::Typed(TypedEntity::Float(n))) => {
+            advance = true;
+            Some(ParameterValue::Scalar(DynVal::with_value(*n)))
+        }
+        Some(EvaluatedExpr::Typed(TypedEntity::Parameter(pl))) => {
+            advance = true;
+            Some(ParameterValue::Scalar(pl.clone()))
+        }
+        Some(EvaluatedExpr::Typed(TypedEntity::Symbol(s))) => {
+            advance = true;
+            if let Some(note) = music_theory::from_string(s) {
+                Some(ParameterValue::Scalar(DynVal::with_value(
+                    music_theory::to_freq(note, music_theory::Tuning::EqualTemperament),
                 )))
+            } else {
+                None
             }
-            Some(EvaluatedExpr::Identifier(i)) => {
-                advance = true;
-                ParameterValue::Placeholder(VariableId::Custom(i.to_string()))
-            }
-            _ => ParameterValue::Scalar(DynVal::with_value(100.0)),
-        },
-    );
+        }
+        Some(EvaluatedExpr::Identifier(i)) => {
+            advance = true;
+            Some(ParameterValue::Placeholder(VariableId::Custom(
+                i.to_string(),
+            )))
+        }
+        _ => Some(ParameterValue::Scalar(DynVal::with_value(100.0))),
+    };
+    if let Some(p) = par {
+        ev.params.insert(SynthParameterLabel::PitchFrequency, p);
+    }
+
     if advance {
         tail_drain.next();
     }

@@ -16,7 +16,7 @@ use regex::Regex;
 use std::collections::HashMap;
 use std::{fmt, sync};
 
-use crate::session::SyncContext;
+use crate::{builtin_types::VariableId, session::SyncContext};
 use crate::{Command, OutputMode, SampleAndWavematrixSet, TypedEntity, VariableStore};
 
 pub mod eval;
@@ -61,7 +61,7 @@ pub enum EvaluatedExpr {
     // that might make them macros rather than functions?
     // Not sure ...
     FunctionDefinition(String, Vec<String>, Vec<Expr>),
-    VariableDefinition(String, TypedEntity),
+    VariableDefinition(VariableId, TypedEntity),
     // everything else is a typed entity
     Typed(TypedEntity),
 }
@@ -420,21 +420,34 @@ pub fn eval_expression(
                 }
             }
             Expr::VariableDefinition => {
-                if let Some(EvaluatedExpr::Identifier(i)) =
-                    eval_expression(&tail[0], functions, globals, None, sample_set, out_mode)
-                {
-                    let mut reduced_tail = tail
-                        .iter()
-                        .map(|expr| {
-                            eval_expression(expr, functions, globals, None, sample_set, out_mode)
-                        })
-                        .collect::<Option<Vec<EvaluatedExpr>>>()?;
+                let id =
+                    match eval_expression(&tail[0], functions, globals, None, sample_set, out_mode)
+                    {
+                        Some(EvaluatedExpr::Identifier(i)) => VariableId::Custom(i),
+                        Some(EvaluatedExpr::Typed(TypedEntity::Symbol(s))) => {
+                            // check whether it's a reserved symbol
+                            if crate::parser::eval::events::sound::map_symbolic_param_value(&s)
+                                .is_some()
+                                || crate::music_theory::from_string(&s).is_some()
+                            {
+                                return None;
+                            }
+                            VariableId::Symbol(s)
+                        }
+                        _ => {
+                            return None;
+                        }
+                    };
 
-                    if let Some(EvaluatedExpr::Typed(te)) = reduced_tail.pop() {
-                        Some(EvaluatedExpr::VariableDefinition(i, te))
-                    } else {
-                        None
-                    }
+                let mut reduced_tail = tail
+                    .iter()
+                    .map(|expr| {
+                        eval_expression(expr, functions, globals, None, sample_set, out_mode)
+                    })
+                    .collect::<Option<Vec<EvaluatedExpr>>>()?;
+
+                if let Some(EvaluatedExpr::Typed(te)) = reduced_tail.pop() {
+                    Some(EvaluatedExpr::VariableDefinition(id, te))
                 } else {
                     None
                 }
@@ -444,7 +457,6 @@ pub fn eval_expression(
         _ => None,
     }
 }
-
 pub fn eval_from_str(
     src: &str,
     functions: &FunctionMap,

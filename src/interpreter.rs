@@ -281,8 +281,8 @@ pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
             function_map.lock().usr_lib.insert(name, (pos_args, body));
         }
         EvaluatedExpr::VariableDefinition(name, var) => {
-            println!("a variable definition {name}");
-            var_store.insert(VariableId::Custom(name), var);
+            println!("a variable definition {name:#?}");
+            var_store.insert(name, var);
         }
         EvaluatedExpr::Progn(exprs) => {
             for expr in exprs {

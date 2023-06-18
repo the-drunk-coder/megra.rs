@@ -184,34 +184,39 @@ pub fn parameter(
 
             if let Some(p) = tail_drain.next() {
                 let mut ev = Event::with_name_and_operation(parts[0].to_string(), op);
-                ev.params.insert(
-                    param_key,
-                    match p {
-                        EvaluatedExpr::Typed(TypedEntity::Float(n)) => {
-                            ParameterValue::Scalar(DynVal::with_value(n))
-                        }
-                        EvaluatedExpr::Typed(TypedEntity::Parameter(pl)) => {
-                            ParameterValue::Scalar(pl)
-                        }
-                        EvaluatedExpr::Typed(TypedEntity::ParameterValue(m)) => m,
-                        EvaluatedExpr::Typed(TypedEntity::Symbol(s))
-                            if param_key == SynthParameterLabel::PitchFrequency
-                                || param_key == SynthParameterLabel::LowpassCutoffFrequency
-                                || param_key == SynthParameterLabel::HighpassCutoffFrequency
-                                || param_key == SynthParameterLabel::PeakFrequency =>
-                        {
-                            ParameterValue::Scalar(DynVal::with_value(music_theory::to_freq(
-                                music_theory::from_string(&s),
-                                music_theory::Tuning::EqualTemperament,
+                let par = match p {
+                    EvaluatedExpr::Typed(TypedEntity::Float(n)) => {
+                        Some(ParameterValue::Scalar(DynVal::with_value(n)))
+                    }
+                    EvaluatedExpr::Typed(TypedEntity::Parameter(pl)) => {
+                        Some(ParameterValue::Scalar(pl))
+                    }
+                    EvaluatedExpr::Typed(TypedEntity::ParameterValue(m)) => Some(m),
+                    EvaluatedExpr::Typed(TypedEntity::Symbol(s))
+                        if param_key == SynthParameterLabel::PitchFrequency
+                            || param_key == SynthParameterLabel::LowpassCutoffFrequency
+                            || param_key == SynthParameterLabel::HighpassCutoffFrequency
+                            || param_key == SynthParameterLabel::PeakFrequency =>
+                    {
+                        if let Some(note) = music_theory::from_string(&s) {
+                            Some(ParameterValue::Scalar(DynVal::with_value(
+                                music_theory::to_freq(note, music_theory::Tuning::EqualTemperament),
                             )))
+                        } else {
+                            None
                         }
-                        EvaluatedExpr::Typed(TypedEntity::Symbol(s)) => {
-                            // jump out if the user entered garbage ...
-                            crate::parser::eval::events::sound::map_symbolic_param_value(&s)?
-                        }
-                        _ => ParameterValue::Scalar(DynVal::with_value(0.5)), // should be save ...
-                    },
-                );
+                    }
+                    EvaluatedExpr::Typed(TypedEntity::Symbol(s)) => {
+                        // jump out if the user entered garbage ...
+                        crate::parser::eval::events::sound::map_symbolic_param_value(&s)
+                    }
+                    _ => Some(ParameterValue::Scalar(DynVal::with_value(0.5))), // should be save ...
+                };
+
+                if let Some(p) = par {
+                    ev.params.insert(param_key, p);
+                }
+
                 //println!("{:?}", ev);
                 Some(EvaluatedExpr::Typed(TypedEntity::SoundEvent(ev)))
             } else {

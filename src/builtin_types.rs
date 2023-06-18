@@ -45,7 +45,7 @@ pub enum TypedEntity {
     GeneratorModifierList(Vec<GeneratorProcessorOrModifier>),
 }
 
-#[derive(Clone, PartialEq, Eq, Hash)]
+#[derive(Clone, PartialEq, Eq, Hash, Debug)]
 pub enum VariableId {
     LifemodelGlobalResources,
     GlobalTimeModifier, // the global factor applied to all durations, usually 1.0
@@ -53,6 +53,7 @@ pub enum VariableId {
     DefaultDuration,    // default duration for two subsequent events (200ms usuallyd)
     DefaultCycleDuration, // default duration for a cycle (800ms, or four times the default event duration)
     Custom(String),
+    Symbol(String),
 }
 
 pub type VariableStore = DashMap<VariableId, TypedEntity>;
