@@ -518,13 +518,13 @@ mod tests {
         let event_mappings = HashMap::new();
 
         let mut fmap: FunctionMap = FunctionMap::new();
-        fmap.fmap.insert(
+        fmap.std_lib.insert(
             "piano".to_string(),
             crate::parser::eval::events::sound::sound,
         );
-        fmap.fmap
+        fmap.std_lib
             .insert("saw".to_string(), crate::parser::eval::events::sound::sound);
-        fmap.fmap
+        fmap.std_lib
             .insert("~".to_string(), crate::parser::eval::events::sound::sound);
 
         let o = eval_cyc_from_str(

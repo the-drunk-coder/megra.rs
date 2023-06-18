@@ -58,16 +58,16 @@ mod tests {
         let sample_set = sync::Arc::new(Mutex::new(SampleAndWavematrixSet::new()));
 
         functions
-            .fmap
+            .std_lib
             .insert("saw".to_string(), eval::events::sound::sound);
         functions
-            .fmap
+            .std_lib
             .insert("ctrl".to_string(), eval::events::control::control);
         functions
-            .fmap
+            .std_lib
             .insert("sx".to_string(), eval::session::sync_context::sync_context);
         functions
-            .fmap
+            .std_lib
             .insert("nuc".to_string(), eval::constructors::nuc::nuc);
 
         let globals = sync::Arc::new(VariableStore::new());

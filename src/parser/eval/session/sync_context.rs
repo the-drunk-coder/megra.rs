@@ -152,12 +152,12 @@ mod tests {
         let sample_set = sync::Arc::new(Mutex::new(SampleAndWavematrixSet::new()));
 
         functions
-            .fmap
+            .std_lib
             .insert("sx".to_string(), eval::session::sync_context::sync_context);
         functions
-            .fmap
+            .std_lib
             .insert("nuc".to_string(), eval::constructors::nuc::nuc);
-        functions.fmap.insert("bd".to_string(), |_, _, _, _, _| {
+        functions.std_lib.insert("bd".to_string(), |_, _, _, _, _| {
             Some(EvaluatedExpr::Typed(TypedEntity::String("bd".to_string())))
         });
 

@@ -516,7 +516,7 @@ mod tests {
         let sample_set = sync::Arc::new(Mutex::new(SampleAndWavematrixSet::new()));
 
         functions
-            .fmap
+            .std_lib
             .insert("risset".to_string(), eval::events::sound::sound);
 
         let globals = sync::Arc::new(VariableStore::new());

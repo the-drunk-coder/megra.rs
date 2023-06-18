@@ -473,7 +473,7 @@ mod tests {
         let sample_set = sync::Arc::new(Mutex::new(SampleAndWavematrixSet::new()));
 
         functions
-            .fmap
+            .std_lib
             .insert("text".to_string(), |_, tail, _, _, _| {
                 // SYMBOLS
                 if let EvaluatedExpr::Typed(TypedEntity::Symbol(s)) = &tail[1] {
@@ -522,7 +522,7 @@ mod tests {
 
                 // FLOA
                 if let EvaluatedExpr::Typed(TypedEntity::Float(f)) = &tail[3] {
-                    assert!(f == 1.0);
+                    assert!(*f == 1.0);
                 } else {
                     panic!();
                 }
@@ -531,7 +531,7 @@ mod tests {
             });
 
         functions
-            .fmap
+            .std_lib
             .insert("bounce".to_string(), |_, tail, _, _, _| {
                 if let EvaluatedExpr::Typed(TypedEntity::Float(f)) = &tail[1] {
                     assert!(*f == 0.0);
@@ -544,7 +544,7 @@ mod tests {
                     panic!();
                 }
 
-                Some(EvaluatedExpr::Boolean(true))
+                Some(EvaluatedExpr::Typed(TypedEntity::Boolean(true)))
             });
 
         match eval_from_str(
@@ -555,7 +555,10 @@ mod tests {
             OutputMode::Stereo,
         ) {
             Ok(res) => {
-                assert!(matches!(res, EvaluatedExpr::Boolean(true)))
+                assert!(matches!(
+                    res,
+                    EvaluatedExpr::Typed(TypedEntity::Boolean(true))
+                ))
             }
             Err(e) => {
                 println!("err {e}");
