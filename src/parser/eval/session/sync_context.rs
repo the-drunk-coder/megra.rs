@@ -1,5 +1,6 @@
 use crate::builtin_types::*;
 use crate::generator::Generator;
+use crate::parser::eval::resolver::resolve_globals;
 use crate::parser::{EvaluatedExpr, FunctionMap};
 use crate::session::SyncContext;
 use crate::{OutputMode, SampleAndWavematrixSet};
@@ -10,14 +11,15 @@ use std::sync;
 pub fn sync_context(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
-    _: &sync::Arc<VariableStore>,
+    var_store: &sync::Arc<VariableStore>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
-    let mut tail_drain = tail.drain(..);
+    // eval-time resolve
     // ignore function name
-    tail_drain.next();
-    // name is the first symbol
+    resolve_globals(&mut tail[1..], var_store);
+    let mut tail_drain = tail.drain(1..);
+
     // name is the first symbol
     let name = if let Some(EvaluatedExpr::Typed(TypedEntity::Symbol(s))) = tail_drain.next() {
         s
@@ -35,7 +37,6 @@ pub fn sync_context(
         return Some(EvaluatedExpr::SyncContext(SyncContext {
             name,
             generators: Vec::new(),
-            part_proxies: Vec::new(),
             sync_to: None,
             active: false,
             shift: 0,
@@ -45,7 +46,6 @@ pub fn sync_context(
     }
 
     let mut gens: Vec<Generator> = Vec::new();
-    let mut proxies: Vec<PartProxy> = Vec::new();
     let mut sync_to = None;
     let mut shift: i32 = 0;
     let mut collect_block_tags: bool = false;
@@ -91,23 +91,7 @@ pub fn sync_context(
                     solo_tags.insert(s);
                 } else if collect_block_tags {
                     block_tags.insert(s);
-                } else {
-                    // assume it's a part proxy
-                    // part proxy without additional modifiers
-                    proxies.push(PartProxy::Proxy(s, Vec::new()));
                 }
-            }
-            EvaluatedExpr::Typed(TypedEntity::PartProxy(p)) => {
-                collect_solo_tags = false;
-                collect_block_tags = false;
-                // part proxy without additional modifiers
-                proxies.push(p);
-            }
-            EvaluatedExpr::Typed(TypedEntity::ProxyList(mut l)) => {
-                collect_solo_tags = false;
-                collect_block_tags = false;
-                // part proxy without additional modifiers
-                proxies.append(&mut l);
             }
             EvaluatedExpr::Typed(TypedEntity::Generator(mut k)) => {
                 collect_solo_tags = false;
@@ -130,7 +114,6 @@ pub fn sync_context(
     Some(EvaluatedExpr::SyncContext(SyncContext {
         name,
         generators: gens,
-        part_proxies: proxies,
         sync_to,
         active: true,
         shift,

@@ -87,45 +87,6 @@ fn eval_generator_processor(
             g.processors.push((gp.get_id(), gp));
             EvaluatedExpr::Typed(TypedEntity::Generator(g))
         }
-        Some(EvaluatedExpr::Typed(TypedEntity::Symbol(s))) => {
-            // check if previous is a keyword ...
-            // if not, assume it's a part proxy
-            let prev = tail.pop();
-            match prev {
-                Some(EvaluatedExpr::Keyword(_)) => {
-                    tail.push(prev.unwrap()); // push back for further processing
-                    tail.push(EvaluatedExpr::Typed(TypedEntity::Symbol(s)));
-                    EvaluatedExpr::Typed(TypedEntity::GeneratorProcessorOrModifier(
-                        GeneratorProcessorOrModifier::GeneratorProcessor(collector(tail)),
-                    ))
-                }
-                _ => {
-                    tail.push(prev.unwrap()); // push back for further processing
-                    EvaluatedExpr::Typed(TypedEntity::PartProxy(PartProxy::Proxy(
-                        s,
-                        vec![GeneratorProcessorOrModifier::GeneratorProcessor(collector(
-                            tail,
-                        ))],
-                    )))
-                }
-            }
-        }
-        Some(EvaluatedExpr::Typed(TypedEntity::PartProxy(PartProxy::Proxy(s, mut proxy_mods)))) => {
-            proxy_mods.push(GeneratorProcessorOrModifier::GeneratorProcessor(collector(
-                tail,
-            )));
-            EvaluatedExpr::Typed(TypedEntity::PartProxy(PartProxy::Proxy(s, proxy_mods)))
-        }
-        Some(EvaluatedExpr::Typed(TypedEntity::ProxyList(mut l))) => {
-            let gp = collector(tail);
-            let mut pdrain = l.drain(..);
-            let mut new_list = Vec::new();
-            while let Some(PartProxy::Proxy(s, mut proxy_mods)) = pdrain.next() {
-                proxy_mods.push(GeneratorProcessorOrModifier::GeneratorProcessor(gp.clone()));
-                new_list.push(PartProxy::Proxy(s, proxy_mods));
-            }
-            EvaluatedExpr::Typed(TypedEntity::ProxyList(new_list))
-        }
         Some(EvaluatedExpr::Typed(TypedEntity::GeneratorList(mut gl))) => {
             let gp = collector(tail);
             for gen in gl.iter_mut() {

@@ -27,7 +27,6 @@ pub fn define_standard_library() -> FunctionMap {
     standard_library.std_lib.insert("vals".to_string(), eval::constructors::vals::vals);
 
     // commands
-    standard_library.std_lib.insert("defpart".to_string(), eval::commands::load_part);
     standard_library.std_lib.insert("freeze".to_string(), eval::commands::freeze_buffer);
     standard_library.std_lib.insert("load-sample".to_string(), eval::commands::load_sample);
     standard_library.std_lib.insert("load-wavematrix".to_string(), eval::commands::load_sample_as_wavematrix);

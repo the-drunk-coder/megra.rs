@@ -12,40 +12,6 @@ use crate::{OutputMode, SampleAndWavematrixSet};
 use parking_lot::Mutex;
 use std::sync;
 
-pub fn load_part(
-    _: &FunctionMap,
-    tail: &mut Vec<EvaluatedExpr>,
-    _: &sync::Arc<VariableStore>,
-    _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
-    _: OutputMode,
-) -> Option<EvaluatedExpr> {
-    let mut tail_drain = tail.drain(..).skip(1);
-    let mut gens = Vec::new();
-    let mut proxies = Vec::new();
-
-    let name: String = if let Some(EvaluatedExpr::Typed(TypedEntity::Symbol(s))) = tail_drain.next()
-    {
-        s
-    } else {
-        return None;
-    };
-
-    for c in tail_drain {
-        match c {
-            EvaluatedExpr::Typed(TypedEntity::Generator(g)) => gens.push(g),
-            EvaluatedExpr::Typed(TypedEntity::GeneratorList(mut gl)) => gens.append(&mut gl),
-            EvaluatedExpr::Typed(TypedEntity::PartProxy(p)) => proxies.push(p),
-            EvaluatedExpr::Typed(TypedEntity::ProxyList(mut pl)) => proxies.append(&mut pl),
-            _ => {}
-        }
-    }
-
-    Some(EvaluatedExpr::Command(Command::LoadPart((
-        name,
-        Part::Combined(gens, proxies),
-    ))))
-}
-
 pub fn define_midi_callback(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,

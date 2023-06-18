@@ -46,7 +46,6 @@ pub struct SyncContext {
     pub sync_to: Option<String>,
     pub active: bool,
     pub generators: Vec<Generator>,
-    pub part_proxies: Vec<PartProxy>,
     pub shift: i32,
     pub block_tags: BTreeSet<String>,
     pub solo_tags: BTreeSet<String>,
@@ -63,64 +62,6 @@ pub struct Session<const BUFSIZE: usize, const NCHAN: usize> {
     contexts: HashMap<String, BTreeSet<BTreeSet<String>>>,
     pub osc_client: OscClient,
     pub rec_control: Option<real_time_streaming::RecordingControl<BUFSIZE, NCHAN>>,
-}
-
-// basically a bfs on a dag !
-fn resolve_proxy(
-    var_store: &sync::Arc<VariableStore>,
-    proxy: PartProxy,
-    generators: &mut Vec<Generator>,
-) {
-    match proxy {
-        PartProxy::Proxy(s, procs) => {
-            //visited.push(s);
-            // dashmap access is a bit awkward ...
-            if let Some(thing) = var_store.get(&VariableId::Custom(s)) {
-                if let TypedEntity::Part(Part::Combined(part_generators, proxies)) = thing.value() {
-                    // this can be done for sure ...
-                    for mut gen in part_generators.clone().drain(..) {
-                        let mut procs_clone = procs.clone();
-                        for gpom in procs_clone.drain(..) {
-                            match gpom {
-                                GeneratorProcessorOrModifier::GeneratorProcessor(gp) => {
-                                    gen.processors.push((gp.get_id(), gp))
-                                }
-                                GeneratorProcessorOrModifier::GeneratorModifierFunction((
-                                    fun,
-                                    pos,
-                                    named,
-                                )) => fun(&mut gen, &pos, &named, var_store),
-                            }
-                        }
-                        //gen.id_tags.insert(s.clone());
-                        generators.push(gen);
-                    }
-
-                    for sub_proxy in proxies.clone().drain(..) {
-                        let mut sub_gens = Vec::new();
-                        resolve_proxy(var_store, sub_proxy, &mut sub_gens);
-                        for mut gen in sub_gens.drain(..) {
-                            let mut procs_clone = procs.clone();
-                            for gpom in procs_clone.drain(..) {
-                                match gpom {
-                                    GeneratorProcessorOrModifier::GeneratorProcessor(gp) => {
-                                        gen.processors.push((gp.get_id(), gp))
-                                    }
-                                    GeneratorProcessorOrModifier::GeneratorModifierFunction((
-                                        fun,
-                                        pos,
-                                        named,
-                                    )) => fun(&mut gen, &pos, &named, var_store),
-                                }
-                            }
-                            //gen.id_tags.insert(s.clone());
-                            generators.push(gen);
-                        }
-                    }
-                }
-            }
-        }
-    }
 }
 
 //////////////////////////////////////
@@ -376,25 +317,6 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
         sample_set: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
         output_mode: OutputMode,
     ) {
-        // resolve part proxies ..
-        // at some point this should probably check if
-        // there's loops and so on ...
-        // do it in a block to keep locking time short
-        {
-            let mut gens = Vec::new();
-
-            for p in ctx.part_proxies.drain(..) {
-                resolve_proxy(var_store, p, &mut gens);
-            }
-
-            for (i, gen) in gens.iter_mut().enumerate() {
-                gen.id_tags.insert(format!("prox-{i}"));
-                gen.id_tags.insert(ctx.name.clone());
-            }
-
-            ctx.generators.append(&mut gens);
-        } // end resolve proxies
-
         let name = ctx.name.clone(); // keep a copy for later
         if ctx.active {
             // otherwise, handle internal sync relations ...

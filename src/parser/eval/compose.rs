@@ -39,23 +39,6 @@ pub fn compose(
 ) -> Option<EvaluatedExpr> {
     let last = tail.pop();
     Some(match last {
-        Some(EvaluatedExpr::Typed(TypedEntity::Symbol(s))) => EvaluatedExpr::Typed(
-            TypedEntity::PartProxy(PartProxy::Proxy(s, collect_compose(tail))),
-        ),
-        Some(EvaluatedExpr::Typed(TypedEntity::PartProxy(PartProxy::Proxy(s, mut proxy_mods)))) => {
-            proxy_mods.append(&mut collect_compose(tail));
-            EvaluatedExpr::Typed(TypedEntity::PartProxy(PartProxy::Proxy(s, proxy_mods)))
-        }
-        Some(EvaluatedExpr::Typed(TypedEntity::ProxyList(mut l))) => {
-            let gp = collect_compose(tail);
-            let mut pdrain = l.drain(..);
-            let mut new_list = Vec::new();
-            while let Some(PartProxy::Proxy(s, mut proxy_mods)) = pdrain.next() {
-                proxy_mods.append(&mut gp.clone());
-                new_list.push(PartProxy::Proxy(s, proxy_mods));
-            }
-            EvaluatedExpr::Typed(TypedEntity::ProxyList(new_list))
-        }
         Some(EvaluatedExpr::Typed(TypedEntity::Generator(mut g))) => {
             let mut proc_or_mods = collect_compose(tail);
             let mut procs = Vec::new();

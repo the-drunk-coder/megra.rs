@@ -31,7 +31,6 @@ pub enum TypedEntity {
     Boolean(bool),
     Part(Part),
     ConfigParameter(ConfigParameter),
-    PartProxy(PartProxy),
     Generator(Generator),
     GeneratorProcessorOrModifier(GeneratorProcessorOrModifier),
     ControlEvent(ControlEvent),
@@ -41,7 +40,6 @@ pub enum TypedEntity {
     Rule(Rule),
     // compound types, some specialized for convenience
     Vec(Vec<Box<TypedEntity>>),
-    ProxyList(Vec<PartProxy>),
     GeneratorList(Vec<Generator>),
     GeneratorProcessorOrModifierList(Vec<GeneratorProcessorOrModifier>),
     GeneratorModifierList(Vec<GeneratorProcessorOrModifier>),

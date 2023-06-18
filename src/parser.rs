@@ -152,6 +152,7 @@ fn parse_definition(i: &str) -> IResult<&str, Expr, VerboseError<&str>> {
     alt((
         map(tag("fun"), |_| Expr::FunctionDefinition),
         map(tag("let"), |_| Expr::VariableDefinition),
+        map(tag("defpart"), |_| Expr::VariableDefinition),
     ))(i)
 }
 

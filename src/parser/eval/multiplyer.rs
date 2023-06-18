@@ -70,68 +70,8 @@ fn spread_gens(gens: &mut [Generator], out_mode: &OutputMode) {
     }
 }
 
-fn spread_proxies(proxies: &mut [PartProxy], out_mode: &OutputMode) {
-    let positions = match out_mode {
-        OutputMode::Stereo => {
-            if proxies.len() == 1 {
-                vec![0.0]
-            } else {
-                let mut p = Vec::new();
-                for i in 0..proxies.len() {
-                    let val = (i as f32 * (2.0 / (proxies.len() as f32 - 1.0))) - 1.0;
-                    p.push(val);
-                }
-                p
-            }
-        }
-        OutputMode::FourChannel => {
-            if proxies.len() == 1 {
-                vec![0.0]
-            } else {
-                let mut p = Vec::new();
-                for i in 0..proxies.len() {
-                    let val = 1.0 + (i as f32 * (3.0 / (proxies.len() as f32 - 1.0)));
-                    p.push(val);
-                }
-                p
-            }
-        }
-        OutputMode::EightChannel => {
-            if proxies.len() == 1 {
-                vec![0.0]
-            } else {
-                let mut p = Vec::new();
-                for i in 0..proxies.len() {
-                    let val = 1.0 + (i as f32 * (7.0 / (proxies.len() as f32 - 1.0)));
-                    p.push(val);
-                }
-                p
-            }
-        }
-    };
-
-    for (i, prox) in proxies.iter_mut().enumerate() {
-        let mut p = PearProcessor::new();
-        let mut ev = Event::with_name_and_operation("pos".to_string(), EventOperation::Replace);
-        ev.params.insert(
-            SynthParameterLabel::ChannelPosition,
-            ParameterValue::Scalar(DynVal::with_value(positions[i])),
-        );
-        let mut filtered_events = HashMap::new();
-        filtered_events.insert(vec!["".to_string()], (true, vec![ev]));
-        p.events_to_be_applied
-            .push((DynVal::with_value(100.0), filtered_events));
-        match prox {
-            PartProxy::Proxy(_, ref mut procs) => procs.push(
-                GeneratorProcessorOrModifier::GeneratorProcessor(Box::new(p)),
-            ),
-        }
-    }
-}
-
 pub fn eval_multiplyer(
     gen_spread: GenSpreader,
-    proxy_spread: ProxySpreader,
     tail: &mut Vec<EvaluatedExpr>,
     out_mode: OutputMode,
     globals: &std::sync::Arc<VariableStore>,
@@ -165,48 +105,6 @@ pub fn eval_multiplyer(
     }
 
     Some(match last {
-        // create a proxy ...
-        Some(EvaluatedExpr::Typed(TypedEntity::Symbol(s))) => {
-            println!("create proxy {s}");
-            let mut proxies = Vec::new();
-            for gpl in gen_proc_list_list.drain(..) {
-                proxies.push(PartProxy::Proxy(s.clone(), gpl));
-            }
-            proxies.push(PartProxy::Proxy(s, Vec::new()));
-            // return early, this will be resolved in session handling !
-            proxy_spread(&mut proxies, &out_mode);
-            EvaluatedExpr::Typed(TypedEntity::ProxyList(proxies))
-        }
-        Some(EvaluatedExpr::Typed(TypedEntity::PartProxy(PartProxy::Proxy(s, procs)))) => {
-            println!("create proxy list from proxy {s}");
-            let mut proxies = Vec::new();
-            for mut gpl in gen_proc_list_list.drain(..) {
-                let mut ngpl = procs.clone();
-                ngpl.append(&mut gpl);
-                proxies.push(PartProxy::Proxy(s.clone(), ngpl));
-            }
-            proxies.push(PartProxy::Proxy(s, procs));
-            proxy_spread(&mut proxies, &out_mode);
-            EvaluatedExpr::Typed(TypedEntity::ProxyList(proxies))
-        }
-        Some(EvaluatedExpr::Typed(TypedEntity::ProxyList(mut l))) => {
-            println!("propagate proxy list");
-            let mut proxies = Vec::new();
-            for prox in l.iter() {
-                match prox {
-                    PartProxy::Proxy(s, procs) => {
-                        for gpl in gen_proc_list_list.iter() {
-                            let mut ngpl = procs.clone();
-                            ngpl.append(&mut gpl.clone());
-                            proxies.push(PartProxy::Proxy(s.clone(), ngpl));
-                        }
-                    }
-                }
-            }
-            proxies.append(&mut l);
-            proxy_spread(&mut proxies, &out_mode);
-            EvaluatedExpr::Typed(TypedEntity::ProxyList(proxies))
-        }
         Some(EvaluatedExpr::Typed(TypedEntity::Generator(g))) => {
             let mut gens = Vec::new();
             let mut idx: usize = 0;
@@ -303,7 +201,7 @@ pub fn eval_xspread(
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     out_mode: OutputMode,
 ) -> Option<EvaluatedExpr> {
-    eval_multiplyer(spread_gens, spread_proxies, tail, out_mode, globals)
+    eval_multiplyer(spread_gens, tail, out_mode, globals)
 }
 
 pub fn eval_xdup(
@@ -313,5 +211,5 @@ pub fn eval_xdup(
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     out_mode: OutputMode,
 ) -> Option<EvaluatedExpr> {
-    eval_multiplyer(|_, _| {}, |_, _| {}, tail, out_mode, globals)
+    eval_multiplyer(|_, _| {}, tail, out_mode, globals)
 }
