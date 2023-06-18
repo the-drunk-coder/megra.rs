@@ -198,13 +198,12 @@ pub fn parameter(
                             || param_key == SynthParameterLabel::HighpassCutoffFrequency
                             || param_key == SynthParameterLabel::PeakFrequency =>
                     {
-                        if let Some(note) = music_theory::from_string(&s) {
-                            Some(ParameterValue::Scalar(DynVal::with_value(
-                                music_theory::to_freq(note, music_theory::Tuning::EqualTemperament),
+                        music_theory::from_string(&s).map(|note| {
+                            ParameterValue::Scalar(DynVal::with_value(music_theory::to_freq(
+                                note,
+                                music_theory::Tuning::EqualTemperament,
                             )))
-                        } else {
-                            None
-                        }
+                        })
                     }
                     EvaluatedExpr::Typed(TypedEntity::Symbol(s)) => {
                         // jump out if the user entered garbage ...
