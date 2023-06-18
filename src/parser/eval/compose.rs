@@ -6,6 +6,8 @@ use crate::{OutputMode, SampleAndWavematrixSet};
 use parking_lot::Mutex;
 use std::sync;
 
+use super::resolver::resolve_globals;
+
 fn collect_compose(tail: &mut Vec<EvaluatedExpr>) -> Vec<GeneratorProcessorOrModifier> {
     let mut gen_procs = Vec::new();
     let mut tail_drain = tail.drain(..);
@@ -37,6 +39,7 @@ pub fn compose(
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
+    resolve_globals(&mut tail[1..], globals);
     let last = tail.pop();
     Some(match last {
         Some(EvaluatedExpr::Typed(TypedEntity::Generator(mut g))) => {
