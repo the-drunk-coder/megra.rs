@@ -4,6 +4,7 @@ use crate::{
     generator_processor::GeneratorProcessor,
     markov_sequence_generator::MarkovSequenceGenerator,
 };
+use core::fmt;
 use ruffbox_synth::building_blocks::{SynthParameterLabel, SynthParameterValue};
 use std::boxed::Box;
 use std::collections::BTreeSet;
@@ -48,6 +49,12 @@ pub struct Generator {
     // the keep_root flag determines whether we replace the root at
     // subsequent evaluations ...
     pub keep_root: bool,
+}
+
+impl fmt::Debug for Generator {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Generator({:#?})", self.id_tags)
+    }
 }
 
 impl Generator {

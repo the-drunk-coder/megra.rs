@@ -10,7 +10,7 @@ use ruffbox_synth::building_blocks::{FilterType, SynthParameterLabel, SynthParam
 
 use crate::{TypedEntity, VariableId, VariableStore};
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 #[rustfmt::skip]
 pub enum ParameterValue {
     Scalar(DynVal),

@@ -571,7 +571,7 @@ pub fn export_dot(
 
     match tail_drain.next() {
         Some(EvaluatedExpr::Typed(TypedEntity::Generator(g))) => Some(EvaluatedExpr::Command(
-            Command::ExportDotStatic((filename, g)),
+            Command::ExportDotStatic(filename, g),
         )),
         Some(EvaluatedExpr::Keyword(k)) => {
             match k.as_str() {
@@ -616,10 +616,10 @@ pub fn once(
         }
     }
 
-    Some(EvaluatedExpr::Command(Command::Once((
+    Some(EvaluatedExpr::Command(Command::Once(
         sound_events,
         control_events,
-    ))))
+    )))
 }
 
 pub fn step_part(

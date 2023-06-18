@@ -84,7 +84,7 @@ fn interpret_midi_command<const BUFSIZE: usize, const NCHAN: usize>(
 ) {
     match c {
         // I should overthink this in general ...
-        Command::Once((mut s, mut c)) => {
+        Command::Once(mut s, mut c) => {
             commands::once(
                 ruffbox,
                 var_store,

@@ -1,3 +1,4 @@
+use core::fmt;
 use ruffbox_synth::building_blocks::{
     EnvelopeSegmentInfo, EnvelopeSegmentType, SynthParameterLabel, SynthParameterValue, ValOp,
 };
@@ -59,6 +60,12 @@ pub struct ControlEvent {
     pub tags: BTreeSet<String>,
     pub ctx: Option<Vec<SyncContext>>,
     pub cmd: Option<Vec<Command>>,
+}
+
+impl fmt::Debug for ControlEvent {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "ControlEvent({:#?})", self.tags)
+    }
 }
 
 /// This is the "latent" event, where the parameters haven't been evaluated yet.

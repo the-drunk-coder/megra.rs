@@ -4,7 +4,7 @@ use ruffbox_synth::building_blocks::{SynthParameterLabel, SynthParameterValue};
 use std::collections::HashMap;
 use vom_rs::pfa;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Rule {
     pub source: Vec<char>,
     pub symbol: char,

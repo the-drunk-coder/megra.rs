@@ -9,6 +9,7 @@ pub mod generator_modifier;
 pub mod generator_processor;
 pub mod multiplyer;
 pub mod osc;
+pub mod print;
 pub mod progn;
 pub mod resolver;
 pub mod session;

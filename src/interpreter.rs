@@ -26,6 +26,9 @@ pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
     base_dir: String,
 ) {
     match c {
+        Command::Print(te) => {
+            println!("{te:#?}");
+        }
         Command::Clear => {
             let session2 = sync::Arc::clone(session);
             thread::spawn(move || {
@@ -132,13 +135,13 @@ pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
         Command::GlobalRuffboxParams(mut m) => {
             commands::set_global_ruffbox_parameters(ruffbox, var_store, &mut m);
         }
-        Command::ExportDotStatic((f, g)) => {
+        Command::ExportDotStatic(f, g) => {
             commands::export_dot_static(&f, &g);
         }
         Command::ExportDotRunning((f, t)) => {
             commands::export_dot_running(&f, &t, session);
         }
-        Command::Once((mut s, mut c)) => {
+        Command::Once(mut s, mut c) => {
             commands::once(
                 ruffbox,
                 var_store,
