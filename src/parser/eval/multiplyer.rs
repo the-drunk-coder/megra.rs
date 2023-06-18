@@ -13,7 +13,6 @@ use crate::{OutputMode, SampleAndWavematrixSet};
 use parking_lot::Mutex;
 
 pub type GenSpreader = fn(&mut [Generator], &OutputMode);
-pub type ProxySpreader = fn(&mut [PartProxy], &OutputMode);
 
 fn spread_gens(gens: &mut [Generator], out_mode: &OutputMode) {
     let positions = match out_mode {
