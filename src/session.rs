@@ -5,10 +5,7 @@ use std::{sync, thread};
 use ruffbox_synth::building_blocks::{SynthParameterLabel, SynthParameterValue};
 use ruffbox_synth::ruffbox::RuffboxControls;
 
-use crate::builtin_types::{
-    Command, ConfigParameter, VariableId,
-    VariableStore,
-};
+use crate::builtin_types::{Command, ConfigParameter, VariableId, VariableStore};
 use crate::commands;
 use crate::event::InterpretableEvent;
 use crate::event_helpers::*;
