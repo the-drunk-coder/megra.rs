@@ -16,15 +16,8 @@ use regex::Regex;
 use std::collections::HashMap;
 use std::{fmt, sync};
 
-use crate::event::{ControlEvent, Event};
-use crate::generator::Generator;
-use crate::markov_sequence_generator::Rule;
-use crate::parameter::{DynVal, ParameterValue};
 use crate::session::SyncContext;
-use crate::{
-    Command, GeneratorProcessorOrModifier, OutputMode, PartProxy, SampleAndWavematrixSet,
-    TypedEntity, VariableStore,
-};
+use crate::{Command, OutputMode, SampleAndWavematrixSet, TypedEntity, VariableStore};
 
 pub mod eval;
 
