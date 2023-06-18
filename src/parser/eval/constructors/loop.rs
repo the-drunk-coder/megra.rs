@@ -4,6 +4,7 @@ use crate::event::*;
 use crate::generator::Generator;
 use crate::markov_sequence_generator::MarkovSequenceGenerator;
 use crate::parameter::*;
+use crate::parser::eval::resolver::resolve_globals;
 use crate::sample_set::SampleAndWavematrixSet;
 use crate::session::OutputMode;
 use ruffbox_synth::building_blocks::SynthParameterLabel;
@@ -22,10 +23,10 @@ pub fn a_loop(
     sample_set: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     out_mode: OutputMode,
 ) -> Option<EvaluatedExpr> {
-    let mut tail_drain = tail.drain(..).peekable();
-
-    // ignore function name in this case
-    tail_drain.next();
+    // eval-time resolve
+    // ignore function name
+    resolve_globals(&mut tail[1..], var_store);
+    let mut tail_drain = tail.drain(1..).peekable();
 
     // name is the first symbol
     let name = if let Some(EvaluatedExpr::Typed(TypedEntity::Symbol(n))) = tail_drain.peek() {

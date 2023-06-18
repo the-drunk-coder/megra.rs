@@ -3,6 +3,7 @@ use crate::event::*;
 use crate::generator::Generator;
 use crate::markov_sequence_generator::MarkovSequenceGenerator;
 use crate::parameter::*;
+use crate::parser::eval::resolver::resolve_globals;
 
 use ruffbox_synth::building_blocks::SynthParameterLabel;
 use std::collections::{BTreeSet, HashMap};
@@ -20,8 +21,10 @@ pub fn friendship(
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
-    // ignore function name in this case
-    let mut tail_drain = tail.drain(..).skip(1);
+    // eval-time resolve
+    // ignore function name
+    resolve_globals(&mut tail[1..], var_store);
+    let mut tail_drain = tail.drain(1..);
 
     // name is the first symbol
     let name = if let Some(EvaluatedExpr::Typed(TypedEntity::Symbol(n))) = tail_drain.next() {

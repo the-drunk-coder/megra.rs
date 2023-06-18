@@ -10,6 +10,7 @@ pub mod generator_processor;
 pub mod multiplyer;
 pub mod osc;
 pub mod progn;
+pub mod resolver;
 pub mod session;
 pub mod structs;
 //pub mod vec;

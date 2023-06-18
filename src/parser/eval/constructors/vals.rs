@@ -12,6 +12,7 @@ use crate::event_helpers::map_parameter;
 use crate::generator::Generator;
 use crate::markov_sequence_generator::MarkovSequenceGenerator;
 use crate::parameter::*;
+use crate::parser::eval::resolver::resolve_globals;
 use crate::parser::{EvaluatedExpr, FunctionMap};
 use crate::{OutputMode, SampleAndWavematrixSet};
 
@@ -22,10 +23,10 @@ pub fn vals(
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
-    let mut tail_drain = tail.drain(..);
-
-    // ignore function name in this case
-    tail_drain.next();
+    // eval-time resolve
+    // ignore function name
+    resolve_globals(&mut tail[1..], var_store);
+    let mut tail_drain = tail.drain(1..);
 
     // name is the first symbol
     let name = if let Some(EvaluatedExpr::Typed(TypedEntity::Symbol(n))) = tail_drain.next() {

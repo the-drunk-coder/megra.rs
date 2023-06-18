@@ -266,6 +266,9 @@ pub fn parse_expr(i: &str) -> IResult<&str, Expr, VerboseError<&str>> {
 }
 
 /// This one reduces the abstract syntax tree ...
+/// does not resolve global variables at this point,
+/// as there might be different points in time where it makes
+/// sense to resolve things ...
 pub fn eval_expression(
     e: &Expr,
     functions: &FunctionMap,
