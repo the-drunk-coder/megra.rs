@@ -54,7 +54,7 @@ pub fn osc_send(
     };
 
     let mut args = Vec::new();
-    while let Some(thing) = tail_drain.next() {
+    for thing in tail_drain {
         match thing {
             EvaluatedExpr::Typed(TypedEntity::Float(f)) => args.push(TypedEntity::Float(f)),
             EvaluatedExpr::Typed(TypedEntity::Symbol(s)) => args.push(TypedEntity::Symbol(s)),
