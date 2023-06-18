@@ -776,3 +776,11 @@ pub fn define_osc_client(
         clients.insert(name, cl);
     }
 }
+
+pub fn push(id: VariableId, value: TypedEntity, globals: &sync::Arc<VariableStore>) {
+    if let Some(mut thing) = globals.get_mut(&id) {
+        if let TypedEntity::Vec(v) = thing.value_mut() {
+            v.push(Box::new(value));
+        }
+    }
+}

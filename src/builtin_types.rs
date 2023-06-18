@@ -86,6 +86,7 @@ pub enum Command {
     OscSendMessage(String, String, Vec<TypedEntity>),
     DefineMidiCallback(u8, Box<Command>),
     Print(TypedEntity),
+    Push(VariableId, TypedEntity),
 }
 
 #[derive(Clone)]

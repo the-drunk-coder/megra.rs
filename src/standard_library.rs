@@ -59,6 +59,7 @@ pub fn define_standard_library() -> FunctionMap {
 
     // parameter structs
     standard_library.std_lib.insert("vec".to_string(), eval::structs::vec);
+    standard_library.std_lib.insert("push".to_string(), eval::structs::push);
     standard_library.std_lib.insert("mat".to_string(), eval::structs::mat);
     
     // sound events (sample events are added as needed)

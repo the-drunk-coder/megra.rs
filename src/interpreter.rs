@@ -26,6 +26,9 @@ pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
     base_dir: String,
 ) {
     match c {
+        Command::Push(id, te) => {
+            commands::push(id, te, var_store);
+        }
         Command::Print(te) => {
             println!("{te:#?}");
         }
