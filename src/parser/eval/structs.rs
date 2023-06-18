@@ -19,20 +19,12 @@ pub fn vec(
     let mut pvec = Vec::new();
 
     for p in tail_drain {
-        match p {
-            EvaluatedExpr::Typed(TypedEntity::Float(f)) => {
-                pvec.push(DynVal::with_value(f));
-            }
-            EvaluatedExpr::Typed(TypedEntity::Parameter(p)) => {
-                pvec.push(p);
-            }
-            _ => {}
+        if let EvaluatedExpr::Typed(t) = p {
+            pvec.push(Box::new(t));
         }
     }
 
-    Some(EvaluatedExpr::Typed(TypedEntity::ParameterValue(
-        ParameterValue::Vector(pvec),
-    )))
+    Some(EvaluatedExpr::Typed(TypedEntity::Vec(pvec)))
 }
 
 pub fn mat(
@@ -58,11 +50,8 @@ pub fn mat(
                     }
                 }
             }
-            EvaluatedExpr::Typed(TypedEntity::Float(f)) => {
-                row.push(DynVal::with_value(f));
-            }
-            EvaluatedExpr::Typed(TypedEntity::Parameter(p)) => {
-                row.push(p);
+            EvaluatedExpr::Typed(t) => {
+                row.push(Box::new(t));
             }
             _ => {}
         }
@@ -72,7 +61,5 @@ pub fn mat(
         pmat.push(row.clone());
     }
 
-    Some(EvaluatedExpr::Typed(TypedEntity::ParameterValue(
-        ParameterValue::Matrix(pmat),
-    )))
+    Some(EvaluatedExpr::Typed(TypedEntity::Matrix(pmat)))
 }

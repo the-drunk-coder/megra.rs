@@ -52,6 +52,19 @@ pub fn map_symbolic_param_value(sym: &str) -> Option<ParameterValue> {
     }
 }
 
+pub fn resolve_vector(vec: Vec<Box<TypedEntity>>) -> ParameterValue {
+    let mut pvec = Vec::new();
+    for x in vec.into_iter() {
+        match *x {
+            TypedEntity::Float(f) => pvec.push(DynVal::with_value(f)),
+            TypedEntity::Parameter(p) => pvec.push(p.clone()),
+            _ => {}
+        }
+    }
+
+    ParameterValue::Vector(pvec)
+}
+
 fn collect_param_value(
     tail_drain: &mut std::iter::Peekable<std::vec::Drain<EvaluatedExpr>>,
 ) -> ParameterValue {
@@ -69,7 +82,7 @@ fn collect_param_value(
                     tail_drain.next();
                     return pc;
                 } else {
-                    break;
+                    ParameterValue::Placeholder(VariableId::Symbol(s.to_string()));
                 }
             }
             EvaluatedExpr::Typed(TypedEntity::Parameter(p)) => {
@@ -82,6 +95,15 @@ fn collect_param_value(
                 tail_drain.next();
                 return mc;
             }
+            EvaluatedExpr::Typed(TypedEntity::Vec(v)) => {
+                let mc = resolve_vector(v.clone());
+                tail_drain.next();
+                return mc;
+            }
+            EvaluatedExpr::Identifier(i) => {
+                ParameterValue::Placeholder(VariableId::Custom(i.to_string()));
+            }
+
             _ => {
                 break;
             }
