@@ -6,7 +6,7 @@ use ruffbox_synth::building_blocks::{SynthParameterLabel, SynthParameterValue};
 use ruffbox_synth::ruffbox::RuffboxControls;
 
 use crate::builtin_types::{
-    Command, ConfigParameter, GeneratorProcessorOrModifier, Part, PartProxy, VariableId,
+    Command, ConfigParameter, VariableId,
     VariableStore,
 };
 use crate::commands;

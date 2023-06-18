@@ -1,5 +1,5 @@
 use crate::{
-    builtin_types::{TypedEntity, VariableId, VariableStore},
+    builtin_types::{VariableId, VariableStore},
     parser::EvaluatedExpr,
 };
 
