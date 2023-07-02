@@ -8,6 +8,7 @@ use ruffbox_synth::ruffbox::RuffboxControls;
 
 use crate::builtin_types::*;
 use crate::commands;
+use crate::osc_receiver::OscReceiver;
 use crate::parser::{EvaluatedExpr, FunctionMap};
 use crate::sample_set::SampleAndWavematrixSet;
 use crate::session::{OutputMode, Session};
@@ -186,6 +187,9 @@ pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
                 let _ = thing.value().send_message(osc_addr, osc_args);
             }
             //println!("send msg {client_name} {osc_addr}");
+        }
+        Command::OscDefineCallback(target) => {
+            OscReceiver::start_receiver_thread_udp(target);
         }
     };
 }

@@ -3,6 +3,7 @@ use crate::generator::{GenModFun, Generator};
 use crate::generator_processor::GeneratorProcessor;
 use crate::markov_sequence_generator::Rule;
 use crate::parameter::*;
+use crate::parser::EvaluatedExpr;
 use core::fmt;
 use dashmap::DashMap;
 use std::collections::{BTreeSet, HashMap};
@@ -87,6 +88,7 @@ pub enum Command {
     StopRecording,                                 // stop recording ...
     OscDefineClient(String, String),
     OscSendMessage(String, String, Vec<TypedEntity>),
+    OscDefineCallback(String),
     DefineMidiCallback(u8, Box<Command>),
     Print(TypedEntity),
     Push(VariableId, TypedEntity),

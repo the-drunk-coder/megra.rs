@@ -72,3 +72,24 @@ pub fn osc_send(
         args,
     )))
 }
+
+pub fn osc_define_callback(
+    _: &FunctionMap,
+    tail: &mut Vec<EvaluatedExpr>,
+    _: &sync::Arc<VariableStore>,
+    _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
+    _: OutputMode,
+) -> Option<EvaluatedExpr> {
+    let mut tail_drain = tail.drain(..);
+    tail_drain.next();
+
+    let host_name = if let Some(EvaluatedExpr::Typed(TypedEntity::String(s))) = tail_drain.next() {
+        s
+    } else {
+        return None;
+    };
+
+    Some(EvaluatedExpr::Command(Command::OscDefineCallback(
+        host_name,
+    )))
+}

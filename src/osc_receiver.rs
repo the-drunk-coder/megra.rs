@@ -6,7 +6,7 @@ use std::str::FromStr;
 pub struct OscReceiver {}
 
 impl OscReceiver {
-    pub fn start_receiver_thread_udp(&mut self, target: String) {
+    pub fn start_receiver_thread_udp(target: String) {
         let addr = match SocketAddrV4::from_str(&target) {
             Ok(addr) => addr,
             Err(_) => panic!("err"),
