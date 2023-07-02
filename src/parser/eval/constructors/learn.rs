@@ -90,13 +90,26 @@ pub fn learn(
 
         match c {
             EvaluatedExpr::Keyword(k) => match k.as_str() {
-                "sample" => {
-                    if let Some(EvaluatedExpr::Typed(TypedEntity::String(desc))) = tail_drain.next()
-                    {
+                "sample" => match tail_drain.next() {
+                    Some(EvaluatedExpr::Typed(TypedEntity::String(desc))) => {
                         sample = desc.to_string();
                         sample.retain(|c| !c.is_whitespace());
                     }
-                }
+                    Some(EvaluatedExpr::Typed(TypedEntity::Vec(args))) => {
+                        for arg in args {
+                            match *arg {
+                                TypedEntity::String(s) => {
+                                    sample.push_str(&s);
+                                }
+                                TypedEntity::Character(s) => {
+                                    sample.push(s);
+                                }
+                                _ => {}
+                            }
+                        }
+                    }
+                    _ => {}
+                },
                 "events" => {
                     collect_events = true;
                     continue;
