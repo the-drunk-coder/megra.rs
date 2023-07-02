@@ -5,6 +5,7 @@
 #![allow(clippy::type_complexity)]
 
 pub mod builtin_types;
+pub mod callbacks;
 pub mod commands;
 pub mod cyc_parser;
 pub mod editor;
@@ -37,6 +38,7 @@ mod osc_sender;
 mod visualizer_client;
 
 use crate::builtin_types::*;
+use crate::callbacks::CallbackMap;
 use crate::sample_set::SampleAndWavematrixSet;
 use crate::session::{OutputMode, Session};
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
@@ -731,26 +733,8 @@ where
     let stdlib = sync::Arc::new(Mutex::new(define_standard_library()));
     let controls_arc = sync::Arc::new(controls);
 
-    // check if we have a midi input situation
-    let midi_callback_map = sync::Arc::new(Mutex::new(HashMap::<u8, Command>::new()));
-    if let Some(midi_in_port) = options.midi_in {
-        let cb_2 = sync::Arc::clone(&midi_callback_map);
-        let session_midi = sync::Arc::clone(&session);
-        let ruffbox_midi = sync::Arc::clone(&controls_arc);
-        let sam_midi = sync::Arc::clone(&sample_set);
-        let var_midi = sync::Arc::clone(&var_store);
-        thread::spawn(move || {
-            midi_input::open_midi_input_port(
-                cb_2,
-                midi_in_port,
-                session_midi,
-                ruffbox_midi,
-                sam_midi,
-                var_midi,
-                options.mode,
-            );
-        });
-    }
+    // callbacks for midi or osc
+    let callback_map = sync::Arc::new(CallbackMap::new());
 
     let base_dir = if let Some(p) = options.base_folder {
         let bd = std::path::PathBuf::from(p);
@@ -820,10 +804,34 @@ where
         });
     }
 
+    // check if we have a midi input situation
+    if let Some(midi_in_port) = options.midi_in {
+        let callback_map_midi = sync::Arc::clone(&callback_map);
+        let function_map_midi = sync::Arc::clone(&stdlib);
+        let session_midi = sync::Arc::clone(&session);
+        let ruffbox_midi = sync::Arc::clone(&controls_arc);
+        let sam_midi = sync::Arc::clone(&sample_set);
+        let var_midi = sync::Arc::clone(&var_store);
+        let bd = base_dir.clone().display().to_string();
+        thread::spawn(move || {
+            midi_input::open_midi_input_port(
+                midi_in_port,
+                function_map_midi,
+                callback_map_midi,
+                session_midi,
+                ruffbox_midi,
+                sam_midi,
+                var_midi,
+                options.mode,
+                bd,
+            );
+        });
+    }
+
     if options.editor {
         editor::run_editor(
             &stdlib,
-            &midi_callback_map,
+            &callback_map,
             &session,
             &controls_arc,
             &sample_set,
@@ -840,7 +848,7 @@ where
         // start the megra repl
         repl::start_repl(
             &stdlib,
-            &midi_callback_map,
+            &callback_map,
             &session,
             &controls_arc,
             &sample_set,

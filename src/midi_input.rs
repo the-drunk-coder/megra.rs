@@ -4,7 +4,9 @@ use parking_lot::Mutex;
 use std::collections::HashMap;
 use std::sync;
 
-use crate::{Command, OutputMode, SampleAndWavematrixSet, Session, VariableStore};
+use crate::callbacks::{CallbackKey, CallbackMap};
+use crate::parser::FunctionMap;
+use crate::{interpreter, Command, OutputMode, SampleAndWavematrixSet, Session, VariableStore};
 
 use crate::commands;
 
@@ -22,13 +24,15 @@ pub fn list_midi_input_ports() -> Result<(), anyhow::Error> {
 }
 
 pub fn open_midi_input_port<const BUFSIZE: usize, const NCHAN: usize>(
-    midi_callback_map: sync::Arc<Mutex<HashMap<u8, Command>>>, // could be dashmap i suppose
     in_port_num: usize,
+    function_map: sync::Arc<Mutex<FunctionMap>>,
+    callback_map: sync::Arc<CallbackMap>, // could be dashmap i suppose
     session: sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
     ruffbox: sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
     sample_set: sync::Arc<Mutex<SampleAndWavematrixSet>>,
     var_store: sync::Arc<VariableStore>,
-    output_mode: OutputMode,
+    mode: OutputMode,
+    base_dir: String,
 ) {
     let mut midi_in = MidiInput::new("midir reading input").unwrap();
     midi_in.ignore(Ignore::None);
@@ -50,14 +54,17 @@ pub fn open_midi_input_port<const BUFSIZE: usize, const NCHAN: usize>(
                 const NOTE_ON_MSG: u8 = 145;
                 if message[0] == NOTE_ON_MSG {
                     let key = message[1];
-                    if let Some(command) = midi_callback_map.lock().get(&key) {
-                        interpret_midi_command(
-                            command.clone(),
+                    if let Some(thing) = callback_map.get(&CallbackKey::MidiNote(key)) {
+                        interpreter::interpret(
+                            thing.clone(),
+                            &function_map,
+                            &callback_map,
                             &session,
                             &ruffbox,
                             &sample_set,
                             &var_store,
-                            output_mode,
+                            mode,
+                            base_dir.clone(),
                         );
                     } else {
                         println!("EMPTY KEY {:?} (len = {})", message, message.len());
@@ -72,34 +79,4 @@ pub fn open_midi_input_port<const BUFSIZE: usize, const NCHAN: usize>(
 
     // keep midi thread running until we quit the program ...
     std::thread::park();
-}
-
-fn interpret_midi_command<const BUFSIZE: usize, const NCHAN: usize>(
-    c: Command,
-    session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
-    ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
-    sample_set: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
-    var_store: &sync::Arc<VariableStore>,
-    output_mode: OutputMode,
-) {
-    match c {
-        // I should overthink this in general ...
-        Command::Once(mut s, mut c) => {
-            commands::once(
-                ruffbox,
-                var_store,
-                sample_set,
-                session,
-                &mut s,
-                &mut c,
-                output_mode,
-            );
-        }
-        Command::StepPart(name) => {
-            commands::step_part(ruffbox, var_store, sample_set, session, output_mode, name);
-        }
-        _ => {
-            println!("this command isn't midi-enabled !")
-        }
-    }
 }

@@ -27,7 +27,7 @@ pub fn define_midi_callback(
         return None;
     };
 
-    if let Some(EvaluatedExpr::Command(c)) = tail_drain.next() {
+    if let Some(c) = tail_drain.next() {
         Some(EvaluatedExpr::Command(Command::DefineMidiCallback(
             key,
             Box::new(c),

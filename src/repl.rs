@@ -7,6 +7,7 @@ use rustyline::error::ReadlineError;
 use rustyline::Editor;
 
 use crate::builtin_types::*;
+use crate::callbacks::CallbackMap;
 use crate::interpreter;
 
 use crate::parser;
@@ -17,7 +18,7 @@ use crate::session::{OutputMode, Session};
 #[allow(clippy::too_many_arguments)]
 pub fn start_repl<const BUFSIZE: usize, const NCHAN: usize>(
     function_map: &sync::Arc<Mutex<FunctionMap>>,
-    midi_callback_map: &sync::Arc<Mutex<HashMap<u8, Command>>>,
+    callback_map: &sync::Arc<CallbackMap>,
     session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
     ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
     sample_set: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
@@ -76,7 +77,7 @@ pub fn start_repl<const BUFSIZE: usize, const NCHAN: usize>(
                                                 interpreter::interpret(
                                                     pfa,
                                                     function_map,
-                                                    midi_callback_map,
+                                                    callback_map,
                                                     session,
                                                     ruffbox,
                                                     sample_set,
@@ -106,7 +107,7 @@ pub fn start_repl<const BUFSIZE: usize, const NCHAN: usize>(
                         interpreter::interpret(
                             pfa,
                             function_map,
-                            midi_callback_map,
+                            callback_map,
                             session,
                             ruffbox,
                             sample_set,

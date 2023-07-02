@@ -1,9 +1,14 @@
+use epaint::ahash::HashMap;
 use rosc::OscPacket;
 
 use std::net::{SocketAddrV4, UdpSocket};
 use std::str::FromStr;
 
-pub struct OscReceiver {}
+use crate::parser::EvaluatedExpr;
+
+pub struct OscReceiver {
+    callback_map: HashMap<String, Box<EvaluatedExpr>>,
+}
 
 impl OscReceiver {
     pub fn start_receiver_thread_udp(target: String) {

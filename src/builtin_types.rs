@@ -89,7 +89,7 @@ pub enum Command {
     OscDefineClient(String, String),
     OscSendMessage(String, String, Vec<TypedEntity>),
     OscDefineCallback(String),
-    DefineMidiCallback(u8, Box<Command>),
+    DefineMidiCallback(u8, Box<EvaluatedExpr>),
     Print(TypedEntity),
     Push(VariableId, TypedEntity),
 }

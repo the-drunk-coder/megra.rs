@@ -7,6 +7,8 @@ use std::thread;
 use ruffbox_synth::ruffbox::RuffboxControls;
 
 use crate::builtin_types::*;
+use crate::callbacks::CallbackKey;
+use crate::callbacks::CallbackMap;
 use crate::commands;
 use crate::osc_receiver::OscReceiver;
 use crate::parser::{EvaluatedExpr, FunctionMap};
@@ -18,7 +20,7 @@ use crate::visualizer_client::VisualizerClient;
 pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
     c: Command,
     function_map: &sync::Arc<Mutex<FunctionMap>>,
-    midi_callback_map: &sync::Arc<Mutex<HashMap<u8, Command>>>,
+    callback_map: &sync::Arc<CallbackMap>,
     session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
     ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
     sample_set: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
@@ -160,7 +162,7 @@ pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
             commands::step_part(ruffbox, var_store, sample_set, session, output_mode, name);
         }
         Command::DefineMidiCallback(key, c) => {
-            midi_callback_map.lock().insert(key, *c);
+            callback_map.insert(CallbackKey::MidiNote(key), *c);
         }
         Command::OscDefineClient(client_name, host) => {
             commands::define_osc_client(
@@ -198,7 +200,7 @@ pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
 pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
     parsed_in: EvaluatedExpr,
     function_map: &sync::Arc<Mutex<FunctionMap>>,
-    midi_callback_map: &sync::Arc<Mutex<HashMap<u8, Command>>>,
+    callback_map: &sync::Arc<CallbackMap>,
     session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
     ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
     sample_set: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
@@ -257,7 +259,7 @@ pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
             interpret_command(
                 c,
                 function_map,
-                midi_callback_map,
+                callback_map,
                 session,
                 ruffbox,
                 sample_set,
@@ -294,7 +296,7 @@ pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
                 interpret(
                     expr,
                     function_map,
-                    midi_callback_map,
+                    callback_map,
                     session,
                     ruffbox,
                     sample_set,

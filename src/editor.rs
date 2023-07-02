@@ -11,6 +11,7 @@ mod megra_editor;
 use megra_editor::{EditorFont, MegraEditor};
 
 use crate::builtin_types::*;
+use crate::callbacks::CallbackMap;
 use crate::interpreter;
 use crate::parser;
 use crate::parser::FunctionMap;
@@ -20,7 +21,7 @@ use crate::session::{OutputMode, Session};
 #[allow(clippy::too_many_arguments)]
 pub fn run_editor<const BUFSIZE: usize, const NCHAN: usize>(
     function_map: &sync::Arc<Mutex<FunctionMap>>,
-    midi_callback_map: &sync::Arc<Mutex<HashMap<u8, Command>>>,
+    callback_map: &sync::Arc<CallbackMap>,
     session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
     ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
     sample_set: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
@@ -33,7 +34,7 @@ pub fn run_editor<const BUFSIZE: usize, const NCHAN: usize>(
 ) -> std::result::Result<(), eframe::Error> {
     let session2 = sync::Arc::clone(session);
     let function_map2 = sync::Arc::clone(function_map);
-    let midi_callback_map2 = sync::Arc::clone(midi_callback_map);
+    let callback_map2 = sync::Arc::clone(callback_map);
     let ruffbox2 = sync::Arc::clone(ruffbox);
     let sample_set2 = sync::Arc::clone(sample_set);
     let var_store2 = sync::Arc::clone(var_store);
@@ -48,7 +49,7 @@ pub fn run_editor<const BUFSIZE: usize, const NCHAN: usize>(
                     interpreter::interpret(
                         pfa,
                         &function_map2,
-                        &midi_callback_map2,
+                        &callback_map2,
                         &session2,
                         &ruffbox2,
                         &sample_set2,
