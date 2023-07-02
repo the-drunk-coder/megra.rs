@@ -14,4 +14,5 @@ pub mod progn;
 pub mod resolver;
 pub mod session;
 pub mod structs;
+pub mod types;
 //pub mod vec;

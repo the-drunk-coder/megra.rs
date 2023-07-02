@@ -342,6 +342,11 @@ pub fn define_standard_library() -> FunctionMap {
     // osc
     standard_library.std_lib.insert("osc-sender".to_string(), eval::osc::osc_define_sender);
     standard_library.std_lib.insert("osc-send".to_string(), eval::osc::osc_send);
+    // types for osc
+    standard_library.std_lib.insert("f64".to_string(), eval::types::double);
+    standard_library.std_lib.insert("i32".to_string(), eval::types::int);
+    standard_library.std_lib.insert("i64".to_string(), eval::types::long);
+
     
     standard_library
 }

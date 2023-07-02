@@ -174,6 +174,9 @@ pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
             for arg in args.iter() {
                 match arg {
                     TypedEntity::Float(n) => osc_args.push(OscType::Float(*n)),
+                    TypedEntity::Double(n) => osc_args.push(OscType::Double(*n)),
+                    TypedEntity::Int32(n) => osc_args.push(OscType::Int(*n)),
+                    TypedEntity::Int64(n) => osc_args.push(OscType::Long(*n)),
                     TypedEntity::String(s) => osc_args.push(OscType::String(s.to_string())),
                     TypedEntity::Symbol(s) => osc_args.push(OscType::String(s.to_string())),
                     _ => {}

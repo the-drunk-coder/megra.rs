@@ -21,6 +21,9 @@ pub enum ConfigParameter {
 #[derive(Clone, Debug)]
 pub enum TypedEntity {
     Float(f32),
+    Double(f64),
+    Int32(i32),
+    Int64(i64),
     String(String),
     Symbol(String),
     Character(char),

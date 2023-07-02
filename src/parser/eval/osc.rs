@@ -57,6 +57,9 @@ pub fn osc_send(
     for thing in tail_drain {
         match thing {
             EvaluatedExpr::Typed(TypedEntity::Float(f)) => args.push(TypedEntity::Float(f)),
+            EvaluatedExpr::Typed(TypedEntity::Double(f)) => args.push(TypedEntity::Double(f)),
+            EvaluatedExpr::Typed(TypedEntity::Int32(f)) => args.push(TypedEntity::Int32(f)),
+            EvaluatedExpr::Typed(TypedEntity::Int64(f)) => args.push(TypedEntity::Int64(f)),
             EvaluatedExpr::Typed(TypedEntity::Symbol(s)) => args.push(TypedEntity::Symbol(s)),
             EvaluatedExpr::Typed(TypedEntity::String(s)) => args.push(TypedEntity::String(s)),
             _ => {}
