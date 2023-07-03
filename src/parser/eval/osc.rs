@@ -73,7 +73,7 @@ pub fn osc_send(
     )))
 }
 
-pub fn osc_define_callback(
+pub fn osc_start_receiver(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<VariableStore>,
@@ -89,7 +89,31 @@ pub fn osc_define_callback(
         return None;
     };
 
-    Some(EvaluatedExpr::Command(Command::OscDefineCallback(
-        host_name,
-    )))
+    Some(EvaluatedExpr::Command(Command::OscStartReceiver(host_name)))
+}
+
+pub fn osc_define_callback(
+    _: &FunctionMap,
+    tail: &mut Vec<EvaluatedExpr>,
+    _: &sync::Arc<VariableStore>,
+    _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
+    _: OutputMode,
+) -> Option<EvaluatedExpr> {
+    let mut tail_drain = tail.drain(..);
+    tail_drain.next();
+
+    let addr = if let Some(EvaluatedExpr::Typed(TypedEntity::String(s))) = tail_drain.next() {
+        s
+    } else {
+        return None;
+    };
+
+    if let Some(c) = tail_drain.next() {
+        Some(EvaluatedExpr::Command(Command::OscDefineCallback(
+            addr,
+            Box::new(c),
+        )))
+    } else {
+        None
+    }
 }

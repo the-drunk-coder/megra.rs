@@ -190,8 +190,27 @@ pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
             }
             //println!("send msg {client_name} {osc_addr}");
         }
-        Command::OscDefineCallback(target) => {
-            OscReceiver::start_receiver_thread_udp(target);
+        Command::OscStartReceiver(target) => {
+            let ruffbox2 = sync::Arc::clone(ruffbox);
+            let fmap2 = sync::Arc::clone(function_map);
+            let cbmap2 = sync::Arc::clone(callback_map);
+            let sample_set2 = sync::Arc::clone(sample_set);
+            let session2 = sync::Arc::clone(session);
+            let var_store2 = sync::Arc::clone(var_store);
+            OscReceiver::start_receiver_thread_udp(
+                target,
+                fmap2,
+                cbmap2,
+                session2,
+                ruffbox2,
+                sample_set2,
+                var_store2,
+                output_mode,
+                base_dir.clone(),
+            );
+        }
+        Command::OscDefineCallback(key, c) => {
+            callback_map.insert(CallbackKey::OscAddr(key), *c);
         }
     };
 }

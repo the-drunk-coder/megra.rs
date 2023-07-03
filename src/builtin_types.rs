@@ -88,7 +88,8 @@ pub enum Command {
     StopRecording,                                 // stop recording ...
     OscDefineClient(String, String),
     OscSendMessage(String, String, Vec<TypedEntity>),
-    OscDefineCallback(String),
+    OscStartReceiver(String),
+    OscDefineCallback(String, Box<EvaluatedExpr>),
     DefineMidiCallback(u8, Box<EvaluatedExpr>),
     Print(TypedEntity),
     Push(VariableId, TypedEntity),

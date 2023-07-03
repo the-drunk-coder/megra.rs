@@ -1,17 +1,35 @@
 use epaint::ahash::HashMap;
+use parking_lot::Mutex;
 use rosc::OscPacket;
+use ruffbox_synth::ruffbox::RuffboxControls;
 
 use std::net::{SocketAddrV4, UdpSocket};
 use std::str::FromStr;
+use std::sync;
 
-use crate::parser::EvaluatedExpr;
+use crate::builtin_types::VariableStore;
+use crate::callbacks::{CallbackKey, CallbackMap};
+use crate::interpreter;
+use crate::parser::{EvaluatedExpr, FunctionMap};
+use crate::sample_set::SampleAndWavematrixSet;
+use crate::session::{OutputMode, Session};
 
 pub struct OscReceiver {
     callback_map: HashMap<String, Box<EvaluatedExpr>>,
 }
 
 impl OscReceiver {
-    pub fn start_receiver_thread_udp(target: String) {
+    pub fn start_receiver_thread_udp<const BUFSIZE: usize, const NCHAN: usize>(
+        target: String,
+        function_map: sync::Arc<Mutex<FunctionMap>>,
+        callback_map: sync::Arc<CallbackMap>, // could be dashmap i suppose
+        session: sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
+        ruffbox: sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
+        sample_set: sync::Arc<Mutex<SampleAndWavematrixSet>>,
+        var_store: sync::Arc<VariableStore>,
+        mode: OutputMode,
+        base_dir: String,
+    ) {
         let addr = match SocketAddrV4::from_str(&target) {
             Ok(addr) => addr,
             Err(_) => panic!("err"),
@@ -28,7 +46,30 @@ impl OscReceiver {
                 Ok((size, addr)) => {
                     println!("Received packet with size {} from: {}", size, addr);
                     let (_, packet) = rosc::decoder::decode_udp(&buf[..size]).unwrap();
-                    handle_packet(packet);
+                    match packet {
+                        OscPacket::Message(msg) => {
+                            println!("OSC address: {}", msg.addr);
+                            println!("OSC arguments: {:?}", msg.args);
+                            if let Some(thing) = callback_map.get(&CallbackKey::OscAddr(msg.addr)) {
+                                interpreter::interpret(
+                                    thing.clone(),
+                                    &function_map,
+                                    &callback_map,
+                                    &session,
+                                    &ruffbox,
+                                    &sample_set,
+                                    &var_store,
+                                    mode,
+                                    base_dir.clone(),
+                                );
+                            } else {
+                                println!("no callback for OSC addr ??");
+                            }
+                        }
+                        OscPacket::Bundle(bundle) => {
+                            println!("OSC Bundle: {:?}", bundle);
+                        }
+                    }
                 }
                 Err(e) => {
                     println!("Error receiving from socket: {}", e);
@@ -36,17 +77,5 @@ impl OscReceiver {
                 }
             }
         });
-    }
-}
-
-fn handle_packet(packet: OscPacket) {
-    match packet {
-        OscPacket::Message(msg) => {
-            println!("OSC address: {}", msg.addr);
-            println!("OSC arguments: {:?}", msg.args);
-        }
-        OscPacket::Bundle(bundle) => {
-            println!("OSC Bundle: {:?}", bundle);
-        }
     }
 }
