@@ -8,4 +8,4 @@
 * some extra types (f64, i32, i64) for osc sender
 * osc receiver
 * more flexible midi callbacks
-
+* negative rates for samples (can't believe I didn't think about that before ...)
