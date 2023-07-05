@@ -47,7 +47,7 @@ use getopts::Options;
 use parking_lot::Mutex;
 use ruffbox_synth::ruffbox::{init_ruffbox, ReverbMode};
 use standard_library::define_standard_library;
-use std::collections::HashMap;
+
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::{env, sync, thread};
 

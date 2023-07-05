@@ -1,5 +1,5 @@
 use parking_lot::Mutex;
-use std::collections::HashMap;
+
 use std::sync;
 
 use ruffbox_synth::ruffbox::RuffboxControls;

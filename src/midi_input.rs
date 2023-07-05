@@ -1,14 +1,12 @@
 use midir::{Ignore, MidiInput};
 
 use parking_lot::Mutex;
-use std::collections::HashMap;
+
 use std::sync;
 
 use crate::callbacks::{CallbackKey, CallbackMap};
 use crate::parser::FunctionMap;
-use crate::{interpreter, Command, OutputMode, SampleAndWavematrixSet, Session, VariableStore};
-
-use crate::commands;
+use crate::{interpreter, OutputMode, SampleAndWavematrixSet, Session, VariableStore};
 
 use ruffbox_synth::ruffbox::RuffboxControls;
 

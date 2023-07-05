@@ -2,7 +2,6 @@ use parking_lot::Mutex;
 use std::sync;
 
 use crate::builtin_types::*;
-use crate::parameter::*;
 
 use crate::parser::{EvaluatedExpr, FunctionMap};
 use crate::{OutputMode, SampleAndWavematrixSet};

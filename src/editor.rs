@@ -4,7 +4,7 @@ mod syntax_highlighting;
 
 use parking_lot::Mutex;
 use ruffbox_synth::ruffbox::RuffboxControls;
-use std::collections::HashMap;
+
 use std::sync;
 
 mod megra_editor;

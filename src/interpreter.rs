@@ -1,6 +1,6 @@
 use parking_lot::Mutex;
 use rosc::OscType;
-use std::collections::HashMap;
+
 use std::sync;
 use std::thread;
 
