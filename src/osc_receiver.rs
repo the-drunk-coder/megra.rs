@@ -14,9 +14,7 @@ use crate::parser::{EvaluatedExpr, FunctionMap};
 use crate::sample_set::SampleAndWavematrixSet;
 use crate::session::{OutputMode, Session};
 
-pub struct OscReceiver {
-    callback_map: HashMap<String, Box<EvaluatedExpr>>,
-}
+pub struct OscReceiver;
 
 impl OscReceiver {
     pub fn start_receiver_thread_udp<const BUFSIZE: usize, const NCHAN: usize>(
