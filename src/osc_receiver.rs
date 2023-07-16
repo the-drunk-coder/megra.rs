@@ -9,7 +9,7 @@ use std::sync;
 
 use crate::builtin_types::{TypedEntity, VariableStore};
 use crate::interpreter;
-use crate::parser::{eval_expression, Atom, EvaluatedExpr, FunctionMap};
+use crate::parser::{eval_expression, EvaluatedExpr, FunctionMap};
 use crate::sample_set::SampleAndWavematrixSet;
 use crate::session::{OutputMode, Session};
 

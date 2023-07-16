@@ -7,7 +7,7 @@ use rustyline::error::ReadlineError;
 use rustyline::Editor;
 
 use crate::builtin_types::*;
-use crate::callbacks::CallbackMap;
+
 use crate::interpreter;
 
 use crate::parser;

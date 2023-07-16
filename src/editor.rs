@@ -11,7 +11,7 @@ mod megra_editor;
 use megra_editor::{EditorFont, MegraEditor};
 
 use crate::builtin_types::*;
-use crate::callbacks::CallbackMap;
+
 use crate::interpreter;
 use crate::parser;
 use crate::parser::FunctionMap;

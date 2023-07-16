@@ -7,8 +7,7 @@ use std::thread;
 use ruffbox_synth::ruffbox::RuffboxControls;
 
 use crate::builtin_types::*;
-use crate::callbacks::CallbackKey;
-use crate::callbacks::CallbackMap;
+
 use crate::commands;
 use crate::osc_receiver::OscReceiver;
 use crate::parser::{EvaluatedExpr, FunctionMap};

@@ -5,7 +5,6 @@
 #![allow(clippy::type_complexity)]
 
 pub mod builtin_types;
-pub mod callbacks;
 pub mod commands;
 pub mod cyc_parser;
 pub mod editor;
@@ -38,7 +37,6 @@ mod osc_sender;
 mod visualizer_client;
 
 use crate::builtin_types::*;
-use crate::callbacks::CallbackMap;
 use crate::sample_set::SampleAndWavematrixSet;
 use crate::session::{OutputMode, Session};
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
@@ -732,9 +730,6 @@ where
     // define the "standard library"
     let stdlib = sync::Arc::new(Mutex::new(define_standard_library()));
     let controls_arc = sync::Arc::new(controls);
-
-    // callbacks for midi or osc
-    let callback_map = sync::Arc::new(CallbackMap::new());
 
     let base_dir = if let Some(p) = options.base_folder {
         let bd = std::path::PathBuf::from(p);

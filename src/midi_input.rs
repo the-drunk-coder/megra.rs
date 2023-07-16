@@ -1,11 +1,9 @@
-use epaint::ahash::HashMap;
 use midir::{Ignore, MidiInput};
 
 use parking_lot::Mutex;
 
 use std::sync;
 
-use crate::callbacks::{CallbackKey, CallbackMap};
 use crate::parser::{eval_expression, EvaluatedExpr, FunctionMap};
 use crate::{interpreter, OutputMode, SampleAndWavematrixSet, Session, VariableStore};
 
@@ -56,7 +54,7 @@ pub fn open_midi_input_port<const BUFSIZE: usize, const NCHAN: usize>(
                     let functions = function_map.lock();
 
                     if functions.usr_lib.contains_key(&key) {
-                        let (fun_arg_names, fun_expr) =
+                        let (_fun_arg_names, fun_expr) =
                             functions.usr_lib.get(&key).unwrap().clone();
 
                         // FIRST, eval local args,

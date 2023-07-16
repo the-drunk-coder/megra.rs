@@ -3,7 +3,7 @@ use crate::generator::{GenModFun, Generator};
 use crate::generator_processor::GeneratorProcessor;
 use crate::markov_sequence_generator::Rule;
 use crate::parameter::*;
-use crate::parser::EvaluatedExpr;
+
 use core::fmt;
 use dashmap::DashMap;
 use std::collections::{BTreeSet, HashMap};
