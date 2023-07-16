@@ -93,7 +93,6 @@ struct RunOptions {
     reverb_mode: ReverbMode,
     font: Option<String>,
     font_size: f32,
-    midi_in: Option<usize>,
     downmix_stereo: bool,
     ambisonic_binaural: bool,
 }
@@ -122,14 +121,7 @@ fn main() -> Result<(), anyhow::Error> {
     opts.optflag("h", "help", "Print this help");
     opts.optflag("n", "no-samples", "don't load default samples");
     opts.optopt("o", "output-mode", "output mode (stereo, 8ch)", "stereo");
-    opts.optopt(
-        "",
-        "midi-in",
-        "choose midi input (none deactivates midi in)",
-        "none",
-    );
     opts.optflag("l", "list-devices", "list available audio devices");
-    opts.optflag("", "midi-ports", "list available midi input ports");
     opts.optopt("d", "device", "choose device", "default");
     opts.optopt(
         "",
@@ -306,10 +298,6 @@ fn main() -> Result<(), anyhow::Error> {
         return Ok(());
     }
 
-    if matches.opt_present("midi-ports") {
-        return midi_input::list_midi_input_ports();
-    }
-
     let out_device = if let Some(dev) = matches.opt_str("d") {
         dev
     } else {
@@ -340,16 +328,6 @@ fn main() -> Result<(), anyhow::Error> {
     // let's assume it's the same for both ...
     let sample_format = out_config.sample_format();
 
-    let midi_in: Option<usize> = if let Some(midi_port) = matches.opt_str("midi-in") {
-        if midi_port.to_lowercase() == "none" {
-            None
-        } else {
-            Some(midi_port.parse()?)
-        }
-    } else {
-        None
-    };
-
     let run_opts = RunOptions {
         mode: out_mode,
         num_live_buffers: num_live_buffers as usize,
@@ -363,7 +341,6 @@ fn main() -> Result<(), anyhow::Error> {
         reverb_mode,
         font: matches.opt_str("font"),
         font_size,
-        midi_in,
         downmix_stereo,
         ambisonic_binaural,
     };
@@ -796,28 +773,6 @@ where
                 options.downmix_stereo,
             );
             println!("a command (load default sample sets)");
-        });
-    }
-
-    // check if we have a midi input situation
-    if let Some(midi_in_port) = options.midi_in {
-        let function_map_midi = sync::Arc::clone(&stdlib);
-        let session_midi = sync::Arc::clone(&session);
-        let ruffbox_midi = sync::Arc::clone(&controls_arc);
-        let sam_midi = sync::Arc::clone(&sample_set);
-        let var_midi = sync::Arc::clone(&var_store);
-        let bd = base_dir.display().to_string();
-        thread::spawn(move || {
-            midi_input::open_midi_input_port(
-                midi_in_port,
-                function_map_midi,
-                session_midi,
-                ruffbox_midi,
-                sam_midi,
-                var_midi,
-                options.mode,
-                bd,
-            );
         });
     }
 

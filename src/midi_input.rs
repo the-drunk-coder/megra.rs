@@ -9,15 +9,15 @@ use crate::{interpreter, OutputMode, SampleAndWavematrixSet, Session, VariableSt
 
 use ruffbox_synth::ruffbox::RuffboxControls;
 
-pub fn list_midi_input_ports() -> Result<(), anyhow::Error> {
-    let mut midi_in = MidiInput::new("midir reading input")?;
-    midi_in.ignore(Ignore::None);
-    println!("\nAvailable input ports:");
-    let in_ports = midi_in.ports();
-    for (i, p) in in_ports.iter().enumerate() {
-        println!("{}: {}", i, midi_in.port_name(p).unwrap());
+pub fn list_midi_input_ports() {
+    if let Ok(mut midi_in) = MidiInput::new("midir reading input") {
+        midi_in.ignore(Ignore::None);
+        println!("\nAvailable input ports:");
+        let in_ports = midi_in.ports();
+        for (i, p) in in_ports.iter().enumerate() {
+            println!("{}: {}", i, midi_in.port_name(p).unwrap());
+        }
     }
-    Ok(())
 }
 
 pub fn open_midi_input_port<const BUFSIZE: usize, const NCHAN: usize>(

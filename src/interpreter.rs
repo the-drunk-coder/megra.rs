@@ -9,6 +9,7 @@ use ruffbox_synth::ruffbox::RuffboxControls;
 use crate::builtin_types::*;
 
 use crate::commands;
+use crate::midi_input;
 use crate::osc_receiver::OscReceiver;
 use crate::parser::{EvaluatedExpr, FunctionMap};
 use crate::sample_set::SampleAndWavematrixSet;
@@ -201,6 +202,28 @@ pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
                 output_mode,
                 base_dir,
             );
+        }
+        Command::MidiStartReceiver(midi_in_port) => {
+            let function_map_midi = sync::Arc::clone(function_map);
+            let session_midi = sync::Arc::clone(&session);
+            let ruffbox_midi = sync::Arc::clone(&ruffbox);
+            let sam_midi = sync::Arc::clone(&sample_set);
+            let var_midi = sync::Arc::clone(&var_store);
+            thread::spawn(move || {
+                midi_input::open_midi_input_port(
+                    midi_in_port,
+                    function_map_midi,
+                    session_midi,
+                    ruffbox_midi,
+                    sam_midi,
+                    var_midi,
+                    output_mode,
+                    base_dir,
+                );
+            });
+        }
+        Command::MidiListPorts => {
+            midi_input::list_midi_input_ports();
         }
     };
 }

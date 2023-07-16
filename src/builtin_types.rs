@@ -89,6 +89,8 @@ pub enum Command {
     OscDefineClient(String, String),
     OscSendMessage(String, String, Vec<TypedEntity>),
     OscStartReceiver(String),
+    MidiStartReceiver(usize),
+    MidiListPorts,
     Print(TypedEntity),
     Push(VariableId, TypedEntity),
 }
