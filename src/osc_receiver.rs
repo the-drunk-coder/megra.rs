@@ -1,4 +1,4 @@
-use epaint::ahash::HashMap;
+
 use parking_lot::Mutex;
 use rosc::OscPacket;
 use ruffbox_synth::ruffbox::RuffboxControls;
@@ -10,7 +10,7 @@ use std::sync;
 use crate::builtin_types::VariableStore;
 use crate::callbacks::{CallbackKey, CallbackMap};
 use crate::interpreter;
-use crate::parser::{EvaluatedExpr, FunctionMap};
+use crate::parser::{FunctionMap};
 use crate::sample_set::SampleAndWavematrixSet;
 use crate::session::{OutputMode, Session};
 
