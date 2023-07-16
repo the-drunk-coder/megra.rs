@@ -27,14 +27,9 @@ pub fn define_midi_callback(
         return None;
     };
 
-    if let Some(c) = tail_drain.next() {
-        Some(EvaluatedExpr::Command(Command::DefineMidiCallback(
-            key,
-            Box::new(c),
-        )))
-    } else {
-        None
-    }
+    tail_drain
+        .next()
+        .map(|c| EvaluatedExpr::Command(Command::DefineMidiCallback(key, Box::new(c))))
 }
 
 pub fn import_sample_set(

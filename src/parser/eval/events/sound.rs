@@ -82,7 +82,7 @@ fn collect_param_value(
                     tail_drain.next();
                     return pc;
                 } else {
-                    ParameterValue::Placeholder(VariableId::Symbol(s.to_string()));
+                    s.to_string();
                 }
             }
             EvaluatedExpr::Typed(TypedEntity::Parameter(p)) => {
@@ -101,7 +101,7 @@ fn collect_param_value(
                 return mc;
             }
             EvaluatedExpr::Identifier(i) => {
-                ParameterValue::Placeholder(VariableId::Custom(i.to_string()));
+                i.to_string();
             }
 
             _ => {

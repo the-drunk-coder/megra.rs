@@ -206,7 +206,7 @@ pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
                 sample_set2,
                 var_store2,
                 output_mode,
-                base_dir.clone(),
+                base_dir,
             );
         }
         Command::OscDefineCallback(key, c) => {

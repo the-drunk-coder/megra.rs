@@ -108,12 +108,7 @@ pub fn osc_define_callback(
         return None;
     };
 
-    if let Some(c) = tail_drain.next() {
-        Some(EvaluatedExpr::Command(Command::OscDefineCallback(
-            addr,
-            Box::new(c),
-        )))
-    } else {
-        None
-    }
+    tail_drain
+        .next()
+        .map(|c| EvaluatedExpr::Command(Command::OscDefineCallback(addr, Box::new(c))))
 }

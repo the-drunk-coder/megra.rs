@@ -812,7 +812,7 @@ where
         let ruffbox_midi = sync::Arc::clone(&controls_arc);
         let sam_midi = sync::Arc::clone(&sample_set);
         let var_midi = sync::Arc::clone(&var_store);
-        let bd = base_dir.clone().display().to_string();
+        let bd = base_dir.display().to_string();
         thread::spawn(move || {
             midi_input::open_midi_input_port(
                 midi_in_port,

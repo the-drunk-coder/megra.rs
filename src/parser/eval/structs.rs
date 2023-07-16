@@ -36,8 +36,8 @@ pub fn push(
     let mut tail_drain = tail.drain(1..);
 
     let place = match tail_drain.next() {
-        Some(EvaluatedExpr::Identifier(i)) => VariableId::Custom(i.to_string()),
-        Some(EvaluatedExpr::Typed(TypedEntity::Symbol(s))) => VariableId::Symbol(s.to_string()),
+        Some(EvaluatedExpr::Identifier(i)) => VariableId::Custom(i),
+        Some(EvaluatedExpr::Typed(TypedEntity::Symbol(s))) => VariableId::Symbol(s),
         _ => {
             return None;
         }
