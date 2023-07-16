@@ -2,6 +2,7 @@ use midir::{Ignore, MidiInput};
 
 use parking_lot::Mutex;
 
+use std::collections::HashMap;
 use std::sync;
 
 use crate::parser::{eval_expression, EvaluatedExpr, FunctionMap};
@@ -47,51 +48,51 @@ pub fn open_midi_input_port<const BUFSIZE: usize, const NCHAN: usize>(
             in_port,
             "midir-read-input",
             move |_, message, _| {
-                const NOTE_ON_MSG: u8 = 145;
-                if message[0] == NOTE_ON_MSG {
-                    let key = format!("{}", message[1]);
+                let functions = function_map.lock();
 
-                    let functions = function_map.lock();
+                if functions.usr_lib.contains_key("midi") {
+                    let (fun_arg_names, fun_expr) = functions.usr_lib.get("midi").unwrap().clone();
 
-                    if functions.usr_lib.contains_key(&key) {
-                        let (_fun_arg_names, fun_expr) =
-                            functions.usr_lib.get(&key).unwrap().clone();
+                    // FIRST, eval local args,
+                    // manual zip
+                    let mut local_args = HashMap::new();
+                    for (i, val) in fun_arg_names.iter().enumerate() {
+                        local_args.insert(
+                            val.clone(),
+                            EvaluatedExpr::Typed(crate::builtin_types::TypedEntity::Float(
+                                message[i] as f32,
+                            )),
+                        );
+                    }
 
-                        // FIRST, eval local args,
-                        // manual zip
-                        //let local_args = HashMap::new();
-
-                        // THIRD
-                        if let Some(mut fun_tail) = fun_expr
-                            .iter()
-                            .map(|expr| {
-                                eval_expression(
-                                    expr,
-                                    &functions,
-                                    &var_store,
-                                    None,
-                                    &sample_set,
-                                    mode,
-                                )
-                            })
-                            .collect::<Option<Vec<EvaluatedExpr>>>()
-                        {
-                            // return last form result, cl-style
-                            if let Some(eval_expr) = fun_tail.pop() {
-                                interpreter::interpret(
-                                    eval_expr,
-                                    &function_map,
-                                    &session,
-                                    &ruffbox,
-                                    &sample_set,
-                                    &var_store,
-                                    mode,
-                                    base_dir.clone(),
-                                );
-                            }
+                    // THIRD
+                    if let Some(fun_tail) = fun_expr
+                        .iter()
+                        .map(|expr| {
+                            eval_expression(
+                                expr,
+                                &functions,
+                                &var_store,
+                                Some(&local_args),
+                                &sample_set,
+                                mode,
+                            )
+                        })
+                        .collect::<Option<Vec<EvaluatedExpr>>>()
+                    {
+                        // return last form result, cl-style
+                        for eval_expr in fun_tail {
+                            interpreter::interpret(
+                                eval_expr,
+                                &function_map,
+                                &session,
+                                &ruffbox,
+                                &sample_set,
+                                &var_store,
+                                mode,
+                                base_dir.clone(),
+                            );
                         }
-                    } else {
-                        println!("EMPTY KEY {:?} (len = {})", message, message.len());
                     }
                 }
             },

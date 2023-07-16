@@ -85,7 +85,7 @@ impl OscReceiver {
                                 }
 
                                 // THIRD
-                                if let Some(mut fun_tail) = fun_expr
+                                if let Some(fun_tail) = fun_expr
                                     .iter()
                                     .map(|expr| {
                                         eval_expression(
@@ -100,7 +100,7 @@ impl OscReceiver {
                                     .collect::<Option<Vec<EvaluatedExpr>>>()
                                 {
                                     // return last form result, cl-style
-                                    if let Some(eval_expr) = fun_tail.pop() {
+                                    for eval_expr in fun_tail {
                                         interpreter::interpret(
                                             eval_expr,
                                             &function_map,
