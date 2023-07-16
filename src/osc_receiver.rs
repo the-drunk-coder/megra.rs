@@ -1,15 +1,15 @@
 use parking_lot::Mutex;
-use rosc::OscPacket;
+use rosc::{OscPacket, OscType};
 use ruffbox_synth::ruffbox::RuffboxControls;
 
+use std::collections::HashMap;
 use std::net::{SocketAddrV4, UdpSocket};
 use std::str::FromStr;
 use std::sync;
 
-use crate::builtin_types::VariableStore;
-use crate::callbacks::{CallbackKey, CallbackMap};
+use crate::builtin_types::{TypedEntity, VariableStore};
 use crate::interpreter;
-use crate::parser::FunctionMap;
+use crate::parser::{eval_expression, Atom, EvaluatedExpr, FunctionMap};
 use crate::sample_set::SampleAndWavematrixSet;
 use crate::session::{OutputMode, Session};
 
@@ -19,7 +19,6 @@ impl OscReceiver {
     pub fn start_receiver_thread_udp<const BUFSIZE: usize, const NCHAN: usize>(
         target: String,
         function_map: sync::Arc<Mutex<FunctionMap>>,
-        callback_map: sync::Arc<CallbackMap>, // could be dashmap i suppose
         session: sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
         ruffbox: sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
         sample_set: sync::Arc<Mutex<SampleAndWavematrixSet>>,
@@ -47,18 +46,73 @@ impl OscReceiver {
                         OscPacket::Message(msg) => {
                             println!("OSC address: {}", msg.addr);
                             println!("OSC arguments: {:?}", msg.args);
-                            if let Some(thing) = callback_map.get(&CallbackKey::OscAddr(msg.addr)) {
-                                interpreter::interpret(
-                                    thing.clone(),
-                                    &function_map,
-                                    &callback_map,
-                                    &session,
-                                    &ruffbox,
-                                    &sample_set,
-                                    &var_store,
-                                    mode,
-                                    base_dir.clone(),
-                                );
+
+                            // check whether we have an OSC function stored under this address ...
+                            let functions = function_map.lock();
+
+                            if functions.usr_lib.contains_key(&msg.addr) {
+                                let (fun_arg_names, fun_expr) =
+                                    functions.usr_lib.get(&msg.addr).unwrap().clone();
+
+                                // FIRST, eval local args,
+                                // manual zip
+                                let mut local_args = HashMap::new();
+                                for (i, val) in msg.args[..fun_arg_names.len()].iter().enumerate() {
+                                    // TODO: better type handling ...
+                                    local_args.insert(
+                                        fun_arg_names[i].clone(),
+                                        match val {
+                                            OscType::Float(f) => {
+                                                EvaluatedExpr::Typed(TypedEntity::Float(*f))
+                                            }
+                                            OscType::Double(d) => {
+                                                EvaluatedExpr::Typed(TypedEntity::Float(*d as f32))
+                                            }
+                                            OscType::Int(i) => {
+                                                EvaluatedExpr::Typed(TypedEntity::Float(*i as f32))
+                                            }
+                                            OscType::Long(i) => {
+                                                EvaluatedExpr::Typed(TypedEntity::Float(*i as f32))
+                                            }
+                                            OscType::String(s) => {
+                                                EvaluatedExpr::Typed(TypedEntity::String(s.clone()))
+                                            }
+                                            _ => {
+                                                continue;
+                                            } // dirty ..
+                                        },
+                                    );
+                                }
+
+                                // THIRD
+                                if let Some(mut fun_tail) = fun_expr
+                                    .iter()
+                                    .map(|expr| {
+                                        eval_expression(
+                                            expr,
+                                            &functions,
+                                            &var_store,
+                                            Some(&local_args),
+                                            &sample_set,
+                                            mode,
+                                        )
+                                    })
+                                    .collect::<Option<Vec<EvaluatedExpr>>>()
+                                {
+                                    // return last form result, cl-style
+                                    if let Some(eval_expr) = fun_tail.pop() {
+                                        interpreter::interpret(
+                                            eval_expr,
+                                            &function_map,
+                                            &session,
+                                            &ruffbox,
+                                            &sample_set,
+                                            &var_store,
+                                            mode,
+                                            base_dir.clone(),
+                                        );
+                                    }
+                                }
                             } else {
                                 println!("no callback for OSC addr ??");
                             }
@@ -70,7 +124,7 @@ impl OscReceiver {
                 }
                 Err(e) => {
                     println!("Error receiving from socket: {}", e);
-                    break;
+                    //break;
                 }
             }
         });

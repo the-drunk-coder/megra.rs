@@ -806,7 +806,6 @@ where
 
     // check if we have a midi input situation
     if let Some(midi_in_port) = options.midi_in {
-        let callback_map_midi = sync::Arc::clone(&callback_map);
         let function_map_midi = sync::Arc::clone(&stdlib);
         let session_midi = sync::Arc::clone(&session);
         let ruffbox_midi = sync::Arc::clone(&controls_arc);
@@ -817,7 +816,6 @@ where
             midi_input::open_midi_input_port(
                 midi_in_port,
                 function_map_midi,
-                callback_map_midi,
                 session_midi,
                 ruffbox_midi,
                 sam_midi,
@@ -831,7 +829,6 @@ where
     if options.editor {
         editor::run_editor(
             &stdlib,
-            &callback_map,
             &session,
             &controls_arc,
             &sample_set,
@@ -848,7 +845,6 @@ where
         // start the megra repl
         repl::start_repl(
             &stdlib,
-            &callback_map,
             &session,
             &controls_arc,
             &sample_set,

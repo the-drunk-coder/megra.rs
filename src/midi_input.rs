@@ -1,3 +1,4 @@
+use epaint::ahash::HashMap;
 use midir::{Ignore, MidiInput};
 
 use parking_lot::Mutex;
@@ -5,7 +6,7 @@ use parking_lot::Mutex;
 use std::sync;
 
 use crate::callbacks::{CallbackKey, CallbackMap};
-use crate::parser::FunctionMap;
+use crate::parser::{eval_expression, EvaluatedExpr, FunctionMap};
 use crate::{interpreter, OutputMode, SampleAndWavematrixSet, Session, VariableStore};
 
 use ruffbox_synth::ruffbox::RuffboxControls;
@@ -24,7 +25,6 @@ pub fn list_midi_input_ports() -> Result<(), anyhow::Error> {
 pub fn open_midi_input_port<const BUFSIZE: usize, const NCHAN: usize>(
     in_port_num: usize,
     function_map: sync::Arc<Mutex<FunctionMap>>,
-    callback_map: sync::Arc<CallbackMap>, // could be dashmap i suppose
     session: sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
     ruffbox: sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
     sample_set: sync::Arc<Mutex<SampleAndWavematrixSet>>,
@@ -51,19 +51,47 @@ pub fn open_midi_input_port<const BUFSIZE: usize, const NCHAN: usize>(
             move |_, message, _| {
                 const NOTE_ON_MSG: u8 = 145;
                 if message[0] == NOTE_ON_MSG {
-                    let key = message[1];
-                    if let Some(thing) = callback_map.get(&CallbackKey::MidiNote(key)) {
-                        interpreter::interpret(
-                            thing.clone(),
-                            &function_map,
-                            &callback_map,
-                            &session,
-                            &ruffbox,
-                            &sample_set,
-                            &var_store,
-                            mode,
-                            base_dir.clone(),
-                        );
+                    let key = format!("{}", message[1]);
+
+                    let functions = function_map.lock();
+
+                    if functions.usr_lib.contains_key(&key) {
+                        let (fun_arg_names, fun_expr) =
+                            functions.usr_lib.get(&key).unwrap().clone();
+
+                        // FIRST, eval local args,
+                        // manual zip
+                        //let local_args = HashMap::new();
+
+                        // THIRD
+                        if let Some(mut fun_tail) = fun_expr
+                            .iter()
+                            .map(|expr| {
+                                eval_expression(
+                                    expr,
+                                    &functions,
+                                    &var_store,
+                                    None,
+                                    &sample_set,
+                                    mode,
+                                )
+                            })
+                            .collect::<Option<Vec<EvaluatedExpr>>>()
+                        {
+                            // return last form result, cl-style
+                            if let Some(eval_expr) = fun_tail.pop() {
+                                interpreter::interpret(
+                                    eval_expr,
+                                    &function_map,
+                                    &session,
+                                    &ruffbox,
+                                    &sample_set,
+                                    &var_store,
+                                    mode,
+                                    base_dir.clone(),
+                                );
+                            }
+                        }
                     } else {
                         println!("EMPTY KEY {:?} (len = {})", message, message.len());
                     }

@@ -12,26 +12,6 @@ use crate::{OutputMode, SampleAndWavematrixSet};
 use parking_lot::Mutex;
 use std::sync;
 
-pub fn define_midi_callback(
-    _: &FunctionMap,
-    tail: &mut Vec<EvaluatedExpr>,
-    _: &sync::Arc<VariableStore>,
-    _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
-    _: OutputMode,
-) -> Option<EvaluatedExpr> {
-    let mut tail_drain = tail.drain(..).skip(1);
-
-    let key: u8 = if let Some(EvaluatedExpr::Typed(TypedEntity::Float(s))) = tail_drain.next() {
-        s as u8
-    } else {
-        return None;
-    };
-
-    tail_drain
-        .next()
-        .map(|c| EvaluatedExpr::Command(Command::DefineMidiCallback(key, Box::new(c))))
-}
-
 pub fn import_sample_set(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,

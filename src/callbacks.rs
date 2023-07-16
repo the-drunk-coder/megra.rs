@@ -8,4 +8,4 @@ pub enum CallbackKey {
     OscAddr(String),
 }
 
-pub type CallbackMap = DashMap<CallbackKey, EvaluatedExpr>;
+pub type CallbackMap = DashMap<CallbackKey, (Vec<String>, EvaluatedExpr)>;

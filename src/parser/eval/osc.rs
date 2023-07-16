@@ -91,24 +91,3 @@ pub fn osc_start_receiver(
 
     Some(EvaluatedExpr::Command(Command::OscStartReceiver(host_name)))
 }
-
-pub fn osc_define_callback(
-    _: &FunctionMap,
-    tail: &mut Vec<EvaluatedExpr>,
-    _: &sync::Arc<VariableStore>,
-    _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
-    _: OutputMode,
-) -> Option<EvaluatedExpr> {
-    let mut tail_drain = tail.drain(..);
-    tail_drain.next();
-
-    let addr = if let Some(EvaluatedExpr::Typed(TypedEntity::String(s))) = tail_drain.next() {
-        s
-    } else {
-        return None;
-    };
-
-    tail_drain
-        .next()
-        .map(|c| EvaluatedExpr::Command(Command::OscDefineCallback(addr, Box::new(c))))
-}

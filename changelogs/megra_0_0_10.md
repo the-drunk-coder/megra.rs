@@ -6,6 +6,7 @@
 * introduce `print`
 * osc sender
 * some extra types (f64, i32, i64) for osc sender
-* osc receiver
+* osc receiver 
+* osc callbacks (toplevel functions with args)
 * more flexible midi callbacks
 * negative rates for samples (can't believe I didn't think about that before ...)

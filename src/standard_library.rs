@@ -47,7 +47,6 @@ pub fn define_standard_library() -> FunctionMap {
     standard_library.std_lib.insert("connect-visualizer".to_string(), eval::commands::connect_visualizer);
     standard_library.std_lib.insert("rec".to_string(), eval::commands::start_recording);
     standard_library.std_lib.insert("stop-rec".to_string(), eval::commands::stop_recording);
-    standard_library.std_lib.insert("midi-callback".to_string(), eval::commands::define_midi_callback);
     standard_library.std_lib.insert("import-sample-set".to_string(), eval::commands::import_sample_set);
     standard_library.std_lib.insert("print".to_string(), eval::print::print);
 
@@ -342,8 +341,8 @@ pub fn define_standard_library() -> FunctionMap {
     // osc
     standard_library.std_lib.insert("osc-sender".to_string(), eval::osc::osc_define_sender);
     standard_library.std_lib.insert("osc-send".to_string(), eval::osc::osc_send);
-    standard_library.std_lib.insert("osc-callback".to_string(), eval::osc::osc_define_callback);
     standard_library.std_lib.insert("osc-receiver".to_string(), eval::osc::osc_start_receiver);
+
     // types for osc
     standard_library.std_lib.insert("f64".to_string(), eval::types::double);
     standard_library.std_lib.insert("i32".to_string(), eval::types::int);

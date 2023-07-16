@@ -151,6 +151,7 @@ fn parse_boolean(i: &str) -> IResult<&str, Atom, VerboseError<&str>> {
 fn parse_definition(i: &str) -> IResult<&str, Expr, VerboseError<&str>> {
     alt((
         map(tag("fun"), |_| Expr::FunctionDefinition),
+        map(tag("callback"), |_| Expr::FunctionDefinition),
         map(tag("let"), |_| Expr::VariableDefinition),
         map(tag("defpart"), |_| Expr::VariableDefinition),
     ))(i)
@@ -364,9 +365,15 @@ pub fn eval_expression(
         }
         Expr::Definition(head, tail) => match **head {
             Expr::FunctionDefinition => {
-                if let Some(EvaluatedExpr::Identifier(i)) =
-                    eval_expression(&tail[0], functions, globals, None, sample_set, out_mode)
-                {
+                let id =
+                    match eval_expression(&tail[0], functions, globals, None, sample_set, out_mode)
+                    {
+                        Some(EvaluatedExpr::Identifier(i)) => Some(i),
+                        Some(EvaluatedExpr::Typed(TypedEntity::String(s))) => Some(s),
+                        _ => None,
+                    };
+
+                if let Some(i) = id {
                     // i hate this clone ...
                     let mut tail_clone = tail.clone();
 

@@ -20,7 +20,6 @@ use crate::visualizer_client::VisualizerClient;
 pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
     c: Command,
     function_map: &sync::Arc<Mutex<FunctionMap>>,
-    callback_map: &sync::Arc<CallbackMap>,
     session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
     ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
     sample_set: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
@@ -161,9 +160,6 @@ pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
         Command::StepPart(name) => {
             commands::step_part(ruffbox, var_store, sample_set, session, output_mode, name);
         }
-        Command::DefineMidiCallback(key, c) => {
-            callback_map.insert(CallbackKey::MidiNote(key), *c);
-        }
         Command::OscDefineClient(client_name, host) => {
             commands::define_osc_client(
                 client_name,
@@ -193,14 +189,12 @@ pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
         Command::OscStartReceiver(target) => {
             let ruffbox2 = sync::Arc::clone(ruffbox);
             let fmap2 = sync::Arc::clone(function_map);
-            let cbmap2 = sync::Arc::clone(callback_map);
             let sample_set2 = sync::Arc::clone(sample_set);
             let session2 = sync::Arc::clone(session);
             let var_store2 = sync::Arc::clone(var_store);
             OscReceiver::start_receiver_thread_udp(
                 target,
                 fmap2,
-                cbmap2,
                 session2,
                 ruffbox2,
                 sample_set2,
@@ -209,9 +203,6 @@ pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
                 base_dir,
             );
         }
-        Command::OscDefineCallback(key, c) => {
-            callback_map.insert(CallbackKey::OscAddr(key), *c);
-        }
     };
 }
 
@@ -219,7 +210,6 @@ pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
 pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
     parsed_in: EvaluatedExpr,
     function_map: &sync::Arc<Mutex<FunctionMap>>,
-    callback_map: &sync::Arc<CallbackMap>,
     session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
     ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
     sample_set: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
@@ -278,7 +268,6 @@ pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
             interpret_command(
                 c,
                 function_map,
-                callback_map,
                 session,
                 ruffbox,
                 sample_set,
@@ -315,7 +304,6 @@ pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
                 interpret(
                     expr,
                     function_map,
-                    callback_map,
                     session,
                     ruffbox,
                     sample_set,
