@@ -11,6 +11,8 @@ categories = ["multimedia::audio"]
 keywords = ["audio", "livecoding", "dsl", "sampler"]
 
 [dependencies]
+# only needed as workaround for sha256 which otherwise doesn't compile ...
+tokio = { version = "1.28.2", features = ["full"] }
 num = "0.4"
 cpal = { version="0.15", features = ["jack"] }
 directories-next = "2.0"
@@ -23,7 +25,7 @@ nom = "7.1"
 vom_rs = "0.4"
 #vom_rs = { path = "../vom.rs" }
 rustyline = "9.1"
-claxon = "0.4"
+claxon = "0.4.3"
 getopts = "0.2"
 rand = "0.8"
 rust-music-theory = "0.2"
@@ -41,7 +43,7 @@ regex = "1.5"
 midir = "0.8.0"
 reqwest = {version = "0.11.16", features = ["blocking"]}
 zip = "0.6.4"
-sha256 = "1.1"
+sha256 = "1.2"
 
 [dev-dependencies]
 assert_approx_eq = "1.1.0"
