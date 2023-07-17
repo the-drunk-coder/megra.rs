@@ -64,9 +64,10 @@ pub fn open_midi_input_port<const BUFSIZE: usize, const NCHAN: usize>(
                                     message[i] as f32,
                                 )),
                             );
-                        } else {
-                            println!("no midi arg available for pos arg {val}");
                         }
+                        //else {
+                        //  println!("no midi arg available for pos arg {val}");
+                        // }
                     }
 
                     // THIRD
