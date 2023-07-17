@@ -146,3 +146,26 @@ pub fn pow(
         None
     }
 }
+
+pub fn mtof(
+    _: &FunctionMap,
+    tail: &mut Vec<EvaluatedExpr>,
+    _: &sync::Arc<VariableStore>,
+    _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
+    _: OutputMode,
+) -> Option<EvaluatedExpr> {
+    let mut tail_drain = tail.drain(..);
+    tail_drain.next(); // don't need the function name
+
+    if let Some(EvaluatedExpr::Typed(TypedEntity::Float(note))) = tail_drain.next() {
+        if let Some(EvaluatedExpr::Typed(TypedEntity::Float(base))) = tail_drain.next() {
+            Some(EvaluatedExpr::Typed(TypedEntity::Float(
+                base * f32::powf(2.0, (note - 69.0) / 12.0),
+            )))
+        } else {
+            None
+        }
+    } else {
+        None
+    }
+}
