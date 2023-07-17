@@ -337,6 +337,7 @@ pub fn define_standard_library() -> FunctionMap {
     standard_library.std_lib.insert("div".to_string(), eval::arithmetic::div);
     standard_library.std_lib.insert("mod".to_string(), eval::arithmetic::modulo);
     standard_library.std_lib.insert("pow".to_string(), eval::arithmetic::pow);
+    standard_library.std_lib.insert("mtof".to_string(), eval::arithmetic::mtof);
 
     // osc
     standard_library.std_lib.insert("osc-sender".to_string(), eval::osc::osc_define_sender);
