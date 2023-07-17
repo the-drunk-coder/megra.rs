@@ -57,12 +57,16 @@ pub fn open_midi_input_port<const BUFSIZE: usize, const NCHAN: usize>(
                     // manual zip
                     let mut local_args = HashMap::new();
                     for (i, val) in fun_arg_names.iter().enumerate() {
-                        local_args.insert(
-                            val.clone(),
-                            EvaluatedExpr::Typed(crate::builtin_types::TypedEntity::Float(
-                                message[i] as f32,
-                            )),
-                        );
+                        if i < message.len() {
+                            local_args.insert(
+                                val.clone(),
+                                EvaluatedExpr::Typed(crate::builtin_types::TypedEntity::Float(
+                                    message[i] as f32,
+                                )),
+                            );
+                        } else {
+                            println!("no midi arg available for pos arg {val}");
+                        }
                     }
 
                     // THIRD
