@@ -1,4 +1,4 @@
-use crate::builtin_types::TypedEntity;
+use crate::builtin_types::{Comparable, TypedEntity};
 use crate::parameter::{DynVal, ParameterValue};
 use crate::parser::{EvaluatedExpr, FunctionMap};
 use crate::{OutputMode, SampleAndWavematrixSet, VariableStore};
@@ -23,7 +23,9 @@ pub fn lin_ramp_modulator(
 
     if let Some(f) = tail_drain.next() {
         from = match f {
-            EvaluatedExpr::Typed(TypedEntity::Float(fl)) => DynVal::with_value(fl),
+            EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(fl))) => {
+                DynVal::with_value(fl)
+            }
             EvaluatedExpr::Typed(TypedEntity::Parameter(p)) => p,
             _ => from,
         };
@@ -31,7 +33,9 @@ pub fn lin_ramp_modulator(
 
     if let Some(t) = tail_drain.next() {
         to = match t {
-            EvaluatedExpr::Typed(TypedEntity::Float(f)) => DynVal::with_value(f),
+            EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f))) => {
+                DynVal::with_value(f)
+            }
             EvaluatedExpr::Typed(TypedEntity::Parameter(p)) => p,
             _ => to,
         };
@@ -42,14 +46,18 @@ pub fn lin_ramp_modulator(
             "time" | "t" => {
                 if let Some(p) = tail_drain.next() {
                     time = match p {
-                        EvaluatedExpr::Typed(TypedEntity::Float(f)) => DynVal::with_value(f),
+                        EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f))) => {
+                            DynVal::with_value(f)
+                        }
                         EvaluatedExpr::Typed(TypedEntity::Parameter(p)) => p,
                         _ => time,
                     };
                 }
             }
             "op" => {
-                if let Some(EvaluatedExpr::Typed(TypedEntity::Symbol(s))) = tail_drain.next() {
+                if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(s)))) =
+                    tail_drain.next()
+                {
                     match s.as_str() {
                         "add" => op = ValOp::Add,
                         "sub" => op = ValOp::Subtract,
@@ -84,7 +92,9 @@ pub fn log_ramp_modulator(
 
     if let Some(f) = tail_drain.next() {
         from = match f {
-            EvaluatedExpr::Typed(TypedEntity::Float(fl)) => DynVal::with_value(fl),
+            EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(fl))) => {
+                DynVal::with_value(fl)
+            }
             EvaluatedExpr::Typed(TypedEntity::Parameter(p)) => p,
             _ => from,
         };
@@ -92,7 +102,9 @@ pub fn log_ramp_modulator(
 
     if let Some(t) = tail_drain.next() {
         to = match t {
-            EvaluatedExpr::Typed(TypedEntity::Float(f)) => DynVal::with_value(f),
+            EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f))) => {
+                DynVal::with_value(f)
+            }
             EvaluatedExpr::Typed(TypedEntity::Parameter(p)) => p,
             _ => to,
         };
@@ -103,14 +115,18 @@ pub fn log_ramp_modulator(
             "time" | "t" => {
                 if let Some(p) = tail_drain.next() {
                     time = match p {
-                        EvaluatedExpr::Typed(TypedEntity::Float(f)) => DynVal::with_value(f),
+                        EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f))) => {
+                            DynVal::with_value(f)
+                        }
                         EvaluatedExpr::Typed(TypedEntity::Parameter(p)) => p,
                         _ => time,
                     };
                 }
             }
             "op" => {
-                if let Some(EvaluatedExpr::Typed(TypedEntity::Symbol(s))) = tail_drain.next() {
+                if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(s)))) =
+                    tail_drain.next()
+                {
                     match s.as_str() {
                         "add" => op = ValOp::Add,
                         "sub" => op = ValOp::Subtract,
@@ -144,7 +160,9 @@ pub fn exp_ramp_modulator(
 
     if let Some(f) = tail_drain.next() {
         from = match f {
-            EvaluatedExpr::Typed(TypedEntity::Float(fl)) => DynVal::with_value(fl),
+            EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(fl))) => {
+                DynVal::with_value(fl)
+            }
             EvaluatedExpr::Typed(TypedEntity::Parameter(p)) => p,
             _ => from,
         };
@@ -152,7 +170,9 @@ pub fn exp_ramp_modulator(
 
     if let Some(t) = tail_drain.next() {
         to = match t {
-            EvaluatedExpr::Typed(TypedEntity::Float(f)) => DynVal::with_value(f),
+            EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f))) => {
+                DynVal::with_value(f)
+            }
             EvaluatedExpr::Typed(TypedEntity::Parameter(p)) => p,
             _ => to,
         };
@@ -163,14 +183,18 @@ pub fn exp_ramp_modulator(
             "time" | "t" => {
                 if let Some(p) = tail_drain.next() {
                     time = match p {
-                        EvaluatedExpr::Typed(TypedEntity::Float(f)) => DynVal::with_value(f),
+                        EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f))) => {
+                            DynVal::with_value(f)
+                        }
                         EvaluatedExpr::Typed(TypedEntity::Parameter(p)) => p,
                         _ => time,
                     };
                 }
             }
             "op" => {
-                if let Some(EvaluatedExpr::Typed(TypedEntity::Symbol(s))) = tail_drain.next() {
+                if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(s)))) =
+                    tail_drain.next()
+                {
                     match s.as_str() {
                         "add" => op = ValOp::Add,
                         "sub" => op = ValOp::Subtract,
@@ -210,7 +234,9 @@ pub fn multi_point_envelope_modulator(
     while let Some(c) = tail_drain.next() {
         if collect_levels {
             match c {
-                EvaluatedExpr::Typed(TypedEntity::Float(f)) => levels.push(DynVal::with_value(f)),
+                EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f))) => {
+                    levels.push(DynVal::with_value(f))
+                }
                 EvaluatedExpr::Typed(TypedEntity::Parameter(ref p)) => levels.push(p.clone()),
                 _ => {
                     collect_levels = false;
@@ -219,7 +245,9 @@ pub fn multi_point_envelope_modulator(
         }
         if collect_times {
             match c {
-                EvaluatedExpr::Typed(TypedEntity::Float(f)) => times.push(DynVal::with_value(f)),
+                EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f))) => {
+                    times.push(DynVal::with_value(f))
+                }
                 EvaluatedExpr::Typed(TypedEntity::Parameter(ref p)) => times.push(p.clone()),
                 _ => {
                     collect_times = false;
@@ -228,7 +256,7 @@ pub fn multi_point_envelope_modulator(
         }
 
         if collect_segment_types {
-            if let EvaluatedExpr::Typed(TypedEntity::Symbol(ref s)) = c {
+            if let EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(ref s))) = c {
                 types.push(match s.as_str() {
                     "lin" => EnvelopeSegmentType::Lin,
                     "log" => EnvelopeSegmentType::Log,
@@ -252,12 +280,18 @@ pub fn multi_point_envelope_modulator(
                     collect_segment_types = true;
                 }
                 "loop" => {
-                    if let Some(EvaluatedExpr::Typed(TypedEntity::Boolean(b))) = tail_drain.next() {
+                    if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+                        Comparable::Boolean(b),
+                    ))) = tail_drain.next()
+                    {
                         loop_env = b;
                     }
                 }
                 "op" => {
-                    if let Some(EvaluatedExpr::Typed(TypedEntity::Symbol(s))) = tail_drain.next() {
+                    if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+                        Comparable::Symbol(s),
+                    ))) = tail_drain.next()
+                    {
                         match s.as_str() {
                             "add" => op = ValOp::Add,
                             "sub" => op = ValOp::Subtract,
@@ -302,7 +336,7 @@ pub fn lfo_modulator(
                 "init" | "i" => {
                     if let Some(p) = tail_drain.next() {
                         match p {
-                            EvaluatedExpr::Typed(TypedEntity::Float(f)) => {
+                            EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f))) => {
                                 init = DynVal::with_value(f)
                             }
                             EvaluatedExpr::Typed(TypedEntity::Parameter(p)) => init = p,
@@ -313,7 +347,7 @@ pub fn lfo_modulator(
                 "freq" | "f" => {
                     if let Some(p) = tail_drain.next() {
                         match p {
-                            EvaluatedExpr::Typed(TypedEntity::Float(f)) => {
+                            EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f))) => {
                                 freq = ParameterValue::Scalar(DynVal::with_value(f))
                             }
                             EvaluatedExpr::Typed(TypedEntity::Parameter(p)) => {
@@ -327,7 +361,7 @@ pub fn lfo_modulator(
                 "phase" | "p" => {
                     if let Some(p) = tail_drain.next() {
                         match p {
-                            EvaluatedExpr::Typed(TypedEntity::Float(f)) => {
+                            EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f))) => {
                                 eff_phase = DynVal::with_value(f);
                                 phase_set = true;
                             }
@@ -340,10 +374,14 @@ pub fn lfo_modulator(
                     }
                 }
                 "range" | "r" => {
-                    if let Some(EvaluatedExpr::Typed(TypedEntity::Float(f1))) = tail_drain.next() {
+                    if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(
+                        f1,
+                    )))) = tail_drain.next()
+                    {
                         let a = f1;
-                        if let Some(EvaluatedExpr::Typed(TypedEntity::Float(f2))) =
-                            tail_drain.next()
+                        if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+                            Comparable::Float(f2),
+                        ))) = tail_drain.next()
                         {
                             let b = f2;
                             let lamp = (a - b).abs() / 2.0;
@@ -363,7 +401,7 @@ pub fn lfo_modulator(
                 "amp" => {
                     if let Some(p) = tail_drain.next() {
                         match p {
-                            EvaluatedExpr::Typed(TypedEntity::Float(f)) => {
+                            EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f))) => {
                                 amp = ParameterValue::Scalar(DynVal::with_value(f))
                             }
                             EvaluatedExpr::Typed(TypedEntity::Parameter(p)) => {
@@ -377,7 +415,7 @@ pub fn lfo_modulator(
                 "add" => {
                     if let Some(p) = tail_drain.next() {
                         match p {
-                            EvaluatedExpr::Typed(TypedEntity::Float(f)) => {
+                            EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f))) => {
                                 add = DynVal::with_value(f)
                             }
                             EvaluatedExpr::Typed(TypedEntity::Parameter(p)) => add = p,
@@ -386,7 +424,10 @@ pub fn lfo_modulator(
                     }
                 }
                 "op" => {
-                    if let Some(EvaluatedExpr::Typed(TypedEntity::Symbol(s))) = tail_drain.next() {
+                    if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+                        Comparable::Symbol(s),
+                    ))) = tail_drain.next()
+                    {
                         match s.as_str() {
                             "add" => op = ValOp::Add,
                             "sub" => op = ValOp::Subtract,
@@ -431,7 +472,7 @@ pub fn lfsaw_modulator(
                 "init" | "i" => {
                     if let Some(p) = tail_drain.next() {
                         match p {
-                            EvaluatedExpr::Typed(TypedEntity::Float(f)) => {
+                            EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f))) => {
                                 init = DynVal::with_value(f)
                             }
                             EvaluatedExpr::Typed(TypedEntity::Parameter(p)) => init = p,
@@ -442,7 +483,7 @@ pub fn lfsaw_modulator(
                 "freq" | "f" => {
                     if let Some(p) = tail_drain.next() {
                         match p {
-                            EvaluatedExpr::Typed(TypedEntity::Float(f)) => {
+                            EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f))) => {
                                 freq = ParameterValue::Scalar(DynVal::with_value(f))
                             }
                             EvaluatedExpr::Typed(TypedEntity::Parameter(p)) => {
@@ -456,7 +497,7 @@ pub fn lfsaw_modulator(
                 "phase" | "p" => {
                     if let Some(p) = tail_drain.next() {
                         match p {
-                            EvaluatedExpr::Typed(TypedEntity::Float(f)) => {
+                            EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f))) => {
                                 eff_phase = DynVal::with_value(f);
                                 phase_set = true;
                             }
@@ -469,10 +510,14 @@ pub fn lfsaw_modulator(
                     }
                 }
                 "range" | "r" => {
-                    if let Some(EvaluatedExpr::Typed(TypedEntity::Float(f1))) = tail_drain.next() {
+                    if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(
+                        f1,
+                    )))) = tail_drain.next()
+                    {
                         let a = f1;
-                        if let Some(EvaluatedExpr::Typed(TypedEntity::Float(f2))) =
-                            tail_drain.next()
+                        if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+                            Comparable::Float(f2),
+                        ))) = tail_drain.next()
                         {
                             let b = f2;
                             let lamp = (a - b).abs() / 2.0;
@@ -492,7 +537,7 @@ pub fn lfsaw_modulator(
                 "amp" => {
                     if let Some(p) = tail_drain.next() {
                         match p {
-                            EvaluatedExpr::Typed(TypedEntity::Float(f)) => {
+                            EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f))) => {
                                 amp = ParameterValue::Scalar(DynVal::with_value(f))
                             }
                             EvaluatedExpr::Typed(TypedEntity::Parameter(p)) => {
@@ -506,7 +551,7 @@ pub fn lfsaw_modulator(
                 "add" => {
                     if let Some(p) = tail_drain.next() {
                         match p {
-                            EvaluatedExpr::Typed(TypedEntity::Float(f)) => {
+                            EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f))) => {
                                 amp = ParameterValue::Scalar(DynVal::with_value(f))
                             }
                             EvaluatedExpr::Typed(TypedEntity::Parameter(p)) => {
@@ -518,7 +563,10 @@ pub fn lfsaw_modulator(
                     }
                 }
                 "op" => {
-                    if let Some(EvaluatedExpr::Typed(TypedEntity::Symbol(s))) = tail_drain.next() {
+                    if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+                        Comparable::Symbol(s),
+                    ))) = tail_drain.next()
+                    {
                         match s.as_str() {
                             "add" => op = ValOp::Add,
                             "sub" => op = ValOp::Subtract,
@@ -563,7 +611,7 @@ pub fn lfrsaw_modulator(
                 "init" | "i" => {
                     if let Some(p) = tail_drain.next() {
                         match p {
-                            EvaluatedExpr::Typed(TypedEntity::Float(f)) => {
+                            EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f))) => {
                                 init = DynVal::with_value(f)
                             }
                             EvaluatedExpr::Typed(TypedEntity::Parameter(p)) => init = p,
@@ -574,7 +622,7 @@ pub fn lfrsaw_modulator(
                 "freq" | "f" => {
                     if let Some(p) = tail_drain.next() {
                         match p {
-                            EvaluatedExpr::Typed(TypedEntity::Float(f)) => {
+                            EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f))) => {
                                 freq = ParameterValue::Scalar(DynVal::with_value(f))
                             }
                             EvaluatedExpr::Typed(TypedEntity::Parameter(p)) => {
@@ -588,7 +636,7 @@ pub fn lfrsaw_modulator(
                 "phase" | "p" => {
                     if let Some(p) = tail_drain.next() {
                         match p {
-                            EvaluatedExpr::Typed(TypedEntity::Float(f)) => {
+                            EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f))) => {
                                 eff_phase = DynVal::with_value(f);
                                 phase_set = true;
                             }
@@ -601,10 +649,14 @@ pub fn lfrsaw_modulator(
                     }
                 }
                 "range" | "r" => {
-                    if let Some(EvaluatedExpr::Typed(TypedEntity::Float(f1))) = tail_drain.next() {
+                    if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(
+                        f1,
+                    )))) = tail_drain.next()
+                    {
                         let a = f1;
-                        if let Some(EvaluatedExpr::Typed(TypedEntity::Float(f2))) =
-                            tail_drain.next()
+                        if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+                            Comparable::Float(f2),
+                        ))) = tail_drain.next()
                         {
                             let b = f2;
                             let lamp = (a - b).abs() / 2.0;
@@ -624,7 +676,7 @@ pub fn lfrsaw_modulator(
                 "amp" => {
                     if let Some(p) = tail_drain.next() {
                         match p {
-                            EvaluatedExpr::Typed(TypedEntity::Float(f)) => {
+                            EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f))) => {
                                 amp = ParameterValue::Scalar(DynVal::with_value(f))
                             }
                             EvaluatedExpr::Typed(TypedEntity::Parameter(p)) => {
@@ -638,7 +690,7 @@ pub fn lfrsaw_modulator(
                 "add" => {
                     if let Some(p) = tail_drain.next() {
                         match p {
-                            EvaluatedExpr::Typed(TypedEntity::Float(f)) => {
+                            EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f))) => {
                                 add = DynVal::with_value(f)
                             }
                             EvaluatedExpr::Typed(TypedEntity::Parameter(p)) => add = p,
@@ -647,7 +699,10 @@ pub fn lfrsaw_modulator(
                     }
                 }
                 "op" => {
-                    if let Some(EvaluatedExpr::Typed(TypedEntity::Symbol(s))) = tail_drain.next() {
+                    if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+                        Comparable::Symbol(s),
+                    ))) = tail_drain.next()
+                    {
                         match s.as_str() {
                             "add" => op = ValOp::Add,
                             "sub" => op = ValOp::Subtract,
@@ -692,7 +747,7 @@ pub fn lftri_modulator(
                 "init" | "i" => {
                     if let Some(p) = tail_drain.next() {
                         match p {
-                            EvaluatedExpr::Typed(TypedEntity::Float(f)) => {
+                            EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f))) => {
                                 init = DynVal::with_value(f)
                             }
                             EvaluatedExpr::Typed(TypedEntity::Parameter(p)) => init = p,
@@ -703,7 +758,7 @@ pub fn lftri_modulator(
                 "freq" | "f" => {
                     if let Some(p) = tail_drain.next() {
                         match p {
-                            EvaluatedExpr::Typed(TypedEntity::Float(f)) => {
+                            EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f))) => {
                                 freq = ParameterValue::Scalar(DynVal::with_value(f))
                             }
                             EvaluatedExpr::Typed(TypedEntity::Parameter(p)) => {
@@ -717,7 +772,7 @@ pub fn lftri_modulator(
                 "phase" | "p" => {
                     if let Some(p) = tail_drain.next() {
                         match p {
-                            EvaluatedExpr::Typed(TypedEntity::Float(f)) => {
+                            EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f))) => {
                                 eff_phase = DynVal::with_value(f);
                                 phase_set = true;
                             }
@@ -730,10 +785,14 @@ pub fn lftri_modulator(
                     }
                 }
                 "range" | "r" => {
-                    if let Some(EvaluatedExpr::Typed(TypedEntity::Float(f1))) = tail_drain.next() {
+                    if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(
+                        f1,
+                    )))) = tail_drain.next()
+                    {
                         let a = f1;
-                        if let Some(EvaluatedExpr::Typed(TypedEntity::Float(f2))) =
-                            tail_drain.next()
+                        if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+                            Comparable::Float(f2),
+                        ))) = tail_drain.next()
                         {
                             let b = f2;
                             let lamp = (a - b).abs() / 2.0;
@@ -753,7 +812,7 @@ pub fn lftri_modulator(
                 "amp" => {
                     if let Some(p) = tail_drain.next() {
                         match p {
-                            EvaluatedExpr::Typed(TypedEntity::Float(f)) => {
+                            EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f))) => {
                                 amp = ParameterValue::Scalar(DynVal::with_value(f))
                             }
                             EvaluatedExpr::Typed(TypedEntity::Parameter(p)) => {
@@ -767,7 +826,7 @@ pub fn lftri_modulator(
                 "add" => {
                     if let Some(p) = tail_drain.next() {
                         match p {
-                            EvaluatedExpr::Typed(TypedEntity::Float(f)) => {
+                            EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f))) => {
                                 amp = ParameterValue::Scalar(DynVal::with_value(f))
                             }
                             EvaluatedExpr::Typed(TypedEntity::Parameter(p)) => {
@@ -779,7 +838,10 @@ pub fn lftri_modulator(
                     }
                 }
                 "op" => {
-                    if let Some(EvaluatedExpr::Typed(TypedEntity::Symbol(s))) = tail_drain.next() {
+                    if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+                        Comparable::Symbol(s),
+                    ))) = tail_drain.next()
+                    {
                         match s.as_str() {
                             "add" => op = ValOp::Add,
                             "sub" => op = ValOp::Subtract,
@@ -821,7 +883,7 @@ pub fn lfsquare_modulator(
                 "init" | "i" => {
                     if let Some(p) = tail_drain.next() {
                         match p {
-                            EvaluatedExpr::Typed(TypedEntity::Float(f)) => {
+                            EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f))) => {
                                 init = DynVal::with_value(f)
                             }
                             EvaluatedExpr::Typed(TypedEntity::Parameter(p)) => init = p,
@@ -832,7 +894,7 @@ pub fn lfsquare_modulator(
                 "freq" | "f" => {
                     if let Some(p) = tail_drain.next() {
                         match p {
-                            EvaluatedExpr::Typed(TypedEntity::Float(f)) => {
+                            EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f))) => {
                                 freq = ParameterValue::Scalar(DynVal::with_value(f))
                             }
                             EvaluatedExpr::Typed(TypedEntity::Parameter(p)) => {
@@ -844,10 +906,14 @@ pub fn lfsquare_modulator(
                     }
                 }
                 "range" | "r" => {
-                    if let Some(EvaluatedExpr::Typed(TypedEntity::Float(f1))) = tail_drain.next() {
+                    if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(
+                        f1,
+                    )))) = tail_drain.next()
+                    {
                         let a = f1;
-                        if let Some(EvaluatedExpr::Typed(TypedEntity::Float(f2))) =
-                            tail_drain.next()
+                        if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+                            Comparable::Float(f2),
+                        ))) = tail_drain.next()
                         {
                             let b = f2;
                             let lamp = (a - b).abs() / 2.0;
@@ -861,7 +927,7 @@ pub fn lfsquare_modulator(
                 "pw" => {
                     if let Some(p) = tail_drain.next() {
                         match p {
-                            EvaluatedExpr::Typed(TypedEntity::Float(p)) => {
+                            EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(p))) => {
                                 pw = DynVal::with_value(p)
                             }
                             EvaluatedExpr::Typed(TypedEntity::Parameter(p)) => pw = p,
@@ -872,7 +938,7 @@ pub fn lfsquare_modulator(
                 "amp" => {
                     if let Some(p) = tail_drain.next() {
                         match p {
-                            EvaluatedExpr::Typed(TypedEntity::Float(f)) => {
+                            EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f))) => {
                                 amp = ParameterValue::Scalar(DynVal::with_value(f))
                             }
                             EvaluatedExpr::Typed(TypedEntity::Parameter(p)) => {
@@ -886,7 +952,7 @@ pub fn lfsquare_modulator(
                 "add" => {
                     if let Some(p) = tail_drain.next() {
                         match p {
-                            EvaluatedExpr::Typed(TypedEntity::Float(f)) => {
+                            EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f))) => {
                                 add = DynVal::with_value(f)
                             }
                             EvaluatedExpr::Typed(TypedEntity::Parameter(p)) => add = p,
@@ -895,7 +961,10 @@ pub fn lfsquare_modulator(
                     }
                 }
                 "op" => {
-                    if let Some(EvaluatedExpr::Typed(TypedEntity::Symbol(s))) = tail_drain.next() {
+                    if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+                        Comparable::Symbol(s),
+                    ))) = tail_drain.next()
+                    {
                         match s.as_str() {
                             "add" => op = ValOp::Add,
                             "sub" => op = ValOp::Subtract,

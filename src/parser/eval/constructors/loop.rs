@@ -29,7 +29,9 @@ pub fn a_loop(
     let mut tail_drain = tail.drain(1..).peekable();
 
     // name is the first symbol
-    let name = if let Some(EvaluatedExpr::Typed(TypedEntity::Symbol(n))) = tail_drain.peek() {
+    let name = if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(n)))) =
+        tail_drain.peek()
+    {
         n.clone()
     } else {
         "".to_string()
@@ -76,7 +78,7 @@ pub fn a_loop(
     while let Some(c) = tail_drain.next() {
         if collect_template {
             match c {
-                EvaluatedExpr::Typed(TypedEntity::Symbol(s)) => {
+                EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(s))) => {
                     template_evs.push(s);
                     continue;
                 }
@@ -88,7 +90,7 @@ pub fn a_loop(
 
         if collect_events {
             match c {
-                EvaluatedExpr::Typed(TypedEntity::Symbol(ref s)) => {
+                EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(ref s))) => {
                     if !cur_key.is_empty() && !collected_evs.is_empty() {
                         //println!("found event {}", cur_key);
                         collected_mapping.insert(cur_key.clone(), collected_evs.clone());
@@ -118,7 +120,7 @@ pub fn a_loop(
         match c {
             EvaluatedExpr::Keyword(k) => match k.as_str() {
                 "dur" => match tail_drain.next() {
-                    Some(EvaluatedExpr::Typed(TypedEntity::Float(n))) => {
+                    Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(n)))) => {
                         dur = DynVal::with_value(n);
                     }
                     Some(EvaluatedExpr::Typed(TypedEntity::Parameter(p))) => {
@@ -127,19 +129,28 @@ pub fn a_loop(
                     _ => {}
                 },
                 "rep" => {
-                    if let Some(EvaluatedExpr::Typed(TypedEntity::Float(n))) = tail_drain.peek() {
+                    if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(
+                        n,
+                    )))) = tail_drain.peek()
+                    {
                         repetition_chance = *n;
                         tail_drain.next();
                     }
                 }
                 "rnd" => {
-                    if let Some(EvaluatedExpr::Typed(TypedEntity::Float(n))) = tail_drain.peek() {
+                    if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(
+                        n,
+                    )))) = tail_drain.peek()
+                    {
                         randomize_chance = *n;
                         tail_drain.next();
                     }
                 }
                 "max-rep" => {
-                    if let Some(EvaluatedExpr::Typed(TypedEntity::Float(n))) = tail_drain.peek() {
+                    if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(
+                        n,
+                    )))) = tail_drain.peek()
+                    {
                         max_repetitions = *n;
                         tail_drain.next();
                     }
@@ -153,7 +164,10 @@ pub fn a_loop(
                     continue;
                 }
                 "keep" => {
-                    if let Some(EvaluatedExpr::Typed(TypedEntity::Boolean(b))) = tail_drain.peek() {
+                    if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+                        Comparable::Boolean(b),
+                    ))) = tail_drain.peek()
+                    {
                         keep_root = *b;
                         tail_drain.next();
                     }
@@ -170,14 +184,14 @@ pub fn a_loop(
                 // one duration for every event
                 dur_vec.push(dur.clone());
             }
-            EvaluatedExpr::Typed(TypedEntity::Float(f)) => {
+            EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f))) => {
                 if !dur_vec.is_empty() {
                     *dur_vec.last_mut().unwrap() = DynVal::with_value(f);
                 } else {
                     dur_vec.push(DynVal::with_value(f));
                 }
             }
-            EvaluatedExpr::Typed(TypedEntity::String(d)) => {
+            EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::String(d))) => {
                 let mut parsed_cycle = cyc_parser::eval_cyc_from_str(
                     &d,
                     functions,

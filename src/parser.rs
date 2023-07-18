@@ -16,7 +16,10 @@ use regex::Regex;
 use std::collections::HashMap;
 use std::{fmt, sync};
 
-use crate::{builtin_types::VariableId, session::SyncContext};
+use crate::{
+    builtin_types::{Comparable, VariableId},
+    session::SyncContext,
+};
 use crate::{Command, OutputMode, SampleAndWavematrixSet, TypedEntity, VariableStore};
 
 pub mod eval;
@@ -55,6 +58,7 @@ pub enum EvaluatedExpr {
     Command(Command),
     SyncContext(SyncContext),
     Progn(Vec<EvaluatedExpr>),
+    Match(Box<EvaluatedExpr>, Vec<(EvaluatedExpr, EvaluatedExpr)>),
     // I don't really have an idea how to make functions,
     // so for now I'll just store the non-evaluated Exprs
     // and reduce them once the user calls the function ...
@@ -75,6 +79,7 @@ impl fmt::Debug for EvaluatedExpr {
             EvaluatedExpr::Keyword(k) => write!(f, "EvaluatedExpr::Keyword({k})"),
             EvaluatedExpr::SyncContext(_) => write!(f, "EvaluatedExpr::SyncContext(_)"),
             EvaluatedExpr::Progn(_) => write!(f, "EvaluatedExpr::Progn"),
+            EvaluatedExpr::Match(_, _) => write!(f, "EvaluatedExpr::Match"),
             EvaluatedExpr::FunctionDefinition(_, _, _) => {
                 write!(f, "EvaluatedExpr::FunctionDefinition")
             }
@@ -281,11 +286,17 @@ pub fn eval_expression(
 ) -> Option<EvaluatedExpr> {
     match e {
         Expr::Constant(c) => Some(match c {
-            Atom::Float(f) => EvaluatedExpr::Typed(TypedEntity::Float(*f)),
-            Atom::Symbol(s) => EvaluatedExpr::Typed(TypedEntity::Symbol(s.to_string())),
+            Atom::Float(f) => EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(*f))),
+            Atom::Symbol(s) => {
+                EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(s.to_string())))
+            }
             Atom::Keyword(k) => EvaluatedExpr::Keyword(k.to_string()),
-            Atom::String(s) => EvaluatedExpr::Typed(TypedEntity::String(s.to_string())),
-            Atom::Boolean(b) => EvaluatedExpr::Typed(TypedEntity::Boolean(*b)),
+            Atom::String(s) => {
+                EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::String(s.to_string())))
+            }
+            Atom::Boolean(b) => {
+                EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Boolean(*b)))
+            }
             Atom::Identifier(f) => {
                 // eval local vars at eval time ???
                 if let Some(loc) = locals {
@@ -369,7 +380,9 @@ pub fn eval_expression(
                     match eval_expression(&tail[0], functions, globals, None, sample_set, out_mode)
                     {
                         Some(EvaluatedExpr::Identifier(i)) => Some(i),
-                        Some(EvaluatedExpr::Typed(TypedEntity::String(s))) => Some(s),
+                        Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+                            Comparable::String(s),
+                        ))) => Some(s),
                         _ => None,
                     };
 
@@ -431,7 +444,9 @@ pub fn eval_expression(
                     match eval_expression(&tail[0], functions, globals, None, sample_set, out_mode)
                     {
                         Some(EvaluatedExpr::Identifier(i)) => VariableId::Custom(i),
-                        Some(EvaluatedExpr::Typed(TypedEntity::Symbol(s))) => {
+                        Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+                            Comparable::Symbol(s),
+                        ))) => {
                             // check whether it's a reserved symbol
                             if crate::parser::eval::events::sound::map_symbolic_param_value(&s)
                                 .is_some()
@@ -499,7 +514,9 @@ mod tests {
             .std_lib
             .insert("text".to_string(), |_, tail, _, _, _| {
                 // SYMBOLS
-                if let EvaluatedExpr::Typed(TypedEntity::Symbol(s)) = &tail[1] {
+                if let EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(s))) =
+                    &tail[1]
+                {
                     assert!(s == "tar");
                 } else {
                     panic!();
@@ -531,20 +548,26 @@ mod tests {
                 }
 
                 // BOOLEANS
-                if let EvaluatedExpr::Typed(TypedEntity::Boolean(b)) = &tail[5] {
+                if let EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Boolean(b))) =
+                    &tail[5]
+                {
                     assert!(b);
                 } else {
                     panic!();
                 }
 
-                if let EvaluatedExpr::Typed(TypedEntity::Boolean(b)) = &tail[7] {
+                if let EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Boolean(b))) =
+                    &tail[7]
+                {
                     assert!(!b);
                 } else {
                     panic!();
                 }
 
                 // FLOA
-                if let EvaluatedExpr::Typed(TypedEntity::Float(f)) = &tail[3] {
+                if let EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f))) =
+                    &tail[3]
+                {
                     assert!(*f == 1.0);
                 } else {
                     panic!();
@@ -556,12 +579,16 @@ mod tests {
         functions
             .std_lib
             .insert("bounce".to_string(), |_, tail, _, _, _| {
-                if let EvaluatedExpr::Typed(TypedEntity::Float(f)) = &tail[1] {
+                if let EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f))) =
+                    &tail[1]
+                {
                     assert!(*f == 0.0);
                 } else {
                     panic!();
                 }
-                if let EvaluatedExpr::Typed(TypedEntity::Float(f)) = &tail[2] {
+                if let EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f))) =
+                    &tail[2]
+                {
                     assert!(*f == 400.0);
                 } else {
                     panic!();

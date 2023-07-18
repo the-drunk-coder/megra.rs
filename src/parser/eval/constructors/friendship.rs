@@ -27,7 +27,9 @@ pub fn friendship(
     let mut tail_drain = tail.drain(1..);
 
     // name is the first symbol
-    let name = if let Some(EvaluatedExpr::Typed(TypedEntity::Symbol(n))) = tail_drain.next() {
+    let name = if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(n)))) =
+        tail_drain.next()
+    {
         n
     } else {
         "".to_string()
@@ -66,7 +68,7 @@ pub fn friendship(
     while let Some(c) = tail_drain.next() {
         if collect_labeled {
             match c {
-                EvaluatedExpr::Typed(TypedEntity::Symbol(ref s)) => {
+                EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(ref s))) => {
                     if !cur_key.is_empty() && !collected_evs.is_empty() {
                         collected_mapping
                             .insert(cur_key.chars().next().unwrap(), collected_evs.clone());
@@ -100,7 +102,7 @@ pub fn friendship(
             let mut final_vec = Vec::new();
 
             match c {
-                EvaluatedExpr::Typed(TypedEntity::Symbol(ref s)) => {
+                EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(ref s))) => {
                     let label = s.chars().next().unwrap();
                     if collected_mapping.contains_key(&label) {
                         final_vec.append(&mut collected_mapping.get(&label).unwrap().clone());
@@ -122,7 +124,7 @@ pub fn friendship(
         if let EvaluatedExpr::Keyword(k) = c {
             match k.as_str() {
                 "dur" => match tail_drain.next() {
-                    Some(EvaluatedExpr::Typed(TypedEntity::Float(n))) => {
+                    Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(n)))) => {
                         dur = DynVal::with_value(n);
                     }
                     Some(EvaluatedExpr::Typed(TypedEntity::Parameter(p))) => {
@@ -135,17 +137,26 @@ pub fn friendship(
                     continue;
                 }
                 "rep" => {
-                    if let Some(EvaluatedExpr::Typed(TypedEntity::Float(n))) = tail_drain.next() {
+                    if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(
+                        n,
+                    )))) = tail_drain.next()
+                    {
                         repetition_chance = n;
                     }
                 }
                 "rnd" => {
-                    if let Some(EvaluatedExpr::Typed(TypedEntity::Float(n))) = tail_drain.next() {
+                    if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(
+                        n,
+                    )))) = tail_drain.next()
+                    {
                         randomize_chance = n;
                     }
                 }
                 "max-rep" => {
-                    if let Some(EvaluatedExpr::Typed(TypedEntity::Float(n))) = tail_drain.next() {
+                    if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(
+                        n,
+                    )))) = tail_drain.next()
+                    {
                         max_repetitions = n;
                     }
                 }
@@ -157,7 +168,9 @@ pub fn friendship(
                         let mut final_vec = Vec::new();
 
                         match c {
-                            EvaluatedExpr::Typed(TypedEntity::Symbol(ref s)) => {
+                            EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(
+                                ref s,
+                            ))) => {
                                 let label = s.chars().next().unwrap();
                                 if collected_mapping.contains_key(&label) {
                                     final_vec.append(
@@ -183,7 +196,10 @@ pub fn friendship(
                     continue;
                 }
                 "keep" => {
-                    if let Some(EvaluatedExpr::Typed(TypedEntity::Boolean(b))) = tail_drain.next() {
+                    if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+                        Comparable::Boolean(b),
+                    ))) = tail_drain.next()
+                    {
                         keep_root = b;
                     }
                 }

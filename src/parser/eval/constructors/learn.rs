@@ -25,7 +25,9 @@ pub fn learn(
     resolve_globals(&mut tail[1..], var_store);
     let mut tail_drain = tail.drain(1..);
     // name is the first symbol
-    let name = if let Some(EvaluatedExpr::Typed(TypedEntity::Symbol(n))) = tail_drain.next() {
+    let name = if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(n)))) =
+        tail_drain.next()
+    {
         n
     } else {
         "".to_string()
@@ -60,7 +62,7 @@ pub fn learn(
     while let Some(c) = tail_drain.next() {
         if collect_events {
             match c {
-                EvaluatedExpr::Typed(TypedEntity::Symbol(ref s)) => {
+                EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(ref s))) => {
                     if !cur_key.is_empty() && !ev_vec.is_empty() {
                         //println!("found event {}", cur_key);
                         event_mapping.insert(cur_key.chars().next().unwrap(), ev_vec.clone());
@@ -91,17 +93,19 @@ pub fn learn(
         match c {
             EvaluatedExpr::Keyword(k) => match k.as_str() {
                 "sample" => match tail_drain.next() {
-                    Some(EvaluatedExpr::Typed(TypedEntity::String(desc))) => {
+                    Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::String(
+                        desc,
+                    )))) => {
                         sample = desc.to_string();
                         sample.retain(|c| !c.is_whitespace());
                     }
                     Some(EvaluatedExpr::Typed(TypedEntity::Vec(args))) => {
                         for arg in args {
                             match *arg {
-                                TypedEntity::String(s) => {
+                                TypedEntity::Comparable(Comparable::String(s)) => {
                                     sample.push_str(&s);
                                 }
-                                TypedEntity::Character(s) => {
+                                TypedEntity::Comparable(Comparable::Character(s)) => {
                                     sample.push(s);
                                 }
                                 _ => {}
@@ -115,7 +119,7 @@ pub fn learn(
                     continue;
                 }
                 "dur" => match tail_drain.next() {
-                    Some(EvaluatedExpr::Typed(TypedEntity::Float(n))) => {
+                    Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(n)))) => {
                         dur = DynVal::with_value(n);
                     }
                     Some(EvaluatedExpr::Typed(TypedEntity::Parameter(p))) => {
@@ -124,27 +128,42 @@ pub fn learn(
                     _ => {}
                 },
                 "bound" => {
-                    if let Some(EvaluatedExpr::Typed(TypedEntity::Float(n))) = tail_drain.next() {
+                    if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(
+                        n,
+                    )))) = tail_drain.next()
+                    {
                         bound = n as usize;
                     }
                 }
                 "epsilon" => {
-                    if let Some(EvaluatedExpr::Typed(TypedEntity::Float(n))) = tail_drain.next() {
+                    if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(
+                        n,
+                    )))) = tail_drain.next()
+                    {
                         epsilon = n;
                     }
                 }
                 "size" => {
-                    if let Some(EvaluatedExpr::Typed(TypedEntity::Float(n))) = tail_drain.next() {
+                    if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(
+                        n,
+                    )))) = tail_drain.next()
+                    {
                         pfa_size = n as usize;
                     }
                 }
                 "autosilence" => {
-                    if let Some(EvaluatedExpr::Typed(TypedEntity::Boolean(b))) = tail_drain.next() {
+                    if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+                        Comparable::Boolean(b),
+                    ))) = tail_drain.next()
+                    {
                         autosilence = b;
                     }
                 }
                 "keep" => {
-                    if let Some(EvaluatedExpr::Typed(TypedEntity::Boolean(b))) = tail_drain.next() {
+                    if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+                        Comparable::Boolean(b),
+                    ))) = tail_drain.next()
+                    {
                         keep_root = b;
                     }
                 }

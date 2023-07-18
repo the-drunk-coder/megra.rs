@@ -3,7 +3,7 @@ use std::sync;
 use parking_lot::Mutex;
 
 use crate::{
-    builtin_types::{TypedEntity, VariableStore},
+    builtin_types::{Comparable, TypedEntity, VariableStore},
     parser::{EvaluatedExpr, FunctionMap},
     sample_set::SampleAndWavematrixSet,
     session::OutputMode,
@@ -19,8 +19,12 @@ pub fn int(
     let mut tail_drain = tail.drain(..);
     tail_drain.next(); // don't need the function name
 
-    if let Some(EvaluatedExpr::Typed(TypedEntity::Float(f))) = tail_drain.next() {
-        Some(EvaluatedExpr::Typed(TypedEntity::Int32(f as i32)))
+    if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f)))) =
+        tail_drain.next()
+    {
+        Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+            Comparable::Int32(f as i32),
+        )))
     } else {
         None
     }
@@ -36,8 +40,12 @@ pub fn long(
     let mut tail_drain = tail.drain(..);
     tail_drain.next(); // don't need the function name
 
-    if let Some(EvaluatedExpr::Typed(TypedEntity::Float(f))) = tail_drain.next() {
-        Some(EvaluatedExpr::Typed(TypedEntity::Int64(f as i64)))
+    if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f)))) =
+        tail_drain.next()
+    {
+        Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+            Comparable::Int64(f as i64),
+        )))
     } else {
         None
     }
@@ -53,8 +61,12 @@ pub fn double(
     let mut tail_drain = tail.drain(..);
     tail_drain.next(); // don't need the function name
 
-    if let Some(EvaluatedExpr::Typed(TypedEntity::Float(f))) = tail_drain.next() {
-        Some(EvaluatedExpr::Typed(TypedEntity::Double(f as f64)))
+    if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f)))) =
+        tail_drain.next()
+    {
+        Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+            Comparable::Double(f as f64),
+        )))
     } else {
         None
     }

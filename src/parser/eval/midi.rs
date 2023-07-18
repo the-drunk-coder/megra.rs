@@ -3,7 +3,7 @@ use std::sync;
 use parking_lot::Mutex;
 
 use crate::{
-    builtin_types::{TypedEntity, VariableStore},
+    builtin_types::{Comparable, TypedEntity, VariableStore},
     parser::{EvaluatedExpr, FunctionMap},
     sample_set::SampleAndWavematrixSet,
     session::OutputMode,
@@ -30,7 +30,9 @@ pub fn open_midi_port(
 ) -> Option<EvaluatedExpr> {
     let mut tail_drain = tail.drain(1..);
 
-    if let Some(EvaluatedExpr::Typed(TypedEntity::Float(port))) = tail_drain.next() {
+    if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(port)))) =
+        tail_drain.next()
+    {
         Some(EvaluatedExpr::Command(
             crate::builtin_types::Command::MidiStartReceiver(port as usize),
         ))

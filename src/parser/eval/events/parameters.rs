@@ -1,4 +1,4 @@
-use crate::builtin_types::TypedEntity;
+use crate::builtin_types::{Comparable, TypedEntity};
 use crate::event::{Event, EventOperation};
 use crate::music_theory;
 use crate::parameter::{DynVal, ParameterValue};
@@ -43,7 +43,7 @@ pub fn sample_keys(
     let mut keyword_set = HashSet::new();
 
     for p in tail_drain {
-        if let EvaluatedExpr::Typed(TypedEntity::Symbol(s)) = p {
+        if let EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(s))) = p {
             keyword_set.insert(s);
         }
     }
@@ -88,7 +88,9 @@ pub fn sample_number(
         return None;
     };
 
-    let snum = if let Some(EvaluatedExpr::Typed(TypedEntity::Float(f))) = tail_drain.next() {
+    let snum = if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f)))) =
+        tail_drain.next()
+    {
         f as usize
     } else {
         return None;
@@ -127,7 +129,9 @@ pub fn transpose(
 ) -> Option<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..).skip(1);
 
-    if let Some(EvaluatedExpr::Typed(TypedEntity::Float(n))) = tail_drain.next() {
+    if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(n)))) =
+        tail_drain.next()
+    {
         let mut ev =
             Event::with_name_and_operation("ratefreq".to_string(), EventOperation::Multiply);
 
@@ -185,14 +189,14 @@ pub fn parameter(
             if let Some(p) = tail_drain.next() {
                 let mut ev = Event::with_name_and_operation(parts[0].to_string(), op);
                 let par = match p {
-                    EvaluatedExpr::Typed(TypedEntity::Float(n)) => {
+                    EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(n))) => {
                         Some(ParameterValue::Scalar(DynVal::with_value(n)))
                     }
                     EvaluatedExpr::Typed(TypedEntity::Parameter(pl)) => {
                         Some(ParameterValue::Scalar(pl))
                     }
                     EvaluatedExpr::Typed(TypedEntity::ParameterValue(m)) => Some(m),
-                    EvaluatedExpr::Typed(TypedEntity::Symbol(s))
+                    EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(s)))
                         if param_key == SynthParameterLabel::PitchFrequency
                             || param_key == SynthParameterLabel::LowpassCutoffFrequency
                             || param_key == SynthParameterLabel::HighpassCutoffFrequency
@@ -205,7 +209,7 @@ pub fn parameter(
                             )))
                         })
                     }
-                    EvaluatedExpr::Typed(TypedEntity::Symbol(s)) => {
+                    EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(s))) => {
                         // jump out if the user entered garbage ...
                         crate::parser::eval::events::sound::map_symbolic_param_value(&s)
                     }

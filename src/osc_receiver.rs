@@ -7,7 +7,7 @@ use std::net::{SocketAddrV4, UdpSocket};
 use std::str::FromStr;
 use std::sync;
 
-use crate::builtin_types::{TypedEntity, VariableStore};
+use crate::builtin_types::{Comparable, TypedEntity, VariableStore};
 use crate::interpreter;
 use crate::parser::{eval_expression, EvaluatedExpr, FunctionMap};
 use crate::sample_set::SampleAndWavematrixSet;
@@ -62,20 +62,28 @@ impl OscReceiver {
                                     local_args.insert(
                                         fun_arg_names[i].clone(),
                                         match val {
-                                            OscType::Float(f) => {
-                                                EvaluatedExpr::Typed(TypedEntity::Float(*f))
-                                            }
+                                            OscType::Float(f) => EvaluatedExpr::Typed(
+                                                TypedEntity::Comparable(Comparable::Float(*f)),
+                                            ),
                                             OscType::Double(d) => {
-                                                EvaluatedExpr::Typed(TypedEntity::Float(*d as f32))
+                                                EvaluatedExpr::Typed(TypedEntity::Comparable(
+                                                    Comparable::Float(*d as f32),
+                                                ))
                                             }
                                             OscType::Int(i) => {
-                                                EvaluatedExpr::Typed(TypedEntity::Float(*i as f32))
+                                                EvaluatedExpr::Typed(TypedEntity::Comparable(
+                                                    Comparable::Float(*i as f32),
+                                                ))
                                             }
                                             OscType::Long(i) => {
-                                                EvaluatedExpr::Typed(TypedEntity::Float(*i as f32))
+                                                EvaluatedExpr::Typed(TypedEntity::Comparable(
+                                                    Comparable::Float(*i as f32),
+                                                ))
                                             }
                                             OscType::String(s) => {
-                                                EvaluatedExpr::Typed(TypedEntity::String(s.clone()))
+                                                EvaluatedExpr::Typed(TypedEntity::Comparable(
+                                                    Comparable::String(s.clone()),
+                                                ))
                                             }
                                             _ => {
                                                 continue;

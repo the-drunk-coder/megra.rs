@@ -37,7 +37,9 @@ pub fn collect_apple(tail: &mut Vec<EvaluatedExpr>) -> Box<dyn GeneratorProcesso
 
                     // grab new probability
                     cur_prob = match tail_drain.next() {
-                        Some(EvaluatedExpr::Typed(TypedEntity::Float(f))) => DynVal::with_value(f),
+                        Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(
+                            f,
+                        )))) => DynVal::with_value(f),
                         Some(EvaluatedExpr::Typed(TypedEntity::Parameter(p))) => p,
                         _ => DynVal::with_value(1.0),
                     };

@@ -5,6 +5,7 @@ use parking_lot::Mutex;
 use std::collections::HashMap;
 use std::sync;
 
+use crate::builtin_types::Comparable;
 use crate::parser::{eval_expression, EvaluatedExpr, FunctionMap};
 use crate::{interpreter, OutputMode, SampleAndWavematrixSet, Session, VariableStore};
 
@@ -60,9 +61,11 @@ pub fn open_midi_input_port<const BUFSIZE: usize, const NCHAN: usize>(
                         if i < message.len() {
                             local_args.insert(
                                 val.clone(),
-                                EvaluatedExpr::Typed(crate::builtin_types::TypedEntity::Float(
-                                    message[i] as f32,
-                                )),
+                                EvaluatedExpr::Typed(
+                                    crate::builtin_types::TypedEntity::Comparable(
+                                        Comparable::Float(message[i] as f32),
+                                    ),
+                                ),
                             );
                         }
                         //else {

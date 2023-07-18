@@ -26,7 +26,9 @@ pub fn import_sample_set(
     let mut checksum: Option<String> = None;
 
     // handle named sample sets ...
-    if let Some(EvaluatedExpr::Typed(TypedEntity::Symbol(s))) = tail_drain.peek() {
+    if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(s)))) =
+        tail_drain.peek()
+    {
         // hard-coded tutorial sample set with checksum ...
         if s.as_str() == "tutorial" {
             url = Some("https://github.com/the-drunk-coder/megra-public-samples/archive/refs/heads/master.zip".to_string());
@@ -38,17 +40,26 @@ pub fn import_sample_set(
         while let Some(c) = tail_drain.next() {
             if let EvaluatedExpr::Keyword(k) = c {
                 if k.as_str() == "checksum" {
-                    if let Some(EvaluatedExpr::Typed(TypedEntity::String(s))) = tail_drain.peek() {
+                    if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+                        Comparable::String(s),
+                    ))) = tail_drain.peek()
+                    {
                         checksum = Some(s.to_string());
                     }
                 }
                 if k.as_str() == "url" {
-                    if let Some(EvaluatedExpr::Typed(TypedEntity::String(s))) = tail_drain.peek() {
+                    if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+                        Comparable::String(s),
+                    ))) = tail_drain.peek()
+                    {
                         url = Some(s.to_string());
                     }
                 }
                 if k.as_str() == "file" {
-                    if let Some(EvaluatedExpr::Typed(TypedEntity::String(s))) = tail_drain.peek() {
+                    if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+                        Comparable::String(s),
+                    ))) = tail_drain.peek()
+                    {
                         file = Some(s.to_string());
                     }
                 }
@@ -91,32 +102,45 @@ pub fn load_sample_as_wavematrix(
         if let EvaluatedExpr::Keyword(k) = c {
             if k.as_str() == "key" {
                 // default is zero ...
-                if let Some(EvaluatedExpr::Typed(TypedEntity::Symbol(n))) = tail_drain.next() {
+                if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(n)))) =
+                    tail_drain.next()
+                {
                     key = Some(n);
                 }
             }
             if k.as_str() == "start" {
                 // default is zero ...
-                if let Some(EvaluatedExpr::Typed(TypedEntity::Float(f))) = tail_drain.next() {
+                if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f)))) =
+                    tail_drain.next()
+                {
                     start = Some(f);
                 }
             }
             if k.as_str() == "path" {
                 // default is zero ...
-                if let Some(EvaluatedExpr::Typed(TypedEntity::String(s))) = tail_drain.next() {
+                if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::String(s)))) =
+                    tail_drain.next()
+                {
                     path = Some(s);
                 }
             }
             if k.as_str() == "method" {
                 // default is zero ...
-                if let Some(EvaluatedExpr::Typed(TypedEntity::Symbol(s))) = tail_drain.next() {
+                if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(s)))) =
+                    tail_drain.next()
+                {
                     method = Some(s);
                 }
             }
             if k.as_str() == "size" {
                 // default is zero ...
-                if let Some(EvaluatedExpr::Typed(TypedEntity::Float(x))) = tail_drain.next() {
-                    if let Some(EvaluatedExpr::Typed(TypedEntity::Float(y))) = tail_drain.next() {
+                if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(x)))) =
+                    tail_drain.next()
+                {
+                    if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(
+                        y,
+                    )))) = tail_drain.next()
+                    {
                         matrix_size = Some((x as usize, y as usize));
                     }
                 }
@@ -156,14 +180,17 @@ pub fn freeze_buffer(
             EvaluatedExpr::Keyword(k) => {
                 if k.as_str() == "in" {
                     // default is zero ...
-                    if let Some(EvaluatedExpr::Typed(TypedEntity::Float(n))) = tail_drain.next() {
+                    if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(
+                        n,
+                    )))) = tail_drain.next()
+                    {
                         if n as usize > 0 {
                             inbuf = n as usize - 1;
                         }
                     }
                 }
             }
-            EvaluatedExpr::Typed(TypedEntity::Float(f)) => {
+            EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f))) => {
                 if f as usize > 0 {
                     freezbuf = f as usize - 1;
                 }
@@ -195,7 +222,7 @@ pub fn load_sample(
 
     while let Some(c) = tail_drain.next() {
         if collect_keywords {
-            if let EvaluatedExpr::Typed(TypedEntity::Symbol(ref s)) = c {
+            if let EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(ref s))) = c {
                 keywords.push(s.to_string());
                 continue;
             } else {
@@ -210,17 +237,26 @@ pub fn load_sample(
                     continue;
                 }
                 "set" => {
-                    if let Some(EvaluatedExpr::Typed(TypedEntity::Symbol(n))) = tail_drain.next() {
+                    if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+                        Comparable::Symbol(n),
+                    ))) = tail_drain.next()
+                    {
                         set = n.to_string();
                     }
                 }
                 "path" => {
-                    if let Some(EvaluatedExpr::Typed(TypedEntity::String(n))) = tail_drain.next() {
+                    if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+                        Comparable::String(n),
+                    ))) = tail_drain.next()
+                    {
                         path = n.to_string();
                     }
                 }
                 "use-stereo" => {
-                    if let Some(EvaluatedExpr::Typed(TypedEntity::Boolean(b))) = tail_drain.next() {
+                    if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+                        Comparable::Boolean(b),
+                    ))) = tail_drain.next()
+                    {
                         downmix_stereo = !b;
                     }
                 }
@@ -245,7 +281,9 @@ pub fn load_sample_sets(
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..).skip(1);
-    let path = if let EvaluatedExpr::Typed(TypedEntity::String(n)) = tail_drain.next().unwrap() {
+    let path = if let EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::String(n))) =
+        tail_drain.next().unwrap()
+    {
         n
     } else {
         "".to_string()
@@ -254,7 +292,9 @@ pub fn load_sample_sets(
     let mut downmix_stereo = false;
     if let Some(EvaluatedExpr::Keyword(k)) = tail_drain.next() {
         if k == "use-stereo" {
-            if let Some(EvaluatedExpr::Typed(TypedEntity::Boolean(b))) = tail_drain.next() {
+            if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Boolean(b)))) =
+                tail_drain.next()
+            {
                 downmix_stereo = !b
             }
         }
@@ -274,7 +314,9 @@ pub fn load_sample_set(
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..).skip(1);
-    let path = if let EvaluatedExpr::Typed(TypedEntity::String(n)) = tail_drain.next().unwrap() {
+    let path = if let EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::String(n))) =
+        tail_drain.next().unwrap()
+    {
         n
     } else {
         "".to_string()
@@ -283,7 +325,9 @@ pub fn load_sample_set(
     let mut downmix_stereo = false;
     if let Some(EvaluatedExpr::Keyword(k)) = tail_drain.next() {
         if k == "use-stereo" {
-            if let Some(EvaluatedExpr::Typed(TypedEntity::Boolean(b))) = tail_drain.next() {
+            if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Boolean(b)))) =
+                tail_drain.next()
+            {
                 downmix_stereo = !b
             }
         }
@@ -306,7 +350,9 @@ pub fn tmod(
     Some(EvaluatedExpr::Command(Command::Tmod(
         match tail_drain.next() {
             Some(EvaluatedExpr::Typed(TypedEntity::Parameter(p))) => p,
-            Some(EvaluatedExpr::Typed(TypedEntity::Float(f))) => DynVal::with_value(f),
+            Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f)))) => {
+                DynVal::with_value(f)
+            }
             _ => DynVal::with_value(1.0),
         },
     )))
@@ -323,7 +369,9 @@ pub fn latency(
     Some(EvaluatedExpr::Command(Command::Latency(
         match tail_drain.next() {
             Some(EvaluatedExpr::Typed(TypedEntity::Parameter(p))) => p,
-            Some(EvaluatedExpr::Typed(TypedEntity::Float(f))) => DynVal::with_value(f),
+            Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f)))) => {
+                DynVal::with_value(f)
+            }
             _ => DynVal::with_value(0.05),
         },
     )))
@@ -339,7 +387,9 @@ pub fn bpm(
     let mut tail_drain = tail.drain(..).skip(1);
     Some(EvaluatedExpr::Command(Command::Bpm(
         match tail_drain.next() {
-            Some(EvaluatedExpr::Typed(TypedEntity::Float(f))) => 60000.0 / f,
+            Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f)))) => {
+                60000.0 / f
+            }
             _ => 200.0,
         },
     )))
@@ -355,7 +405,7 @@ pub fn default_duration(
     let mut tail_drain = tail.drain(..).skip(1);
     Some(EvaluatedExpr::Command(Command::DefaultDuration(
         match tail_drain.next() {
-            Some(EvaluatedExpr::Typed(TypedEntity::Float(f))) => f,
+            Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f)))) => f,
             _ => 200.0,
         },
     )))
@@ -371,7 +421,7 @@ pub fn globres(
     let mut tail_drain = tail.drain(..).skip(1);
     Some(EvaluatedExpr::Command(Command::GlobRes(
         match tail_drain.next() {
-            Some(EvaluatedExpr::Typed(TypedEntity::Float(f))) => f,
+            Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f)))) => f,
             _ => 400000.0,
         },
     )))
@@ -391,7 +441,10 @@ pub fn reverb(
         match c {
             EvaluatedExpr::Keyword(k) => match k.as_str() {
                 "damp" => {
-                    if let Some(EvaluatedExpr::Typed(TypedEntity::Float(f))) = tail_drain.next() {
+                    if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(
+                        f,
+                    )))) = tail_drain.next()
+                    {
                         param_map.insert(
                             SynthParameterLabel::ReverbDampening,
                             ParameterValue::Scalar(DynVal::with_value(f)),
@@ -399,7 +452,10 @@ pub fn reverb(
                     }
                 }
                 "mix" => {
-                    if let Some(EvaluatedExpr::Typed(TypedEntity::Float(f))) = tail_drain.next() {
+                    if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(
+                        f,
+                    )))) = tail_drain.next()
+                    {
                         param_map.insert(
                             SynthParameterLabel::ReverbMix,
                             ParameterValue::Scalar(DynVal::with_value(f.clamp(0.01, 0.99))),
@@ -407,7 +463,10 @@ pub fn reverb(
                     }
                 }
                 "roomsize" => {
-                    if let Some(EvaluatedExpr::Typed(TypedEntity::Float(f))) = tail_drain.next() {
+                    if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(
+                        f,
+                    )))) = tail_drain.next()
+                    {
                         param_map.insert(
                             SynthParameterLabel::ReverbRoomsize,
                             ParameterValue::Scalar(DynVal::with_value(f.clamp(0.01, 0.99))),
@@ -440,7 +499,7 @@ pub fn delay(
         match c {
             EvaluatedExpr::Keyword(k) => match k.as_str() {
                 "damp-freq" => match tail_drain.next() {
-                    Some(EvaluatedExpr::Typed(TypedEntity::Float(f))) => {
+                    Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f)))) => {
                         param_map.insert(
                             SynthParameterLabel::DelayDampeningFrequency,
                             ParameterValue::Scalar(DynVal::with_value(f.clamp(20.0, 18000.0))),
@@ -458,7 +517,7 @@ pub fn delay(
                     _ => {}
                 },
                 "feedback" | "fb" => match tail_drain.next() {
-                    Some(EvaluatedExpr::Typed(TypedEntity::Float(f))) => {
+                    Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f)))) => {
                         param_map.insert(
                             SynthParameterLabel::DelayFeedback,
                             ParameterValue::Scalar(DynVal::with_value(f.clamp(0.01, 0.99))),
@@ -476,7 +535,10 @@ pub fn delay(
                     _ => {}
                 },
                 "mix" => {
-                    if let Some(EvaluatedExpr::Typed(TypedEntity::Float(f))) = tail_drain.next() {
+                    if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(
+                        f,
+                    )))) = tail_drain.next()
+                    {
                         param_map.insert(
                             SynthParameterLabel::DelayMix,
                             ParameterValue::Scalar(DynVal::with_value(f.clamp(0.01, 0.99))),
@@ -484,7 +546,7 @@ pub fn delay(
                     }
                 }
                 "time" | "t" => match tail_drain.next() {
-                    Some(EvaluatedExpr::Typed(TypedEntity::Float(f))) => {
+                    Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f)))) => {
                         param_map.insert(
                             SynthParameterLabel::DelayTime,
                             ParameterValue::Scalar(DynVal::with_value(
@@ -501,7 +563,7 @@ pub fn delay(
                     _ => {}
                 },
                 "rate" | "r" => match tail_drain.next() {
-                    Some(EvaluatedExpr::Typed(TypedEntity::Float(f))) => {
+                    Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f)))) => {
                         param_map.insert(
                             SynthParameterLabel::DelayRate,
                             ParameterValue::Scalar(DynVal::with_value(
@@ -538,11 +600,14 @@ pub fn export_dot(
     let mut tail_drain = tail.drain(..).skip(1);
 
     // filename
-    let filename = if let Some(EvaluatedExpr::Typed(TypedEntity::String(s))) = tail_drain.next() {
-        s
-    } else {
-        return None;
-    };
+    let filename =
+        if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::String(s)))) =
+            tail_drain.next()
+        {
+            s
+        } else {
+            return None;
+        };
 
     match tail_drain.next() {
         Some(EvaluatedExpr::Typed(TypedEntity::Generator(g))) => Some(EvaluatedExpr::Command(
@@ -553,8 +618,9 @@ pub fn export_dot(
                 "live" => {
                     let mut id_tags = BTreeSet::new();
                     // expect more tags
-                    while let Some(EvaluatedExpr::Typed(TypedEntity::Symbol(si))) =
-                        tail_drain.next()
+                    while let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+                        Comparable::Symbol(si),
+                    ))) = tail_drain.next()
                     {
                         id_tags.insert(si);
                     }
@@ -605,7 +671,9 @@ pub fn step_part(
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..).skip(1);
-    if let Some(EvaluatedExpr::Typed(TypedEntity::Symbol(s))) = tail_drain.next() {
+    if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(s)))) =
+        tail_drain.next()
+    {
         Some(EvaluatedExpr::Command(Command::StepPart(s)))
     } else {
         None
@@ -640,7 +708,9 @@ pub fn start_recording(
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..).skip(1);
-    let prefix = if let Some(EvaluatedExpr::Typed(TypedEntity::String(s))) = tail_drain.next() {
+    let prefix = if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::String(s)))) =
+        tail_drain.next()
+    {
         Some(s)
     } else {
         None
@@ -651,7 +721,9 @@ pub fn start_recording(
         if let EvaluatedExpr::Keyword(k) = c {
             if k.as_str() == "input" {
                 // default is zero ...
-                if let Some(EvaluatedExpr::Typed(TypedEntity::Boolean(b))) = tail_drain.next() {
+                if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Boolean(b)))) =
+                    tail_drain.next()
+                {
                     rec_input = b;
                 }
             }

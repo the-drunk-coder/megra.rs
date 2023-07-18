@@ -27,19 +27,23 @@ pub fn chop(
     let mut tail_drain = tail.drain(1..);
 
     // name is the first symbol
-    let name = if let Some(EvaluatedExpr::Typed(TypedEntity::Symbol(n))) = tail_drain.next() {
+    let name = if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(n)))) =
+        tail_drain.next()
+    {
         n
     } else {
         "".to_string()
     };
 
     // name is the first symbol
-    let slices: usize = if let Some(EvaluatedExpr::Typed(TypedEntity::Float(n))) = tail_drain.next()
-    {
-        n as usize
-    } else {
-        8
-    };
+    let slices: usize =
+        if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(n)))) =
+            tail_drain.next()
+        {
+            n as usize
+        } else {
+            8
+        };
 
     let mut dur: DynVal = if let TypedEntity::ConfigParameter(ConfigParameter::Numeric(d)) =
         var_store
@@ -67,7 +71,7 @@ pub fn chop(
             }
             EvaluatedExpr::Keyword(k) => match k.as_str() {
                 "dur" => match tail_drain.next() {
-                    Some(EvaluatedExpr::Typed(TypedEntity::Float(n))) => {
+                    Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(n)))) => {
                         dur = DynVal::with_value(n);
                     }
                     Some(EvaluatedExpr::Typed(TypedEntity::Parameter(p))) => {
@@ -76,22 +80,34 @@ pub fn chop(
                     _ => {}
                 },
                 "rep" => {
-                    if let Some(EvaluatedExpr::Typed(TypedEntity::Float(n))) = tail_drain.next() {
+                    if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(
+                        n,
+                    )))) = tail_drain.next()
+                    {
                         repetition_chance = n;
                     }
                 }
                 "rnd" => {
-                    if let Some(EvaluatedExpr::Typed(TypedEntity::Float(n))) = tail_drain.next() {
+                    if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(
+                        n,
+                    )))) = tail_drain.next()
+                    {
                         randomize_chance = n;
                     }
                 }
                 "max-rep" => {
-                    if let Some(EvaluatedExpr::Typed(TypedEntity::Float(n))) = tail_drain.next() {
+                    if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(
+                        n,
+                    )))) = tail_drain.next()
+                    {
                         max_repetitions = n;
                     }
                 }
                 "keep" => {
-                    if let Some(EvaluatedExpr::Typed(TypedEntity::Boolean(b))) = tail_drain.next() {
+                    if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+                        Comparable::Boolean(b),
+                    ))) = tail_drain.next()
+                    {
                         keep_root = b;
                     }
                 }

@@ -16,19 +16,19 @@ fn get_args(
 
     while let Some(c) = tail_drain.next() {
         match c {
-            EvaluatedExpr::Typed(TypedEntity::Float(f)) => {
+            EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f))) => {
                 pos_args.push(ConfigParameter::Numeric(f))
             }
             EvaluatedExpr::Keyword(k) => {
                 named_args.insert(
                     k,
                     match tail_drain.next() {
-                        Some(EvaluatedExpr::Typed(TypedEntity::Float(f))) => {
-                            ConfigParameter::Numeric(f)
-                        }
-                        Some(EvaluatedExpr::Typed(TypedEntity::Symbol(s))) => {
-                            ConfigParameter::Symbolic(s)
-                        }
+                        Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(
+                            f,
+                        )))) => ConfigParameter::Numeric(f),
+                        Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+                            Comparable::Symbol(s),
+                        ))) => ConfigParameter::Symbolic(s),
                         _ => ConfigParameter::Numeric(0.0), // dumb placeholder
                     },
                 );

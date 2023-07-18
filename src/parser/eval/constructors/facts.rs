@@ -29,14 +29,18 @@ pub fn facts(
     let mut tail_drain = tail.drain(1..);
 
     // name is the first symbol
-    let name = if let Some(EvaluatedExpr::Typed(TypedEntity::Symbol(n))) = tail_drain.next() {
+    let name = if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(n)))) =
+        tail_drain.next()
+    {
         n
     } else {
         return None;
     };
 
     // the param to be factorized
-    let param = if let Some(EvaluatedExpr::Typed(TypedEntity::Symbol(n))) = tail_drain.next() {
+    let param = if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(n)))) =
+        tail_drain.next()
+    {
         n
     } else {
         return None;
@@ -63,19 +67,23 @@ pub fn facts(
         match c {
             EvaluatedExpr::Keyword(k) => match k.as_str() {
                 "rnd" => {
-                    if let EvaluatedExpr::Typed(TypedEntity::Float(n)) = tail_drain.next().unwrap()
+                    if let EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(n))) =
+                        tail_drain.next().unwrap()
                     {
                         randomize_chance = n;
                     }
                 }
                 "keep" => {
-                    if let Some(EvaluatedExpr::Typed(TypedEntity::Boolean(b))) = tail_drain.next() {
+                    if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+                        Comparable::Boolean(b),
+                    ))) = tail_drain.next()
+                    {
                         keep_root = b;
                     }
                 }
                 _ => println!("{k}"),
             },
-            EvaluatedExpr::Typed(TypedEntity::Float(f)) => {
+            EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f))) => {
                 let mut e = Event::with_name_and_operation(
                     format!("{param}-mul"),
                     EventOperation::Multiply,

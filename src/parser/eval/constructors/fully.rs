@@ -26,7 +26,9 @@ pub fn fully(
     let mut tail_drain = tail.drain(1..);
 
     // name is the first symbol
-    let name = if let Some(EvaluatedExpr::Typed(TypedEntity::Symbol(n))) = tail_drain.next() {
+    let name = if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(n)))) =
+        tail_drain.next()
+    {
         n
     } else {
         "".to_string()
@@ -60,7 +62,7 @@ pub fn fully(
     while let Some(c) = tail_drain.next() {
         /*if collect_labeled {
             match c {
-                EvaluatedExpr::Typed(TypedEntity::Symbol(ref s)) => {
+                EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(ref s))) => {
                     if !cur_key.is_empty() && !collected_evs.is_empty() {
                         //println!("found event {}", cur_key);
                         collected_mapping
@@ -90,7 +92,7 @@ pub fn fully(
         }*/
 
         match c {
-            /*EvaluatedExpr::Typed(TypedEntity::Symbol(ref s)) => {
+            /*EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(ref s))) => {
                 let mut final_vec = Vec::new();
                 let label = s.chars().next().unwrap();
                 if collected_mapping.contains_key(&label) {
@@ -114,7 +116,7 @@ pub fn fully(
             }
             EvaluatedExpr::Keyword(k) => match k.as_str() {
                 "dur" => match tail_drain.next() {
-                    Some(EvaluatedExpr::Typed(TypedEntity::Float(n))) => {
+                    Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(n)))) => {
                         dur = DynVal::with_value(n);
                     }
                     Some(EvaluatedExpr::Typed(TypedEntity::Parameter(p))) => {
@@ -127,7 +129,10 @@ pub fn fully(
                 //    continue;
                 //}
                 "keep" => {
-                    if let Some(EvaluatedExpr::Typed(TypedEntity::Boolean(b))) = tail_drain.next() {
+                    if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+                        Comparable::Boolean(b),
+                    ))) = tail_drain.next()
+                    {
                         keep_root = b;
                     }
                 }

@@ -172,12 +172,24 @@ pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
             let mut osc_args = Vec::new();
             for arg in args.iter() {
                 match arg {
-                    TypedEntity::Float(n) => osc_args.push(OscType::Float(*n)),
-                    TypedEntity::Double(n) => osc_args.push(OscType::Double(*n)),
-                    TypedEntity::Int32(n) => osc_args.push(OscType::Int(*n)),
-                    TypedEntity::Int64(n) => osc_args.push(OscType::Long(*n)),
-                    TypedEntity::String(s) => osc_args.push(OscType::String(s.to_string())),
-                    TypedEntity::Symbol(s) => osc_args.push(OscType::String(s.to_string())),
+                    TypedEntity::Comparable(Comparable::Float(n)) => {
+                        osc_args.push(OscType::Float(*n))
+                    }
+                    TypedEntity::Comparable(Comparable::Double(n)) => {
+                        osc_args.push(OscType::Double(*n))
+                    }
+                    TypedEntity::Comparable(Comparable::Int32(n)) => {
+                        osc_args.push(OscType::Int(*n))
+                    }
+                    TypedEntity::Comparable(Comparable::Int64(n)) => {
+                        osc_args.push(OscType::Long(*n))
+                    }
+                    TypedEntity::Comparable(Comparable::String(s)) => {
+                        osc_args.push(OscType::String(s.to_string()))
+                    }
+                    TypedEntity::Comparable(Comparable::Symbol(s)) => {
+                        osc_args.push(OscType::String(s.to_string()))
+                    }
                     _ => {}
                 }
             }
@@ -298,19 +310,19 @@ pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
                 base_dir,
             );
         }
-        EvaluatedExpr::Typed(TypedEntity::Float(f)) => {
+        EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f))) => {
             println!("a number: {f}")
         }
-        EvaluatedExpr::Typed(TypedEntity::Symbol(s)) => {
+        EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(s))) => {
             println!("a symbol: {s}")
         }
-        EvaluatedExpr::Typed(TypedEntity::String(s)) => {
+        EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::String(s))) => {
             println!("a string: {s}")
         }
         EvaluatedExpr::Keyword(k) => {
             println!("a keyword: {k}")
         }
-        EvaluatedExpr::Typed(TypedEntity::Boolean(b)) => {
+        EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Boolean(b))) => {
             println!("a boolean: {b}")
         }
         EvaluatedExpr::FunctionDefinition(name, pos_args, body) => {
@@ -333,6 +345,26 @@ pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
                     output_mode,
                     base_dir.clone(),
                 );
+            }
+        }
+        EvaluatedExpr::Match(temp, exprs) => {
+            if let EvaluatedExpr::Typed(TypedEntity::Comparable(t1)) = *temp {
+                for (comp, expr) in exprs {
+                    if let EvaluatedExpr::Typed(TypedEntity::Comparable(t2)) = comp {
+                        if t1 == t2 {
+                            interpret(
+                                expr,
+                                function_map,
+                                session,
+                                ruffbox,
+                                sample_set,
+                                var_store,
+                                output_mode,
+                                base_dir.clone(),
+                            );
+                        }
+                    }
+                }
             }
         }
         _ => println!("unknown"),

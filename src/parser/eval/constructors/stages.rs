@@ -27,7 +27,9 @@ pub fn stages(
     let mut tail_drain = tail.drain(1..);
 
     // name is the first symbol
-    let name = if let Some(EvaluatedExpr::Typed(TypedEntity::Symbol(n))) = tail_drain.next() {
+    let name = if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(n)))) =
+        tail_drain.next()
+    {
         n
     } else {
         "".to_string()
@@ -58,12 +60,15 @@ pub fn stages(
         match c {
             EvaluatedExpr::Keyword(k) => match k.as_str() {
                 "cyc" => {
-                    if let Some(EvaluatedExpr::Typed(TypedEntity::Boolean(b))) = tail_drain.next() {
+                    if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+                        Comparable::Boolean(b),
+                    ))) = tail_drain.next()
+                    {
                         cyclical = b;
                     }
                 }
                 "dur" => match tail_drain.next() {
-                    Some(EvaluatedExpr::Typed(TypedEntity::Float(n))) => {
+                    Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(n)))) => {
                         dur = DynVal::with_value(n);
                     }
                     Some(EvaluatedExpr::Typed(TypedEntity::Parameter(p))) => {
@@ -72,23 +77,33 @@ pub fn stages(
                     _ => {}
                 },
                 "pnext" => {
-                    if let Some(EvaluatedExpr::Typed(TypedEntity::Float(n))) = tail_drain.next() {
+                    if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(
+                        n,
+                    )))) = tail_drain.next()
+                    {
                         pnext = n / 100.0;
                     }
                 }
                 "pprev" => {
-                    if let Some(EvaluatedExpr::Typed(TypedEntity::Float(n))) = tail_drain.next() {
+                    if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(
+                        n,
+                    )))) = tail_drain.next()
+                    {
                         pprev = n / 100.0;
                     }
                 }
                 "rnd" => {
-                    if let EvaluatedExpr::Typed(TypedEntity::Float(n)) = tail_drain.next().unwrap()
+                    if let EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(n))) =
+                        tail_drain.next().unwrap()
                     {
                         randomize_chance = n;
                     }
                 }
                 "keep" => {
-                    if let Some(EvaluatedExpr::Typed(TypedEntity::Boolean(b))) = tail_drain.next() {
+                    if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+                        Comparable::Boolean(b),
+                    ))) = tail_drain.next()
+                    {
                         keep_root = b;
                     }
                 }

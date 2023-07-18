@@ -38,7 +38,7 @@ pub fn collect_every(tail: &mut Vec<EvaluatedExpr>) -> Box<dyn GeneratorProcesso
                 events.push(e);
                 collect_filters = false;
             }
-            EvaluatedExpr::Typed(TypedEntity::Symbol(s)) => {
+            EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(s))) => {
                 if collect_filters {
                     last_filters.push(s)
                 }
@@ -94,9 +94,9 @@ pub fn collect_every(tail: &mut Vec<EvaluatedExpr>) -> Box<dyn GeneratorProcesso
                         }
                         // grab new probability
                         cur_step = match tail_drain.next() {
-                            Some(EvaluatedExpr::Typed(TypedEntity::Float(f))) => {
-                                DynVal::with_value(f)
-                            }
+                            Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+                                Comparable::Float(f),
+                            ))) => DynVal::with_value(f),
                             Some(EvaluatedExpr::Typed(TypedEntity::Parameter(p))) => p,
                             _ => DynVal::with_value(1.0),
                         };
@@ -105,8 +105,9 @@ pub fn collect_every(tail: &mut Vec<EvaluatedExpr>) -> Box<dyn GeneratorProcesso
                     }
                     "id" => {
                         // should be peek, really
-                        if let Some(EvaluatedExpr::Typed(TypedEntity::Symbol(s))) =
-                            tail_drain.next()
+                        if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+                            Comparable::Symbol(s),
+                        ))) = tail_drain.next()
                         {
                             proc.id = Some(s)
                         }

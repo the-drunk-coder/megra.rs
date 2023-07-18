@@ -1,4 +1,4 @@
-use crate::builtin_types::TypedEntity;
+use crate::builtin_types::{Comparable, TypedEntity};
 use crate::parser::{EvaluatedExpr, FunctionMap};
 use crate::{OutputMode, SampleAndWavematrixSet, VariableStore};
 
@@ -23,11 +23,13 @@ pub fn add(
 
     let mut result = 0.0;
     for n in tail_drain {
-        if let EvaluatedExpr::Typed(TypedEntity::Float(f)) = n {
+        if let EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f))) = n {
             result += f;
         }
     }
-    Some(EvaluatedExpr::Typed(TypedEntity::Float(result)))
+    Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+        Comparable::Float(result),
+    )))
 }
 
 pub fn sub(
@@ -40,19 +42,24 @@ pub fn sub(
     let mut tail_drain = tail.drain(..);
     tail_drain.next(); // don't need the function name
 
-    let mut result = if let Some(EvaluatedExpr::Typed(TypedEntity::Float(f))) = tail_drain.next() {
-        f
-    } else {
-        0.0
-    };
+    let mut result =
+        if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f)))) =
+            tail_drain.next()
+        {
+            f
+        } else {
+            0.0
+        };
 
     for n in tail_drain {
-        if let EvaluatedExpr::Typed(TypedEntity::Float(f)) = n {
+        if let EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f))) = n {
             result -= f;
         }
     }
 
-    Some(EvaluatedExpr::Typed(TypedEntity::Float(result)))
+    Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+        Comparable::Float(result),
+    )))
 }
 
 pub fn mul(
@@ -65,19 +72,24 @@ pub fn mul(
     let mut tail_drain = tail.drain(..);
     tail_drain.next(); // don't need the function name
 
-    let mut result = if let Some(EvaluatedExpr::Typed(TypedEntity::Float(f))) = tail_drain.next() {
-        f
-    } else {
-        0.0
-    };
+    let mut result =
+        if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f)))) =
+            tail_drain.next()
+        {
+            f
+        } else {
+            0.0
+        };
 
     for n in tail_drain {
-        if let EvaluatedExpr::Typed(TypedEntity::Float(f)) = n {
+        if let EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f))) = n {
             result *= f;
         }
     }
 
-    Some(EvaluatedExpr::Typed(TypedEntity::Float(result)))
+    Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+        Comparable::Float(result),
+    )))
 }
 
 pub fn div(
@@ -90,19 +102,24 @@ pub fn div(
     let mut tail_drain = tail.drain(..);
     tail_drain.next(); // don't need the function name
 
-    let mut result = if let Some(EvaluatedExpr::Typed(TypedEntity::Float(f))) = tail_drain.next() {
-        f
-    } else {
-        0.0
-    };
+    let mut result =
+        if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f)))) =
+            tail_drain.next()
+        {
+            f
+        } else {
+            0.0
+        };
 
     for n in tail_drain {
-        if let EvaluatedExpr::Typed(TypedEntity::Float(f)) = n {
+        if let EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f))) = n {
             result /= f;
         }
     }
 
-    Some(EvaluatedExpr::Typed(TypedEntity::Float(result)))
+    Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+        Comparable::Float(result),
+    )))
 }
 
 pub fn modulo(
@@ -115,9 +132,15 @@ pub fn modulo(
     let mut tail_drain = tail.drain(..);
     tail_drain.next(); // don't need the function name
 
-    if let Some(EvaluatedExpr::Typed(TypedEntity::Float(a))) = tail_drain.next() {
-        if let Some(EvaluatedExpr::Typed(TypedEntity::Float(b))) = tail_drain.next() {
-            Some(EvaluatedExpr::Typed(TypedEntity::Float(a % b)))
+    if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(a)))) =
+        tail_drain.next()
+    {
+        if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(b)))) =
+            tail_drain.next()
+        {
+            Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+                Comparable::Float(a % b),
+            )))
         } else {
             None
         }
@@ -136,9 +159,15 @@ pub fn pow(
     let mut tail_drain = tail.drain(..);
     tail_drain.next(); // don't need the function name
 
-    if let Some(EvaluatedExpr::Typed(TypedEntity::Float(a))) = tail_drain.next() {
-        if let Some(EvaluatedExpr::Typed(TypedEntity::Float(b))) = tail_drain.next() {
-            Some(EvaluatedExpr::Typed(TypedEntity::Float(a.powf(b))))
+    if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(a)))) =
+        tail_drain.next()
+    {
+        if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(b)))) =
+            tail_drain.next()
+        {
+            Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+                Comparable::Float(a.powf(b)),
+            )))
         } else {
             None
         }
@@ -157,10 +186,14 @@ pub fn mtof(
     let mut tail_drain = tail.drain(..);
     tail_drain.next(); // don't need the function name
 
-    if let Some(EvaluatedExpr::Typed(TypedEntity::Float(note))) = tail_drain.next() {
-        if let Some(EvaluatedExpr::Typed(TypedEntity::Float(base))) = tail_drain.next() {
-            Some(EvaluatedExpr::Typed(TypedEntity::Float(
-                base * f32::powf(2.0, (note - 69.0) / 12.0),
+    if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(note)))) =
+        tail_drain.next()
+    {
+        if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(base)))) =
+            tail_drain.next()
+        {
+            Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+                Comparable::Float(base * f32::powf(2.0, (note - 69.0) / 12.0)),
             )))
         } else {
             None

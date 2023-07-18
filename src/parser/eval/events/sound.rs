@@ -1,4 +1,4 @@
-use crate::builtin_types::TypedEntity;
+use crate::builtin_types::{Comparable, TypedEntity};
 use crate::event::{Event, EventOperation};
 use crate::event_helpers::map_parameter;
 use crate::music_theory;
@@ -56,7 +56,7 @@ pub fn resolve_vector(vec: Vec<Box<TypedEntity>>) -> ParameterValue {
     let mut pvec = Vec::new();
     for x in vec.into_iter() {
         match *x {
-            TypedEntity::Float(f) => pvec.push(DynVal::with_value(f)),
+            TypedEntity::Comparable(Comparable::Float(f)) => pvec.push(DynVal::with_value(f)),
             TypedEntity::Parameter(p) => pvec.push(p.clone()),
             _ => {}
         }
@@ -71,12 +71,12 @@ fn collect_param_value(
     let mut par_vec = Vec::new();
     while let Some(e) = tail_drain.peek() {
         match e {
-            EvaluatedExpr::Typed(TypedEntity::Float(f)) => {
+            EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f))) => {
                 par_vec.push(DynVal::with_value(*f));
                 tail_drain.next();
             }
 
-            EvaluatedExpr::Typed(TypedEntity::Symbol(s)) => {
+            EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(s))) => {
                 if let Some(p) = map_symbolic_param_value(s) {
                     let pc = p;
                     tail_drain.next();
@@ -131,7 +131,7 @@ fn get_pitch_param(
             advance = true;
             Some(m.clone())
         }
-        Some(EvaluatedExpr::Typed(TypedEntity::Float(n))) => {
+        Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(n)))) => {
             advance = true;
             Some(ParameterValue::Scalar(DynVal::with_value(*n)))
         }
@@ -139,7 +139,7 @@ fn get_pitch_param(
             advance = true;
             Some(ParameterValue::Scalar(pl.clone()))
         }
-        Some(EvaluatedExpr::Typed(TypedEntity::Symbol(s))) => {
+        Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(s)))) => {
             advance = true;
             music_theory::from_string(s).map(|note| {
                 ParameterValue::Scalar(DynVal::with_value(music_theory::to_freq(
@@ -173,7 +173,7 @@ fn get_bufnum_param(
     ev.params.insert(
         SynthParameterLabel::SampleBufferNumber,
         ParameterValue::Scalar(match tail_drain.peek() {
-            Some(EvaluatedExpr::Typed(TypedEntity::Float(n))) => {
+            Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(n)))) => {
                 let nn = *n;
                 tail_drain.next();
                 if nn as usize > 0 {
@@ -469,19 +469,20 @@ pub fn sound(
                 // we send the info down the line so it can be manipulated
                 // along the way and evaluated later on ..
                 ev.sample_lookup = match tail_drain.peek() {
-                    Some(EvaluatedExpr::Typed(TypedEntity::Symbol(s))) => {
+                    Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(s)))) => {
                         let mut keyword_set: HashSet<String> = HashSet::new();
                         keyword_set.insert(s.to_string());
                         ev.tags.insert(s.to_string());
-                        while let Some(EvaluatedExpr::Typed(TypedEntity::Symbol(s))) =
-                            tail_drain.peek()
+                        while let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+                            Comparable::Symbol(s),
+                        ))) = tail_drain.peek()
                         {
                             keyword_set.insert(s.to_string());
                             tail_drain.next();
                         }
                         Some(SampleLookup::Key(fname.to_string(), keyword_set))
                     }
-                    Some(EvaluatedExpr::Typed(TypedEntity::Float(pos))) => {
+                    Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(pos)))) => {
                         Some(SampleLookup::N(fname.to_string(), *pos as usize))
                     }
                     _ => {
@@ -500,13 +501,17 @@ pub fn sound(
     // collect keyword params
     while let Some(EvaluatedExpr::Keyword(k)) = tail_drain.next() {
         if k == "tags" {
-            while let Some(EvaluatedExpr::Typed(TypedEntity::Symbol(s))) = tail_drain.peek() {
+            while let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(s)))) =
+                tail_drain.peek()
+            {
                 ev.tags.insert(s.clone());
                 tail_drain.next();
             }
         } else if k == "wm" {
             // wavematrix lookup
-            if let Some(EvaluatedExpr::Typed(TypedEntity::Symbol(s))) = tail_drain.peek() {
+            if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(s)))) =
+                tail_drain.peek()
+            {
                 if let Some(wavematrix) = sample_set_sync.lock().get_wavematrix(s) {
                     //println!("found wavematrix {}", s);
                     ev.params.insert(

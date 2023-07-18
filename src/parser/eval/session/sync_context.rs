@@ -21,17 +21,22 @@ pub fn sync_context(
     let mut tail_drain = tail.drain(1..);
 
     // name is the first symbol
-    let name = if let Some(EvaluatedExpr::Typed(TypedEntity::Symbol(s))) = tail_drain.next() {
+    let name = if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(s)))) =
+        tail_drain.next()
+    {
         s
     } else {
         "".to_string()
     };
 
-    let active = if let Some(EvaluatedExpr::Typed(TypedEntity::Boolean(b))) = tail_drain.next() {
-        b
-    } else {
-        false
-    };
+    let active =
+        if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Boolean(b)))) =
+            tail_drain.next()
+        {
+            b
+        } else {
+            false
+        };
 
     if !active {
         return Some(EvaluatedExpr::SyncContext(SyncContext {
@@ -60,8 +65,9 @@ pub fn sync_context(
                     "sync" => {
                         collect_solo_tags = false;
                         collect_block_tags = false;
-                        if let EvaluatedExpr::Typed(TypedEntity::Symbol(sync)) =
-                            tail_drain.next().unwrap()
+                        if let EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(
+                            sync,
+                        ))) = tail_drain.next().unwrap()
                         {
                             sync_to = Some(sync);
                         }
@@ -69,7 +75,7 @@ pub fn sync_context(
                     "shift" => {
                         collect_solo_tags = false;
                         collect_block_tags = false;
-                        if let EvaluatedExpr::Typed(TypedEntity::Float(f)) =
+                        if let EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f))) =
                             tail_drain.next().unwrap()
                         {
                             shift = f as i32;
@@ -86,7 +92,7 @@ pub fn sync_context(
                     _ => {} // ignore
                 }
             }
-            EvaluatedExpr::Typed(TypedEntity::Symbol(s)) => {
+            EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(s))) => {
                 if collect_solo_tags {
                     solo_tags.insert(s);
                 } else if collect_block_tags {
@@ -141,7 +147,9 @@ mod tests {
             .std_lib
             .insert("nuc".to_string(), eval::constructors::nuc::nuc);
         functions.std_lib.insert("bd".to_string(), |_, _, _, _, _| {
-            Some(EvaluatedExpr::Typed(TypedEntity::String("bd".to_string())))
+            Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+                Comparable::String("bd".to_string()),
+            )))
         });
 
         let globals = sync::Arc::new(VariableStore::new());

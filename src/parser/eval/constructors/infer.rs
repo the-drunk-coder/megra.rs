@@ -27,14 +27,18 @@ pub fn rule(
     let mut tail_drain = tail.drain(1..);
 
     let source_vec: Vec<char> =
-        if let Some(EvaluatedExpr::Typed(TypedEntity::Symbol(s))) = tail_drain.next() {
+        if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(s)))) =
+            tail_drain.next()
+        {
             s.chars().collect()
         } else {
             return None;
         };
 
     let sym_vec: Vec<char> =
-        if let Some(EvaluatedExpr::Typed(TypedEntity::Symbol(s))) = tail_drain.next() {
+        if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(s)))) =
+            tail_drain.next()
+        {
             s.chars().collect()
         } else {
             return None;
@@ -52,17 +56,23 @@ pub fn rule(
         unreachable!()
     };
 
-    let probability = if let Some(EvaluatedExpr::Typed(TypedEntity::Float(p))) = tail_drain.next() {
-        p / 100.0
-    } else {
-        1.0
-    };
+    let probability =
+        if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(p)))) =
+            tail_drain.next()
+        {
+            p / 100.0
+        } else {
+            1.0
+        };
 
-    let duration = if let Some(EvaluatedExpr::Typed(TypedEntity::Float(f))) = tail_drain.next() {
-        f as u64
-    } else {
-        def_dur as u64
-    };
+    let duration =
+        if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f)))) =
+            tail_drain.next()
+        {
+            f as u64
+        } else {
+            def_dur as u64
+        };
 
     Some(EvaluatedExpr::Typed(TypedEntity::Rule(Rule {
         source: source_vec,
@@ -85,7 +95,9 @@ pub fn infer(
     let mut tail_drain = tail.drain(1..);
 
     // name is the first symbol
-    let name = if let Some(EvaluatedExpr::Typed(TypedEntity::Symbol(n))) = tail_drain.next() {
+    let name = if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(n)))) =
+        tail_drain.next()
+    {
         n
     } else {
         "".to_string()
@@ -118,7 +130,7 @@ pub fn infer(
     while let Some(c) = tail_drain.next() {
         if collect_events {
             match c {
-                EvaluatedExpr::Typed(TypedEntity::Symbol(ref s)) => {
+                EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(ref s))) => {
                     if !cur_key.is_empty() && !ev_vec.is_empty() {
                         //println!("found event {}", cur_key);
                         event_mapping.insert(cur_key.chars().next().unwrap(), ev_vec.clone());
@@ -171,7 +183,7 @@ pub fn infer(
                     continue;
                 }
                 "dur" => match tail_drain.next() {
-                    Some(EvaluatedExpr::Typed(TypedEntity::Float(n))) => {
+                    Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(n)))) => {
                         dur = DynVal::with_value(n);
                     }
                     Some(EvaluatedExpr::Typed(TypedEntity::Parameter(p))) => {
@@ -180,7 +192,10 @@ pub fn infer(
                     _ => {}
                 },
                 "keep" => {
-                    if let Some(EvaluatedExpr::Typed(TypedEntity::Boolean(b))) = tail_drain.next() {
+                    if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+                        Comparable::Boolean(b),
+                    ))) = tail_drain.next()
+                    {
                         keep_root = b;
                     }
                 }

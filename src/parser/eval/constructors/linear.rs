@@ -27,7 +27,9 @@ pub fn linear(
     let mut tail_drain = tail.drain(1..);
 
     // name is the first symbol
-    let name = if let Some(EvaluatedExpr::Typed(TypedEntity::Symbol(n))) = tail_drain.next() {
+    let name = if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(n)))) =
+        tail_drain.next()
+    {
         n
     } else {
         "".to_string()
@@ -61,7 +63,7 @@ pub fn linear(
                 dur_vec.push(dur.clone());
                 continue;
             }
-            EvaluatedExpr::Typed(TypedEntity::Float(f)) => {
+            EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f))) => {
                 *dur_vec.last_mut().unwrap() = DynVal::with_value(f);
             }
             _ => println! {"ignored"},

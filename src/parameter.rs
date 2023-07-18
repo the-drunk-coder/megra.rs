@@ -8,6 +8,7 @@ use std::fmt::*;
 use ruffbox_synth::building_blocks::{EnvelopeSegmentInfo, EnvelopeSegmentType};
 use ruffbox_synth::building_blocks::{FilterType, SynthParameterLabel, SynthParameterValue, ValOp};
 
+use crate::builtin_types::Comparable;
 use crate::{TypedEntity, VariableId, VariableStore};
 
 #[derive(Clone, Debug)]
@@ -210,7 +211,7 @@ pub fn resolve_parameter(
         // resolve params
         ParameterValue::Placeholder(id) => {
             if let Some(thing) = globals.get(id) {
-                if let TypedEntity::Float(n) = thing.value() {
+                if let TypedEntity::Comparable(Comparable::Float(n)) = thing.value() {
                     return SynthParameterValue::ScalarF32(*n);
                 }
             }

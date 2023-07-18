@@ -37,7 +37,9 @@ pub fn push(
 
     let place = match tail_drain.next() {
         Some(EvaluatedExpr::Identifier(i)) => VariableId::Custom(i),
-        Some(EvaluatedExpr::Typed(TypedEntity::Symbol(s))) => VariableId::Symbol(s),
+        Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(s)))) => {
+            VariableId::Symbol(s)
+        }
         _ => {
             return None;
         }

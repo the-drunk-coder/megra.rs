@@ -19,8 +19,8 @@ pub enum ConfigParameter {
     Symbolic(String),
 }
 
-#[derive(Clone, Debug)]
-pub enum TypedEntity {
+#[derive(Clone, Debug, PartialEq)]
+pub enum Comparable {
     Float(f32),
     Double(f64),
     Int32(i32),
@@ -29,6 +29,11 @@ pub enum TypedEntity {
     Symbol(String),
     Character(char),
     Boolean(bool),
+}
+
+#[derive(Clone, Debug)]
+pub enum TypedEntity {
+    Comparable(Comparable),
     ConfigParameter(ConfigParameter),
     Generator(Generator),
     GeneratorProcessorOrModifier(GeneratorProcessorOrModifier),

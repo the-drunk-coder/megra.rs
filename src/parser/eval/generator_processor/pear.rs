@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::builtin_types::TypedEntity;
+use crate::builtin_types::{Comparable, TypedEntity};
 use crate::generator_processor::*;
 use crate::parameter::DynVal;
 
@@ -46,9 +46,9 @@ pub fn collect_pear(tail: &mut Vec<EvaluatedExpr>) -> Box<dyn GeneratorProcessor
                         // grab new probability
 
                         cur_prob = match tail_drain.next() {
-                            Some(EvaluatedExpr::Typed(TypedEntity::Float(f))) => {
-                                DynVal::with_value(f)
-                            }
+                            Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+                                Comparable::Float(f),
+                            ))) => DynVal::with_value(f),
                             Some(EvaluatedExpr::Typed(TypedEntity::Parameter(p))) => p,
                             _ => DynVal::with_value(1.0),
                         };
@@ -77,7 +77,7 @@ pub fn collect_pear(tail: &mut Vec<EvaluatedExpr>) -> Box<dyn GeneratorProcessor
                     _ => {}
                 }
             }
-            EvaluatedExpr::Typed(TypedEntity::Symbol(s)) => {
+            EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(s))) => {
                 if collect_filters {
                     //println!("found filter {}", s);
                     last_filters.push(s)

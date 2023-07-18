@@ -13,17 +13,22 @@ pub fn osc_define_sender(
 ) -> Option<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..);
     tail_drain.next();
-    let sender_name = if let Some(EvaluatedExpr::Typed(TypedEntity::Symbol(s))) = tail_drain.next()
-    {
-        s
-    } else {
-        return None;
-    };
-    let host_name = if let Some(EvaluatedExpr::Typed(TypedEntity::String(s))) = tail_drain.next() {
-        s
-    } else {
-        return None;
-    };
+    let sender_name =
+        if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(s)))) =
+            tail_drain.next()
+        {
+            s
+        } else {
+            return None;
+        };
+    let host_name =
+        if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::String(s)))) =
+            tail_drain.next()
+        {
+            s
+        } else {
+            return None;
+        };
 
     Some(EvaluatedExpr::Command(Command::OscDefineClient(
         sender_name,
@@ -41,13 +46,17 @@ pub fn osc_send(
     let mut tail_drain = tail.drain(..);
     tail_drain.next();
 
-    let sender_name = if let Some(EvaluatedExpr::Typed(TypedEntity::Symbol(s))) = tail_drain.next()
+    let sender_name =
+        if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(s)))) =
+            tail_drain.next()
+        {
+            s
+        } else {
+            return None;
+        };
+    let addr = if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::String(s)))) =
+        tail_drain.next()
     {
-        s
-    } else {
-        return None;
-    };
-    let addr = if let Some(EvaluatedExpr::Typed(TypedEntity::String(s))) = tail_drain.next() {
         s
     } else {
         return None;
@@ -56,12 +65,24 @@ pub fn osc_send(
     let mut args = Vec::new();
     for thing in tail_drain {
         match thing {
-            EvaluatedExpr::Typed(TypedEntity::Float(f)) => args.push(TypedEntity::Float(f)),
-            EvaluatedExpr::Typed(TypedEntity::Double(f)) => args.push(TypedEntity::Double(f)),
-            EvaluatedExpr::Typed(TypedEntity::Int32(f)) => args.push(TypedEntity::Int32(f)),
-            EvaluatedExpr::Typed(TypedEntity::Int64(f)) => args.push(TypedEntity::Int64(f)),
-            EvaluatedExpr::Typed(TypedEntity::Symbol(s)) => args.push(TypedEntity::Symbol(s)),
-            EvaluatedExpr::Typed(TypedEntity::String(s)) => args.push(TypedEntity::String(s)),
+            EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f))) => {
+                args.push(TypedEntity::Comparable(Comparable::Float(f)))
+            }
+            EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Double(f))) => {
+                args.push(TypedEntity::Comparable(Comparable::Double(f)))
+            }
+            EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Int32(f))) => {
+                args.push(TypedEntity::Comparable(Comparable::Int32(f)))
+            }
+            EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Int64(f))) => {
+                args.push(TypedEntity::Comparable(Comparable::Int64(f)))
+            }
+            EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(s))) => {
+                args.push(TypedEntity::Comparable(Comparable::Symbol(s)))
+            }
+            EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::String(s))) => {
+                args.push(TypedEntity::Comparable(Comparable::String(s)))
+            }
             _ => {}
         }
     }
@@ -83,11 +104,14 @@ pub fn osc_start_receiver(
     let mut tail_drain = tail.drain(..);
     tail_drain.next();
 
-    let host_name = if let Some(EvaluatedExpr::Typed(TypedEntity::String(s))) = tail_drain.next() {
-        s
-    } else {
-        return None;
-    };
+    let host_name =
+        if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::String(s)))) =
+            tail_drain.next()
+        {
+            s
+        } else {
+            return None;
+        };
 
     Some(EvaluatedExpr::Command(Command::OscStartReceiver(host_name)))
 }

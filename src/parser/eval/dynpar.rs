@@ -4,7 +4,7 @@ use crate::parameter::{
     DynVal,
 };
 
-use crate::builtin_types::TypedEntity;
+use crate::builtin_types::{Comparable, TypedEntity};
 use crate::parser::{EvaluatedExpr, FunctionMap};
 use crate::{OutputMode, SampleAndWavematrixSet, VariableStore};
 use parking_lot::Mutex;
@@ -31,7 +31,9 @@ fn find_keyword_param(
 ) -> DynVal {
     if let Some(b) = raw_params.get(key) {
         match b {
-            EvaluatedExpr::Typed(TypedEntity::Float(f)) => DynVal::with_value(*f),
+            EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f))) => {
+                DynVal::with_value(*f)
+            }
             EvaluatedExpr::Typed(TypedEntity::Parameter(p)) => p.clone(),
             _ => DynVal::with_value(default),
         }
@@ -45,7 +47,9 @@ fn find_keyword_bool(
     key: &str,
     default: bool,
 ) -> bool {
-    if let Some(EvaluatedExpr::Typed(TypedEntity::Boolean(b))) = raw_params.get(key) {
+    if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Boolean(b)))) =
+        raw_params.get(key)
+    {
         *b
     } else {
         default
@@ -55,7 +59,9 @@ fn find_keyword_bool(
 fn get_next_param(tail_drain: &mut std::vec::Drain<EvaluatedExpr>, default: f32) -> DynVal {
     if let Some(b) = tail_drain.next() {
         match b {
-            EvaluatedExpr::Typed(TypedEntity::Float(f)) => DynVal::with_value(f),
+            EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f))) => {
+                DynVal::with_value(f)
+            }
             EvaluatedExpr::Typed(TypedEntity::Parameter(p)) => p,
             _ => DynVal::with_value(default),
         }
@@ -150,7 +156,9 @@ pub fn env(
     while let Some(c) = tail_drain.next() {
         if collect_steps {
             match c {
-                EvaluatedExpr::Typed(TypedEntity::Float(f)) => steps.push(DynVal::with_value(f)),
+                EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f))) => {
+                    steps.push(DynVal::with_value(f))
+                }
                 EvaluatedExpr::Typed(TypedEntity::Parameter(ref p)) => steps.push(p.clone()),
                 _ => {
                     collect_steps = false;
@@ -159,7 +167,9 @@ pub fn env(
         }
         if collect_values {
             match c {
-                EvaluatedExpr::Typed(TypedEntity::Float(f)) => values.push(DynVal::with_value(f)),
+                EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f))) => {
+                    values.push(DynVal::with_value(f))
+                }
                 EvaluatedExpr::Typed(TypedEntity::Parameter(ref p)) => values.push(p.clone()),
                 _ => {
                     collect_values = false;
@@ -181,7 +191,10 @@ pub fn env(
                     collect_steps = true;
                 }
                 "repeat" => {
-                    if let Some(EvaluatedExpr::Typed(TypedEntity::Boolean(b))) = tail_drain.next() {
+                    if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+                        Comparable::Boolean(b),
+                    ))) = tail_drain.next()
+                    {
                         repeat = b;
                     }
                 }

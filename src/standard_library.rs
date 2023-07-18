@@ -50,8 +50,9 @@ pub fn define_standard_library() -> FunctionMap {
     standard_library.std_lib.insert("import-sample-set".to_string(), eval::commands::import_sample_set);
     standard_library.std_lib.insert("print".to_string(), eval::print::print);
 
-    // progn
+    // progn and other constructs
     standard_library.std_lib.insert("progn".to_string(), eval::progn::progn);
+    standard_library.std_lib.insert("match".to_string(), eval::megra_match::megra_match);
     
     // control event
     standard_library.std_lib.insert("ctrl".to_string(), eval::events::control::control);
