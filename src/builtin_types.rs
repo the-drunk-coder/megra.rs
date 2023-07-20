@@ -44,6 +44,7 @@ pub enum TypedEntity {
     Rule(Rule),
     // compound types, some specialized for convenience
     Vec(Vec<Box<TypedEntity>>),
+    Pair(Box<TypedEntity>, Box<TypedEntity>),
     Matrix(Vec<Vec<Box<TypedEntity>>>),
     GeneratorList(Vec<Generator>),
     GeneratorProcessorOrModifierList(Vec<GeneratorProcessorOrModifier>),

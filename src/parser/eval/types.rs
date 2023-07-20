@@ -71,3 +71,27 @@ pub fn double(
         None
     }
 }
+
+pub fn pair(
+    _: &FunctionMap,
+    tail: &mut Vec<EvaluatedExpr>,
+    _: &sync::Arc<VariableStore>,
+    _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
+    _: OutputMode,
+) -> Option<EvaluatedExpr> {
+    let mut tail_drain = tail.drain(..);
+    tail_drain.next(); // don't need the function name
+
+    if let Some(EvaluatedExpr::Typed(t1)) = tail_drain.next() {
+        if let Some(EvaluatedExpr::Typed(t2)) = tail_drain.next() {
+            Some(EvaluatedExpr::Typed(TypedEntity::Pair(
+                Box::new(t1),
+                Box::new(t2),
+            )))
+        } else {
+            None
+        }
+    } else {
+        None
+    }
+}

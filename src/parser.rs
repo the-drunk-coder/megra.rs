@@ -464,7 +464,7 @@ pub fn eval_expression(
                 let mut reduced_tail = tail
                     .iter()
                     .map(|expr| {
-                        eval_expression(expr, functions, globals, None, sample_set, out_mode)
+                        eval_expression(expr, functions, globals, locals, sample_set, out_mode)
                     })
                     .collect::<Option<Vec<EvaluatedExpr>>>()?;
 
