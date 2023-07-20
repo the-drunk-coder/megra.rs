@@ -101,7 +101,7 @@ fn collect_param_value(
                 return mc;
             }
             EvaluatedExpr::Identifier(i) => {
-                i.to_string();
+                return ParameterValue::Placeholder(VariableId::Custom(i.to_string()));
             }
 
             _ => {
