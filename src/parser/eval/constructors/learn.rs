@@ -71,6 +71,45 @@ pub fn learn(
                     cur_key = s.clone();
                     continue;
                 }
+                EvaluatedExpr::Typed(TypedEntity::Vec(ref v)) => {
+                    for x in v.clone() {
+                        if let TypedEntity::Pair(key, events) = *x {
+                            if let TypedEntity::Comparable(Comparable::Symbol(key_sym)) = *key {
+                                let mut unpack_evs = Vec::new();
+
+                                match *events {
+                                    TypedEntity::SoundEvent(ev) => {
+                                        unpack_evs.push(SourceEvent::Sound(ev));
+                                    }
+                                    TypedEntity::ControlEvent(ev) => {
+                                        unpack_evs.push(SourceEvent::Control(ev));
+                                    }
+                                    TypedEntity::Vec(pot_ev_vec) => {
+                                        for pot_ev in pot_ev_vec {
+                                            match *pot_ev {
+                                                TypedEntity::SoundEvent(ev) => {
+                                                    unpack_evs.push(SourceEvent::Sound(ev));
+                                                }
+                                                TypedEntity::ControlEvent(ev) => {
+                                                    unpack_evs.push(SourceEvent::Control(ev));
+                                                }
+                                                _ => {}
+                                            }
+                                        }
+                                    }
+                                    _ => {}
+                                }
+
+                                if !unpack_evs.is_empty() {
+                                    event_mapping
+                                        .insert(key_sym.chars().next().unwrap(), unpack_evs);
+                                }
+                            }
+                        }
+                    }
+                    continue;
+                }
+
                 EvaluatedExpr::Typed(TypedEntity::SoundEvent(e)) => {
                     ev_vec.push(SourceEvent::Sound(e));
                     continue;
