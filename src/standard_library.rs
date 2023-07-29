@@ -344,6 +344,9 @@ pub fn define_standard_library() -> FunctionMap {
     standard_library.std_lib.insert("mtosym".to_string(), eval::midi_helpers::mtosym);
     standard_library.std_lib.insert("veltodyn".to_string(), eval::midi_helpers::veltodyn);
 
+    // string helpers
+    standard_library.std_lib.insert("concat".to_string(), eval::string_helpers::concat);
+
     // osc
     standard_library.std_lib.insert("osc-sender".to_string(), eval::osc::osc_define_sender);
     standard_library.std_lib.insert("osc-send".to_string(), eval::osc::osc_send);
@@ -352,6 +355,7 @@ pub fn define_standard_library() -> FunctionMap {
     // midi
     standard_library.std_lib.insert("list-midi-ports".to_string(), eval::midi::eval_list_midi_ports);
     standard_library.std_lib.insert("open-midi-port".to_string(), eval::midi::open_midi_port);
+
         
     // types for osc and other stuff
     standard_library.std_lib.insert("f64".to_string(), eval::types::double);

@@ -16,6 +16,7 @@ pub mod print;
 pub mod progn;
 pub mod resolver;
 pub mod session;
+pub mod string_helpers;
 pub mod structs;
 pub mod types;
 //pub mod vec;
