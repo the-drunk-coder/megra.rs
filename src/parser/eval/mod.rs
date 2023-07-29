@@ -9,6 +9,7 @@ pub mod generator_modifier;
 pub mod generator_processor;
 pub mod megra_match;
 pub mod midi;
+pub mod midi_helpers;
 pub mod multiplyer;
 pub mod osc;
 pub mod print;
