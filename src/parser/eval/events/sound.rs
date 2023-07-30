@@ -103,7 +103,9 @@ fn collect_param_value(
             EvaluatedExpr::Identifier(i) => {
                 return ParameterValue::Placeholder(VariableId::Custom(i.to_string()));
             }
-
+            EvaluatedExpr::Typed(TypedEntity::LazyArithmetic(l)) => {
+                return ParameterValue::Lazy(l.clone());
+            }
             _ => {
                 break;
             }
@@ -153,6 +155,10 @@ fn get_pitch_param(
             Some(ParameterValue::Placeholder(VariableId::Custom(
                 i.to_string(),
             )))
+        }
+        Some(EvaluatedExpr::Typed(TypedEntity::LazyArithmetic(l))) => {
+            advance = true;
+            Some(ParameterValue::Lazy(l.clone()))
         }
         _ => Some(ParameterValue::Scalar(DynVal::with_value(100.0))),
     };

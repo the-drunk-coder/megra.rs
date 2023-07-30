@@ -1,15 +1,37 @@
-use crate::builtin_types::{Comparable, TypedEntity};
+use crate::builtin_types::{Comparable, LazyArithmetic, LazyVal, TypedEntity};
 use crate::parser::{EvaluatedExpr, FunctionMap};
 use crate::{OutputMode, SampleAndWavematrixSet, VariableStore};
 
 use parking_lot::Mutex;
 use std::sync;
 
+use super::resolver::needs_resolve;
+
 // some simple arithmetic functions, to bring megra a bit closer to
 // a regular lisp ...
 
 // now, with variables, if there's in-time evaluation, we'd need to return a function in case
 // there's an identifier in there ... hmpf ...
+
+fn collect_lazy_vals(tail: &mut Vec<EvaluatedExpr>) -> Vec<LazyVal> {
+    let mut vals = Vec::new();
+    let tail_drain = tail.drain(1..);
+    for n in tail_drain {
+        match n {
+            EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f))) => {
+                vals.push(LazyVal::Val(f));
+            }
+            EvaluatedExpr::Identifier(i) => {
+                vals.push(LazyVal::Id(crate::builtin_types::VariableId::Custom(i)));
+            }
+            EvaluatedExpr::Typed(TypedEntity::LazyArithmetic(a)) => {
+                vals.push(LazyVal::Arith(a));
+            }
+            _ => {}
+        }
+    }
+    vals
+}
 
 pub fn add(
     _: &FunctionMap,
@@ -18,6 +40,12 @@ pub fn add(
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
+    if needs_resolve(&tail[1..]) {
+        return Some(EvaluatedExpr::Typed(TypedEntity::LazyArithmetic(
+            LazyArithmetic::Add(collect_lazy_vals(tail)),
+        )));
+    }
+
     let mut tail_drain = tail.drain(..);
     tail_drain.next(); // don't need the function name
 
@@ -39,6 +67,12 @@ pub fn sub(
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
+    if needs_resolve(&tail[1..]) {
+        return Some(EvaluatedExpr::Typed(TypedEntity::LazyArithmetic(
+            LazyArithmetic::Sub(collect_lazy_vals(tail)),
+        )));
+    }
+
     let mut tail_drain = tail.drain(..);
     tail_drain.next(); // don't need the function name
 
@@ -69,6 +103,12 @@ pub fn mul(
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
+    if needs_resolve(&tail[1..]) {
+        return Some(EvaluatedExpr::Typed(TypedEntity::LazyArithmetic(
+            LazyArithmetic::Mul(collect_lazy_vals(tail)),
+        )));
+    }
+
     let mut tail_drain = tail.drain(..);
     tail_drain.next(); // don't need the function name
 
@@ -99,6 +139,12 @@ pub fn div(
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
+    if needs_resolve(&tail[1..]) {
+        return Some(EvaluatedExpr::Typed(TypedEntity::LazyArithmetic(
+            LazyArithmetic::Div(collect_lazy_vals(tail)),
+        )));
+    }
+
     let mut tail_drain = tail.drain(..);
     tail_drain.next(); // don't need the function name
 
@@ -129,6 +175,12 @@ pub fn modulo(
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
+    if needs_resolve(&tail[1..]) {
+        return Some(EvaluatedExpr::Typed(TypedEntity::LazyArithmetic(
+            LazyArithmetic::Modulo(collect_lazy_vals(tail)),
+        )));
+    }
+
     let mut tail_drain = tail.drain(..);
     tail_drain.next(); // don't need the function name
 
@@ -156,6 +208,12 @@ pub fn pow(
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
+    if needs_resolve(&tail[1..]) {
+        return Some(EvaluatedExpr::Typed(TypedEntity::LazyArithmetic(
+            LazyArithmetic::Pow(collect_lazy_vals(tail)),
+        )));
+    }
+
     let mut tail_drain = tail.drain(..);
     tail_drain.next(); // don't need the function name
 

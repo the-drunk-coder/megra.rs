@@ -49,6 +49,7 @@ pub enum TypedEntity {
     GeneratorList(Vec<Generator>),
     GeneratorProcessorOrModifierList(Vec<GeneratorProcessorOrModifier>),
     GeneratorModifierList(Vec<GeneratorProcessorOrModifier>),
+    LazyArithmetic(LazyArithmetic),
 }
 
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]
@@ -60,6 +61,23 @@ pub enum VariableId {
     DefaultCycleDuration, // default duration for a cycle (800ms, or four times the default event duration)
     Custom(String),
     Symbol(String),
+}
+
+#[derive(Clone, PartialEq, Debug)]
+pub enum LazyVal {
+    Id(VariableId),
+    Val(f32),
+    Arith(LazyArithmetic),
+}
+
+#[derive(Clone, PartialEq, Debug)]
+pub enum LazyArithmetic {
+    Mul(Vec<LazyVal>),
+    Div(Vec<LazyVal>),
+    Add(Vec<LazyVal>),
+    Sub(Vec<LazyVal>),
+    Modulo(Vec<LazyVal>),
+    Pow(Vec<LazyVal>),
 }
 
 pub type VariableStore = DashMap<VariableId, TypedEntity>;

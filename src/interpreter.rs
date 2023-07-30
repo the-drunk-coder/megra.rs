@@ -313,6 +313,9 @@ pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
         EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f))) => {
             println!("a number: {f}")
         }
+        EvaluatedExpr::Typed(TypedEntity::LazyArithmetic(l)) => {
+            println!("a lazy arithmetic {l:?}")
+        }
         EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(s))) => {
             println!("a symbol: {s}")
         }
