@@ -8,7 +8,8 @@ use std::fmt::*;
 use ruffbox_synth::building_blocks::{EnvelopeSegmentInfo, EnvelopeSegmentType};
 use ruffbox_synth::building_blocks::{FilterType, SynthParameterLabel, SynthParameterValue, ValOp};
 
-use crate::builtin_types::Comparable;
+use crate::builtin_types::{Comparable, LazyFun};
+use crate::parser::EvaluatedExpr;
 use crate::{TypedEntity, VariableId, VariableStore};
 
 #[derive(Clone, Debug)]
@@ -28,7 +29,8 @@ pub enum ParameterValue {
     ExpRamp(DynVal, DynVal, DynVal, ValOp),                        // from, to, time, op
     EnvelopeSegmentType(EnvelopeSegmentType),
     MultiPointEnvelope(Vec<DynVal>, Vec<DynVal>, Vec<EnvelopeSegmentType>, bool, ValOp), // levels, times, loop, op
-    Placeholder(VariableId)
+    PlaceholderId(VariableId),
+    PlaceholderFun(LazyFun),
 }
 
 pub fn shake_parameter(v: &mut ParameterValue, factor: f32) {
@@ -209,7 +211,7 @@ pub fn resolve_parameter(
 ) -> SynthParameterValue {
     match v {
         // resolve params
-        ParameterValue::Placeholder(id) => {
+        ParameterValue::PlaceholderId(id) => {
             if let Some(thing) = globals.get(id) {
                 if let TypedEntity::Comparable(Comparable::Float(n)) = thing.value() {
                     return SynthParameterValue::ScalarF32(*n);

@@ -3,6 +3,7 @@ use crate::generator::{GenModFun, Generator};
 use crate::generator_processor::GeneratorProcessor;
 use crate::markov_sequence_generator::Rule;
 use crate::parameter::*;
+use crate::parser::EvaluatedExpr;
 
 use core::fmt;
 use dashmap::DashMap;
@@ -49,6 +50,7 @@ pub enum TypedEntity {
     GeneratorList(Vec<Generator>),
     GeneratorProcessorOrModifierList(Vec<GeneratorProcessorOrModifier>),
     GeneratorModifierList(Vec<GeneratorProcessorOrModifier>),
+    LazyFun(LazyFun)
 }
 
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]
@@ -61,6 +63,8 @@ pub enum VariableId {
     Custom(String),
     Symbol(String),
 }
+
+pub struct LazyFun(pub Vec<EvaluatedExpr>);
 
 pub type VariableStore = DashMap<VariableId, TypedEntity>;
 
@@ -98,7 +102,7 @@ pub enum Command {
     MidiStartReceiver(usize),
     MidiListPorts,
     Print(TypedEntity),
-    Push(VariableId, TypedEntity),
+    Push(VariableId, TypedEntity), // push to vector command
 }
 
 #[derive(Clone)]

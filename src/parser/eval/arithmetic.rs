@@ -1,9 +1,11 @@
-use crate::builtin_types::{Comparable, TypedEntity};
+use crate::builtin_types::{Comparable, TypedEntity, LazyFun};
 use crate::parser::{EvaluatedExpr, FunctionMap};
 use crate::{OutputMode, SampleAndWavematrixSet, VariableStore};
 
 use parking_lot::Mutex;
 use std::sync;
+
+use super::resolver::needs_resolution;
 
 // some simple arithmetic functions, to bring megra a bit closer to
 // a regular lisp ...
@@ -18,8 +20,13 @@ pub fn add(
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
-    let mut tail_drain = tail.drain(..);
-    tail_drain.next(); // don't need the function name
+
+    if needs_resolution(&tail[1..]) {
+        return Some(EvaluatedExpr::Typed(TypedEntity::LazyFun(LazyFun(tail.clone()))));
+    }
+
+    // ignore function name
+    let tail_drain = tail.drain(1..);
 
     let mut result = 0.0;
     for n in tail_drain {
@@ -39,8 +46,13 @@ pub fn sub(
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
-    let mut tail_drain = tail.drain(..);
-    tail_drain.next(); // don't need the function name
+    
+    if needs_resolution(&tail[1..]) {
+        return Some(EvaluatedExpr::Typed(TypedEntity::LazyFun(LazyFun(tail.clone()))));
+    }
+
+    // ignore function name
+    let mut tail_drain = tail.drain(1..);
 
     let mut result =
         if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f)))) =
@@ -69,8 +81,13 @@ pub fn mul(
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
-    let mut tail_drain = tail.drain(..);
-    tail_drain.next(); // don't need the function name
+    
+    if needs_resolution(&tail[1..]) {
+        return Some(EvaluatedExpr::Typed(TypedEntity::LazyFun(LazyFun(tail.clone()))));
+    }
+
+    // ignore function name
+    let mut tail_drain = tail.drain(1..);
 
     let mut result =
         if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f)))) =
@@ -99,8 +116,13 @@ pub fn div(
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
-    let mut tail_drain = tail.drain(..);
-    tail_drain.next(); // don't need the function name
+    
+    if needs_resolution(&tail[1..]) {
+        return Some(EvaluatedExpr::Typed(TypedEntity::LazyFun(LazyFun(tail.clone()))));
+    }
+
+    // ignore function name
+    let mut tail_drain = tail.drain(1..);
 
     let mut result =
         if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f)))) =
@@ -129,8 +151,13 @@ pub fn modulo(
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
-    let mut tail_drain = tail.drain(..);
-    tail_drain.next(); // don't need the function name
+    
+    if needs_resolution(&tail[1..]) {
+        return Some(EvaluatedExpr::Typed(TypedEntity::LazyFun(LazyFun(tail.clone()))));
+    }
+
+    // ignore function name
+    let mut tail_drain = tail.drain(1..);
 
     if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(a)))) =
         tail_drain.next()
@@ -156,8 +183,13 @@ pub fn pow(
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
-    let mut tail_drain = tail.drain(..);
-    tail_drain.next(); // don't need the function name
+    
+    if needs_resolution(&tail[1..]) {
+        return Some(EvaluatedExpr::Typed(TypedEntity::LazyFun(LazyFun(tail.clone()))));
+    }
+
+    // ignore function name
+    let mut tail_drain = tail.drain(1..);
 
     if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(a)))) =
         tail_drain.next()
