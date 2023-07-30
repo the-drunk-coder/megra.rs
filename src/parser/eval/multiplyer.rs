@@ -54,6 +54,18 @@ fn spread_gens(gens: &mut [Generator], out_mode: &OutputMode) {
                 p
             }
         }
+        OutputMode::SixteenChannel => {
+            if gens.len() == 1 {
+                vec![0.0]
+            } else {
+                let mut p = Vec::new();
+                for i in 0..gens.len() {
+                    let val = 1.0 + (i as f32 * (15.0 / (gens.len() as f32 - 1.0)));
+                    p.push(val);
+                }
+                p
+            }
+        }
     };
 
     for i in 0..gens.len() {

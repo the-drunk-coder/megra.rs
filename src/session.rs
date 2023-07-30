@@ -24,7 +24,7 @@ pub enum OutputMode {
     // Ambisonics
     FourChannel,
     EightChannel,
-    //SixteenChannel,
+    SixteenChannel,
     //TwentyFourChannel,
 }
 

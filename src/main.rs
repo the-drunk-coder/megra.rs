@@ -193,6 +193,7 @@ fn main() -> Result<(), anyhow::Error> {
     }
 
     let out_mode = match matches.opt_str("o").as_deref() {
+        Some("16ch") => OutputMode::SixteenChannel,
         Some("8ch") => OutputMode::EightChannel,
         Some("4ch") => OutputMode::FourChannel,
         Some("stereo") => OutputMode::Stereo,
@@ -396,6 +397,24 @@ fn main() -> Result<(), anyhow::Error> {
                 }
                 cpal::SampleFormat::U16 => {
                     run::<u16, 8>(&input_device, &output_device, &out_conf, &in_conf, run_opts)?
+                }
+                _ => todo!(),
+            }
+        }
+        OutputMode::SixteenChannel => {
+            let mut out_conf: cpal::StreamConfig = out_config.into();
+            let mut in_conf: cpal::StreamConfig = in_config.into();
+            in_conf.channels = num_live_buffers;
+            out_conf.channels = 16;
+            match sample_format {
+                cpal::SampleFormat::F32 => {
+                    run::<f32, 16>(&input_device, &output_device, &out_conf, &in_conf, run_opts)?
+                }
+                cpal::SampleFormat::I16 => {
+                    run::<i16, 16>(&input_device, &output_device, &out_conf, &in_conf, run_opts)?
+                }
+                cpal::SampleFormat::U16 => {
+                    run::<u16, 16>(&input_device, &output_device, &out_conf, &in_conf, run_opts)?
                 }
                 _ => todo!(),
             }
