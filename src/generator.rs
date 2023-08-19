@@ -1,5 +1,5 @@
 use crate::{
-    builtin_types::VariableStore,
+    builtin_types::GlobalVariables,
     event::{EventOperation, InterpretableEvent, StaticEvent},
     generator_processor::GeneratorProcessor,
     markov_sequence_generator::MarkovSequenceGenerator,
@@ -84,8 +84,8 @@ impl Generator {
         self.root_generator.reached_end_state()
     }
 
-    pub fn current_events(&mut self, var_store: &Arc<VariableStore>) -> Vec<InterpretableEvent> {
-        let mut events = self.root_generator.current_events(var_store);
+    pub fn current_events(&mut self, globals: &Arc<GlobalVariables>) -> Vec<InterpretableEvent> {
+        let mut events = self.root_generator.current_events(globals);
 
         for ev in events.iter_mut() {
             if let InterpretableEvent::Sound(s) = ev {
@@ -100,8 +100,8 @@ impl Generator {
         tmp_procs.append(&mut self.processors);
 
         for (_, proc) in tmp_procs.iter_mut() {
-            proc.process_events(&mut events, var_store);
-            proc.process_generator(self, var_store);
+            proc.process_events(&mut events, globals);
+            proc.process_generator(self, globals);
         }
 
         // and back home ...
@@ -114,10 +114,10 @@ impl Generator {
         events
     }
 
-    pub fn current_transition(&mut self, var_store: &Arc<VariableStore>) -> StaticEvent {
-        let mut trans = self.root_generator.current_transition(var_store);
+    pub fn current_transition(&mut self, globals: &Arc<GlobalVariables>) -> StaticEvent {
+        let mut trans = self.root_generator.current_transition(globals);
         for (_, proc) in self.processors.iter_mut() {
-            proc.process_transition(&mut trans, var_store);
+            proc.process_transition(&mut trans, globals);
         }
         if let Some(tmod) = self.time_mods.pop() {
             //println!("apply time mod");

@@ -87,7 +87,7 @@ pub fn eval_multiplyer(
     gen_spread: GenSpreader,
     tail: &mut Vec<EvaluatedExpr>,
     out_mode: OutputMode,
-    globals: &std::sync::Arc<VariableStore>,
+    globals: &std::sync::Arc<GlobalVariables>,
 ) -> Option<EvaluatedExpr> {
     let last = tail.pop(); // generator or generator list ...
 
@@ -210,7 +210,7 @@ pub fn eval_multiplyer(
 pub fn eval_xspread(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
-    globals: &sync::Arc<VariableStore>,
+    globals: &sync::Arc<GlobalVariables>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     out_mode: OutputMode,
 ) -> Option<EvaluatedExpr> {
@@ -221,7 +221,7 @@ pub fn eval_xspread(
 pub fn eval_xdup(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
-    globals: &sync::Arc<VariableStore>,
+    globals: &sync::Arc<GlobalVariables>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     out_mode: OutputMode,
 ) -> Option<EvaluatedExpr> {

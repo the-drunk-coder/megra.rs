@@ -17,13 +17,13 @@ use parking_lot::Mutex;
 pub fn flower(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
-    var_store: &sync::Arc<VariableStore>,
+    globals: &sync::Arc<GlobalVariables>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
     // eval-time resolve
     // ignore function name
-    resolve_globals(&mut tail[1..], var_store);
+    resolve_globals(&mut tail[1..], globals);
     let mut tail_drain = tail.drain(1..);
 
     // name is the first symbol
@@ -49,13 +49,12 @@ pub fn flower(
     let mut last_char: char = 'a'; // label chars
     let mut petal_labels = Vec::new();
 
-    let mut dur: DynVal = if let TypedEntity::ConfigParameter(ConfigParameter::Numeric(d)) =
-        var_store
-            .entry(VariableId::DefaultDuration)
-            .or_insert(TypedEntity::ConfigParameter(ConfigParameter::Numeric(
-                200.0,
-            )))
-            .value()
+    let mut dur: DynVal = if let TypedEntity::ConfigParameter(ConfigParameter::Numeric(d)) = globals
+        .entry(VariableId::DefaultDuration)
+        .or_insert(TypedEntity::ConfigParameter(ConfigParameter::Numeric(
+            200.0,
+        )))
+        .value()
     {
         DynVal::with_value(*d)
     } else {

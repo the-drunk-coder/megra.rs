@@ -21,7 +21,7 @@ pub fn start_repl<const BUFSIZE: usize, const NCHAN: usize>(
     session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
     ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
     sample_set: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
-    var_store: &sync::Arc<VariableStore>,
+    globals: &sync::Arc<GlobalVariables>,
     mode: OutputMode,
     base_dir: String,
 ) -> Result<(), anyhow::Error> {
@@ -43,7 +43,7 @@ pub fn start_repl<const BUFSIZE: usize, const NCHAN: usize>(
                 let pfa_in = parser::eval_from_str(
                     line.as_str(),
                     &function_map.lock(),
-                    var_store,
+                    globals,
                     sample_set,
                     mode,
                 );
@@ -67,7 +67,7 @@ pub fn start_repl<const BUFSIZE: usize, const NCHAN: usize>(
                                         let inner_pfa_in = parser::eval_from_str(
                                             line_buffer.as_str(),
                                             &function_map.lock(),
-                                            var_store,
+                                            globals,
                                             sample_set,
                                             mode,
                                         );
@@ -79,7 +79,7 @@ pub fn start_repl<const BUFSIZE: usize, const NCHAN: usize>(
                                                     session,
                                                     ruffbox,
                                                     sample_set,
-                                                    var_store,
+                                                    globals,
                                                     mode,
                                                     base_dir.clone(),
                                                 );
@@ -108,7 +108,7 @@ pub fn start_repl<const BUFSIZE: usize, const NCHAN: usize>(
                             session,
                             ruffbox,
                             sample_set,
-                            var_store,
+                            globals,
                             mode,
                             base_dir.clone(),
                         );

@@ -6,7 +6,7 @@ use crate::parameter::{
 
 use crate::builtin_types::{Comparable, TypedEntity};
 use crate::parser::{EvaluatedExpr, FunctionMap};
-use crate::{OutputMode, SampleAndWavematrixSet, VariableStore};
+use crate::{GlobalVariables, OutputMode, SampleAndWavematrixSet};
 use parking_lot::Mutex;
 use std::collections::HashMap;
 use std::sync;
@@ -73,7 +73,7 @@ fn get_next_param(tail_drain: &mut std::vec::Drain<EvaluatedExpr>, default: f32)
 pub fn bounce(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
-    _: &sync::Arc<VariableStore>,
+    _: &sync::Arc<GlobalVariables>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
@@ -103,7 +103,7 @@ pub fn bounce(
 pub fn brownian(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
-    _: &sync::Arc<VariableStore>,
+    _: &sync::Arc<GlobalVariables>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
@@ -139,7 +139,7 @@ pub fn brownian(
 pub fn env(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
-    _: &sync::Arc<VariableStore>,
+    _: &sync::Arc<GlobalVariables>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
@@ -215,7 +215,7 @@ pub fn env(
 pub fn fade(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
-    _: &sync::Arc<VariableStore>,
+    _: &sync::Arc<GlobalVariables>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
@@ -246,7 +246,7 @@ pub fn fade(
 pub fn randrange(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
-    _: &sync::Arc<VariableStore>,
+    _: &sync::Arc<GlobalVariables>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {

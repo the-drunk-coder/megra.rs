@@ -5,7 +5,7 @@ use crate::{
     parameter::{DynVal, ParameterValue},
     pfa_growth::*,
     pfa_reverse::*,
-    VariableStore,
+    GlobalVariables,
 };
 use rand::seq::SliceRandom;
 use ruffbox_synth::building_blocks::SynthParameterLabel;
@@ -193,7 +193,7 @@ pub fn shake_raw(
 pub fn skip_raw(
     gen: &mut MarkovSequenceGenerator,
     times: usize,
-    globals: &std::sync::Arc<VariableStore>,
+    globals: &std::sync::Arc<GlobalVariables>,
 ) {
     for _ in 0..times {
         gen.current_events(globals);

@@ -9,7 +9,7 @@ use crate::{OutputMode, SampleAndWavematrixSet};
 pub fn mat(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
-    _: &sync::Arc<VariableStore>,
+    _: &sync::Arc<GlobalVariables>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {

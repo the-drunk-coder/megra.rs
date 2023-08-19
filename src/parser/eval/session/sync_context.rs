@@ -11,13 +11,13 @@ use std::sync;
 pub fn sync_context(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
-    var_store: &sync::Arc<VariableStore>,
+    globals: &sync::Arc<GlobalVariables>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
     // eval-time resolve
     // ignore function name
-    resolve_globals(&mut tail[1..], var_store);
+    resolve_globals(&mut tail[1..], globals);
     let mut tail_drain = tail.drain(1..);
 
     // name is the first symbol
@@ -152,7 +152,7 @@ mod tests {
             )))
         });
 
-        let globals = sync::Arc::new(VariableStore::new());
+        let globals = sync::Arc::new(GlobalVariables::new());
 
         match eval_from_str(
             snippet,

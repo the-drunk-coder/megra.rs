@@ -20,7 +20,7 @@ use crate::{
     builtin_types::{Comparable, VariableId},
     session::SyncContext,
 };
-use crate::{Command, OutputMode, SampleAndWavematrixSet, TypedEntity, VariableStore};
+use crate::{Command, GlobalVariables, OutputMode, SampleAndWavematrixSet, TypedEntity};
 
 pub mod eval;
 
@@ -99,7 +99,7 @@ pub struct FunctionMap {
         fn(
             &FunctionMap,
             &mut Vec<EvaluatedExpr>,
-            &sync::Arc<VariableStore>,
+            &sync::Arc<GlobalVariables>,
             &sync::Arc<Mutex<SampleAndWavematrixSet>>,
             OutputMode,
         ) -> Option<EvaluatedExpr>,
@@ -279,7 +279,7 @@ pub fn parse_expr(i: &str) -> IResult<&str, Expr, VerboseError<&str>> {
 pub fn eval_expression(
     e: &Expr,
     functions: &FunctionMap,
-    globals: &sync::Arc<VariableStore>,
+    globals: &sync::Arc<GlobalVariables>,
     locals: Option<&HashMap<String, EvaluatedExpr>>,
     sample_set: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     out_mode: OutputMode,
@@ -482,7 +482,7 @@ pub fn eval_expression(
 pub fn eval_from_str(
     src: &str,
     functions: &FunctionMap,
-    globals: &sync::Arc<VariableStore>,
+    globals: &sync::Arc<GlobalVariables>,
     sample_set: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     out_mode: OutputMode,
 ) -> Result<EvaluatedExpr, String> {
@@ -507,7 +507,7 @@ mod tests {
         let snippet = "(text 'tar :lvl 1.0 :global #t :relate #f :boost (bounce 0 400))";
 
         let mut functions = FunctionMap::new();
-        let globals = sync::Arc::new(VariableStore::new());
+        let globals = sync::Arc::new(GlobalVariables::new());
         let sample_set = sync::Arc::new(Mutex::new(SampleAndWavematrixSet::new()));
 
         functions

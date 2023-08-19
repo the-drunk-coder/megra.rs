@@ -34,7 +34,7 @@ pub struct SchedulerData<const BUFSIZE: usize, const NCHAN: usize> {
     pub synced_generators: Vec<(Box<Generator>, f64)>,
     pub ruffbox: sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
     pub session: sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
-    pub var_store: sync::Arc<VariableStore>,
+    pub globals: sync::Arc<GlobalVariables>,
     // the osc client reverence here might be a bit
     // redundant, as there's already a reference in the
     // session, but that way we can access the client without
@@ -56,7 +56,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> SchedulerData<BUFSIZE, NCHAN> {
         mut data: Box<Generator>,
         ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
         session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
-        var_store: &sync::Arc<VariableStore>,
+        globals: &sync::Arc<GlobalVariables>,
         block_tags: &BTreeSet<String>,
         solo_tags: &BTreeSet<String>,
     ) -> Self {
@@ -81,7 +81,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> SchedulerData<BUFSIZE, NCHAN> {
             synced_generators: old.synced_generators.clone(), // carry over synced gens ...
             ruffbox: sync::Arc::clone(ruffbox),
             session: sync::Arc::clone(session),
-            var_store: sync::Arc::clone(var_store),
+            globals: sync::Arc::clone(globals),
             osc_client: old.osc_client.clone(),
             output_mode: old.output_mode,
             sample_set: sync::Arc::clone(&old.sample_set),
@@ -99,7 +99,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> SchedulerData<BUFSIZE, NCHAN> {
         data: Box<Generator>,
         ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
         session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
-        var_store: &sync::Arc<VariableStore>,
+        globals: &sync::Arc<GlobalVariables>,
         block_tags: &BTreeSet<String>,
         solo_tags: &BTreeSet<String>,
     ) -> Self {
@@ -117,7 +117,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> SchedulerData<BUFSIZE, NCHAN> {
             synced_generators: Vec::new(),
             ruffbox: sync::Arc::clone(ruffbox),
             session: sync::Arc::clone(session),
-            var_store: sync::Arc::clone(var_store),
+            globals: sync::Arc::clone(globals),
             osc_client: old.osc_client.clone(),
             sample_set: sync::Arc::clone(&old.sample_set),
             output_mode: old.output_mode,
@@ -134,7 +134,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> SchedulerData<BUFSIZE, NCHAN> {
         shift: f64,
         session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
         ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
-        var_store: &sync::Arc<VariableStore>,
+        globals: &sync::Arc<GlobalVariables>,
         sample_set: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
         output_mode: OutputMode,
         sync_mode: SyncMode,
@@ -155,7 +155,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> SchedulerData<BUFSIZE, NCHAN> {
             synced_generators: Vec::new(),
             ruffbox: sync::Arc::clone(ruffbox),
             session: sync::Arc::clone(session),
-            var_store: sync::Arc::clone(var_store),
+            globals: sync::Arc::clone(globals),
             osc_client: session.lock().osc_client.clone(),
             sample_set: sync::Arc::clone(sample_set),
             output_mode,

@@ -7,7 +7,7 @@ use std::sync;
 
 use crate::builtin_types::Comparable;
 use crate::parser::{eval_expression, EvaluatedExpr, FunctionMap};
-use crate::{interpreter, OutputMode, SampleAndWavematrixSet, Session, VariableStore};
+use crate::{interpreter, GlobalVariables, OutputMode, SampleAndWavematrixSet, Session};
 
 use ruffbox_synth::ruffbox::RuffboxControls;
 
@@ -29,7 +29,7 @@ pub fn open_midi_input_port<const BUFSIZE: usize, const NCHAN: usize>(
     session: sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
     ruffbox: sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
     sample_set: sync::Arc<Mutex<SampleAndWavematrixSet>>,
-    var_store: sync::Arc<VariableStore>,
+    globals: sync::Arc<GlobalVariables>,
     mode: OutputMode,
     base_dir: String,
 ) {
@@ -81,7 +81,7 @@ pub fn open_midi_input_port<const BUFSIZE: usize, const NCHAN: usize>(
                             eval_expression(
                                 expr,
                                 &functions,
-                                &var_store,
+                                &globals,
                                 Some(&local_args),
                                 &sample_set,
                                 mode,
@@ -97,7 +97,7 @@ pub fn open_midi_input_port<const BUFSIZE: usize, const NCHAN: usize>(
                                 &session,
                                 &ruffbox,
                                 &sample_set,
-                                &var_store,
+                                &globals,
                                 mode,
                                 base_dir.clone(),
                             );

@@ -7,7 +7,7 @@ use std::net::{SocketAddrV4, UdpSocket};
 use std::str::FromStr;
 use std::sync;
 
-use crate::builtin_types::{Comparable, TypedEntity, VariableStore};
+use crate::builtin_types::{Comparable, GlobalVariables, TypedEntity};
 use crate::interpreter;
 use crate::parser::{eval_expression, EvaluatedExpr, FunctionMap};
 use crate::sample_set::SampleAndWavematrixSet;
@@ -23,7 +23,7 @@ impl OscReceiver {
         session: sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
         ruffbox: sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
         sample_set: sync::Arc<Mutex<SampleAndWavematrixSet>>,
-        var_store: sync::Arc<VariableStore>,
+        globals: sync::Arc<GlobalVariables>,
         mode: OutputMode,
         base_dir: String,
     ) {
@@ -100,7 +100,7 @@ impl OscReceiver {
                                         eval_expression(
                                             expr,
                                             &functions,
-                                            &var_store,
+                                            &globals,
                                             Some(&local_args),
                                             &sample_set,
                                             mode,
@@ -116,7 +116,7 @@ impl OscReceiver {
                                             &session,
                                             &ruffbox,
                                             &sample_set,
-                                            &var_store,
+                                            &globals,
                                             mode,
                                             base_dir.clone(),
                                         );

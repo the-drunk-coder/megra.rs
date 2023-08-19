@@ -42,7 +42,7 @@ fn get_args(
 pub fn eval_haste(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
-    globals: &sync::Arc<VariableStore>,
+    globals: &sync::Arc<GlobalVariables>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
@@ -52,7 +52,7 @@ pub fn eval_haste(
 pub fn eval_keep(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
-    globals: &sync::Arc<VariableStore>,
+    globals: &sync::Arc<GlobalVariables>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
@@ -62,7 +62,7 @@ pub fn eval_keep(
 pub fn eval_relax(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
-    globals: &sync::Arc<VariableStore>,
+    globals: &sync::Arc<GlobalVariables>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
@@ -72,7 +72,7 @@ pub fn eval_relax(
 pub fn eval_blur(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
-    globals: &sync::Arc<VariableStore>,
+    globals: &sync::Arc<GlobalVariables>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
@@ -82,7 +82,7 @@ pub fn eval_blur(
 pub fn eval_sharpen(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
-    globals: &sync::Arc<VariableStore>,
+    globals: &sync::Arc<GlobalVariables>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
@@ -92,7 +92,7 @@ pub fn eval_sharpen(
 pub fn eval_solidify(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
-    globals: &sync::Arc<VariableStore>,
+    globals: &sync::Arc<GlobalVariables>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
@@ -102,7 +102,7 @@ pub fn eval_solidify(
 pub fn eval_rep(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
-    globals: &sync::Arc<VariableStore>,
+    globals: &sync::Arc<GlobalVariables>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
@@ -112,7 +112,7 @@ pub fn eval_rep(
 pub fn eval_shake(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
-    globals: &sync::Arc<VariableStore>,
+    globals: &sync::Arc<GlobalVariables>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
@@ -122,7 +122,7 @@ pub fn eval_shake(
 pub fn eval_skip(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
-    globals: &sync::Arc<VariableStore>,
+    globals: &sync::Arc<GlobalVariables>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
@@ -132,7 +132,7 @@ pub fn eval_skip(
 pub fn eval_rewind(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
-    globals: &sync::Arc<VariableStore>,
+    globals: &sync::Arc<GlobalVariables>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
@@ -142,7 +142,7 @@ pub fn eval_rewind(
 pub fn eval_rnd(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
-    globals: &sync::Arc<VariableStore>,
+    globals: &sync::Arc<GlobalVariables>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
@@ -152,7 +152,7 @@ pub fn eval_rnd(
 pub fn eval_grow(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
-    globals: &sync::Arc<VariableStore>,
+    globals: &sync::Arc<GlobalVariables>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
@@ -162,7 +162,7 @@ pub fn eval_grow(
 pub fn eval_grown(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
-    globals: &sync::Arc<VariableStore>,
+    globals: &sync::Arc<GlobalVariables>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
@@ -172,7 +172,7 @@ pub fn eval_grown(
 pub fn eval_shrink(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
-    globals: &sync::Arc<VariableStore>,
+    globals: &sync::Arc<GlobalVariables>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
@@ -182,7 +182,7 @@ pub fn eval_shrink(
 pub fn eval_reverse(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
-    globals: &sync::Arc<VariableStore>,
+    globals: &sync::Arc<GlobalVariables>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
@@ -192,7 +192,7 @@ pub fn eval_reverse(
 fn eval_generator_modifier(
     fun: GenModFun,
     tail: &mut Vec<EvaluatedExpr>,
-    globals: &std::sync::Arc<VariableStore>,
+    globals: &std::sync::Arc<GlobalVariables>,
 ) -> Option<EvaluatedExpr> {
     let last = tail.pop();
     Some(match last {

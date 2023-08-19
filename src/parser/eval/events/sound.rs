@@ -5,7 +5,7 @@ use crate::music_theory;
 use crate::parameter::{DynVal, ParameterValue};
 use crate::parser::{EvaluatedExpr, FunctionMap};
 use crate::sample_set::SampleLookup;
-use crate::{OutputMode, SampleAndWavematrixSet, VariableId, VariableStore};
+use crate::{GlobalVariables, OutputMode, SampleAndWavematrixSet, VariableId};
 use parking_lot::Mutex;
 use ruffbox_synth::building_blocks::{EnvelopeSegmentType, FilterType, SynthParameterLabel};
 use std::collections::HashSet;
@@ -323,7 +323,7 @@ fn nofilter_defaults(ev: &mut Event) {
 pub fn sound(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
-    _: &sync::Arc<VariableStore>,
+    _: &sync::Arc<GlobalVariables>,
     sample_set_sync: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
@@ -557,7 +557,7 @@ mod tests {
             .std_lib
             .insert("risset".to_string(), eval::events::sound::sound);
 
-        let globals = sync::Arc::new(VariableStore::new());
+        let globals = sync::Arc::new(GlobalVariables::new());
 
         match eval_from_str(
             snippet,

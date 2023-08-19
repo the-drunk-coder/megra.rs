@@ -1,7 +1,7 @@
 use std::sync::*;
 
 use crate::{
-    builtin_types::VariableStore,
+    builtin_types::GlobalVariables,
     event::{InterpretableEvent, StaticEvent},
     generator::Generator,
     generator_processor::*,
@@ -47,7 +47,7 @@ impl GeneratorProcessor for EveryProcessor {
     fn process_events(
         &mut self,
         events: &mut Vec<InterpretableEvent>,
-        globals: &Arc<VariableStore>,
+        globals: &Arc<GlobalVariables>,
     ) {
         self.last_static.clear();
         for (step, filtered_events, _) in self.things_to_be_applied.iter_mut() {
@@ -78,7 +78,7 @@ impl GeneratorProcessor for EveryProcessor {
         }
     }
 
-    fn process_generator(&mut self, gen: &mut Generator, globals: &Arc<VariableStore>) {
+    fn process_generator(&mut self, gen: &mut Generator, globals: &Arc<GlobalVariables>) {
         for (step, _, gen_mods) in self.things_to_be_applied.iter_mut() {
             // genmodfuns not needed here ...
             let cur_step: usize = (step.static_val as usize) % 101;
@@ -92,7 +92,7 @@ impl GeneratorProcessor for EveryProcessor {
         self.step_count += 1;
     }
 
-    fn process_transition(&mut self, trans: &mut StaticEvent, _: &Arc<VariableStore>) {
+    fn process_transition(&mut self, trans: &mut StaticEvent, _: &Arc<GlobalVariables>) {
         for (cur_step, filtered_events) in self.last_static.iter() {
             if self.step_count % cur_step == 0 {
                 for (filter, evs) in filtered_events.iter() {

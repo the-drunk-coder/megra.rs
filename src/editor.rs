@@ -24,7 +24,7 @@ pub fn run_editor<const BUFSIZE: usize, const NCHAN: usize>(
     session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
     ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
     sample_set: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
-    var_store: &sync::Arc<VariableStore>,
+    globals: &sync::Arc<GlobalVariables>,
     base_dir: String,
     create_sketch: bool,
     mode: OutputMode,
@@ -35,13 +35,13 @@ pub fn run_editor<const BUFSIZE: usize, const NCHAN: usize>(
     let function_map2 = sync::Arc::clone(function_map);
     let ruffbox2 = sync::Arc::clone(ruffbox);
     let sample_set2 = sync::Arc::clone(sample_set);
-    let var_store2 = sync::Arc::clone(var_store);
+    let globals2 = sync::Arc::clone(globals);
     let base_dir_2 = base_dir.clone();
 
     let callback_ref: sync::Arc<Mutex<dyn FnMut(&String)>> =
         sync::Arc::new(Mutex::new(move |text: &String| {
             let pfa_in =
-                parser::eval_from_str(text, &function_map2.lock(), &var_store2, &sample_set2, mode);
+                parser::eval_from_str(text, &function_map2.lock(), &globals2, &sample_set2, mode);
             match pfa_in {
                 Ok(pfa) => {
                     interpreter::interpret(
@@ -50,7 +50,7 @@ pub fn run_editor<const BUFSIZE: usize, const NCHAN: usize>(
                         &session2,
                         &ruffbox2,
                         &sample_set2,
-                        &var_store2,
+                        &globals2,
                         mode,
                         base_dir_2.to_string(),
                     );

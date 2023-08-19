@@ -2,7 +2,7 @@ use rand::*;
 use std::sync::*;
 
 use crate::{
-    builtin_types::VariableStore, generator::Generator, generator_processor::*, parameter::DynVal,
+    builtin_types::GlobalVariables, generator::Generator, generator_processor::*, parameter::DynVal,
 };
 
 /// Apple-ys modifiers to the underlying processors
@@ -22,7 +22,7 @@ impl AppleProcessor {
 impl GeneratorProcessor for AppleProcessor {
     // this one only processes generators ... for the event stream processor,
     // see "pear"
-    fn process_generator(&mut self, gen: &mut Generator, globals: &Arc<VariableStore>) {
+    fn process_generator(&mut self, gen: &mut Generator, globals: &Arc<GlobalVariables>) {
         let mut rng = rand::thread_rng();
         for (prob, gen_mods) in self.modifiers_to_be_applied.iter_mut() {
             let cur_prob: usize = (prob.evaluate_numerical() as usize) % 101; // make sure prob is always between 0 and 100

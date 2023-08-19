@@ -9,7 +9,7 @@ use super::resolver::resolve_globals;
 pub fn print(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
-    globals: &sync::Arc<VariableStore>,
+    globals: &sync::Arc<GlobalVariables>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {

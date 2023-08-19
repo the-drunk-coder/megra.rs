@@ -5,7 +5,7 @@ use std::{collections::HashSet, sync::*};
 use ruffbox_synth::building_blocks::SynthParameterLabel;
 
 use crate::{
-    builtin_types::{TypedEntity, VariableId, VariableStore},
+    builtin_types::{GlobalVariables, TypedEntity, VariableId},
     generator::modifier_functions_raw::*,
     generator::Generator,
     generator_processor::*,
@@ -84,7 +84,7 @@ impl GeneratorProcessor for LifemodelProcessor {
     // I'm a bit surprises this one's stateless ...
 
     // this one only processes the generators ...
-    fn process_generator(&mut self, gen: &mut Generator, var_store: &Arc<VariableStore>) {
+    fn process_generator(&mut self, gen: &mut Generator, globals: &Arc<GlobalVariables>) {
         // check if we need to grow ...
         let mut something_happened = false;
         if self.step_count >= self.growth_cycle {
@@ -97,7 +97,7 @@ impl GeneratorProcessor for LifemodelProcessor {
                 self.local_resources -= self.growth_cost;
                 true
             } else if let TypedEntity::ConfigParameter(ConfigParameter::Numeric(global_resources)) =
-                var_store
+                globals
                     .entry(VariableId::LifemodelGlobalResources)
                     .or_insert(TypedEntity::ConfigParameter(ConfigParameter::Numeric(
                         LifemodelDefaults::GLOBAL_INIT_RESOURCES,
@@ -144,7 +144,7 @@ impl GeneratorProcessor for LifemodelProcessor {
                         if self.global_contrib {
                             if let TypedEntity::ConfigParameter(ConfigParameter::Numeric(
                                 global_resources,
-                            )) = var_store
+                            )) = globals
                                 .entry(VariableId::LifemodelGlobalResources)
                                 .or_insert(TypedEntity::ConfigParameter(ConfigParameter::Numeric(
                                     LifemodelDefaults::GLOBAL_INIT_RESOURCES,
@@ -193,7 +193,7 @@ impl GeneratorProcessor for LifemodelProcessor {
                 if self.global_contrib {
                     if let TypedEntity::ConfigParameter(ConfigParameter::Numeric(
                         global_resources,
-                    )) = var_store
+                    )) = globals
                         .entry(VariableId::LifemodelGlobalResources)
                         .or_insert(TypedEntity::ConfigParameter(ConfigParameter::Numeric(
                             LifemodelDefaults::GLOBAL_INIT_RESOURCES,

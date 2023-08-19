@@ -19,11 +19,11 @@ use parking_lot::Mutex;
 pub fn cyc(
     functions: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
-    var_store: &sync::Arc<VariableStore>,
+    globals: &sync::Arc<GlobalVariables>,
     sample_set: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     out_mode: OutputMode,
 ) -> Option<EvaluatedExpr> {
-    resolve_globals(&mut tail[1..], var_store);
+    resolve_globals(&mut tail[1..], globals);
     let mut tail_drain = tail.drain(1..).peekable();
 
     // name is the first symbol
@@ -38,13 +38,12 @@ pub fn cyc(
     tail_drain.next();
 
     // get the default global duration ...
-    let mut dur: DynVal = if let TypedEntity::ConfigParameter(ConfigParameter::Numeric(d)) =
-        var_store
-            .entry(VariableId::DefaultCycleDuration)
-            .or_insert(TypedEntity::ConfigParameter(ConfigParameter::Numeric(
-                800.0,
-            )))
-            .value()
+    let mut dur: DynVal = if let TypedEntity::ConfigParameter(ConfigParameter::Numeric(d)) = globals
+        .entry(VariableId::DefaultCycleDuration)
+        .or_insert(TypedEntity::ConfigParameter(ConfigParameter::Numeric(
+            800.0,
+        )))
+        .value()
     {
         DynVal::with_value(*d)
     } else {
@@ -184,7 +183,7 @@ pub fn cyc(
                     out_mode,
                     &template_evs,
                     &collected_mapping,
-                    var_store,
+                    globals,
                 );
                 if parsed_cycle.is_empty() {
                     println!("couldn't parse cycle");

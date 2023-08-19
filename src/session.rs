@@ -5,7 +5,7 @@ use std::{sync, thread};
 use ruffbox_synth::building_blocks::{SynthParameterLabel, SynthParameterValue};
 use ruffbox_synth::ruffbox::RuffboxControls;
 
-use crate::builtin_types::{Command, ConfigParameter, VariableId, VariableStore};
+use crate::builtin_types::{Command, ConfigParameter, GlobalVariables, VariableId};
 use crate::commands;
 use crate::event::InterpretableEvent;
 use crate::event_helpers::*;
@@ -76,7 +76,7 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
     let mut latency: f64 = 0.05;
 
     if let TypedEntity::ConfigParameter(ConfigParameter::Dynamic(global_tmod)) = data
-        .var_store
+        .globals
         .entry(VariableId::GlobalTimeModifier) // fixed variable ID
         .or_insert(TypedEntity::ConfigParameter(ConfigParameter::Dynamic(
             DynVal::with_value(1.0),
@@ -87,7 +87,7 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
     }
 
     if let TypedEntity::ConfigParameter(ConfigParameter::Dynamic(global_latency)) = data
-        .var_store
+        .globals
         .entry(VariableId::GlobalLatency)
         .or_insert(TypedEntity::ConfigParameter(ConfigParameter::Dynamic(
             DynVal::with_value(0.05),
@@ -109,7 +109,7 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
     }
 
     let time = if let SynthParameterValue::ScalarF32(t) =
-        data.generator.current_transition(&data.var_store).params[&SynthParameterLabel::Duration]
+        data.generator.current_transition(&data.globals).params[&SynthParameterLabel::Duration]
     {
         (t * 0.001) as f64 * tmod
     } else {
@@ -117,7 +117,7 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
     };
 
     // retrieve the current events
-    let mut events = data.generator.current_events(&data.var_store);
+    let mut events = data.generator.current_events(&data.globals);
     //if events.is_empty() {
     //    println!("really no events");
     //}
@@ -230,7 +230,7 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
                             &mut sx,
                             &data.session,
                             &data.ruffbox,
-                            &data.var_store,
+                            &data.globals,
                             &data.sample_set,
                             data.output_mode,
                         );
@@ -245,15 +245,15 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
                                 println!("freeze buffer");
                             }
                             Command::Tmod(p) => {
-                                commands::set_global_tmod(&data.var_store, p);
+                                commands::set_global_tmod(&data.globals, p);
                             }
                             Command::GlobRes(v) => {
-                                commands::set_global_lifemodel_resources(&data.var_store, v);
+                                commands::set_global_lifemodel_resources(&data.globals, v);
                             }
                             Command::GlobalRuffboxParams(mut m) => {
                                 commands::set_global_ruffbox_parameters(
                                     &data.ruffbox,
-                                    &data.var_store,
+                                    &data.globals,
                                     &mut m,
                                 );
                             }
@@ -268,7 +268,7 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
                                 //println!("handle once from gen");
                                 commands::once(
                                     &data.ruffbox,
-                                    &data.var_store,
+                                    &data.globals,
                                     &data.sample_set,
                                     &data.session,
                                     &mut s,
@@ -305,7 +305,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
         ctx: &mut SyncContext,
         session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
         ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
-        var_store: &sync::Arc<VariableStore>,
+        globals: &sync::Arc<GlobalVariables>,
         sample_set: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
         output_mode: OutputMode,
     ) {
@@ -407,7 +407,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                         Box::new(gen),
                         session,
                         ruffbox,
-                        var_store,
+                        globals,
                         sample_set,
                         output_mode,
                         ctx.shift as f64 * 0.001,
@@ -426,7 +426,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                         Box::new(gen),
                         session,
                         ruffbox,
-                        var_store,
+                        globals,
                         &ext_sync,
                         ctx.shift as f64 * 0.001,
                         &ctx.block_tags,
@@ -440,7 +440,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                         Box::new(gen),
                         session,
                         ruffbox,
-                        var_store,
+                        globals,
                         sample_set,
                         output_mode,
                         ctx.shift as f64 * 0.001,
@@ -484,7 +484,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                             Box::new(gen),
                             session,
                             ruffbox,
-                            var_store,
+                            globals,
                             sample_set,
                             output_mode,
                             ctx.shift as f64 * 0.001,
@@ -525,7 +525,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
         gen: Box<Generator>,
         session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
         ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
-        var_store: &sync::Arc<VariableStore>,
+        globals: &sync::Arc<GlobalVariables>,
 
         sample_set: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
         output_mode: OutputMode,
@@ -560,7 +560,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                 gen,
                 session,
                 ruffbox,
-                var_store,
+                globals,
                 sample_set,
                 output_mode,
                 shift,
@@ -585,7 +585,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                     gen,
                     ruffbox,
                     session,
-                    var_store,
+                    globals,
                     block_tags,
                     solo_tags,
                 );
@@ -599,7 +599,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
         gen: Box<Generator>,
         session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
         ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
-        var_store: &sync::Arc<VariableStore>,
+        globals: &sync::Arc<GlobalVariables>,
         sync_tags: &BTreeSet<String>,
         shift: f64,
         block_tags: &BTreeSet<String>,
@@ -633,7 +633,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                     gen,
                     ruffbox,
                     session,
-                    var_store,
+                    globals,
                     block_tags,
                     solo_tags,
                 );
@@ -652,7 +652,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                     gen,
                     ruffbox,
                     session,
-                    var_store,
+                    globals,
                     block_tags,
                     solo_tags,
                 );
@@ -684,7 +684,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                 gen,
                 &data.ruffbox,
                 &data.session,
-                &data.var_store,
+                &data.globals,
                 block_tags,
                 solo_tags,
             )));
@@ -723,7 +723,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
         gen: Box<Generator>,
         session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
         ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
-        var_store: &sync::Arc<VariableStore>,
+        globals: &sync::Arc<GlobalVariables>,
         sample_set: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
         output_mode: OutputMode,
         shift: f64,
@@ -743,7 +743,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
             shift,
             session,
             ruffbox,
-            var_store,
+            globals,
             sample_set,
             output_mode,
             SyncMode::NotOnSilence,

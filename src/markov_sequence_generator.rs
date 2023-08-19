@@ -1,5 +1,5 @@
 use crate::event::{Event, InterpretableEvent, SourceEvent, StaticEvent};
-use crate::VariableStore;
+use crate::GlobalVariables;
 use ruffbox_synth::building_blocks::{SynthParameterLabel, SynthParameterValue};
 use std::collections::HashMap;
 use vom_rs::pfa;
@@ -45,7 +45,7 @@ impl MarkovSequenceGenerator {
 
     pub fn current_events(
         &mut self,
-        globals: &std::sync::Arc<VariableStore>,
+        globals: &std::sync::Arc<GlobalVariables>,
     ) -> Vec<InterpretableEvent> {
         let mut interpretable_events = Vec::new();
 
@@ -77,7 +77,7 @@ impl MarkovSequenceGenerator {
         interpretable_events
     }
 
-    pub fn current_transition(&mut self, globals: &std::sync::Arc<VariableStore>) -> StaticEvent {
+    pub fn current_transition(&mut self, globals: &std::sync::Arc<GlobalVariables>) -> StaticEvent {
         // keep in case there's no next transition because
         // the generator has reached it's end ...
         let tmp_next = if self.last_transition.is_some() {

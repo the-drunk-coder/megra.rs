@@ -1,6 +1,6 @@
 use crate::builtin_types::{Comparable, TypedEntity};
 use crate::parser::{EvaluatedExpr, FunctionMap};
-use crate::{OutputMode, SampleAndWavematrixSet, VariableStore};
+use crate::{GlobalVariables, OutputMode, SampleAndWavematrixSet};
 
 use parking_lot::Mutex;
 use std::sync;
@@ -8,7 +8,7 @@ use std::sync;
 pub fn concat(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
-    _: &sync::Arc<VariableStore>,
+    _: &sync::Arc<GlobalVariables>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {

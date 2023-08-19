@@ -23,13 +23,13 @@ pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
     session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
     ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
     sample_set: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
-    var_store: &sync::Arc<VariableStore>,
+    globals: &sync::Arc<GlobalVariables>,
     output_mode: OutputMode,
     base_dir: String,
 ) {
     match c {
         Command::Push(id, te) => {
-            commands::push(id, te, var_store);
+            commands::push(id, te, globals);
         }
         Command::Print(te) => {
             println!("{te:#?}");
@@ -123,22 +123,22 @@ pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
             println!("freeze buffer");
         }
         Command::Tmod(p) => {
-            commands::set_global_tmod(var_store, p);
+            commands::set_global_tmod(globals, p);
         }
         Command::Latency(p) => {
-            commands::set_global_latency(var_store, p);
+            commands::set_global_latency(globals, p);
         }
         Command::DefaultDuration(d) => {
-            commands::set_default_duration(var_store, d);
+            commands::set_default_duration(globals, d);
         }
         Command::Bpm(b) => {
-            commands::set_default_duration(var_store, b);
+            commands::set_default_duration(globals, b);
         }
         Command::GlobRes(v) => {
-            commands::set_global_lifemodel_resources(var_store, v);
+            commands::set_global_lifemodel_resources(globals, v);
         }
         Command::GlobalRuffboxParams(mut m) => {
-            commands::set_global_ruffbox_parameters(ruffbox, var_store, &mut m);
+            commands::set_global_ruffbox_parameters(ruffbox, globals, &mut m);
         }
         Command::ExportDotStatic(f, g) => {
             commands::export_dot_static(&f, &g);
@@ -149,7 +149,7 @@ pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
         Command::Once(mut s, mut c) => {
             commands::once(
                 ruffbox,
-                var_store,
+                globals,
                 sample_set,
                 session,
                 &mut s,
@@ -158,7 +158,7 @@ pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
             );
         }
         Command::StepPart(name) => {
-            commands::step_part(ruffbox, var_store, sample_set, session, output_mode, name);
+            commands::step_part(ruffbox, globals, sample_set, session, output_mode, name);
         }
         Command::OscDefineClient(client_name, host) => {
             commands::define_osc_client(
@@ -203,14 +203,14 @@ pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
             let fmap2 = sync::Arc::clone(function_map);
             let sample_set2 = sync::Arc::clone(sample_set);
             let session2 = sync::Arc::clone(session);
-            let var_store2 = sync::Arc::clone(var_store);
+            let globals2 = sync::Arc::clone(globals);
             OscReceiver::start_receiver_thread_udp(
                 target,
                 fmap2,
                 session2,
                 ruffbox2,
                 sample_set2,
-                var_store2,
+                globals2,
                 output_mode,
                 base_dir,
             );
@@ -220,7 +220,7 @@ pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
             let session_midi = sync::Arc::clone(session);
             let ruffbox_midi = sync::Arc::clone(ruffbox);
             let sam_midi = sync::Arc::clone(sample_set);
-            let var_midi = sync::Arc::clone(var_store);
+            let var_midi = sync::Arc::clone(globals);
             thread::spawn(move || {
                 midi_input::open_midi_input_port(
                     midi_in_port,
@@ -247,7 +247,7 @@ pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
     session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
     ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
     sample_set: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
-    var_store: &sync::Arc<VariableStore>,
+    globals: &sync::Arc<GlobalVariables>,
     output_mode: OutputMode,
     base_dir: String,
 ) {
@@ -296,7 +296,7 @@ pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
                 "\n\n############### a context called \'{}\' ###############",
                 s.name
             );
-            Session::handle_context(&mut s, session, ruffbox, var_store, sample_set, output_mode);
+            Session::handle_context(&mut s, session, ruffbox, globals, sample_set, output_mode);
         }
         EvaluatedExpr::Command(c) => {
             interpret_command(
@@ -305,7 +305,7 @@ pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
                 session,
                 ruffbox,
                 sample_set,
-                var_store,
+                globals,
                 output_mode,
                 base_dir,
             );
@@ -334,7 +334,7 @@ pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
         }
         EvaluatedExpr::VariableDefinition(name, var) => {
             println!("a variable definition {name:#?}");
-            var_store.insert(name, var);
+            globals.insert(name, var);
         }
         EvaluatedExpr::Progn(exprs) => {
             for expr in exprs {
@@ -344,7 +344,7 @@ pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
                     session,
                     ruffbox,
                     sample_set,
-                    var_store,
+                    globals,
                     output_mode,
                     base_dir.clone(),
                 );
@@ -361,7 +361,7 @@ pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
                                 session,
                                 ruffbox,
                                 sample_set,
-                                var_store,
+                                globals,
                                 output_mode,
                                 base_dir.clone(),
                             );

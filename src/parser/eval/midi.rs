@@ -3,7 +3,7 @@ use std::sync;
 use parking_lot::Mutex;
 
 use crate::{
-    builtin_types::{Comparable, TypedEntity, VariableStore},
+    builtin_types::{Comparable, GlobalVariables, TypedEntity},
     parser::{EvaluatedExpr, FunctionMap},
     sample_set::SampleAndWavematrixSet,
     session::OutputMode,
@@ -12,7 +12,7 @@ use crate::{
 pub fn eval_list_midi_ports(
     _: &FunctionMap,
     _: &mut Vec<EvaluatedExpr>,
-    _: &sync::Arc<VariableStore>,
+    _: &sync::Arc<GlobalVariables>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
@@ -24,7 +24,7 @@ pub fn eval_list_midi_ports(
 pub fn open_midi_port(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
-    _: &sync::Arc<VariableStore>,
+    _: &sync::Arc<GlobalVariables>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {

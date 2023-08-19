@@ -665,7 +665,7 @@ fn run<const NCHAN: usize>(
     raw_session.rec_control = Some(rec_control);
     let session = sync::Arc::new(Mutex::new(raw_session));
 
-    let var_store = sync::Arc::new(VariableStore::new());
+    let globals = sync::Arc::new(GlobalVariables::new());
     let sample_set = sync::Arc::new(Mutex::new(SampleAndWavematrixSet::new()));
 
     // define the "standard library"
@@ -746,7 +746,7 @@ fn run<const NCHAN: usize>(
             &session,
             &controls_arc,
             &sample_set,
-            &var_store,
+            &globals,
             base_dir.display().to_string(),
             options.create_sketch,
             options.mode,
@@ -762,7 +762,7 @@ fn run<const NCHAN: usize>(
             &session,
             &controls_arc,
             &sample_set,
-            &var_store,
+            &globals,
             options.mode,
             base_dir.display().to_string(),
         )

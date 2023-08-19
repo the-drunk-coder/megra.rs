@@ -532,7 +532,7 @@ pub fn stop_recording<const BUFSIZE: usize, const NCHAN: usize>(
 /// execute a pre-defined part step by step
 pub fn step_part<const BUFSIZE: usize, const NCHAN: usize>(
     ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
-    var_store: &sync::Arc<VariableStore>,
+    globals: &sync::Arc<GlobalVariables>,
     sample_set: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
     output_mode: OutputMode,
@@ -541,11 +541,11 @@ pub fn step_part<const BUFSIZE: usize, const NCHAN: usize>(
     let mut sound_events = Vec::new();
     let mut control_events = Vec::new();
 
-    if let Some(mut thing) = var_store.get_mut(&VariableId::Custom(part_name)) {
+    if let Some(mut thing) = globals.get_mut(&VariableId::Custom(part_name)) {
         if let TypedEntity::GeneratorList(ref mut gens) = thing.value_mut() {
             for gen in gens.iter_mut() {
-                gen.current_transition(var_store);
-                let mut current_events = gen.current_events(var_store);
+                gen.current_transition(globals);
+                let mut current_events = gen.current_events(globals);
                 for ev in current_events.drain(..) {
                     match ev {
                         InterpretableEvent::Control(c) => control_events.push(c),
@@ -554,8 +554,8 @@ pub fn step_part<const BUFSIZE: usize, const NCHAN: usize>(
                 }
             }
         } else if let TypedEntity::Generator(ref mut gen) = thing.value_mut() {
-            gen.current_transition(var_store);
-            let mut current_events = gen.current_events(var_store);
+            gen.current_transition(globals);
+            let mut current_events = gen.current_events(globals);
             for ev in current_events.drain(..) {
                 match ev {
                     InterpretableEvent::Control(c) => control_events.push(c),
@@ -568,7 +568,7 @@ pub fn step_part<const BUFSIZE: usize, const NCHAN: usize>(
     // execute retrieved events
     once(
         ruffbox,
-        var_store,
+        globals,
         sample_set,
         session,
         &mut sound_events,
@@ -577,29 +577,29 @@ pub fn step_part<const BUFSIZE: usize, const NCHAN: usize>(
     );
 }
 
-pub fn set_global_tmod(var_store: &sync::Arc<VariableStore>, p: DynVal) {
-    var_store.insert(
+pub fn set_global_tmod(globals: &sync::Arc<GlobalVariables>, p: DynVal) {
+    globals.insert(
         VariableId::GlobalTimeModifier,
         TypedEntity::ConfigParameter(ConfigParameter::Dynamic(p)),
     ); // init on first attempt
 }
 
-pub fn set_global_latency(var_store: &sync::Arc<VariableStore>, p: DynVal) {
-    var_store.insert(
+pub fn set_global_latency(globals: &sync::Arc<GlobalVariables>, p: DynVal) {
+    globals.insert(
         VariableId::GlobalLatency,
         TypedEntity::ConfigParameter(ConfigParameter::Dynamic(p)),
     ); // init on first attempt
 }
 
-pub fn set_default_duration(var_store: &sync::Arc<VariableStore>, n: f32) {
-    var_store.insert(
+pub fn set_default_duration(globals: &sync::Arc<GlobalVariables>, n: f32) {
+    globals.insert(
         VariableId::DefaultDuration,
         TypedEntity::ConfigParameter(ConfigParameter::Numeric(n)),
     ); // init on first attempt
 }
 
-pub fn set_global_lifemodel_resources(var_store: &sync::Arc<VariableStore>, val: f32) {
-    var_store.insert(
+pub fn set_global_lifemodel_resources(globals: &sync::Arc<GlobalVariables>, val: f32) {
+    globals.insert(
         VariableId::LifemodelGlobalResources,
         TypedEntity::ConfigParameter(ConfigParameter::Numeric(val)),
     ); // init on first attempt
@@ -607,7 +607,7 @@ pub fn set_global_lifemodel_resources(var_store: &sync::Arc<VariableStore>, val:
 
 pub fn set_global_ruffbox_parameters<const BUFSIZE: usize, const NCHAN: usize>(
     ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
-    globals: &sync::Arc<VariableStore>,
+    globals: &sync::Arc<GlobalVariables>,
     params: &mut HashMap<SynthParameterLabel, ParameterValue>,
 ) {
     for (k, v) in params.iter_mut() {
@@ -658,7 +658,7 @@ pub fn export_dot_running<const BUFSIZE: usize, const NCHAN: usize>(
 
 pub fn once<const BUFSIZE: usize, const NCHAN: usize>(
     ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
-    var_store: &sync::Arc<VariableStore>,
+    globals: &sync::Arc<GlobalVariables>,
     sample_set: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
     sound_events: &mut [StaticEvent],
@@ -673,7 +673,7 @@ pub fn once<const BUFSIZE: usize, const NCHAN: usize>(
                     &mut sx,
                     session,
                     ruffbox,
-                    var_store,
+                    globals,
                     sample_set,
                     output_mode,
                 );
@@ -779,7 +779,7 @@ pub fn define_osc_client(
     }
 }
 
-pub fn push(id: VariableId, value: TypedEntity, globals: &sync::Arc<VariableStore>) {
+pub fn push(id: VariableId, value: TypedEntity, globals: &sync::Arc<GlobalVariables>) {
     if let Some(mut thing) = globals.get_mut(&id) {
         if let TypedEntity::Vec(v) = thing.value_mut() {
             v.push(Box::new(value));

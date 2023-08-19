@@ -17,11 +17,11 @@ use parking_lot::Mutex;
 pub fn nuc(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
-    var_store: &sync::Arc<VariableStore>,
+    globals: &sync::Arc<GlobalVariables>,
     _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
-    resolve_globals(&mut tail[1..], var_store);
+    resolve_globals(&mut tail[1..], globals);
     let mut tail_drain = tail.drain(1..);
 
     // name is the first symbol
@@ -37,13 +37,12 @@ pub fn nuc(
     let mut duration_mapping = HashMap::<(char, char), Event>::new();
     let mut rules = Vec::new();
 
-    let mut dur: DynVal = if let TypedEntity::ConfigParameter(ConfigParameter::Numeric(d)) =
-        var_store
-            .entry(VariableId::DefaultDuration)
-            .or_insert(TypedEntity::ConfigParameter(ConfigParameter::Numeric(
-                200.0,
-            )))
-            .value()
+    let mut dur: DynVal = if let TypedEntity::ConfigParameter(ConfigParameter::Numeric(d)) = globals
+        .entry(VariableId::DefaultDuration)
+        .or_insert(TypedEntity::ConfigParameter(ConfigParameter::Numeric(
+            200.0,
+        )))
+        .value()
     {
         DynVal::with_value(*d)
     } else {
@@ -146,7 +145,7 @@ mod tests {
             Some(EvaluatedExpr::Typed(TypedEntity::String("bd".to_string())))
         });
 
-        let globals = sync::Arc::new(VariableStore::new());
+        let globals = sync::Arc::new(GlobalVariables::new());
 
         match eval_from_str(
             snippet,

@@ -80,7 +80,7 @@ pub enum LazyArithmetic {
     Pow(Vec<LazyVal>),
 }
 
-pub type VariableStore = DashMap<VariableId, TypedEntity>;
+pub type GlobalVariables = DashMap<VariableId, TypedEntity>;
 
 #[derive(Clone, Debug)]
 pub enum SampleResource {

@@ -10,7 +10,7 @@ use ruffbox_synth::building_blocks::{FilterType, SynthParameterLabel, SynthParam
 
 use crate::builtin_types::{Comparable, LazyArithmetic};
 use crate::parser::eval::resolver::resolve_lazy;
-use crate::{TypedEntity, VariableId, VariableStore};
+use crate::{GlobalVariables, TypedEntity, VariableId};
 
 #[derive(Clone, Debug)]
 #[rustfmt::skip]
@@ -207,7 +207,7 @@ pub fn translate_stereo(val: SynthParameterValue) -> SynthParameterValue {
 pub fn resolve_parameter(
     k: SynthParameterLabel,
     v: &mut ParameterValue,
-    globals: &std::sync::Arc<VariableStore>,
+    globals: &std::sync::Arc<GlobalVariables>,
 ) -> SynthParameterValue {
     match v {
         // resolve params

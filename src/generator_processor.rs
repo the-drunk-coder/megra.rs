@@ -5,7 +5,7 @@ use crate::visualizer_client::VisualizerClient;
 use std::sync;
 
 use crate::{
-    builtin_types::{ConfigParameter, VariableStore},
+    builtin_types::{ConfigParameter, GlobalVariables},
     event::{Event, InterpretableEvent, StaticEvent},
     generator::GenModFun,
     generator::Generator,
@@ -32,13 +32,13 @@ pub trait GeneratorProcessor: GeneratorProcessorClone {
     fn process_events(
         &mut self,
         _events: &mut Vec<InterpretableEvent>,
-        _var_store: &Arc<VariableStore>,
+        _globals: &Arc<GlobalVariables>,
     ) {
         /* pass by default */
     }
     /// implement this if you need to modify the previous
     /// processor's structure
-    fn process_generator(&mut self, _generator: &mut Generator, _var_store: &Arc<VariableStore>) {
+    fn process_generator(&mut self, _generator: &mut Generator, _globals: &Arc<GlobalVariables>) {
         /* pass by default */
     }
     /// implement this if you need to modify the transitions
@@ -46,7 +46,7 @@ pub trait GeneratorProcessor: GeneratorProcessorClone {
     fn process_transition(
         &mut self,
         _transition: &mut StaticEvent,
-        _var_store: &Arc<VariableStore>,
+        _globals: &Arc<GlobalVariables>,
     ) {
         /* pass by default */
     }

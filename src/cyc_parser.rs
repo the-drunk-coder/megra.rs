@@ -174,7 +174,7 @@ pub fn eval_cyc_from_str(
     out_mode: OutputMode,
     template_events: &[String],
     event_mappings: &HashMap<String, Vec<SourceEvent>>,
-    globals: &sync::Arc<VariableStore>,
+    globals: &sync::Arc<GlobalVariables>,
 ) -> Vec<Vec<CycleResult>> {
     let items = parse_cyc(src.trim()).map_err(|e: nom::Err<VerboseError<&str>>| {
         let ret = format!("{e:#?}");
