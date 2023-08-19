@@ -8,6 +8,7 @@ use std::{
     sync,
 };
 
+#[allow(deprecated)]
 use sha256::try_digest;
 
 use vom_rs::pfa;
@@ -45,6 +46,7 @@ fn fetch_url(url: String, file_name: String) -> anyhow::Result<()> {
     Ok(())
 }
 
+#[allow(deprecated)]
 pub fn fetch_sample_set<const BUFSIZE: usize, const NCHAN: usize>(
     function_map: &sync::Arc<Mutex<FunctionMap>>,
     ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
