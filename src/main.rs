@@ -326,9 +326,6 @@ fn main() -> Result<(), anyhow::Error> {
     let out_config: cpal::SupportedStreamConfig = output_device.default_output_config().unwrap();
     let in_config: cpal::SupportedStreamConfig = input_device.default_input_config().unwrap();
 
-    // let's assume it's the same for both ...
-    let sample_format = out_config.sample_format();
-
     let run_opts = RunOptions {
         mode: out_mode,
         num_live_buffers: num_live_buffers as usize,
@@ -346,78 +343,29 @@ fn main() -> Result<(), anyhow::Error> {
         ambisonic_binaural,
     };
 
+    let mut out_conf: cpal::StreamConfig = out_config.into();
+    let mut in_conf: cpal::StreamConfig = in_config.into();
+
     match out_mode {
         OutputMode::Stereo => {
-            let mut out_conf: cpal::StreamConfig = out_config.into();
-            let mut in_conf: cpal::StreamConfig = in_config.into();
             in_conf.channels = num_live_buffers;
             out_conf.channels = 2;
-            match sample_format {
-                cpal::SampleFormat::F32 => {
-                    run::<f32, 2>(&input_device, &output_device, &out_conf, &in_conf, run_opts)?
-                }
-                cpal::SampleFormat::I16 => {
-                    run::<i16, 2>(&input_device, &output_device, &out_conf, &in_conf, run_opts)?
-                }
-                cpal::SampleFormat::U16 => {
-                    run::<u16, 2>(&input_device, &output_device, &out_conf, &in_conf, run_opts)?
-                }
-                _ => todo!(),
-            }
+            run::<2>(&input_device, &output_device, &out_conf, &in_conf, run_opts)?
         }
         OutputMode::FourChannel => {
-            let mut out_conf: cpal::StreamConfig = out_config.into();
-            let mut in_conf: cpal::StreamConfig = in_config.into();
             in_conf.channels = num_live_buffers;
             out_conf.channels = 4;
-            match sample_format {
-                cpal::SampleFormat::F32 => {
-                    run::<f32, 4>(&input_device, &output_device, &out_conf, &in_conf, run_opts)?
-                }
-                cpal::SampleFormat::I16 => {
-                    run::<i16, 4>(&input_device, &output_device, &out_conf, &in_conf, run_opts)?
-                }
-                cpal::SampleFormat::U16 => {
-                    run::<u16, 4>(&input_device, &output_device, &out_conf, &in_conf, run_opts)?
-                }
-                _ => todo!(),
-            }
+            run::<4>(&input_device, &output_device, &out_conf, &in_conf, run_opts)?
         }
         OutputMode::EightChannel => {
-            let mut out_conf: cpal::StreamConfig = out_config.into();
-            let mut in_conf: cpal::StreamConfig = in_config.into();
             in_conf.channels = num_live_buffers;
             out_conf.channels = 8;
-            match sample_format {
-                cpal::SampleFormat::F32 => {
-                    run::<f32, 8>(&input_device, &output_device, &out_conf, &in_conf, run_opts)?
-                }
-                cpal::SampleFormat::I16 => {
-                    run::<i16, 8>(&input_device, &output_device, &out_conf, &in_conf, run_opts)?
-                }
-                cpal::SampleFormat::U16 => {
-                    run::<u16, 8>(&input_device, &output_device, &out_conf, &in_conf, run_opts)?
-                }
-                _ => todo!(),
-            }
+            run::<8>(&input_device, &output_device, &out_conf, &in_conf, run_opts)?
         }
         OutputMode::SixteenChannel => {
-            let mut out_conf: cpal::StreamConfig = out_config.into();
-            let mut in_conf: cpal::StreamConfig = in_config.into();
             in_conf.channels = num_live_buffers;
             out_conf.channels = 16;
-            match sample_format {
-                cpal::SampleFormat::F32 => {
-                    run::<f32, 16>(&input_device, &output_device, &out_conf, &in_conf, run_opts)?
-                }
-                cpal::SampleFormat::I16 => {
-                    run::<i16, 16>(&input_device, &output_device, &out_conf, &in_conf, run_opts)?
-                }
-                cpal::SampleFormat::U16 => {
-                    run::<u16, 16>(&input_device, &output_device, &out_conf, &in_conf, run_opts)?
-                }
-                _ => todo!(),
-            }
+            run::<16>(&input_device, &output_device, &out_conf, &in_conf, run_opts)?
         }
     }
 
@@ -425,16 +373,13 @@ fn main() -> Result<(), anyhow::Error> {
 }
 
 #[allow(clippy::too_many_arguments)]
-fn run<T, const NCHAN: usize>(
+fn run<const NCHAN: usize>(
     input_device: &cpal::Device,
     output_device: &cpal::Device,
     out_config: &cpal::StreamConfig,
     in_config: &cpal::StreamConfig,
     options: RunOptions,
-) -> Result<(), anyhow::Error>
-where
-    T: cpal::Sample,
-{
+) -> Result<(), anyhow::Error> {
     // at some point i'll need to implement more samplerates i suppose ...
     let sample_rate = out_config.sample_rate.0 as f32;
     let out_channels = out_config.channels as usize;

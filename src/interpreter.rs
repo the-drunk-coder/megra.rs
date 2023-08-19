@@ -217,10 +217,10 @@ pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
         }
         Command::MidiStartReceiver(midi_in_port) => {
             let function_map_midi = sync::Arc::clone(function_map);
-            let session_midi = sync::Arc::clone(&session);
-            let ruffbox_midi = sync::Arc::clone(&ruffbox);
-            let sam_midi = sync::Arc::clone(&sample_set);
-            let var_midi = sync::Arc::clone(&var_store);
+            let session_midi = sync::Arc::clone(session);
+            let ruffbox_midi = sync::Arc::clone(ruffbox);
+            let sam_midi = sync::Arc::clone(sample_set);
+            let var_midi = sync::Arc::clone(var_store);
             thread::spawn(move || {
                 midi_input::open_midi_input_port(
                     midi_in_port,

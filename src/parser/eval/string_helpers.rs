@@ -31,8 +31,8 @@ pub fn concat(
     };
 
     for x in tail_drain {
-        match x {
-            EvaluatedExpr::Typed(TypedEntity::Comparable(c)) => match c {
+        if let EvaluatedExpr::Typed(TypedEntity::Comparable(c)) = x {
+            match c {
                 Comparable::Boolean(b) => {
                     accum.push_str(&b.to_string());
                 }
@@ -57,8 +57,7 @@ pub fn concat(
                 Comparable::Character(c) => {
                     accum.push_str(&c.to_string());
                 }
-            },
-            _ => {}
+            }
         }
     }
 

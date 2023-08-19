@@ -219,9 +219,7 @@ pub fn resolve_parameter(
             }
             panic!();
         }
-        ParameterValue::Lazy(l) => {
-            return SynthParameterValue::ScalarF32(resolve_lazy(l.clone(), globals));
-        }
+        ParameterValue::Lazy(l) => SynthParameterValue::ScalarF32(resolve_lazy(l.clone(), globals)),
         ParameterValue::FilterType(t) => SynthParameterValue::FilterType(*t),
         ParameterValue::Scalar(val) => {
             if k == SynthParameterLabel::SampleBufferNumber {

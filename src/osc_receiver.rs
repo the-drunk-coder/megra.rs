@@ -16,6 +16,7 @@ use crate::session::{OutputMode, Session};
 pub struct OscReceiver;
 
 impl OscReceiver {
+    #[allow(clippy::too_many_arguments)]
     pub fn start_receiver_thread_udp<const BUFSIZE: usize, const NCHAN: usize>(
         target: String,
         function_map: sync::Arc<Mutex<FunctionMap>>,
