@@ -23,6 +23,7 @@ pub fn learn(
     // eval-time resolve
     // ignore function name
     resolve_globals(&mut tail[1..], globals);
+
     let mut tail_drain = tail.drain(1..);
     // name is the first symbol
     let name = if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(n)))) =
@@ -98,7 +99,6 @@ pub fn learn(
                                     }
                                     _ => {}
                                 }
-
                                 if !unpack_evs.is_empty() {
                                     event_mapping.insert(key_sym, unpack_evs);
                                 }
@@ -257,7 +257,11 @@ pub fn learn(
                 }
                 _ => println!("{k}"),
             },
-            _ => println! {"ignored {c:?}"},
+            _ => {
+                collect_events = false;
+                println!("ignored {c:#?}");
+                continue;
+            }
         }
     }
 
