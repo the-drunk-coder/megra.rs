@@ -135,11 +135,11 @@ pub fn learn(
                     )))) => {
                         // if the string contains whitespace, assume it's the "new" behavior,
                         // where longer strings are allowed ...
-                        if desc.contains(" ") {
+                        if desc.contains(' ') {
                             // remove symbol markers ...
                             for token in desc.split_whitespace() {
-                                if token.starts_with("'") {
-                                    sample.push(token[1..].to_string());
+                                if let Some(stripped) = token.strip_prefix('\'') {
+                                    sample.push(stripped.to_string());
                                 } else {
                                     sample.push(token.to_string());
                                 }
@@ -255,7 +255,7 @@ pub fn learn(
 
     // if the sample has no whitespace, replicate
     // the previous behaviour ...
-    if sample.len() == 1 && !sample[0].contains(" ") {
+    if sample.len() == 1 && !sample[0].contains(' ') {
         for c in sample[0].chars() {
             let key = format!("{c}");
             if reverse_label_mapping.contains_key(&key) {
