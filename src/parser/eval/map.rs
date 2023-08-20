@@ -18,7 +18,6 @@ pub fn map(
 
     let mut pmap = HashMap::new();
 
-    // only string keys for now ..
     for p in tail_drain {
         if let EvaluatedExpr::Typed(TypedEntity::Pair(key, val)) = p {
             match *key {
