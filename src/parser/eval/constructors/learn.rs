@@ -107,7 +107,41 @@ pub fn learn(
                     }
                     continue;
                 }
-
+                EvaluatedExpr::Typed(TypedEntity::Map(ref m)) => {
+                    for (k, v) in m {
+                        let key = match k {
+                            VariableId::Custom(s) => s.clone(),
+                            VariableId::Symbol(s) => s.clone(),
+                            _ => {
+                                continue;
+                            }
+                        };
+                        let mut ev_vec = Vec::new();
+                        match v {
+                            TypedEntity::Vec(v) => {
+                                for elem in v {
+                                    match *elem.clone() {
+                                        TypedEntity::SoundEvent(s) => {
+                                            ev_vec.push(SourceEvent::Sound(s.clone()))
+                                        }
+                                        TypedEntity::ControlEvent(c) => {
+                                            ev_vec.push(SourceEvent::Control(c.clone()))
+                                        }
+                                        _ => {}
+                                    }
+                                }
+                            }
+                            TypedEntity::SoundEvent(s) => {
+                                ev_vec.push(SourceEvent::Sound(s.clone()))
+                            }
+                            TypedEntity::ControlEvent(c) => {
+                                ev_vec.push(SourceEvent::Control(c.clone()))
+                            }
+                            _ => {}
+                        }
+                        event_mapping.insert(key, ev_vec);
+                    }
+                }
                 EvaluatedExpr::Typed(TypedEntity::SoundEvent(e)) => {
                     ev_vec.push(SourceEvent::Sound(e));
                     continue;
