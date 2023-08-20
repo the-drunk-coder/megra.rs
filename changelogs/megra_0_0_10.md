@@ -19,3 +19,4 @@
 * (kinda) lazy evaluation for the arithmetic functions
 * 16-channel mode
 * arbitrary labels for `learn`
+* allow defining event mappings for `learn` as map 
