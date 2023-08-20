@@ -1,4 +1,4 @@
-use std::collections::{BTreeSet, HashMap};
+use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::sync;
 
 use parking_lot::Mutex;
@@ -117,7 +117,7 @@ pub fn facts(
     // assemble rules and mappings //
     /////////////////////////////////
 
-    let mut event_mapping = HashMap::<char, Vec<SourceEvent>>::new();
+    let mut event_mapping = BTreeMap::<char, Vec<SourceEvent>>::new();
     let mut duration_mapping = HashMap::new();
 
     let pfa = if !keep_root {
@@ -192,6 +192,7 @@ pub fn facts(
             generator: pfa,
             event_mapping,
             duration_mapping,
+            label_mapping: None,
             modified: true,
             symbol_ages: HashMap::new(),
             default_duration: dur.static_val as u64,

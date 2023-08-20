@@ -5,7 +5,7 @@ use crate::markov_sequence_generator::MarkovSequenceGenerator;
 use crate::parameter::*;
 use crate::parser::eval::resolver::resolve_globals;
 use ruffbox_synth::building_blocks::SynthParameterLabel;
-use std::collections::{BTreeSet, HashMap};
+use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::sync;
 use vom_rs::pfa::{Pfa, Rule};
 
@@ -42,7 +42,7 @@ pub fn fully(
 
     let mut keep_root = false;
 
-    let mut final_mapping = HashMap::new();
+    let mut final_mapping = BTreeMap::new();
     let mut last_char: char = 'a'; // label chars
     let mut labels = Vec::new();
 
@@ -178,6 +178,7 @@ pub fn fully(
             name,
             generator: pfa,
             event_mapping: final_mapping,
+            label_mapping: None,
             duration_mapping,
             modified: true,
             symbol_ages: HashMap::new(),

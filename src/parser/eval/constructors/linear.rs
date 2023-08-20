@@ -6,7 +6,7 @@ use crate::parameter::*;
 use crate::parser::eval::resolver::resolve_globals;
 
 use ruffbox_synth::building_blocks::SynthParameterLabel;
-use std::collections::{BTreeSet, HashMap};
+use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::sync;
 use vom_rs::pfa::{Pfa, Rule};
 
@@ -73,7 +73,7 @@ pub fn linear(
     // generated ids
     let mut last_char: char = '1';
 
-    let mut event_mapping = HashMap::<char, Vec<SourceEvent>>::new();
+    let mut event_mapping = BTreeMap::<char, Vec<SourceEvent>>::new();
     let mut duration_mapping = HashMap::<(char, char), Event>::new();
 
     // collect cycle rules
@@ -117,6 +117,7 @@ pub fn linear(
             generator: pfa,
             event_mapping,
             duration_mapping,
+            label_mapping: None,
             modified: true,
             symbol_ages: HashMap::new(),
             default_duration: 200,

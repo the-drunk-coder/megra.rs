@@ -1,4 +1,4 @@
-use std::collections::{BTreeSet, HashMap};
+use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::sync;
 
 use parking_lot::Mutex;
@@ -117,7 +117,7 @@ pub fn vals(
     // assemble rules and mappings //
     /////////////////////////////////
 
-    let mut event_mapping = HashMap::<char, Vec<SourceEvent>>::new();
+    let mut event_mapping = BTreeMap::<char, Vec<SourceEvent>>::new();
     let mut duration_mapping = HashMap::new();
 
     let pfa = if !keep_root {
@@ -190,6 +190,7 @@ pub fn vals(
         root_generator: MarkovSequenceGenerator {
             name,
             generator: pfa,
+            label_mapping: None,
             event_mapping,
             duration_mapping,
             modified: true,

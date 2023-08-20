@@ -6,7 +6,7 @@ use crate::parameter::*;
 use crate::parser::eval::resolver::resolve_globals;
 
 use ruffbox_synth::building_blocks::SynthParameterLabel;
-use std::collections::{BTreeSet, HashMap};
+use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::sync;
 use vom_rs::pfa;
 
@@ -103,7 +103,7 @@ pub fn infer(
         "".to_string()
     };
 
-    let mut event_mapping = HashMap::<char, Vec<SourceEvent>>::new();
+    let mut event_mapping = BTreeMap::<char, Vec<SourceEvent>>::new();
     let mut duration_mapping = HashMap::<(char, char), Event>::new();
     let mut rules = Vec::new();
 
@@ -220,6 +220,7 @@ pub fn infer(
             name,
             generator: pfa, // will be empty if we intend on keeping the root generator
             event_mapping,
+            label_mapping: None,
             duration_mapping,
             modified: true,
             symbol_ages: HashMap::new(),

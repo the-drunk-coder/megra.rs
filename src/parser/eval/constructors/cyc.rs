@@ -8,7 +8,7 @@ use crate::parser::eval::resolver::resolve_globals;
 use crate::sample_set::SampleAndWavematrixSet;
 use crate::session::OutputMode;
 use ruffbox_synth::building_blocks::SynthParameterLabel;
-use std::collections::{BTreeSet, HashMap};
+use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::sync;
 use vom_rs::pfa::{Pfa, Rule};
 
@@ -218,7 +218,7 @@ pub fn cyc(
         }
     }
 
-    let mut event_mapping = HashMap::<char, Vec<SourceEvent>>::new();
+    let mut event_mapping = BTreeMap::<char, Vec<SourceEvent>>::new();
     let mut duration_mapping = HashMap::<(char, char), Event>::new();
 
     let num_events = ev_vecs.len();
@@ -362,6 +362,7 @@ pub fn cyc(
             name,
             generator: pfa,
             event_mapping,
+            label_mapping: None,
             duration_mapping,
             modified: true,
             symbol_ages: HashMap::new(),

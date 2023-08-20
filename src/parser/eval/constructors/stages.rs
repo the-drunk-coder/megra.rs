@@ -6,7 +6,7 @@ use crate::parameter::*;
 use crate::parser::eval::resolver::resolve_globals;
 
 use ruffbox_synth::building_blocks::SynthParameterLabel;
-use std::collections::{BTreeSet, HashMap};
+use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::sync;
 use vom_rs::pfa::{Pfa, Rule};
 
@@ -124,7 +124,7 @@ pub fn stages(
     // assemble rules and mappings //
     /////////////////////////////////
 
-    let mut event_mapping = HashMap::<char, Vec<SourceEvent>>::new();
+    let mut event_mapping = BTreeMap::<char, Vec<SourceEvent>>::new();
     let mut duration_mapping = HashMap::new();
 
     let pfa = if !keep_root {
@@ -284,6 +284,7 @@ pub fn stages(
             generator: pfa,
             event_mapping,
             duration_mapping,
+            label_mapping: None,
             modified: true,
             symbol_ages: HashMap::new(),
             default_duration: dur.static_val as u64,

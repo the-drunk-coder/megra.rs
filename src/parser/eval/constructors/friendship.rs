@@ -6,7 +6,7 @@ use crate::parameter::*;
 use crate::parser::eval::resolver::resolve_globals;
 
 use ruffbox_synth::building_blocks::SynthParameterLabel;
-use std::collections::{BTreeSet, HashMap};
+use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::sync;
 use vom_rs::pfa::{Pfa, Rule};
 
@@ -42,7 +42,7 @@ pub fn friendship(
     let mut collected_mapping = HashMap::<char, Vec<SourceEvent>>::new();
     let mut cur_key: String = "".to_string();
 
-    let mut final_mapping = HashMap::new();
+    let mut final_mapping = BTreeMap::new();
     let center_label: char = '1'; // label chars
     let mut last_char: char = '1'; // label chars
     let mut friends_labels = Vec::new();
@@ -363,6 +363,7 @@ pub fn friendship(
             name,
             generator: pfa,
             event_mapping: final_mapping,
+            label_mapping: None,
             duration_mapping,
             modified: true,
             symbol_ages: HashMap::new(),

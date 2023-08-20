@@ -5,7 +5,7 @@ use crate::markov_sequence_generator::MarkovSequenceGenerator;
 use crate::parameter::*;
 use crate::parser::eval::resolver::resolve_globals;
 
-use std::collections::{BTreeSet, HashMap};
+use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::sync;
 use vom_rs::pfa::Pfa;
 
@@ -34,8 +34,8 @@ pub fn learn(
     };
 
     let mut keep_root = false;
-    let mut sample: String = "".to_string();
-    let mut event_mapping = HashMap::<char, Vec<SourceEvent>>::new();
+    let mut sample: Vec<String> = Vec::new();
+    let mut event_mapping = BTreeMap::<String, Vec<SourceEvent>>::new();
 
     let mut collect_events = false;
     let mut bound = 3;
@@ -64,7 +64,7 @@ pub fn learn(
                 EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(ref s))) => {
                     if !cur_key.is_empty() && !ev_vec.is_empty() {
                         //println!("found event {}", cur_key);
-                        event_mapping.insert(cur_key.chars().next().unwrap(), ev_vec.clone());
+                        event_mapping.insert(cur_key, ev_vec.clone());
                         ev_vec.clear();
                     }
                     cur_key = s.clone();
@@ -100,8 +100,7 @@ pub fn learn(
                                 }
 
                                 if !unpack_evs.is_empty() {
-                                    event_mapping
-                                        .insert(key_sym.chars().next().unwrap(), unpack_evs);
+                                    event_mapping.insert(key_sym, unpack_evs);
                                 }
                             }
                         }
@@ -120,7 +119,7 @@ pub fn learn(
                 _ => {
                     if !cur_key.is_empty() && !ev_vec.is_empty() {
                         //println!("found event {}", cur_key);
-                        event_mapping.insert(cur_key.chars().next().unwrap(), ev_vec.clone());
+                        event_mapping.insert(cur_key.clone(), ev_vec.clone());
                     }
                     collect_events = false;
                     // move on below
@@ -134,17 +133,34 @@ pub fn learn(
                     Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::String(
                         desc,
                     )))) => {
-                        sample = desc.to_string();
-                        sample.retain(|c| !c.is_whitespace());
+                        // if the string contains whitespace, assume it's the "new" behavior,
+                        // where longer strings are allowed ...
+                        if desc.contains(" ") {
+                            // remove symbol markers ...
+                            for token in desc.split_whitespace() {
+                                if token.starts_with("'") {
+                                    sample.push(token[1..].to_string());
+                                } else {
+                                    sample.push(token.to_string());
+                                }
+                            }
+                        } else {
+                            // otherwise, assume the "old", single-character
+                            // behaviour ...
+                            sample.push(desc.to_string());
+                        }
                     }
                     Some(EvaluatedExpr::Typed(TypedEntity::Vec(args))) => {
                         for arg in args {
                             match *arg {
                                 TypedEntity::Comparable(Comparable::String(s)) => {
-                                    sample.push_str(&s);
+                                    sample.push(s);
+                                }
+                                TypedEntity::Comparable(Comparable::Symbol(s)) => {
+                                    sample.push(s);
                                 }
                                 TypedEntity::Comparable(Comparable::Character(s)) => {
-                                    sample.push(s);
+                                    sample.push(format!("{s}"));
                                 }
                                 _ => {}
                             }
@@ -213,12 +229,52 @@ pub fn learn(
 
     if autosilence {
         event_mapping.insert(
-            '~',
+            "~".to_string(),
             vec![SourceEvent::Sound(Event::with_name("silence".to_string()))],
         );
     }
 
-    let s_v: std::vec::Vec<char> = sample.chars().collect();
+    // create internal mapping from
+    // string labels ...
+    let mut char_event_mapping = BTreeMap::new();
+    let mut label_mapping = BTreeMap::new();
+    let mut reverse_label_mapping = BTreeMap::new();
+    let mut next_char: char = '1';
+
+    for (k, v) in event_mapping.into_iter() {
+        char_event_mapping.insert(next_char, v);
+        label_mapping.insert(next_char, k.clone());
+        reverse_label_mapping.insert(k, next_char);
+        next_char = std::char::from_u32(next_char as u32 + 1).unwrap();
+    }
+
+    // assemble the sample ...
+    let mut s_v: std::vec::Vec<char> = Vec::new();
+
+    //println!("raw sample {sample:?}");
+
+    // if the sample has no whitespace, replicate
+    // the previous behaviour ...
+    if sample.len() == 1 && !sample[0].contains(" ") {
+        for c in sample[0].chars() {
+            let key = format!("{c}");
+            if reverse_label_mapping.contains_key(&key) {
+                s_v.push(*reverse_label_mapping.get(&key).unwrap());
+            }
+        }
+    } else {
+        // otherwise, tokenize by whitespace
+        for token in sample {
+            if reverse_label_mapping.contains_key(&token) {
+                s_v.push(*reverse_label_mapping.get(&token).unwrap());
+            }
+        }
+    }
+
+    //println!("cooked sample {s_v:?}");
+    //println!("map {label_mapping:#?}");
+    //println!("rev map {reverse_label_mapping:#?}");
+
     let pfa = if !keep_root {
         // only regenerate if necessary
         Pfa::<char>::learn(s_v, bound, epsilon, pfa_size)
@@ -233,8 +289,9 @@ pub fn learn(
         root_generator: MarkovSequenceGenerator {
             name,
             generator: pfa,
-            event_mapping,
-            duration_mapping: HashMap::new(),
+            event_mapping: char_event_mapping,
+            label_mapping: Some(label_mapping),
+            duration_mapping: HashMap::new(), // unsolved ...
             modified: true,
             symbol_ages: HashMap::new(),
             default_duration: dur.static_val as u64,

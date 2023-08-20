@@ -1,7 +1,7 @@
 use crate::event::{Event, InterpretableEvent, SourceEvent, StaticEvent};
 use crate::GlobalVariables;
 use ruffbox_synth::building_blocks::{SynthParameterLabel, SynthParameterValue};
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 use vom_rs::pfa;
 
 #[derive(Clone, Debug)]
@@ -26,7 +26,9 @@ impl Rule {
 pub struct MarkovSequenceGenerator {
     pub name: String,
     pub generator: pfa::Pfa<char>,
-    pub event_mapping: HashMap<char, Vec<SourceEvent>>,
+    pub event_mapping: BTreeMap<char, Vec<SourceEvent>>,
+    // map the internal chars to more human-readable labels ...
+    pub label_mapping: Option<BTreeMap<char, String>>,
     pub duration_mapping: HashMap<(char, char), Event>,
     pub modified: bool,
     pub symbol_ages: HashMap<char, u64>,

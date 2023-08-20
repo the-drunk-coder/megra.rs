@@ -8,7 +8,7 @@ use crate::parser::{EvaluatedExpr, FunctionMap};
 use crate::{OutputMode, SampleAndWavematrixSet};
 
 use ruffbox_synth::building_blocks::SynthParameterLabel;
-use std::collections::{BTreeSet, HashMap};
+use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::sync;
 use vom_rs::pfa::{Pfa, Rule};
 
@@ -116,7 +116,7 @@ pub fn chop(
         }
     }
 
-    let mut event_mapping = HashMap::<char, Vec<SourceEvent>>::new();
+    let mut event_mapping = BTreeMap::<char, Vec<SourceEvent>>::new();
     let mut duration_mapping = HashMap::<(char, char), Event>::new();
 
     let pfa = if !keep_root {
@@ -252,6 +252,7 @@ pub fn chop(
             name,
             generator: pfa,
             event_mapping,
+            label_mapping: None,
             duration_mapping,
             modified: true,
             symbol_ages: HashMap::new(),
