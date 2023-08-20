@@ -7,6 +7,7 @@ pub mod events;
 pub mod generator_list;
 pub mod generator_modifier;
 pub mod generator_processor;
+pub mod map;
 pub mod matrix;
 pub mod megra_match;
 pub mod midi;

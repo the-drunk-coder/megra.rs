@@ -31,6 +31,9 @@ pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
         Command::Push(id, te) => {
             commands::push(id, te, globals);
         }
+        Command::Insert(id, key, value) => {
+            commands::insert(id, key, value, globals);
+        }
         Command::Print(te) => {
             println!("{te:#?}");
         }
@@ -327,6 +330,12 @@ pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
         }
         EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Boolean(b))) => {
             println!("a boolean: {b}")
+        }
+        EvaluatedExpr::Typed(TypedEntity::Map(m)) => {
+            println!("a map: {m:?}")
+        }
+        EvaluatedExpr::Typed(TypedEntity::Vec(v)) => {
+            println!("a vec: {v:?}")
         }
         EvaluatedExpr::FunctionDefinition(name, pos_args, body) => {
             println!("a function definition: {name} positional args: {pos_args:?}");

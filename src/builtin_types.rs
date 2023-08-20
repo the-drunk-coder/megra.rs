@@ -44,6 +44,7 @@ pub enum TypedEntity {
     Rule(Rule),
     // compound types, some specialized for convenience
     Vec(Vec<Box<TypedEntity>>),
+    Map(HashMap<VariableId, TypedEntity>),
     Pair(Box<TypedEntity>, Box<TypedEntity>),
     Matrix(Vec<Vec<Box<TypedEntity>>>),
     GeneratorList(Vec<Generator>),
@@ -63,6 +64,10 @@ pub enum VariableId {
     Symbol(String),
 }
 
+// not sure if "lazy" is the best description here,
+// it's about evaluating the value at "play-time", when
+// the event is finally played, rather than "eval-time",
+// when the user evaluates the code ...
 #[derive(Clone, PartialEq, Debug)]
 pub enum LazyVal {
     Id(VariableId),
@@ -117,6 +122,7 @@ pub enum Command {
     MidiListPorts,
     Print(TypedEntity),
     Push(VariableId, TypedEntity),
+    Insert(VariableId, VariableId, TypedEntity),
 }
 
 #[derive(Clone)]

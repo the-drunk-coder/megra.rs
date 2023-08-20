@@ -786,3 +786,16 @@ pub fn push(id: VariableId, value: TypedEntity, globals: &sync::Arc<GlobalVariab
         }
     }
 }
+
+pub fn insert(
+    id: VariableId,
+    key: VariableId,
+    value: TypedEntity,
+    globals: &sync::Arc<GlobalVariables>,
+) {
+    if let Some(mut thing) = globals.get_mut(&id) {
+        if let TypedEntity::Map(m) = thing.value_mut() {
+            m.insert(key, value);
+        }
+    }
+}
