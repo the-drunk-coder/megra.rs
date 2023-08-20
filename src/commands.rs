@@ -8,6 +8,9 @@ use std::{
     sync,
 };
 
+// not sure why the author deprecated the sync version,
+// as I really don't see the point of using async here at
+// the moment ...
 #[allow(deprecated)]
 use sha256::try_digest;
 
