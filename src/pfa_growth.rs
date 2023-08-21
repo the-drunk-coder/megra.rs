@@ -17,8 +17,12 @@ pub fn grow_old(pfa: &mut Pfa<char>) -> Option<PfaOperationResult<char>> {
     let dest_id = vec![*pfa.history.last().unwrap()];
     let node_id = *pfa.history.choose(&mut rand::thread_rng()).unwrap();
 
-    // make sure states exists
-    if !(pfa.has_state(&source_id) && pfa.has_state(&dest_id)) {
+    // make sure states exists, and isn't the (empty) origin
+    if !(pfa.has_state(&source_id)
+        && pfa.has_state(&dest_id)
+        && !source_id.is_empty()
+        && !dest_id.is_empty())
+    {
         return None;
     }
 
@@ -177,8 +181,12 @@ pub fn grow_triloop(pfa: &mut Pfa<char>) -> Option<PfaOperationResult<char>> {
     let source_id = vec![*pfa.history.last().unwrap()];
     let dest_id = vec![*pfa.history.get(pfa.history.len() - 2).unwrap()];
 
-    // make sure states exists
-    if !(pfa.has_state(&source_id) && pfa.has_state(&dest_id)) {
+    // check if states exist and aren't empty
+    if !(pfa.has_state(&source_id)
+        && pfa.has_state(&dest_id)
+        && !source_id.is_empty()
+        && !dest_id.is_empty())
+    {
         return None;
     }
 
@@ -255,7 +263,12 @@ pub fn grow_loop(pfa: &mut Pfa<char>) -> Option<PfaOperationResult<char>> {
     let source_id = vec![*pfa.history.get(pfa.history.len() - 2).unwrap()];
 
     // make sure states exists
-    if !(pfa.has_state(&source_id) && pfa.has_state(&dest_id)) {
+    // check if states exist and aren't empty
+    if !pfa.has_state(&source_id)
+        || !pfa.has_state(&dest_id)
+        || source_id.is_empty()
+        || dest_id.is_empty()
+    {
         return None;
     }
 
@@ -337,7 +350,12 @@ pub fn grow_quadloop(pfa: &mut Pfa<char>) -> Option<PfaOperationResult<char>> {
     let dest_id = vec![*pfa.history.get(pfa.history.len() - 3).unwrap()];
 
     // make sure states exists
-    if !(pfa.has_state(&source_id) && pfa.has_state(&dest_id)) {
+    // check if states exist and aren't empty
+    if !(pfa.has_state(&source_id)
+        && pfa.has_state(&dest_id)
+        && !source_id.is_empty()
+        && !dest_id.is_empty())
+    {
         return None;
     }
 
