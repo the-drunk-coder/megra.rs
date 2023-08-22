@@ -1,11 +1,12 @@
+//! Growth methods that allow us to expand a PFA using certain heuristic principles.
+//! They're mostly guided by shapes, or how to reach them.
+
 use rand::{seq::SliceRandom, Rng};
 
 use vom_rs::pfa::*;
 use vom_rs::pst;
 
-/// growth methods that allow us to expand a pfa using certain heuristic principles
-
-/// this is the "old" method because it's the first one I devised,
+/// This is the "old" method because it's the first one I devised,
 /// guided by intuition ...
 pub fn grow_old(pfa: &mut Pfa<char>) -> Option<PfaOperationResult<char>> {
     //pfa.pad_history();
@@ -94,7 +95,7 @@ pub fn grow_old(pfa: &mut Pfa<char>) -> Option<PfaOperationResult<char>> {
     })
 }
 
-/// grow into a shape akin to the 'flower' PFA
+/// Grow into a shape akin to the 'flower' PFA
 pub fn grow_flower(pfa: &mut Pfa<char>) -> Option<PfaOperationResult<char>> {
     //pfa.pad_history();
 
