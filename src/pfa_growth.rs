@@ -49,6 +49,12 @@ pub fn grow_old(pfa: &mut Pfa<char>) -> Option<PfaOperationResult<char>> {
     // update pst
     if let Some(root) = pfa.pst_root.as_mut() {
         pst::add_leaf(root, &rand_state);
+    } else {
+        // re-build and try again ...
+        pfa.rebuild_pst();
+        if let Some(root) = pfa.pst_root.as_mut() {
+            pst::add_leaf(root, &rand_state);
+        }
     }
 
     let mut additions = Vec::new();
@@ -138,6 +144,12 @@ pub fn grow_flower(pfa: &mut Pfa<char>) -> Option<PfaOperationResult<char>> {
     // update pst
     if let Some(root) = pfa.pst_root.as_mut() {
         pst::add_leaf(root, &rand_state);
+    } else {
+        // re-build and try again ...
+        pfa.rebuild_pst();
+        if let Some(root) = pfa.pst_root.as_mut() {
+            pst::add_leaf(root, &rand_state);
+        }
     }
 
     let mut additions = Vec::new();
@@ -213,6 +225,12 @@ pub fn grow_triloop(pfa: &mut Pfa<char>) -> Option<PfaOperationResult<char>> {
     // update pst
     if let Some(root) = pfa.pst_root.as_mut() {
         pst::add_leaf(root, &rand_state);
+    } else {
+        // re-build and try again ...
+        pfa.rebuild_pst();
+        if let Some(root) = pfa.pst_root.as_mut() {
+            pst::add_leaf(root, &rand_state);
+        }
     }
 
     let mut additions = Vec::new();
@@ -295,6 +313,12 @@ pub fn grow_loop(pfa: &mut Pfa<char>) -> Option<PfaOperationResult<char>> {
     // update pst
     if let Some(root) = pfa.pst_root.as_mut() {
         pst::add_leaf(root, &rand_state);
+    } else {
+        // re-build and try again ...
+        pfa.rebuild_pst();
+        if let Some(root) = pfa.pst_root.as_mut() {
+            pst::add_leaf(root, &rand_state);
+        }
     }
 
     let mut removals = Vec::new();
@@ -382,6 +406,12 @@ pub fn grow_quadloop(pfa: &mut Pfa<char>) -> Option<PfaOperationResult<char>> {
     // update pst
     if let Some(root) = pfa.pst_root.as_mut() {
         pst::add_leaf(root, &rand_state);
+    } else {
+        // re-build and try again ...
+        pfa.rebuild_pst();
+        if let Some(root) = pfa.pst_root.as_mut() {
+            pst::add_leaf(root, &rand_state);
+        }
     }
 
     let mut additions = Vec::new();
