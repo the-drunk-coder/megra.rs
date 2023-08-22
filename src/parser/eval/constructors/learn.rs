@@ -313,7 +313,7 @@ pub fn learn(
     //println!("map {label_mapping:#?}");
     //println!("rev map {reverse_label_mapping:#?}");
 
-    let pfa = if !keep_root {
+    let pfa = if !keep_root && !s_v.is_empty() && !char_event_mapping.is_empty() {
         // only regenerate if necessary
         Pfa::<char>::learn(s_v, bound, epsilon, pfa_size)
     } else {
