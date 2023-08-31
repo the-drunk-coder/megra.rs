@@ -345,7 +345,7 @@ mod tests {
     fn test_basic_cyc2_elem() {
         match parse_cyc("[saw:200]") {
             Ok((_, o)) => match &o[0][0] {
-                CycleItem::Event((_, _)) => assert!(true),
+                CycleItem::Event((_, _)) => {}
                 _ => {
                     panic!()
                 }

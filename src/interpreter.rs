@@ -149,14 +149,14 @@ pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
         Command::ExportDotRunning((f, t)) => {
             commands::export_dot_running(&f, &t, session);
         }
-        Command::Once(mut s, mut c) => {
+        Command::Once(mut s, c) => {
             commands::once(
                 ruffbox,
                 globals,
                 sample_set,
                 session,
                 &mut s,
-                &mut c,
+                &c,
                 output_mode,
             );
         }

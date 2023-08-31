@@ -575,7 +575,7 @@ pub fn step_part<const BUFSIZE: usize, const NCHAN: usize>(
         sample_set,
         session,
         &mut sound_events,
-        &mut control_events,
+        &control_events,
         output_mode,
     );
 }
@@ -665,7 +665,7 @@ pub fn once<const BUFSIZE: usize, const NCHAN: usize>(
     sample_set: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
     session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
     sound_events: &mut [StaticEvent],
-    control_events: &mut [ControlEvent],
+    control_events: &[ControlEvent],
     output_mode: OutputMode,
 ) {
     for cev in control_events.iter() {

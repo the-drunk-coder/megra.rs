@@ -533,7 +533,7 @@ impl<'t> LivecodeTextEdit<'t> {
 /// Check for (keyboard) events to edit the cursor and/or text.
 #[allow(clippy::too_many_arguments)]
 fn livecode_events(
-    ui: &mut egui::Ui,
+    ui: &egui::Ui,
     state: &mut LivecodeTextEditState,
     text: &mut dyn TextBuffer,
     galley: &mut Arc<Galley>,
@@ -878,7 +878,7 @@ fn livecode_events(
 // ----------------------------------------------------------------------------
 
 fn paint_cursor_selection(
-    ui: &mut Ui,
+    ui: &Ui,
     painter: &Painter,
     pos: Pos2,
     galley: &Galley,
@@ -926,7 +926,7 @@ fn paint_cursor_selection(
 }
 
 fn paint_cursor_end(
-    ui: &mut Ui,
+    ui: &Ui,
     row_height: f32,
     painter: &Painter,
     pos: Pos2,
