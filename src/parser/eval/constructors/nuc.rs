@@ -143,7 +143,9 @@ mod tests {
             .std_lib
             .insert("nuc".to_string(), eval::constructors::nuc::nuc);
         functions.std_lib.insert("bd".to_string(), |_, _, _, _, _| {
-            Some(EvaluatedExpr::Typed(TypedEntity::String("bd".to_string())))
+            Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+                Comparable::String("bd".to_string()),
+            )))
         });
 
         let globals = sync::Arc::new(GlobalVariables::new());

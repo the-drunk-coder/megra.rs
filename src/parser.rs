@@ -573,7 +573,9 @@ mod tests {
                     panic!();
                 }
 
-                Some(EvaluatedExpr::Typed(TypedEntity::Boolean(true)))
+                Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+                    Comparable::Boolean(true),
+                )))
             });
 
         functions
@@ -594,7 +596,9 @@ mod tests {
                     panic!();
                 }
 
-                Some(EvaluatedExpr::Typed(TypedEntity::Boolean(true)))
+                Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+                    Comparable::Boolean(true),
+                )))
             });
 
         match eval_from_str(
@@ -607,7 +611,7 @@ mod tests {
             Ok(res) => {
                 assert!(matches!(
                     res,
-                    EvaluatedExpr::Typed(TypedEntity::Boolean(true))
+                    EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Boolean(true)))
                 ))
             }
             Err(e) => {

@@ -59,14 +59,11 @@ impl SampleAndWavematrixSet {
     }
 
     pub fn insert(&mut self, set: String, keyword_set: HashSet<String>, bufnum: usize, dur: usize) {
-        self.subsets
-            .entry(set)
-            .or_insert_with(Vec::new)
-            .push(SampleInfo {
-                key: keyword_set,
-                bufnum,
-                duration: dur,
-            });
+        self.subsets.entry(set).or_default().push(SampleInfo {
+            key: keyword_set,
+            bufnum,
+            duration: dur,
+        });
     }
 
     pub fn exists_not_empty(&self, set: &str) -> bool {
