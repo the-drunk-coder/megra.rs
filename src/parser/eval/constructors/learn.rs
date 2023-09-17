@@ -40,6 +40,7 @@ pub fn learn(
 
     let mut collect_events = false;
     let mut bound = 3;
+    let mut tie = true;
     let mut epsilon = 0.01;
     let mut pfa_size = 30;
     let mut dur: DynVal = if let TypedEntity::ConfigParameter(ConfigParameter::Numeric(d)) = globals
@@ -223,6 +224,14 @@ pub fn learn(
                         bound = n as usize;
                     }
                 }
+                "tie" => {
+                    if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+                        Comparable::Boolean(n),
+                    ))) = tail_drain.next()
+                    {
+                        tie = n;
+                    }
+                }
                 "epsilon" => {
                     if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(
                         n,
@@ -313,12 +322,15 @@ pub fn learn(
     //println!("map {label_mapping:#?}");
     //println!("rev map {reverse_label_mapping:#?}");
 
-    let pfa = if !keep_root && !s_v.is_empty() && !char_event_mapping.is_empty() {
+    let mut pfa = if !keep_root && !s_v.is_empty() && !char_event_mapping.is_empty() {
         // only regenerate if necessary
         Pfa::<char>::learn(s_v, bound, epsilon, pfa_size)
     } else {
         Pfa::<char>::new()
     };
+
+    pfa.restart_when_stuck = tie;
+
     let mut id_tags = BTreeSet::new();
     id_tags.insert(name.clone());
 
