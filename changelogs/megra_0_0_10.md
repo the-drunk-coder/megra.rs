@@ -8,7 +8,7 @@
 * introduce `print`
 * introduce midi helpers `mtof`, `mtosym`, `veltodyn`
 * introduce `concat` to concatenate symbols and strings
-* introduce `map` struct and `insert` method
+* introduce `map` struct, `pair` constructor and `insert` method
 * add osc sender
 * add some extra types (f64, i32, i64) for osc sender
 * add osc receiver 
