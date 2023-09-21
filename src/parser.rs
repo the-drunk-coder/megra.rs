@@ -100,7 +100,7 @@ pub struct FunctionMap {
             &FunctionMap,
             &mut Vec<EvaluatedExpr>,
             &sync::Arc<GlobalVariables>,
-            &sync::Arc<Mutex<SampleAndWavematrixSet>>,
+            SampleAndWavematrixSet,
             OutputMode,
         ) -> Option<EvaluatedExpr>,
     >,
@@ -281,7 +281,7 @@ pub fn eval_expression(
     functions: &FunctionMap,
     globals: &sync::Arc<GlobalVariables>,
     locals: Option<&HashMap<String, EvaluatedExpr>>,
-    sample_set: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
+    sample_set: SampleAndWavematrixSet,
     out_mode: OutputMode,
 ) -> Option<EvaluatedExpr> {
     match e {
@@ -311,15 +311,27 @@ pub fn eval_expression(
             }
         }),
         Expr::Application(head, tail) => {
-            if let Some(EvaluatedExpr::Identifier(f)) =
-                eval_expression(head, functions, globals, locals, sample_set, out_mode)
-            {
+            if let Some(EvaluatedExpr::Identifier(f)) = eval_expression(
+                head,
+                functions,
+                globals,
+                locals,
+                sample_set.clone(),
+                out_mode,
+            ) {
                 // check if we have this function ...
                 if functions.std_lib.contains_key(&f) {
                     let mut reduced_tail = tail
                         .iter()
                         .map(|expr| {
-                            eval_expression(expr, functions, globals, locals, sample_set, out_mode)
+                            eval_expression(
+                                expr,
+                                functions,
+                                globals,
+                                locals,
+                                sample_set.clone(),
+                                out_mode,
+                            )
                         })
                         .collect::<Option<Vec<EvaluatedExpr>>>()?;
                     // push function name
@@ -343,9 +355,14 @@ pub fn eval_expression(
                     // manual zip
                     let mut local_args = HashMap::new();
                     for (i, expr) in tail[..fun_arg_names.len()].iter().enumerate() {
-                        if let Some(res) =
-                            eval_expression(expr, functions, globals, None, sample_set, out_mode)
-                        {
+                        if let Some(res) = eval_expression(
+                            expr,
+                            functions,
+                            globals,
+                            None,
+                            sample_set.clone(),
+                            out_mode,
+                        ) {
                             local_args.insert(fun_arg_names[i].clone(), res);
                         }
                     }
@@ -359,7 +376,7 @@ pub fn eval_expression(
                                 functions,
                                 globals,
                                 Some(&local_args),
-                                sample_set,
+                                sample_set.clone(),
                                 out_mode,
                             )
                         })
@@ -376,15 +393,20 @@ pub fn eval_expression(
         }
         Expr::Definition(head, tail) => match **head {
             Expr::FunctionDefinition => {
-                let id =
-                    match eval_expression(&tail[0], functions, globals, None, sample_set, out_mode)
-                    {
-                        Some(EvaluatedExpr::Identifier(i)) => Some(i),
-                        Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
-                            Comparable::String(s),
-                        ))) => Some(s),
-                        _ => None,
-                    };
+                let id = match eval_expression(
+                    &tail[0],
+                    functions,
+                    globals,
+                    None,
+                    sample_set.clone(),
+                    out_mode,
+                ) {
+                    Some(EvaluatedExpr::Identifier(i)) => Some(i),
+                    Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::String(s)))) => {
+                        Some(s)
+                    }
+                    _ => None,
+                };
 
                 if let Some(i) = id {
                     // i hate this clone ...
@@ -396,9 +418,14 @@ pub fn eval_expression(
                     let mut positional_args = Vec::new();
                     let mut rem_args = false;
                     if let Some(Expr::Application(head, fun_tail)) = tail_clone.get(0) {
-                        if let Some(EvaluatedExpr::Identifier(f)) =
-                            eval_expression(head, functions, globals, None, sample_set, out_mode)
-                        {
+                        if let Some(EvaluatedExpr::Identifier(f)) = eval_expression(
+                            head,
+                            functions,
+                            globals,
+                            None,
+                            sample_set.clone(),
+                            out_mode,
+                        ) {
                             // only assume it's positional args when it's not a known function ...
                             // that way, the definition becomes optional
                             if !(functions.std_lib.contains_key(&f)
@@ -410,7 +437,12 @@ pub fn eval_expression(
                                     .iter()
                                     .map(|expr| {
                                         eval_expression(
-                                            expr, functions, globals, None, sample_set, out_mode,
+                                            expr,
+                                            functions,
+                                            globals,
+                                            None,
+                                            sample_set.clone(),
+                                            out_mode,
                                         )
                                     })
                                     .collect::<Option<Vec<EvaluatedExpr>>>()?;
@@ -440,31 +472,41 @@ pub fn eval_expression(
                 }
             }
             Expr::VariableDefinition => {
-                let id =
-                    match eval_expression(&tail[0], functions, globals, None, sample_set, out_mode)
-                    {
-                        Some(EvaluatedExpr::Identifier(i)) => VariableId::Custom(i),
-                        Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
-                            Comparable::Symbol(s),
-                        ))) => {
-                            // check whether it's a reserved symbol
-                            if crate::parser::eval::events::sound::map_symbolic_param_value(&s)
-                                .is_some()
-                                || crate::music_theory::from_string(&s).is_some()
-                            {
-                                return None;
-                            }
-                            VariableId::Symbol(s)
-                        }
-                        _ => {
+                let id = match eval_expression(
+                    &tail[0],
+                    functions,
+                    globals,
+                    None,
+                    sample_set.clone(),
+                    out_mode,
+                ) {
+                    Some(EvaluatedExpr::Identifier(i)) => VariableId::Custom(i),
+                    Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(s)))) => {
+                        // check whether it's a reserved symbol
+                        if crate::parser::eval::events::sound::map_symbolic_param_value(&s)
+                            .is_some()
+                            || crate::music_theory::from_string(&s).is_some()
+                        {
                             return None;
                         }
-                    };
+                        VariableId::Symbol(s)
+                    }
+                    _ => {
+                        return None;
+                    }
+                };
 
                 let mut reduced_tail = tail
                     .iter()
                     .map(|expr| {
-                        eval_expression(expr, functions, globals, locals, sample_set, out_mode)
+                        eval_expression(
+                            expr,
+                            functions,
+                            globals,
+                            locals,
+                            sample_set.clone(),
+                            out_mode,
+                        )
                     })
                     .collect::<Option<Vec<EvaluatedExpr>>>()?;
 
@@ -483,7 +525,7 @@ pub fn eval_from_str(
     src: &str,
     functions: &FunctionMap,
     globals: &sync::Arc<GlobalVariables>,
-    sample_set: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
+    sample_set: SampleAndWavematrixSet,
     out_mode: OutputMode,
 ) -> Result<EvaluatedExpr, String> {
     // preprocessing - remove all comments ...

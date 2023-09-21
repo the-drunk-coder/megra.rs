@@ -9,7 +9,7 @@ pub fn generator_list(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<GlobalVariables>,
-    _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
+    _: SampleAndWavematrixSet,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
     let mut gen_list = Vec::new();

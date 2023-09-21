@@ -10,7 +10,7 @@ pub fn vec(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<GlobalVariables>,
-    _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
+    _: SampleAndWavematrixSet,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
     let tail_drain = tail.drain(..).skip(1);
@@ -30,7 +30,7 @@ pub fn push(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<GlobalVariables>,
-    _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
+    _: SampleAndWavematrixSet,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
     let mut tail_drain = tail.drain(1..);

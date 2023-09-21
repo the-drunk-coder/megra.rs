@@ -20,7 +20,7 @@ pub fn cyc(
     functions: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     globals: &sync::Arc<GlobalVariables>,
-    sample_set: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
+    sample_set: SampleAndWavematrixSet,
     out_mode: OutputMode,
 ) -> Option<EvaluatedExpr> {
     resolve_globals(&mut tail[1..], globals);
@@ -179,7 +179,7 @@ pub fn cyc(
                 let mut parsed_cycle = cyc_parser::eval_cyc_from_str(
                     &d,
                     functions,
-                    sample_set,
+                    sample_set.clone(),
                     out_mode,
                     &template_evs,
                     &collected_mapping,

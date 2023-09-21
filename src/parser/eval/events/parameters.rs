@@ -14,7 +14,7 @@ pub fn sample_keys(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<GlobalVariables>,
-    _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
+    _: SampleAndWavematrixSet,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..);
@@ -60,7 +60,7 @@ pub fn sample_number(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<GlobalVariables>,
-    _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
+    _: SampleAndWavematrixSet,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..);
@@ -108,7 +108,7 @@ pub fn random_sample(
     _: &FunctionMap,
     _: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<GlobalVariables>,
-    _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
+    _: SampleAndWavematrixSet,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
     let mut ev = Event::with_name_and_operation("randsam".to_string(), EventOperation::Replace);
@@ -124,7 +124,7 @@ pub fn transpose(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<GlobalVariables>,
-    _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
+    _: SampleAndWavematrixSet,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..).skip(1);
@@ -162,7 +162,7 @@ pub fn parameter(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<GlobalVariables>,
-    _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
+    _: SampleAndWavematrixSet,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..);

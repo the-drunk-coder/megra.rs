@@ -20,7 +20,7 @@ pub fn start_repl<const BUFSIZE: usize, const NCHAN: usize>(
     function_map: &sync::Arc<Mutex<FunctionMap>>,
     session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
     ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
-    sample_set: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
+    sample_set: SampleAndWavematrixSet,
     globals: &sync::Arc<GlobalVariables>,
     mode: OutputMode,
     base_dir: String,
@@ -44,7 +44,7 @@ pub fn start_repl<const BUFSIZE: usize, const NCHAN: usize>(
                     line.as_str(),
                     &function_map.lock(),
                     globals,
-                    sample_set,
+                    sample_set.clone(),
                     mode,
                 );
 
@@ -68,7 +68,7 @@ pub fn start_repl<const BUFSIZE: usize, const NCHAN: usize>(
                                             line_buffer.as_str(),
                                             &function_map.lock(),
                                             globals,
-                                            sample_set,
+                                            sample_set.clone(),
                                             mode,
                                         );
                                         match inner_pfa_in {
@@ -78,7 +78,7 @@ pub fn start_repl<const BUFSIZE: usize, const NCHAN: usize>(
                                                     function_map,
                                                     session,
                                                     ruffbox,
-                                                    sample_set,
+                                                    sample_set.clone(),
                                                     globals,
                                                     mode,
                                                     base_dir.clone(),
@@ -107,7 +107,7 @@ pub fn start_repl<const BUFSIZE: usize, const NCHAN: usize>(
                             function_map,
                             session,
                             ruffbox,
-                            sample_set,
+                            sample_set.clone(),
                             globals,
                             mode,
                             base_dir.clone(),

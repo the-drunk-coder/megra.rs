@@ -170,7 +170,7 @@ fn parse_cyc<'a>(i: &'a str) -> IResult<&'a str, Vec<Vec<CycleItem>>, VerboseErr
 pub fn eval_cyc_from_str(
     src: &str,
     functions: &FunctionMap,
-    sample_set: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
+    sample_set: SampleAndWavematrixSet,
     out_mode: OutputMode,
     template_events: &[String],
     event_mappings: &HashMap<String, Vec<SourceEvent>>,
@@ -230,7 +230,12 @@ pub fn eval_cyc_from_str(
                                 Ok((_, expr)) => {
                                     if let Some(EvaluatedExpr::Typed(TypedEntity::SoundEvent(e))) =
                                         eval_expression(
-                                            &expr, functions, globals, None, sample_set, out_mode,
+                                            &expr,
+                                            functions,
+                                            globals,
+                                            None,
+                                            sample_set.clone(),
+                                            out_mode,
                                         )
                                     {
                                         //println!("ev {}", e.name);
@@ -298,7 +303,12 @@ pub fn eval_cyc_from_str(
                             Ok((_, expr)) => {
                                 if let Some(EvaluatedExpr::Typed(TypedEntity::SoundEvent(e))) =
                                     eval_expression(
-                                        &expr, functions, globals, None, sample_set, out_mode,
+                                        &expr,
+                                        functions,
+                                        globals,
+                                        None,
+                                        sample_set.clone(),
+                                        out_mode,
                                     )
                                 {
                                     cycle_position.push(CycleResult::SoundEvent(e));

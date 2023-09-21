@@ -22,7 +22,7 @@ pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
     function_map: &sync::Arc<Mutex<FunctionMap>>,
     session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
     ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
-    sample_set: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
+    sample_set: SampleAndWavematrixSet,
     globals: &sync::Arc<GlobalVariables>,
     output_mode: OutputMode,
     base_dir: String,
@@ -61,20 +61,20 @@ pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
         Command::ImportSampleSet(resource) => {
             let ruffbox2 = sync::Arc::clone(ruffbox);
             let fmap2 = sync::Arc::clone(function_map);
-            let sample_set2 = sync::Arc::clone(sample_set);
+
             thread::spawn(move || {
-                commands::fetch_sample_set(&fmap2, &ruffbox2, &sample_set2, base_dir, resource);
+                commands::fetch_sample_set(&fmap2, &ruffbox2, sample_set, base_dir, resource);
             });
         }
         Command::LoadSample(set, mut keywords, path, downmix_stereo) => {
             let ruffbox2 = sync::Arc::clone(ruffbox);
             let fmap2 = sync::Arc::clone(function_map);
-            let sample_set2 = sync::Arc::clone(sample_set);
+
             thread::spawn(move || {
                 commands::load_sample(
                     &fmap2,
                     &ruffbox2,
-                    &sample_set2,
+                    sample_set.clone(),
                     set,
                     &mut keywords,
                     path,
@@ -84,10 +84,9 @@ pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
             });
         }
         Command::LoadSampleAsWavematrix(key, path, method, matrix_size, start) => {
-            let sample_set2 = sync::Arc::clone(sample_set);
             thread::spawn(move || {
                 commands::load_sample_as_wavematrix(
-                    &sample_set2,
+                    sample_set.clone(),
                     key,
                     path,
                     &method,
@@ -100,21 +99,19 @@ pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
         Command::LoadSampleSets(path, downmix_stereo) => {
             let ruffbox2 = sync::Arc::clone(ruffbox);
             let fmap2 = sync::Arc::clone(function_map);
-            let sample_set2 = sync::Arc::clone(sample_set);
             thread::spawn(move || {
-                commands::load_sample_sets(&fmap2, &ruffbox2, &sample_set2, path, downmix_stereo);
+                commands::load_sample_sets(&fmap2, &ruffbox2, sample_set, path, downmix_stereo);
                 println!("a command (load sample sets)");
             });
         }
         Command::LoadSampleSet(path, downmix_stereo) => {
             let ruffbox2 = sync::Arc::clone(ruffbox);
             let fmap2 = sync::Arc::clone(function_map);
-            let sample_set2 = sync::Arc::clone(sample_set);
             thread::spawn(move || {
                 commands::load_sample_set_string(
                     &fmap2,
                     &ruffbox2,
-                    &sample_set2,
+                    sample_set,
                     path,
                     downmix_stereo,
                 );
@@ -204,7 +201,6 @@ pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
         Command::OscStartReceiver(target) => {
             let ruffbox2 = sync::Arc::clone(ruffbox);
             let fmap2 = sync::Arc::clone(function_map);
-            let sample_set2 = sync::Arc::clone(sample_set);
             let session2 = sync::Arc::clone(session);
             let globals2 = sync::Arc::clone(globals);
             OscReceiver::start_receiver_thread_udp(
@@ -212,7 +208,7 @@ pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
                 fmap2,
                 session2,
                 ruffbox2,
-                sample_set2,
+                sample_set,
                 globals2,
                 output_mode,
                 base_dir,
@@ -222,7 +218,6 @@ pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
             let function_map_midi = sync::Arc::clone(function_map);
             let session_midi = sync::Arc::clone(session);
             let ruffbox_midi = sync::Arc::clone(ruffbox);
-            let sam_midi = sync::Arc::clone(sample_set);
             let var_midi = sync::Arc::clone(globals);
             thread::spawn(move || {
                 midi_input::open_midi_input_port(
@@ -230,7 +225,7 @@ pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
                     function_map_midi,
                     session_midi,
                     ruffbox_midi,
-                    sam_midi,
+                    sample_set,
                     var_midi,
                     output_mode,
                     base_dir,
@@ -249,7 +244,7 @@ pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
     function_map: &sync::Arc<Mutex<FunctionMap>>,
     session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
     ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
-    sample_set: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
+    sample_set: SampleAndWavematrixSet,
     globals: &sync::Arc<GlobalVariables>,
     output_mode: OutputMode,
     base_dir: String,
@@ -352,7 +347,7 @@ pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
                     function_map,
                     session,
                     ruffbox,
-                    sample_set,
+                    sample_set.clone(),
                     globals,
                     output_mode,
                     base_dir.clone(),
@@ -369,7 +364,7 @@ pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
                                 function_map,
                                 session,
                                 ruffbox,
-                                sample_set,
+                                sample_set.clone(),
                                 globals,
                                 output_mode,
                                 base_dir.clone(),

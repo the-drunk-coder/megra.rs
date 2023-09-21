@@ -1,14 +1,16 @@
 use crate::parameter::DynVal;
+use dashmap::DashMap;
 use rand::seq::SliceRandom;
 use std::collections::{HashMap, HashSet};
+use std::sync::Arc;
 
 /// the search request for a sample
 #[derive(Clone, Debug)]
 pub enum SampleLookup {
-    Key(String, HashSet<String>),    // lookup by key
-    N(String, usize),                // lookup by position
-    Random(String),                  // final random (different sample every time)
-    FixedRandom(String, SampleInfo), // parse-time random (random sample will be chosen at parsing time)
+    Key(String, HashSet<String>),        // lookup by key
+    N(String, usize),                    // lookup by position
+    Random(String),                      // final random (different sample every time)
+    FixedRandom(String, (usize, usize)), // parse-time random (random sample will be chosen at parsing time)
 }
 
 /// the resolved sample info
@@ -31,9 +33,10 @@ impl SampleInfo {
 /// wavematrices are handled on the "megra-size", while buffers are stored at the
 /// "ruffbox-size", but that gives me more possibilities to play with the wavematrices
 /// on this size, so I suppose that's ok for the moment ...
+#[derive(Clone)]
 pub struct SampleAndWavematrixSet {
-    subsets: HashMap<String, Vec<SampleInfo>>,
-    wavematrices: HashMap<String, Vec<Vec<DynVal>>>,
+    subsets: Arc<DashMap<String, Vec<SampleInfo>>>,
+    wavematrices: Arc<DashMap<String, Vec<Vec<DynVal>>>>,
 }
 
 impl Default for SampleAndWavematrixSet {
@@ -45,8 +48,8 @@ impl Default for SampleAndWavematrixSet {
 impl SampleAndWavematrixSet {
     pub fn new() -> Self {
         SampleAndWavematrixSet {
-            subsets: HashMap::new(),
-            wavematrices: HashMap::new(),
+            subsets: Arc::new(DashMap::new()),
+            wavematrices: Arc::new(DashMap::new()),
         }
     }
 
@@ -54,8 +57,12 @@ impl SampleAndWavematrixSet {
         self.wavematrices.insert(key, table);
     }
 
-    pub fn get_wavematrix(&self, key: &String) -> Option<&Vec<Vec<DynVal>>> {
-        self.wavematrices.get(key)
+    pub fn get_wavematrix(&self, key: &String) -> Option<Vec<Vec<DynVal>>> {
+        if let Some(wm) = self.wavematrices.get(key) {
+            Some(wm.clone())
+        } else {
+            None
+        }
     }
 
     pub fn insert(&mut self, set: String, keyword_set: HashSet<String>, bufnum: usize, dur: usize) {
@@ -71,13 +78,16 @@ impl SampleAndWavematrixSet {
     }
 
     /// get a sample by a set of keys ...
-    pub fn keys(&self, set: &str, keywords: &HashSet<String>) -> Option<&SampleInfo> {
+    pub fn keys(&self, set: &str, keywords: &HashSet<String>) -> Option<(usize, usize)> {
         if let Some(subset) = self.subsets.get(set) {
             let choice: Vec<&SampleInfo> = subset.iter().filter(|i| i.matches(keywords)).collect();
             if !choice.is_empty() {
-                Some(choice.choose(&mut rand::thread_rng()).unwrap())
+                let res = choice.choose(&mut rand::thread_rng()).unwrap();
+                Some((res.bufnum, res.duration))
             } else {
-                subset.get(0)
+                // there's always one ...
+                let res = subset.get(0).unwrap();
+                Some((res.bufnum, res.duration))
             }
         } else {
             None
@@ -85,31 +95,33 @@ impl SampleAndWavematrixSet {
     }
 
     /// get a sample bufnum by
-    pub fn pos(&self, set: &str, pos: usize) -> Option<&SampleInfo> {
+    pub fn pos(&self, set: &str, pos: usize) -> Option<(usize, usize)> {
         if let Some(subset) = self.subsets.get(set) {
             if let Some(sample_info) = subset.get(pos % subset.len()) {
-                Some(sample_info)
+                Some((sample_info.bufnum, sample_info.duration))
             } else {
-                subset.get(0)
+                let res = subset.get(0).unwrap();
+                Some((res.bufnum, res.duration))
             }
         } else {
             None
         }
     }
 
-    pub fn random(&self, set: &str) -> Option<&SampleInfo> {
-        self.subsets
-            .get(set)
-            .map(|subset| subset.choose(&mut rand::thread_rng()).unwrap())
+    pub fn random(&self, set: &str) -> Option<(usize, usize)> {
+        self.subsets.get(set).map(|subset| {
+            let res = subset.choose(&mut rand::thread_rng()).unwrap();
+            (res.bufnum, res.duration)
+        })
     }
 
     // needs lifetimes for the temp return of the info ...
-    pub fn resolve_lookup<'a>(&'a self, lookup: &'a SampleLookup) -> Option<&SampleInfo> {
+    pub fn resolve_lookup<'a>(&'a self, lookup: &'a SampleLookup) -> Option<(usize, usize)> {
         match lookup {
             SampleLookup::Key(fname, keywords) => self.keys(fname, keywords),
             SampleLookup::N(fname, pos) => self.pos(fname, *pos),
             SampleLookup::Random(fname) => self.random(fname),
-            SampleLookup::FixedRandom(_, info) => Some(info),
+            SampleLookup::FixedRandom(_, info) => Some(*info),
         }
     }
 }

@@ -21,7 +21,7 @@ pub fn eval_pear(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     globals: &sync::Arc<GlobalVariables>,
-    _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
+    _: SampleAndWavematrixSet,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
     resolve_globals(&mut tail[1..], globals);
@@ -32,7 +32,7 @@ pub fn eval_inhibit(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     globals: &sync::Arc<GlobalVariables>,
-    _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
+    _: SampleAndWavematrixSet,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
     resolve_globals(&mut tail[1..], globals);
@@ -43,7 +43,7 @@ pub fn eval_exhibit(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     globals: &sync::Arc<GlobalVariables>,
-    _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
+    _: SampleAndWavematrixSet,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
     resolve_globals(&mut tail[1..], globals);
@@ -54,7 +54,7 @@ pub fn eval_apple(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     globals: &sync::Arc<GlobalVariables>,
-    _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
+    _: SampleAndWavematrixSet,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
     resolve_globals(&mut tail[1..], globals);
@@ -65,7 +65,7 @@ pub fn eval_every(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     globals: &sync::Arc<GlobalVariables>,
-    _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
+    _: SampleAndWavematrixSet,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
     resolve_globals(&mut tail[1..], globals);
@@ -76,7 +76,7 @@ pub fn eval_lifemodel(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     globals: &sync::Arc<GlobalVariables>,
-    _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
+    _: SampleAndWavematrixSet,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
     resolve_globals(&mut tail[1..], globals);

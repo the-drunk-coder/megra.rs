@@ -666,7 +666,7 @@ fn run<const NCHAN: usize>(
     let session = sync::Arc::new(Mutex::new(raw_session));
 
     let globals = sync::Arc::new(GlobalVariables::new());
-    let sample_set = sync::Arc::new(Mutex::new(SampleAndWavematrixSet::new()));
+    let sample_set = SampleAndWavematrixSet::new();
 
     // define the "standard library"
     let stdlib = sync::Arc::new(Mutex::new(define_standard_library()));
@@ -726,13 +726,13 @@ fn run<const NCHAN: usize>(
     if options.load_samples {
         println!("load samples from path: {samples_path:?}");
         let controls_arc2 = sync::Arc::clone(&controls_arc);
-        let sample_set2 = sync::Arc::clone(&sample_set);
         let stdlib2 = sync::Arc::clone(&stdlib);
+        let sample_set2 = sample_set.clone();
         thread::spawn(move || {
             commands::load_sample_sets_path(
                 &stdlib2,
                 &controls_arc2,
-                &sample_set2,
+                sample_set2,
                 &samples_path,
                 options.downmix_stereo,
             );
@@ -745,7 +745,7 @@ fn run<const NCHAN: usize>(
             &stdlib,
             &session,
             &controls_arc,
-            &sample_set,
+            sample_set,
             &globals,
             base_dir.display().to_string(),
             options.create_sketch,
@@ -761,7 +761,7 @@ fn run<const NCHAN: usize>(
             &stdlib,
             &session,
             &controls_arc,
-            &sample_set,
+            sample_set,
             &globals,
             options.mode,
             base_dir.display().to_string(),

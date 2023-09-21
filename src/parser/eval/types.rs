@@ -13,7 +13,7 @@ pub fn int(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<GlobalVariables>,
-    _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
+    _: SampleAndWavematrixSet,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..);
@@ -34,7 +34,7 @@ pub fn long(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<GlobalVariables>,
-    _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
+    _: SampleAndWavematrixSet,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..);
@@ -55,7 +55,7 @@ pub fn double(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<GlobalVariables>,
-    _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
+    _: SampleAndWavematrixSet,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..);
@@ -76,7 +76,7 @@ pub fn pair(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<GlobalVariables>,
-    _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
+    _: SampleAndWavematrixSet,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..);

@@ -324,7 +324,7 @@ pub fn sound(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<GlobalVariables>,
-    sample_set_sync: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
+    sample_set: SampleAndWavematrixSet,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..).peekable();
@@ -461,7 +461,6 @@ pub fn sound(
             // to see whether it's a sample event,
             // we check whether the function name represents
             // a sample set ...
-            let sample_set = sample_set_sync.lock();
             if sample_set.exists_not_empty(&fname) {
                 let mut ev = Event::with_name("sampler".to_string());
 
@@ -518,12 +517,10 @@ pub fn sound(
             if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(s)))) =
                 tail_drain.peek()
             {
-                if let Some(wavematrix) = sample_set_sync.lock().get_wavematrix(s) {
+                if let Some(wavematrix) = sample_set.get_wavematrix(s) {
                     //println!("found wavematrix {}", s);
-                    ev.params.insert(
-                        map_parameter(&k),
-                        ParameterValue::Matrix(wavematrix.clone()),
-                    );
+                    ev.params
+                        .insert(map_parameter(&k), ParameterValue::Matrix(wavematrix));
                     tail_drain.next();
                 } else {
                     println!("couldn't find wavematrix {s}")
@@ -563,7 +560,7 @@ mod tests {
             snippet,
             &functions,
             &globals,
-            &sample_set,
+            sample_set,
             OutputMode::Stereo,
         ) {
             Ok(res) => {

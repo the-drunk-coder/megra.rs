@@ -12,7 +12,7 @@ pub fn sync_context(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     globals: &sync::Arc<GlobalVariables>,
-    _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
+    _: SampleAndWavematrixSet,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
     // eval-time resolve

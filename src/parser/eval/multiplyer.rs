@@ -211,7 +211,7 @@ pub fn eval_xspread(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     globals: &sync::Arc<GlobalVariables>,
-    _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
+    _: SampleAndWavematrixSet,
     out_mode: OutputMode,
 ) -> Option<EvaluatedExpr> {
     resolve_globals(&mut tail[1..], globals);
@@ -222,7 +222,7 @@ pub fn eval_xdup(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     globals: &sync::Arc<GlobalVariables>,
-    _: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
+    _: SampleAndWavematrixSet,
     out_mode: OutputMode,
 ) -> Option<EvaluatedExpr> {
     resolve_globals(&mut tail[1..], globals);

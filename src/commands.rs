@@ -53,7 +53,7 @@ fn fetch_url(url: String, file_name: String) -> anyhow::Result<()> {
 pub fn fetch_sample_set<const BUFSIZE: usize, const NCHAN: usize>(
     function_map: &sync::Arc<Mutex<FunctionMap>>,
     ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
-    sample_set: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
+    sample_set: SampleAndWavematrixSet,
     base_dir: String,
     resource: SampleResource,
 ) {
@@ -145,7 +145,7 @@ pub fn fetch_sample_set<const BUFSIZE: usize, const NCHAN: usize>(
                 load_sample(
                     function_map,
                     ruffbox,
-                    sample_set,
+                    sample_set.clone(),
                     set,
                     &mut keyword,
                     file_path.display().to_string(),
@@ -178,7 +178,7 @@ pub fn freeze_buffer<const BUFSIZE: usize, const NCHAN: usize>(
 }
 
 pub fn load_sample_as_wavematrix(
-    sample_set: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
+    mut sample_set: SampleAndWavematrixSet,
     key: String,
     path: String,
     method: &str,
@@ -227,13 +227,13 @@ pub fn load_sample_as_wavematrix(
         }
     }
 
-    sample_set.lock().insert_wavematrix(key, wavematrix);
+    sample_set.insert_wavematrix(key, wavematrix);
 }
 
 pub fn load_sample<const BUFSIZE: usize, const NCHAN: usize>(
     function_map: &sync::Arc<Mutex<FunctionMap>>,
     ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
-    sample_set: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
+    mut sample_set: SampleAndWavematrixSet,
     set: String,
     keywords: &mut Vec<String>,
     path: String,
@@ -313,9 +313,7 @@ pub fn load_sample<const BUFSIZE: usize, const NCHAN: usize>(
             samplerate != ruffbox.samplerate
         );
 
-        sample_set
-            .lock()
-            .insert(set.clone(), keyword_set, bufnum, duration);
+        sample_set.insert(set.clone(), keyword_set, bufnum, duration);
         function_map
             .lock()
             .std_lib // add sample functions to std lib for now ...
@@ -328,7 +326,7 @@ pub fn load_sample<const BUFSIZE: usize, const NCHAN: usize>(
 pub fn load_sample_set<const BUFSIZE: usize, const NCHAN: usize>(
     function_map: &sync::Arc<Mutex<FunctionMap>>,
     ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
-    sample_set: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
+    sample_set: SampleAndWavematrixSet,
     samples_path: &Path,
     downmix_stereo: bool,
 ) {
@@ -361,7 +359,7 @@ pub fn load_sample_set<const BUFSIZE: usize, const NCHAN: usize>(
                             load_sample(
                                 function_map,
                                 ruffbox,
-                                sample_set,
+                                sample_set.clone(),
                                 set_name.clone(),
                                 &mut Vec::new(),
                                 path.to_str().unwrap().to_string(),
@@ -378,7 +376,7 @@ pub fn load_sample_set<const BUFSIZE: usize, const NCHAN: usize>(
 pub fn load_sample_set_string<const BUFSIZE: usize, const NCHAN: usize>(
     function_map: &sync::Arc<Mutex<FunctionMap>>,
     ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
-    sample_set: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
+    sample_set: SampleAndWavematrixSet,
     samples_path: String,
     downmix_stereo: bool,
 ) {
@@ -389,7 +387,7 @@ pub fn load_sample_set_string<const BUFSIZE: usize, const NCHAN: usize>(
 pub fn load_sample_sets<const BUFSIZE: usize, const NCHAN: usize>(
     function_map: &sync::Arc<Mutex<FunctionMap>>,
     ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
-    sample_set: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
+    sample_set: SampleAndWavematrixSet,
     folder_path: String,
     downmix_stereo: bool,
 ) {
@@ -400,7 +398,7 @@ pub fn load_sample_sets<const BUFSIZE: usize, const NCHAN: usize>(
 pub fn load_sample_sets_path<const BUFSIZE: usize, const NCHAN: usize>(
     function_map: &sync::Arc<Mutex<FunctionMap>>,
     ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
-    sample_set: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
+    sample_set: SampleAndWavematrixSet,
     root_path: &Path,
     downmix_stereo: bool,
 ) {
@@ -408,7 +406,13 @@ pub fn load_sample_sets_path<const BUFSIZE: usize, const NCHAN: usize>(
         for entry in entries.flatten() {
             let path = entry.path();
             if path.is_dir() {
-                load_sample_set(function_map, ruffbox, sample_set, &path, downmix_stereo);
+                load_sample_set(
+                    function_map,
+                    ruffbox,
+                    sample_set.clone(),
+                    &path,
+                    downmix_stereo,
+                );
             }
         }
     }
@@ -536,7 +540,7 @@ pub fn stop_recording<const BUFSIZE: usize, const NCHAN: usize>(
 pub fn step_part<const BUFSIZE: usize, const NCHAN: usize>(
     ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
     globals: &sync::Arc<GlobalVariables>,
-    sample_set: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
+    sample_set: SampleAndWavematrixSet,
     session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
     output_mode: OutputMode,
     part_name: String,
@@ -662,7 +666,7 @@ pub fn export_dot_running<const BUFSIZE: usize, const NCHAN: usize>(
 pub fn once<const BUFSIZE: usize, const NCHAN: usize>(
     ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
     globals: &sync::Arc<GlobalVariables>,
-    sample_set: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
+    sample_set: SampleAndWavematrixSet,
     session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
     sound_events: &mut [StaticEvent],
     control_events: &[ControlEvent],
@@ -677,7 +681,7 @@ pub fn once<const BUFSIZE: usize, const NCHAN: usize>(
                     session,
                     ruffbox,
                     globals,
-                    sample_set,
+                    sample_set.clone(),
                     output_mode,
                 );
             }
@@ -693,19 +697,17 @@ pub fn once<const BUFSIZE: usize, const NCHAN: usize>(
         // resolve it NOW ... at the very end, finally ...
         let mut bufnum: usize = 0;
         if let Some(lookup) = s.sample_lookup.as_ref() {
-            if let Some(sample_info) = sample_set.lock().resolve_lookup(lookup) {
-                bufnum = sample_info.bufnum;
+            if let Some((res_bufnum, duration)) = sample_set.resolve_lookup(lookup) {
+                bufnum = res_bufnum;
                 // is this really needed ??
                 s.params.insert(
                     SynthParameterLabel::SampleBufferNumber,
-                    SynthParameterValue::ScalarUsize(sample_info.bufnum),
+                    SynthParameterValue::ScalarUsize(bufnum),
                 );
 
                 s.params
                     .entry(SynthParameterLabel::Sustain)
-                    .or_insert_with(|| {
-                        SynthParameterValue::ScalarF32((sample_info.duration - 2) as f32)
-                    });
+                    .or_insert_with(|| SynthParameterValue::ScalarF32((duration - 2) as f32));
             }
         }
 

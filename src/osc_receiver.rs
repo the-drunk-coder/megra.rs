@@ -22,7 +22,7 @@ impl OscReceiver {
         function_map: sync::Arc<Mutex<FunctionMap>>,
         session: sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
         ruffbox: sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
-        sample_set: sync::Arc<Mutex<SampleAndWavematrixSet>>,
+        sample_set: SampleAndWavematrixSet,
         globals: sync::Arc<GlobalVariables>,
         mode: OutputMode,
         base_dir: String,
@@ -102,7 +102,7 @@ impl OscReceiver {
                                             &functions,
                                             &globals,
                                             Some(&local_args),
-                                            &sample_set,
+                                            sample_set.clone(),
                                             mode,
                                         )
                                     })
@@ -115,7 +115,7 @@ impl OscReceiver {
                                             &function_map,
                                             &session,
                                             &ruffbox,
-                                            &sample_set,
+                                            sample_set.clone(),
                                             &globals,
                                             mode,
                                             base_dir.clone(),

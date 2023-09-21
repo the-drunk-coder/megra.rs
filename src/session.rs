@@ -169,18 +169,18 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
                 // resolve it NOW ... at the very end, finally ...
                 let mut bufnum: usize = 0;
                 if let Some(lookup) = s.sample_lookup.as_ref() {
-                    if let Some(sample_info) = data.sample_set.lock().resolve_lookup(lookup) {
-                        bufnum = sample_info.bufnum;
+                    if let Some((res_bufnum, duration)) = data.sample_set.resolve_lookup(lookup) {
+                        bufnum = res_bufnum;
                         // is this really needed ??
                         s.params.insert(
                             SynthParameterLabel::SampleBufferNumber,
-                            SynthParameterValue::ScalarUsize(sample_info.bufnum),
+                            SynthParameterValue::ScalarUsize(bufnum),
                         );
 
                         s.params
                             .entry(SynthParameterLabel::Sustain)
                             .or_insert_with(|| {
-                                SynthParameterValue::ScalarF32((sample_info.duration - 2) as f32)
+                                SynthParameterValue::ScalarF32((duration - 2) as f32)
                             });
                     }
                 }
@@ -231,7 +231,7 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
                             &data.session,
                             &data.ruffbox,
                             &data.globals,
-                            &data.sample_set,
+                            data.sample_set.clone(),
                             data.output_mode,
                         );
                     }
@@ -269,7 +269,7 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
                                 commands::once(
                                     &data.ruffbox,
                                     &data.globals,
-                                    &data.sample_set,
+                                    data.sample_set.clone(), // clone for thread
                                     &data.session,
                                     &mut s,
                                     &c,
@@ -306,7 +306,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
         session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
         ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
         globals: &sync::Arc<GlobalVariables>,
-        sample_set: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
+        sample_set: SampleAndWavematrixSet,
         output_mode: OutputMode,
     ) {
         let name = ctx.name.clone(); // keep a copy for later
@@ -408,7 +408,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                         session,
                         ruffbox,
                         globals,
-                        sample_set,
+                        sample_set.clone(),
                         output_mode,
                         ctx.shift as f64 * 0.001,
                         &ctx.block_tags,
@@ -441,7 +441,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                         session,
                         ruffbox,
                         globals,
-                        sample_set,
+                        sample_set.clone(),
                         output_mode,
                         ctx.shift as f64 * 0.001,
                         &ctx.block_tags,
@@ -485,7 +485,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                             session,
                             ruffbox,
                             globals,
-                            sample_set,
+                            sample_set.clone(),
                             output_mode,
                             ctx.shift as f64 * 0.001,
                             &ctx.block_tags,
@@ -526,8 +526,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
         session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
         ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
         globals: &sync::Arc<GlobalVariables>,
-
-        sample_set: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
+        sample_set: SampleAndWavematrixSet,
         output_mode: OutputMode,
         shift: f64,
         block_tags: &BTreeSet<String>,
@@ -724,7 +723,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
         session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
         ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
         globals: &sync::Arc<GlobalVariables>,
-        sample_set: &sync::Arc<Mutex<SampleAndWavematrixSet>>,
+        sample_set: SampleAndWavematrixSet,
         output_mode: OutputMode,
         shift: f64,
         block_tags: &BTreeSet<String>,
