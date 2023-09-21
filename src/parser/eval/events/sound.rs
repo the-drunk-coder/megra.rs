@@ -492,7 +492,7 @@ pub fn sound(
                     }
                     _ => {
                         let info = sample_set.random(&fname).unwrap();
-                        Some(SampleLookup::FixedRandom(fname.to_string(), info.clone()))
+                        Some(SampleLookup::FixedRandom(fname.to_string(), info))
                     }
                 };
 

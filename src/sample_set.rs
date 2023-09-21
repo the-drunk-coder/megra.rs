@@ -60,11 +60,7 @@ impl SampleAndWavematrixSet {
     }
 
     pub fn get_wavematrix(&self, key: &String) -> Option<Vec<Vec<DynVal>>> {
-        if let Some(wm) = self.wavematrices.get(key) {
-            Some(wm.clone())
-        } else {
-            None
-        }
+        self.wavematrices.get(key).map(|wm| wm.clone())
     }
 
     pub fn insert(&mut self, set: String, keyword_set: HashSet<String>, bufnum: usize, dur: usize) {
