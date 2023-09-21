@@ -30,9 +30,11 @@ impl SampleInfo {
 
 /// maps an event type (like "bd") to a mapping between keywords and buffer number ...
 /// also contains wavematrices (for now) ... it's a bit inconsistent given that
-/// wavematrices are handled on the "megra-size", while buffers are stored at the
-/// "ruffbox-size", but that gives me more possibilities to play with the wavematrices
+/// wavematrices are handled on the "megra-side", while buffers are stored at the
+/// "ruffbox-side", but that gives me more possibilities to play with the wavematrices
 /// on this size, so I suppose that's ok for the moment ...
+/// also, you'll see many many clones, but keep in mind it's basically only the arcs that's
+/// cloned
 #[derive(Clone)]
 pub struct SampleAndWavematrixSet {
     subsets: Arc<DashMap<String, Vec<SampleInfo>>>,
