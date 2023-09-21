@@ -2,7 +2,6 @@ use crate::builtin_types::{Comparable, LazyArithmetic, LazyVal, TypedEntity};
 use crate::parser::{EvaluatedExpr, FunctionMap};
 use crate::{GlobalVariables, OutputMode, SampleAndWavematrixSet};
 
-use parking_lot::Mutex;
 use std::sync;
 
 use super::resolver::needs_resolve;

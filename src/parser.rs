@@ -11,7 +11,6 @@ use nom::{
     Err, IResult, Parser,
 };
 
-use parking_lot::Mutex;
 use regex::Regex;
 use std::collections::HashMap;
 use std::{fmt, sync};

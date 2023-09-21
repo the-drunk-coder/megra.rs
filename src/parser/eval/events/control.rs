@@ -2,7 +2,7 @@ use crate::builtin_types::TypedEntity;
 use crate::event::*;
 use crate::parser::{EvaluatedExpr, FunctionMap};
 use crate::{GlobalVariables, OutputMode, SampleAndWavematrixSet};
-use parking_lot::Mutex;
+
 use std::collections::BTreeSet;
 use std::sync;
 

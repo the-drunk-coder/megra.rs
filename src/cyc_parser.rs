@@ -4,7 +4,6 @@ use crate::parser::*;
 use crate::sample_set::SampleAndWavematrixSet;
 use crate::session::OutputMode;
 
-use parking_lot::Mutex;
 use std::{collections::HashMap, sync};
 
 use nom::{

@@ -2,7 +2,7 @@ use crate::builtin_types::{Comparable, TypedEntity};
 use crate::parameter::{DynVal, ParameterValue};
 use crate::parser::{EvaluatedExpr, FunctionMap};
 use crate::{GlobalVariables, OutputMode, SampleAndWavematrixSet};
-use parking_lot::Mutex;
+
 use ruffbox_synth::building_blocks::EnvelopeSegmentType;
 use ruffbox_synth::building_blocks::ValOp;
 use std::sync;

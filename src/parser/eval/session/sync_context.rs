@@ -4,7 +4,7 @@ use crate::parser::eval::resolver::resolve_globals;
 use crate::parser::{EvaluatedExpr, FunctionMap};
 use crate::session::SyncContext;
 use crate::{OutputMode, SampleAndWavematrixSet};
-use parking_lot::Mutex;
+
 use std::collections::BTreeSet;
 use std::sync;
 

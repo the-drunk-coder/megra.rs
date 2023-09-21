@@ -1,4 +1,3 @@
-use parking_lot::Mutex;
 use std::sync;
 
 use crate::builtin_types::*;

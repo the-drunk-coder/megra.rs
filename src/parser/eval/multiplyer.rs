@@ -10,7 +10,6 @@ use crate::parameter::{DynVal, ParameterValue};
 
 use crate::parser::{EvaluatedExpr, FunctionMap};
 use crate::{OutputMode, SampleAndWavematrixSet};
-use parking_lot::Mutex;
 
 use super::resolver::resolve_globals;
 

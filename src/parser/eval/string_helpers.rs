@@ -2,7 +2,6 @@ use crate::builtin_types::{Comparable, TypedEntity};
 use crate::parser::{EvaluatedExpr, FunctionMap};
 use crate::{GlobalVariables, OutputMode, SampleAndWavematrixSet};
 
-use parking_lot::Mutex;
 use std::sync;
 
 pub fn concat(

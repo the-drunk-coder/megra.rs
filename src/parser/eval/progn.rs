@@ -1,7 +1,7 @@
 use crate::builtin_types::*;
 use crate::parser::{EvaluatedExpr, FunctionMap};
 use crate::{OutputMode, SampleAndWavematrixSet};
-use parking_lot::Mutex;
+
 use std::sync;
 
 pub fn progn(

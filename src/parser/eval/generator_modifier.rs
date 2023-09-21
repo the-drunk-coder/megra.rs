@@ -5,7 +5,6 @@ use std::sync;
 
 use crate::parser::{EvaluatedExpr, FunctionMap};
 use crate::{OutputMode, SampleAndWavematrixSet};
-use parking_lot::Mutex;
 
 /// Helper function to collect arguments
 fn get_args(

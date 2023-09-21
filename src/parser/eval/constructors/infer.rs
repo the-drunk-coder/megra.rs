@@ -12,7 +12,6 @@ use vom_rs::pfa;
 
 use crate::parser::{EvaluatedExpr, FunctionMap};
 use crate::{OutputMode, SampleAndWavematrixSet};
-use parking_lot::Mutex;
 
 pub fn rule(
     _: &FunctionMap,

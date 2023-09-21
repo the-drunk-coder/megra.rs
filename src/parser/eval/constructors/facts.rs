@@ -1,8 +1,6 @@
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::sync;
 
-use parking_lot::Mutex;
-
 use ruffbox_synth::building_blocks::SynthParameterLabel;
 use vom_rs::pfa::{Pfa, Rule};
 

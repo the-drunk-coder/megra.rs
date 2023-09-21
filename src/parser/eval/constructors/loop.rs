@@ -14,8 +14,6 @@ use vom_rs::pfa::{Pfa, Rule};
 
 use crate::parser::{EvaluatedExpr, FunctionMap};
 
-use parking_lot::Mutex;
-
 pub fn a_loop(
     functions: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,

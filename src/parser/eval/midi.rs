@@ -1,7 +1,5 @@
 use std::sync;
 
-use parking_lot::Mutex;
-
 use crate::{
     builtin_types::{Comparable, GlobalVariables, TypedEntity},
     parser::{EvaluatedExpr, FunctionMap},

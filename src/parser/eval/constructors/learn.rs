@@ -11,7 +11,6 @@ use vom_rs::pfa::Pfa;
 
 use crate::parser::{EvaluatedExpr, FunctionMap};
 use crate::{OutputMode, SampleAndWavematrixSet};
-use parking_lot::Mutex;
 
 pub fn learn(
     _: &FunctionMap,

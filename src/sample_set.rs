@@ -1,7 +1,7 @@
 use crate::parameter::DynVal;
 use dashmap::DashMap;
 use rand::seq::SliceRandom;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 use std::sync::Arc;
 
 /// the search request for a sample

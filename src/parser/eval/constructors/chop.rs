@@ -12,8 +12,6 @@ use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::sync;
 use vom_rs::pfa::{Pfa, Rule};
 
-use parking_lot::Mutex;
-
 pub fn chop(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,

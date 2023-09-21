@@ -3,7 +3,7 @@ use crate::generator_processor::GeneratorWrapperProcessor;
 
 use crate::parser::{EvaluatedExpr, FunctionMap};
 use crate::{OutputMode, SampleAndWavematrixSet};
-use parking_lot::Mutex;
+
 use std::sync;
 
 use super::resolver::resolve_globals;

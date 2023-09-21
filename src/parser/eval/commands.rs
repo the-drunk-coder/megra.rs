@@ -9,7 +9,7 @@ use ruffbox_synth::building_blocks::SynthParameterLabel;
 
 use crate::parser::{EvaluatedExpr, FunctionMap};
 use crate::{OutputMode, SampleAndWavematrixSet};
-use parking_lot::Mutex;
+
 use std::sync;
 
 pub fn import_sample_set(

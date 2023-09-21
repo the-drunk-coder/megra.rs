@@ -12,7 +12,6 @@ use vom_rs::pfa::{Pfa, Rule};
 
 use crate::parser::{EvaluatedExpr, FunctionMap};
 use crate::{OutputMode, SampleAndWavematrixSet};
-use parking_lot::Mutex;
 
 pub fn friendship(
     _: &FunctionMap,
