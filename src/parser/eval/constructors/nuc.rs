@@ -136,7 +136,7 @@ mod tests {
     fn test_eval_nuc() {
         let snippet = "(nuc 'da (bd))";
         let mut functions = FunctionMap::new();
-        let sample_set = sync::Arc::new(Mutex::new(SampleAndWavematrixSet::new()));
+        let sample_set = SampleAndWavematrixSet::new();
 
         functions
             .std_lib
@@ -153,7 +153,7 @@ mod tests {
             snippet,
             &functions,
             &globals,
-            &sample_set,
+            sample_set,
             OutputMode::Stereo,
         ) {
             Ok(res) => {

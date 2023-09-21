@@ -548,7 +548,7 @@ mod tests {
     fn test_eval_sound() {
         let snippet = "(risset 4000 :lvl 1.0)";
         let mut functions = FunctionMap::new();
-        let sample_set = sync::Arc::new(Mutex::new(SampleAndWavematrixSet::new()));
+        let sample_set = SampleAndWavematrixSet::new();
 
         functions
             .std_lib

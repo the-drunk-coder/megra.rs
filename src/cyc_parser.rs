@@ -516,12 +516,12 @@ mod tests {
 
     #[test]
     fn test_basic_cyc2_eval_noparam() {
-        let sample_set = sync::Arc::new(Mutex::new(SampleAndWavematrixSet::new()));
+        let mut sample_set = SampleAndWavematrixSet::new();
 
         // mock sample
         let mut keys = HashSet::new();
         keys.insert("a3".to_string());
-        sample_set.lock().insert("piano".to_string(), keys, 3, 100);
+        sample_set.insert("piano".to_string(), keys, 3, 100);
 
         let template_events = Vec::new();
         let event_mappings = HashMap::new();
@@ -539,7 +539,7 @@ mod tests {
         let o = eval_cyc_from_str(
             "saw /100 saw:400 ~ ~ [saw:100 saw:500] ~ piano:'a3 piano:'a3:lpf=100",
             &fmap,
-            &sample_set,
+            sample_set,
             OutputMode::Stereo,
             &template_events,
             &event_mappings,
