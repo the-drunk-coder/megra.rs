@@ -1,7 +1,7 @@
-use crate::builtin_types::*;
 use crate::generator::Generator;
 use crate::osc_client::OscClient;
 use crate::session::{OutputMode, Session, SyncMode};
+use crate::{builtin_types::*, osc_client};
 use parking_lot::Mutex;
 use ruffbox_synth::ruffbox::RuffboxControls;
 
@@ -33,7 +33,6 @@ pub struct SchedulerData<const BUFSIZE: usize, const NCHAN: usize> {
     pub finished: bool,
     pub synced_generators: Vec<(Box<Generator>, f64)>,
     pub ruffbox: sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
-    pub session: sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
     pub globals: sync::Arc<GlobalVariables>,
     // the osc client reverence here might be a bit
     // redundant, as there's already a reference in the
@@ -55,7 +54,6 @@ impl<const BUFSIZE: usize, const NCHAN: usize> SchedulerData<BUFSIZE, NCHAN> {
         shift: f64,
         mut data: Box<Generator>,
         ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
-        session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
         globals: &sync::Arc<GlobalVariables>,
         block_tags: &BTreeSet<String>,
         solo_tags: &BTreeSet<String>,
@@ -80,7 +78,6 @@ impl<const BUFSIZE: usize, const NCHAN: usize> SchedulerData<BUFSIZE, NCHAN> {
             finished: false,
             synced_generators: old.synced_generators.clone(), // carry over synced gens ...
             ruffbox: sync::Arc::clone(ruffbox),
-            session: sync::Arc::clone(session),
             globals: sync::Arc::clone(globals),
             osc_client: old.osc_client.clone(),
             output_mode: old.output_mode,
@@ -98,7 +95,6 @@ impl<const BUFSIZE: usize, const NCHAN: usize> SchedulerData<BUFSIZE, NCHAN> {
         shift: f64,
         data: Box<Generator>,
         ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
-        session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
         globals: &sync::Arc<GlobalVariables>,
         block_tags: &BTreeSet<String>,
         solo_tags: &BTreeSet<String>,
@@ -116,7 +112,6 @@ impl<const BUFSIZE: usize, const NCHAN: usize> SchedulerData<BUFSIZE, NCHAN> {
             finished: false,
             synced_generators: Vec::new(),
             ruffbox: sync::Arc::clone(ruffbox),
-            session: sync::Arc::clone(session),
             globals: sync::Arc::clone(globals),
             osc_client: old.osc_client.clone(),
             sample_set: old.sample_set.clone(),
@@ -132,7 +127,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> SchedulerData<BUFSIZE, NCHAN> {
     pub fn from_data(
         data: Box<Generator>,
         shift: f64,
-        session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
+        osc_client: OscClient,
         ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
         globals: &sync::Arc<GlobalVariables>,
         sample_set: SampleAndWavematrixSet,
@@ -154,9 +149,8 @@ impl<const BUFSIZE: usize, const NCHAN: usize> SchedulerData<BUFSIZE, NCHAN> {
             finished: false,
             synced_generators: Vec::new(),
             ruffbox: sync::Arc::clone(ruffbox),
-            session: sync::Arc::clone(session),
             globals: sync::Arc::clone(globals),
-            osc_client: session.lock().osc_client.clone(),
+            osc_client,
             sample_set,
             output_mode,
             sync_mode,
@@ -178,14 +172,18 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Scheduler<BUFSIZE, NCHAN> {
     pub fn start(
         &mut self,
         name: &str,
-        fun: fn(&mut SchedulerData<BUFSIZE, NCHAN>) -> (f64, bool, bool),
+        fun: fn(
+            &mut SchedulerData<BUFSIZE, NCHAN>,
+            &std::sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
+        ) -> (f64, bool, bool),
         data: sync::Arc<Mutex<SchedulerData<BUFSIZE, NCHAN>>>,
+        session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
     ) {
         self.running.store(true, Ordering::SeqCst);
         let running = self.running.clone();
 
         let builder = thread::Builder::new().name(name.into());
-
+        let session2 = std::sync::Arc::clone(session);
         self.handle = Some(
             builder
                 .spawn(move || {
@@ -197,7 +195,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Scheduler<BUFSIZE, NCHAN> {
                             let mut sched_data = data.lock();
                             // call event processing function that'll return
                             // the sync flag and
-                            let sched_result = (fun)(&mut sched_data);
+                            let sched_result = (fun)(&mut sched_data, &session2);
                             let sync = sched_result.1;
 			    let end = sched_result.2;
                             if sync {
@@ -205,6 +203,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Scheduler<BUFSIZE, NCHAN> {
                                 for (g, s) in syncs.drain(..) {
                                     Session::start_generator_data_sync(
                                         g,
+					&session2,
                                         &sched_data,
                                         s,
 					&sched_data.block_tags,

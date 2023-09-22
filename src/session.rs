@@ -69,6 +69,7 @@ pub struct Session<const BUFSIZE: usize, const NCHAN: usize> {
 // or better, the inside part of the time iteration
 fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
     data: &mut SchedulerData<BUFSIZE, NCHAN>,
+    session: &std::sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
 ) -> (f64, bool, bool) {
     // global tempo modifier, allows us to do weird stuff with the
     // global tempo ...
@@ -228,7 +229,7 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
                     for mut sx in contexts.drain(..) {
                         Session::handle_context(
                             &mut sx,
-                            &data.session,
+                            session,
                             &data.ruffbox,
                             &data.globals,
                             data.sample_set.clone(),
@@ -258,7 +259,7 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
                                 );
                             }
                             Command::Clear => {
-                                let session2 = sync::Arc::clone(&data.session);
+                                let session2 = sync::Arc::clone(session);
                                 thread::spawn(move || {
                                     Session::clear_session(&session2);
                                     println!("a command (stop session)");
@@ -270,7 +271,7 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
                                     &data.ruffbox,
                                     &data.globals,
                                     data.sample_set.clone(), // clone for thread
-                                    &data.session,
+                                    session,
                                     &mut s,
                                     &c,
                                     data.output_mode,
@@ -583,7 +584,6 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                     shift,
                     gen,
                     ruffbox,
-                    session,
                     globals,
                     block_tags,
                     solo_tags,
@@ -631,7 +631,6 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                     shift,
                     gen,
                     ruffbox,
-                    session,
                     globals,
                     block_tags,
                     solo_tags,
@@ -650,7 +649,6 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                     shift,
                     gen,
                     ruffbox,
-                    session,
                     globals,
                     block_tags,
                     solo_tags,
@@ -662,6 +660,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
     /// start, sync time data ...
     pub fn start_generator_data_sync(
         gen: Box<Generator>,
+        session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
         data: &SchedulerData<BUFSIZE, NCHAN>,
         shift: f64,
         block_tags: &BTreeSet<String>,
@@ -682,12 +681,11 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                 shift,
                 gen,
                 &data.ruffbox,
-                &data.session,
                 &data.globals,
                 block_tags,
                 solo_tags,
             )));
-        Session::start_scheduler(&data.session, sched_data, id_tags)
+        Session::start_scheduler(session, sched_data, id_tags)
     }
 
     // push to synced gen's sync list ...
@@ -740,7 +738,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
         let sched_data = sync::Arc::new(Mutex::new(SchedulerData::<BUFSIZE, NCHAN>::from_data(
             gen,
             shift,
-            session,
+            session.lock().osc_client.clone(),
             ruffbox,
             globals,
             sample_set,
@@ -771,7 +769,12 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
             thread_name.push_str(&(format!("{tag} ")));
         }
 
-        sched.start(thread_name.trim(), eval_loop, sync::Arc::clone(&sched_data));
+        sched.start(
+            thread_name.trim(),
+            eval_loop,
+            sync::Arc::clone(&sched_data),
+            &sync::Arc::clone(session),
+        );
 
         // get sched out of map, try to keep lock only shortly ...
         let sched_prox;
