@@ -1,7 +1,7 @@
+use crate::builtin_types::*;
 use crate::generator::Generator;
 use crate::osc_client::OscClient;
 use crate::session::{OutputMode, Session, SyncMode};
-use crate::{builtin_types::*, osc_client};
 use parking_lot::Mutex;
 use ruffbox_synth::ruffbox::RuffboxControls;
 
