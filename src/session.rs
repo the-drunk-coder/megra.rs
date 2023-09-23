@@ -799,7 +799,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
             }
         }
 
-        session.schedulers = sync::Arc::new(DashMap::new());
-        session.contexts = sync::Arc::new(DashMap::new());
+        session.schedulers.clear();
+        session.contexts.clear();
     }
 }
