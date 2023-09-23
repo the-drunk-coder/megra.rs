@@ -662,7 +662,7 @@ fn run<const NCHAN: usize>(
 
     // global data
     let mut raw_session = Session::new();
-    raw_session.rec_control = Some(rec_control);
+    raw_session.rec_control = sync::Arc::new(Mutex::new(Some(rec_control)));
     let session = sync::Arc::new(Mutex::new(raw_session));
 
     let globals = sync::Arc::new(GlobalVariables::new());

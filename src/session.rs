@@ -1,3 +1,4 @@
+use dashmap::DashMap;
 use parking_lot::Mutex;
 use std::collections::{BTreeSet, HashMap};
 use std::{sync, thread};
@@ -49,11 +50,13 @@ pub struct SyncContext {
 }
 
 pub struct Session<const BUFSIZE: usize, const NCHAN: usize> {
-    pub schedulers:
-        HashMap<BTreeSet<String>, (Scheduler<BUFSIZE, NCHAN>, SchedulerData<BUFSIZE, NCHAN>)>,
-    contexts: HashMap<String, BTreeSet<BTreeSet<String>>>,
+    pub schedulers: sync::Arc<
+        DashMap<BTreeSet<String>, (Scheduler<BUFSIZE, NCHAN>, SchedulerData<BUFSIZE, NCHAN>)>,
+    >,
+    contexts: sync::Arc<DashMap<String, BTreeSet<BTreeSet<String>>>>,
     pub osc_client: OscClient,
-    pub rec_control: Option<real_time_streaming::RecordingControl<BUFSIZE, NCHAN>>,
+    pub rec_control:
+        sync::Arc<Mutex<Option<real_time_streaming::RecordingControl<BUFSIZE, NCHAN>>>>,
 }
 
 //////////////////////////////////////
@@ -295,10 +298,10 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
 impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
     pub fn new() -> Self {
         Session {
-            schedulers: HashMap::new(),
-            contexts: HashMap::new(),
+            schedulers: sync::Arc::new(DashMap::new()),
+            contexts: sync::Arc::new(DashMap::new()),
             osc_client: OscClient::new(),
-            rec_control: None,
+            rec_control: sync::Arc::new(Mutex::new(None)),
         }
     }
 
@@ -325,14 +328,12 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
             let mut newcomers: Vec<_> = Vec::new();
             let mut quitters: Vec<_> = Vec::new();
             let mut remainders: Vec<_> = Vec::new();
-            {
-                let sess = session.lock();
-                if let Some(old_gens) = sess.contexts.get(&name) {
-                    // this means context is running
-                    remainders = new_gens.intersection(old_gens).cloned().collect();
-                    newcomers = new_gens.difference(old_gens).cloned().collect();
-                    quitters = old_gens.difference(&new_gens).cloned().collect();
-                }
+
+            if let Some(old_gens) = session.lock().contexts.get(&name) {
+                // this means context is running
+                remainders = new_gens.intersection(&old_gens).cloned().collect();
+                newcomers = new_gens.difference(&old_gens).cloned().collect();
+                quitters = old_gens.difference(&new_gens).cloned().collect();
             }
 
             println!("newcomers {newcomers:?}");
@@ -351,18 +352,17 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
             // get external sync ...
             let external_sync = if let Some(sync) = &ctx.sync_to {
                 let mut smallest_id = None;
-                {
-                    let sess = session.lock();
-                    if let Some(sync_gens) = sess.contexts.get(sync) {
-                        let mut last_len: usize = usize::MAX;
-                        for tags in sync_gens.iter() {
-                            if tags.len() < last_len {
-                                last_len = tags.len();
-                                smallest_id = Some(tags.clone());
-                            }
+
+                if let Some(sync_gens) = session.lock().contexts.get(sync) {
+                    let mut last_len: usize = usize::MAX;
+                    for tags in sync_gens.iter() {
+                        if tags.len() < last_len {
+                            last_len = tags.len();
+                            smallest_id = Some(tags.clone());
                         }
                     }
-                }
+                };
+
                 smallest_id
             } else {
                 None
@@ -498,15 +498,19 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
 
             // insert new context
             {
-                let mut sess = session.lock();
+                let sess = session.lock();
                 sess.contexts.insert(name, new_gens);
             }
         } else {
             // stop all that were kept in this context, remove context ...
             let an_old_ctx;
             {
-                let mut sess = session.lock();
-                an_old_ctx = sess.contexts.remove(&name);
+                let sess = session.lock();
+                if let Some((_, v)) = sess.contexts.remove(&name) {
+                    an_old_ctx = Some(v);
+                } else {
+                    an_old_ctx = None;
+                }
             }
 
             if let Some(old_ctx) = an_old_ctx {
@@ -537,21 +541,18 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
 
         let mut finished = false;
 
-        {
-            // lock release block
-            let mut sess = session.lock();
-            // start scheduler if it exists ...
-            if let Some((_, data)) = sess.schedulers.get_mut(&id_tags) {
-                print!("resume generator \'");
-                for tag in id_tags.iter() {
-                    print!("{tag} ");
-                }
-                println!("\'");
-
-                // keep the scheduler running, just replace the data ...
-                finished = data.finished.load(sync::atomic::Ordering::SeqCst);
+        // start scheduler if it exists ...
+        if let Some(v) = session.lock().schedulers.get_mut(&id_tags) {
+            let (_, data) = v.value();
+            print!("resume generator \'");
+            for tag in id_tags.iter() {
+                print!("{tag} ");
             }
-        }
+            println!("\'");
+
+            // keep the scheduler running, just replace the data ...
+            finished = data.finished.load(sync::atomic::Ordering::SeqCst);
+        };
 
         if finished {
             Session::stop_generator(session, &id_tags);
@@ -568,9 +569,9 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
             );
             println!("restarted finished gen");
         } else {
-            let mut sess = session.lock();
             // start scheduler if it exists ...
-            if let Some((_, data)) = sess.schedulers.get_mut(&id_tags) {
+            if let Some(v) = session.lock().schedulers.get_mut(&id_tags) {
+                let (_, data) = v.value();
                 print!("resume generator \'");
                 for tag in id_tags.iter() {
                     print!("{tag} ");
@@ -599,14 +600,15 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
         // start scheduler if it exists ...
 
         // thanks, borrow checker, for this elegant construction ...
-        let mut sess = session.lock();
-        let s_data = if let Some((_, sd)) = sess.schedulers.get(sync_tags) {
+        let s_data = if let Some(v) = session.lock().schedulers.get_mut(sync_tags) {
+            let (_, sd) = v.value();
             Some(sd.clone())
         } else {
             None
         };
 
-        if let Some((_, data)) = sess.schedulers.get_mut(&id_tags) {
+        if let Some(mut v) = session.lock().schedulers.get_mut(&id_tags) {
+            let (_, data) = v.value_mut();
             if let Some(sync_data) = s_data {
                 print!("resume sync generator \'");
                 for tag in id_tags.iter() {
@@ -673,8 +675,9 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
         shift: f64,
     ) {
         //this is prob kinda redundant
-        let mut sess = session.lock();
-        if let Some((_, data)) = sess.schedulers.get_mut(sync_tags) {
+        if let Some(v) = session.lock().schedulers.get_mut(sync_tags) {
+            let (_, data) = v.value();
+
             print!("start generator \'");
             for tag in gen.id_tags.iter() {
                 print!("{tag} ");
@@ -754,8 +757,12 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
         // get sched out of map, try to keep lock only shortly ...
         let sched_prox;
         {
-            let mut sess = session.lock();
-            sched_prox = sess.schedulers.remove(&id_tags);
+            let sess = session.lock();
+            if let Some((_, v)) = sess.schedulers.remove(&id_tags) {
+                sched_prox = Some(v);
+            } else {
+                sched_prox = None;
+            }
             sess.schedulers.insert(id_tags.clone(), (sched, sched_data));
         }
 
@@ -785,8 +792,14 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
         // get sched out of map, try to keep lock only shortly ...
         let sched_prox;
         {
-            let mut sess = session.lock();
-            sched_prox = sess.schedulers.remove(gen_name);
+            let sess = session.lock();
+
+            if let Some((_, v)) = sess.schedulers.remove(gen_name) {
+                sched_prox = Some(v);
+            } else {
+                sched_prox = None;
+            }
+
             if let Some(c) = &sess.osc_client.vis {
                 c.clear(gen_name);
             }
@@ -816,9 +829,12 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
         // get scheds out of map, try to keep lock only shortly ...
         let mut sched_proxies = Vec::new();
         {
-            let mut sess = session.lock();
+            let sess = session.lock();
             for name in gen_names.iter() {
-                sched_proxies.push(sess.schedulers.remove(name));
+                if let Some((_, v)) = sess.schedulers.remove(name) {
+                    sched_proxies.push(v);
+                }
+
                 if let Some(c) = &sess.osc_client.vis {
                     c.clear(name);
                 }
@@ -827,8 +843,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
 
         // stop
         let mut sched_proxies2 = Vec::new(); // sometimes rust is really annoying ...
-        let mut prox_drain = sched_proxies.drain(..);
-        while let Some(Some((mut sched, data))) = prox_drain.next() {
+        for (mut sched, data) in sched_proxies.drain(..) {
             sched.stop();
             sched_proxies2.push(sched);
             let sess = session.lock();
@@ -847,11 +862,13 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
 
     pub fn clear_session(session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>) {
         let mut sess = session.lock();
-        for (_, (sched, _)) in sess.schedulers.iter_mut() {
+        for mut sc in sess.schedulers.iter_mut() {
+            let (sched, _) = sc.value_mut();
             sched.stop();
         }
 
-        for (k, (sched, _)) in sess.schedulers.iter_mut() {
+        for mut sc in sess.schedulers.iter_mut() {
+            let (k, (sched, _)) = sc.pair_mut();
             sched.join();
             print!("stopped/removed generator \'");
             for tag in k.iter() {
@@ -861,7 +878,8 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
         }
 
         if let Some(c) = &sess.osc_client.vis {
-            for (k, (_, data)) in sess.schedulers.iter() {
+            for sc in sess.schedulers.iter() {
+                let (k, (_, data)) = sc.pair();
                 c.clear(k);
                 for (_, proc) in data.generator.lock().processors.iter() {
                     proc.clear_visualization(c);
@@ -869,7 +887,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
             }
         }
 
-        sess.schedulers = HashMap::new();
-        sess.contexts = HashMap::new();
+        sess.schedulers = sync::Arc::new(DashMap::new());
+        sess.contexts = sync::Arc::new(DashMap::new());
     }
 }

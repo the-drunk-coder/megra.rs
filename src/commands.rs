@@ -425,7 +425,7 @@ pub fn start_recording<const BUFSIZE: usize, const NCHAN: usize>(
     base_dir: String,
     rec_input: bool,
 ) {
-    let maybe_rec_ctrl = session.lock().rec_control.take();
+    let maybe_rec_ctrl = session.lock().rec_control.lock().take();
     if let Some(mut rec_ctrl) = maybe_rec_ctrl {
         //println!("rec state {} {}", rec_ctrl.is_recording_output.load(Ordering::SeqCst) ,rec_ctrl.is_recording_input.load(Ordering::SeqCst));
 
@@ -502,7 +502,7 @@ pub fn start_recording<const BUFSIZE: usize, const NCHAN: usize>(
             }
         }
 
-        session.lock().rec_control = Some(rec_ctrl);
+        *session.lock().rec_control.lock() = Some(rec_ctrl);
     }
 }
 
@@ -510,7 +510,7 @@ pub fn start_recording<const BUFSIZE: usize, const NCHAN: usize>(
 pub fn stop_recording<const BUFSIZE: usize, const NCHAN: usize>(
     session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
 ) {
-    let maybe_rec_ctrl = session.lock().rec_control.take();
+    let maybe_rec_ctrl = session.lock().rec_control.lock().take();
     if let Some(mut rec_ctrl) = maybe_rec_ctrl {
         //println!("rec state {} {}", rec_ctrl.is_recording_output.load(Ordering::SeqCst), rec_ctrl.is_recording_input.load(Ordering::SeqCst));
         if rec_ctrl.is_recording_output.load(Ordering::SeqCst) {
@@ -532,7 +532,7 @@ pub fn stop_recording<const BUFSIZE: usize, const NCHAN: usize>(
             println!("can't stop input recording that isn't running !");
         }
 
-        session.lock().rec_control = Some(rec_ctrl);
+        *session.lock().rec_control.lock() = Some(rec_ctrl);
     }
 }
 
@@ -637,7 +637,9 @@ pub fn export_dot_running<const BUFSIZE: usize, const NCHAN: usize>(
 
     {
         let sess = session.lock();
-        for (id_tags, (_, data)) in sess.schedulers.iter() {
+        for sc in sess.schedulers.iter() {
+            let (id_tags, (_, data)) = sc.pair();
+
             if !tags.is_disjoint(id_tags) {
                 // get a snapshot of the generator in it's current state
                 gens.push((id_tags.clone(), data.generator.lock().clone()));
