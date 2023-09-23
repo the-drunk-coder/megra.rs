@@ -21,10 +21,6 @@ impl OscReceiver {
         target: String,
         function_map: sync::Arc<Mutex<FunctionMap>>,
         session: Session<BUFSIZE, NCHAN>,
-        ruffbox: sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
-        sample_set: SampleAndWavematrixSet,
-        globals: sync::Arc<GlobalVariables>,
-        mode: OutputMode,
         base_dir: String,
     ) {
         let addr = match SocketAddrV4::from_str(&target) {
@@ -100,10 +96,10 @@ impl OscReceiver {
                                         eval_expression(
                                             expr,
                                             &functions,
-                                            &globals,
+                                            &session.globals,
                                             Some(&local_args),
-                                            sample_set.clone(),
-                                            mode,
+                                            session.sample_set.clone(),
+                                            session.output_mode,
                                         )
                                     })
                                     .collect::<Option<Vec<EvaluatedExpr>>>()
@@ -114,10 +110,6 @@ impl OscReceiver {
                                             eval_expr,
                                             &function_map,
                                             session.clone(),
-                                            &ruffbox,
-                                            sample_set.clone(),
-                                            &globals,
-                                            mode,
                                             base_dir.clone(),
                                         );
                                     }

@@ -37,9 +37,11 @@ mod osc_sender;
 mod visualizer_client;
 
 use crate::builtin_types::*;
+use crate::osc_client::OscClient;
 use crate::sample_set::SampleAndWavematrixSet;
 use crate::session::{OutputMode, Session};
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
+use dashmap::DashMap;
 use directories_next::ProjectDirs;
 use getopts::Options;
 use parking_lot::Mutex;
@@ -660,16 +662,22 @@ fn run<const NCHAN: usize>(
     in_stream.play()?;
     out_stream.play()?;
 
-    // global data
-    let mut session = Session::new();
-    session.rec_control = sync::Arc::new(Mutex::new(Some(rec_control)));
+    // global dat
 
-    let globals = sync::Arc::new(GlobalVariables::new());
-    let sample_set = SampleAndWavematrixSet::new();
+    let session = Session {
+        schedulers: sync::Arc::new(DashMap::new()),
+        contexts: sync::Arc::new(DashMap::new()),
+        osc_client: OscClient::new(),
+        rec_control: sync::Arc::new(Mutex::new(Some(rec_control))),
+        globals: sync::Arc::new(GlobalVariables::new()),
+        sample_set: SampleAndWavematrixSet::new(),
+        ruffbox: sync::Arc::new(controls),
+        output_mode: options.mode,
+        sync_mode: session::SyncMode::NotOnSilence,
+    };
 
     // define the "standard library"
     let stdlib = sync::Arc::new(Mutex::new(define_standard_library()));
-    let controls_arc = sync::Arc::new(controls);
 
     let base_dir = if let Some(p) = options.base_folder {
         let bd = std::path::PathBuf::from(p);
@@ -724,9 +732,9 @@ fn run<const NCHAN: usize>(
     // load the default sample set ...
     if options.load_samples {
         println!("load samples from path: {samples_path:?}");
-        let controls_arc2 = sync::Arc::clone(&controls_arc);
+        let controls_arc2 = sync::Arc::clone(&session.ruffbox);
         let stdlib2 = sync::Arc::clone(&stdlib);
-        let sample_set2 = sample_set.clone();
+        let sample_set2 = session.sample_set.clone();
         thread::spawn(move || {
             commands::load_sample_sets_path(
                 &stdlib2,
@@ -743,12 +751,8 @@ fn run<const NCHAN: usize>(
         editor::run_editor(
             &stdlib,
             session,
-            &controls_arc,
-            sample_set,
-            &globals,
             base_dir.display().to_string(),
             options.create_sketch,
-            options.mode,
             options.font.as_deref(),
             options.font_size,
         )
@@ -756,14 +760,6 @@ fn run<const NCHAN: usize>(
         Ok(())
     } else {
         // start the megra repl
-        repl::start_repl(
-            &stdlib,
-            session,
-            &controls_arc,
-            sample_set,
-            &globals,
-            options.mode,
-            base_dir.display().to_string(),
-        )
+        repl::start_repl(&stdlib, session, base_dir.display().to_string())
     }
 }

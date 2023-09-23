@@ -536,21 +536,17 @@ pub fn stop_recording<const BUFSIZE: usize, const NCHAN: usize>(session: &Sessio
 
 /// execute a pre-defined part step by step
 pub fn step_part<const BUFSIZE: usize, const NCHAN: usize>(
-    ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
-    globals: &sync::Arc<GlobalVariables>,
-    sample_set: SampleAndWavematrixSet,
-    session: &Session<BUFSIZE, NCHAN>,
-    output_mode: OutputMode,
+    session: &mut Session<BUFSIZE, NCHAN>,
     part_name: String,
 ) {
     let mut sound_events = Vec::new();
     let mut control_events = Vec::new();
 
-    if let Some(mut thing) = globals.get_mut(&VariableId::Custom(part_name)) {
+    if let Some(mut thing) = session.globals.get_mut(&VariableId::Custom(part_name)) {
         if let TypedEntity::GeneratorList(ref mut gens) = thing.value_mut() {
             for gen in gens.iter_mut() {
-                gen.current_transition(globals);
-                let mut current_events = gen.current_events(globals);
+                gen.current_transition(&session.globals);
+                let mut current_events = gen.current_events(&session.globals);
                 for ev in current_events.drain(..) {
                     match ev {
                         InterpretableEvent::Control(c) => control_events.push(c),
@@ -559,8 +555,8 @@ pub fn step_part<const BUFSIZE: usize, const NCHAN: usize>(
                 }
             }
         } else if let TypedEntity::Generator(ref mut gen) = thing.value_mut() {
-            gen.current_transition(globals);
-            let mut current_events = gen.current_events(globals);
+            gen.current_transition(&session.globals);
+            let mut current_events = gen.current_events(&session.globals);
             for ev in current_events.drain(..) {
                 match ev {
                     InterpretableEvent::Control(c) => control_events.push(c),
@@ -571,15 +567,7 @@ pub fn step_part<const BUFSIZE: usize, const NCHAN: usize>(
     }
 
     // execute retrieved events
-    once(
-        ruffbox,
-        globals,
-        sample_set,
-        session,
-        &mut sound_events,
-        &control_events,
-        output_mode,
-    );
+    once(session, &mut sound_events, &control_events);
 }
 
 pub fn set_global_tmod(globals: &sync::Arc<GlobalVariables>, p: DynVal) {
@@ -660,26 +648,15 @@ pub fn export_dot_running<const BUFSIZE: usize, const NCHAN: usize>(
 }
 
 pub fn once<const BUFSIZE: usize, const NCHAN: usize>(
-    ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
-    globals: &sync::Arc<GlobalVariables>,
-    sample_set: SampleAndWavematrixSet,
     session: &Session<BUFSIZE, NCHAN>,
     sound_events: &mut [StaticEvent],
     control_events: &[ControlEvent],
-    output_mode: OutputMode,
 ) {
     for cev in control_events.iter() {
         if let Some(mut contexts) = cev.ctx.clone() {
             // this is the worst clone ....
             for mut sx in contexts.drain(..) {
-                Session::handle_context(
-                    &mut sx,
-                    session,
-                    ruffbox,
-                    globals,
-                    sample_set.clone(),
-                    output_mode,
-                );
+                Session::handle_context(&mut sx, session);
             }
         }
     }
@@ -693,7 +670,7 @@ pub fn once<const BUFSIZE: usize, const NCHAN: usize>(
         // resolve it NOW ... at the very end, finally ...
         let mut bufnum: usize = 0;
         if let Some(lookup) = s.sample_lookup.as_ref() {
-            if let Some((res_bufnum, duration)) = sample_set.resolve_lookup(lookup) {
+            if let Some((res_bufnum, duration)) = session.sample_set.resolve_lookup(lookup) {
                 bufnum = res_bufnum;
                 // is this really needed ??
                 s.params.insert(
@@ -713,14 +690,16 @@ pub fn once<const BUFSIZE: usize, const NCHAN: usize>(
 
         // latency 0.05, should be made configurable later ...
         if let Some(mut inst) =
-            ruffbox.prepare_instance(map_synth_type(&s.name, &s.params), 0.0, bufnum)
+            session
+                .ruffbox
+                .prepare_instance(map_synth_type(&s.name, &s.params), 0.0, bufnum)
         {
             // set parameters and trigger instance
             for (k, v) in s.params.iter() {
                 // special handling for stereo param
                 match k {
                     SynthParameterLabel::ChannelPosition => {
-                        if output_mode == OutputMode::Stereo {
+                        if session.output_mode == OutputMode::Stereo {
                             inst.set_instance_parameter(*k, &translate_stereo(v.clone()));
                         } else {
                             inst.set_instance_parameter(*k, v);
@@ -762,7 +741,7 @@ pub fn once<const BUFSIZE: usize, const NCHAN: usize>(
                     _ => inst.set_instance_parameter(*k, v),
                 }
             }
-            ruffbox.trigger(inst);
+            session.ruffbox.trigger(inst);
         } else {
             println!("can't prepare this instance !");
         }

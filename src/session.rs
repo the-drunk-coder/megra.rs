@@ -51,10 +51,16 @@ pub struct SyncContext {
 
 #[derive(Clone)]
 pub struct Session<const BUFSIZE: usize, const NCHAN: usize> {
+    pub sample_set: SampleAndWavematrixSet,
+    pub output_mode: OutputMode,
+    pub sync_mode: SyncMode,
+    pub ruffbox: sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
+    pub globals: sync::Arc<GlobalVariables>,
+
     pub schedulers: sync::Arc<
         DashMap<BTreeSet<String>, (Scheduler<BUFSIZE, NCHAN>, SchedulerData<BUFSIZE, NCHAN>)>,
     >,
-    contexts: sync::Arc<DashMap<String, BTreeSet<BTreeSet<String>>>>,
+    pub contexts: sync::Arc<DashMap<String, BTreeSet<BTreeSet<String>>>>,
     pub osc_client: OscClient,
     pub rec_control:
         sync::Arc<Mutex<Option<real_time_streaming::RecordingControl<BUFSIZE, NCHAN>>>>,
@@ -75,7 +81,7 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
     let mut tmod: f64 = 1.0;
     let mut latency: f64 = 0.05;
 
-    if let TypedEntity::ConfigParameter(ConfigParameter::Dynamic(global_tmod)) = data
+    if let TypedEntity::ConfigParameter(ConfigParameter::Dynamic(global_tmod)) = session
         .globals
         .entry(VariableId::GlobalTimeModifier) // fixed variable ID
         .or_insert(TypedEntity::ConfigParameter(ConfigParameter::Dynamic(
@@ -86,7 +92,7 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
         tmod = global_tmod.evaluate_numerical() as f64;
     }
 
-    if let TypedEntity::ConfigParameter(ConfigParameter::Dynamic(global_latency)) = data
+    if let TypedEntity::ConfigParameter(ConfigParameter::Dynamic(global_latency)) = session
         .globals
         .entry(VariableId::GlobalLatency)
         .or_insert(TypedEntity::ConfigParameter(ConfigParameter::Dynamic(
@@ -100,7 +106,7 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
     // GENERATOR LOCK !!!
     let (time, mut events, end_state) = {
         let mut gen = data.generator.lock();
-        if let Some(vc) = &data.osc_client.vis {
+        if let Some(vc) = &session.osc_client.vis {
             if gen.root_generator.is_modified() {
                 vc.create_or_update(&gen);
                 gen.root_generator.clear_modified()
@@ -112,7 +118,7 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
         }
 
         let time = if let SynthParameterValue::ScalarF32(t) =
-            gen.current_transition(&data.globals).params[&SynthParameterLabel::Duration]
+            gen.current_transition(&session.globals).params[&SynthParameterLabel::Duration]
         {
             (t * 0.001) as f64 * tmod
         } else {
@@ -120,7 +126,7 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
         };
 
         // retrieve the current events
-        let events = gen.current_events(&data.globals);
+        let events = gen.current_events(&session.globals);
         //if events.is_empty() {
         //    println!("really no events");
         //}
@@ -133,7 +139,7 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
     let mut sync = false;
 
     // start the generators ready to be synced ...
-    if data.sync_mode == SyncMode::All {
+    if session.sync_mode == SyncMode::All {
         //println!("sync all");
         sync = true;
     }
@@ -144,7 +150,7 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
                 // no need to allocate a string everytime here, should be changed
                 if s.name == "silence" {
                     // start the generators ready to be synced ...
-                    if data.sync_mode == SyncMode::OnlyOnSilence {
+                    if session.sync_mode == SyncMode::OnlyOnSilence {
                         //println!("sync silence");
                         sync = true;
                     }
@@ -152,7 +158,7 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
                 }
 
                 // start the generators ready to be synced ...
-                if data.sync_mode == SyncMode::NotOnSilence {
+                if session.sync_mode == SyncMode::NotOnSilence {
                     //println!("sync nosilence");
                     sync = true;
                 }
@@ -174,7 +180,8 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
                 // resolve it NOW ... at the very end, finally ...
                 let mut bufnum: usize = 0;
                 if let Some(lookup) = s.sample_lookup.as_ref() {
-                    if let Some((res_bufnum, duration)) = data.sample_set.resolve_lookup(lookup) {
+                    if let Some((res_bufnum, duration)) = session.sample_set.resolve_lookup(lookup)
+                    {
                         bufnum = res_bufnum;
                         // is this really needed ??
                         s.params.insert(
@@ -194,7 +201,7 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
                 // the available information ...
                 s.build_envelope();
 
-                if let Some(mut inst) = data.ruffbox.prepare_instance(
+                if let Some(mut inst) = session.ruffbox.prepare_instance(
                     map_synth_type(&s.name, &s.params),
                     data.stream_time.load() + latency,
                     bufnum,
@@ -204,7 +211,7 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
                         // special handling for stereo param
                         match k {
                             SynthParameterLabel::ChannelPosition => {
-                                if data.output_mode == OutputMode::Stereo {
+                                if session.output_mode == OutputMode::Stereo {
                                     inst.set_instance_parameter(*k, &translate_stereo(v.clone()));
                                 } else {
                                     inst.set_instance_parameter(*k, v);
@@ -222,7 +229,7 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
                             _ => inst.set_instance_parameter(*k, v),
                         }
                     }
-                    data.ruffbox.trigger(inst);
+                    session.ruffbox.trigger(inst);
                 } else {
                     println!("can't prepare instance !");
                 }
@@ -231,14 +238,7 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
                 if let Some(mut contexts) = c.ctx.clone() {
                     // this is the worst clone ....
                     for mut sx in contexts.drain(..) {
-                        Session::handle_context(
-                            &mut sx,
-                            session,
-                            &data.ruffbox,
-                            &data.globals,
-                            data.sample_set.clone(),
-                            data.output_mode,
-                        );
+                        Session::handle_context(&mut sx, session);
                     }
                 }
                 if let Some(mut commands) = c.cmd.clone() {
@@ -246,19 +246,19 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
                     for c in commands.drain(..) {
                         match c {
                             Command::FreezeBuffer(freezbuf, inbuf) => {
-                                commands::freeze_buffer(&data.ruffbox, freezbuf, inbuf);
+                                commands::freeze_buffer(&session.ruffbox, freezbuf, inbuf);
                                 println!("freeze buffer");
                             }
                             Command::Tmod(p) => {
-                                commands::set_global_tmod(&data.globals, p);
+                                commands::set_global_tmod(&session.globals, p);
                             }
                             Command::GlobRes(v) => {
-                                commands::set_global_lifemodel_resources(&data.globals, v);
+                                commands::set_global_lifemodel_resources(&session.globals, v);
                             }
                             Command::GlobalRuffboxParams(mut m) => {
                                 commands::set_global_ruffbox_parameters(
-                                    &data.ruffbox,
-                                    &data.globals,
+                                    &session.ruffbox,
+                                    &session.globals,
                                     &mut m,
                                 );
                             }
@@ -271,15 +271,7 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
                             }
                             Command::Once(mut s, c) => {
                                 //println!("handle once from gen");
-                                commands::once(
-                                    &data.ruffbox,
-                                    &data.globals,
-                                    data.sample_set.clone(), // clone for thread
-                                    session,
-                                    &mut s,
-                                    &c,
-                                    data.output_mode,
-                                );
+                                commands::once(session, &mut s, &c);
                             }
 
                             _ => {
@@ -297,23 +289,7 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
 // END INNER MAIN SCHEDULER FUNCTION ...
 
 impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
-    pub fn new() -> Self {
-        Session {
-            schedulers: sync::Arc::new(DashMap::new()),
-            contexts: sync::Arc::new(DashMap::new()),
-            osc_client: OscClient::new(),
-            rec_control: sync::Arc::new(Mutex::new(None)),
-        }
-    }
-
-    pub fn handle_context(
-        ctx: &mut SyncContext,
-        session: &Session<BUFSIZE, NCHAN>,
-        ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
-        globals: &sync::Arc<GlobalVariables>,
-        sample_set: SampleAndWavematrixSet,
-        output_mode: OutputMode,
-    ) {
+    pub fn handle_context(ctx: &mut SyncContext, session: &Session<BUFSIZE, NCHAN>) {
         let name = ctx.name.clone(); // keep a copy for later
         if ctx.active {
             // otherwise, handle internal sync relations ...
@@ -408,10 +384,6 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                     Session::start_generator_no_sync(
                         gen,
                         session,
-                        ruffbox,
-                        globals,
-                        sample_set.clone(),
-                        output_mode,
                         ctx.shift as f64 * 0.001,
                         &ctx.block_tags,
                         &ctx.solo_tags,
@@ -427,8 +399,6 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                     Session::resume_generator_sync(
                         gen,
                         session,
-                        ruffbox,
-                        globals,
                         &ext_sync,
                         ctx.shift as f64 * 0.001,
                         &ctx.block_tags,
@@ -441,10 +411,6 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                     Session::resume_generator(
                         gen,
                         session,
-                        ruffbox,
-                        globals,
-                        sample_set.clone(),
-                        output_mode,
                         ctx.shift as f64 * 0.001,
                         &ctx.block_tags,
                         &ctx.solo_tags,
@@ -485,10 +451,6 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                         Session::start_generator_no_sync(
                             gen,
                             session,
-                            ruffbox,
-                            globals,
-                            sample_set.clone(),
-                            output_mode,
                             ctx.shift as f64 * 0.001,
                             &ctx.block_tags,
                             &ctx.solo_tags,
@@ -524,10 +486,6 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
     fn resume_generator(
         gen: Generator,
         session: &Session<BUFSIZE, NCHAN>,
-        ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
-        globals: &sync::Arc<GlobalVariables>,
-        sample_set: SampleAndWavematrixSet,
-        output_mode: OutputMode,
         shift: f64,
         block_tags: &BTreeSet<String>,
         solo_tags: &BTreeSet<String>,
@@ -551,17 +509,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
 
         if finished {
             Session::stop_generator(session, &id_tags);
-            Session::start_generator_no_sync(
-                gen,
-                session,
-                ruffbox,
-                globals,
-                sample_set,
-                output_mode,
-                shift,
-                block_tags,
-                solo_tags,
-            );
+            Session::start_generator_no_sync(gen, session, shift, block_tags, solo_tags);
             println!("restarted finished gen");
         } else {
             // start scheduler if it exists ...
@@ -584,8 +532,6 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
     fn resume_generator_sync(
         gen: Generator,
         session: &Session<BUFSIZE, NCHAN>,
-        ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
-        globals: &sync::Arc<GlobalVariables>,
         sync_tags: &BTreeSet<String>,
         shift: f64,
         block_tags: &BTreeSet<String>,
@@ -613,7 +559,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
 
                 // keep the scheduler running, just replace the data ...
                 *data = SchedulerData::<BUFSIZE, NCHAN>::from_time_data(
-                    &sync_data, shift, gen, ruffbox, globals, block_tags, solo_tags,
+                    &sync_data, shift, gen, block_tags, solo_tags,
                 );
             } else {
                 // resume sync: later ...
@@ -625,7 +571,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                 // keep the scheduler running, just replace the data ...
                 //let mut sched_data = data.lock();
                 *data = SchedulerData::<BUFSIZE, NCHAN>::from_previous(
-                    data, shift, gen, ruffbox, globals, block_tags, solo_tags,
+                    data, shift, gen, block_tags, solo_tags,
                 );
             }
         }
@@ -650,13 +596,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
         // sync to data
         // create sched data from data
         let sched_data = SchedulerData::<BUFSIZE, NCHAN>::from_time_data(
-            data,
-            shift,
-            gen,
-            &data.ruffbox,
-            &data.globals,
-            block_tags,
-            solo_tags,
+            data, shift, gen, block_tags, solo_tags,
         );
         Session::start_scheduler(session, sched_data, id_tags)
     }
@@ -692,10 +632,6 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
     pub fn start_generator_no_sync(
         gen: Generator,
         session: &Session<BUFSIZE, NCHAN>,
-        ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
-        globals: &sync::Arc<GlobalVariables>,
-        sample_set: SampleAndWavematrixSet,
-        output_mode: OutputMode,
         shift: f64,
         block_tags: &BTreeSet<String>,
         solo_tags: &BTreeSet<String>,
@@ -711,12 +647,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
         let sched_data = SchedulerData::<BUFSIZE, NCHAN>::from_data(
             gen,
             shift,
-            session.osc_client.clone(),
-            ruffbox,
-            globals,
-            sample_set,
-            output_mode,
-            SyncMode::NotOnSilence,
+            &session.ruffbox,
             block_tags,
             solo_tags,
         );

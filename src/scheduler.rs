@@ -1,12 +1,9 @@
-use crate::builtin_types::*;
 use crate::generator::Generator;
-use crate::osc_client::OscClient;
-use crate::session::{OutputMode, Session, SyncMode};
+use crate::session::Session;
 use crossbeam::atomic::AtomicCell;
 use parking_lot::Mutex;
 use ruffbox_synth::ruffbox::RuffboxControls;
 
-use crate::SampleAndWavematrixSet;
 use std::collections::BTreeSet;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::{Duration, Instant};
@@ -34,20 +31,8 @@ pub struct SchedulerData<const BUFSIZE: usize, const NCHAN: usize> {
     pub generator: std::sync::Arc<Mutex<Generator>>,
     pub finished: std::sync::Arc<AtomicBool>,
     pub synced_generators: std::sync::Arc<Mutex<Vec<(Generator, f64)>>>,
-
     pub block_tags: BTreeSet<String>,
     pub solo_tags: BTreeSet<String>,
-    // the osc client reverence here might be a bit
-    // redundant, as there's already a reference in the
-    // session, but that way we can access the client without
-    // having to lock the session
-    // ONCE THE SCHED DATA IS LOCKFREE ALL OF THE BELOW CAN BE MOVED TO SESSION NOW ...
-    pub osc_client: OscClient,
-    pub sample_set: SampleAndWavematrixSet,
-    pub output_mode: OutputMode,
-    pub sync_mode: SyncMode,
-    pub ruffbox: sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
-    pub globals: sync::Arc<GlobalVariables>,
 }
 
 impl<const BUFSIZE: usize, const NCHAN: usize> SchedulerData<BUFSIZE, NCHAN> {
@@ -57,8 +42,6 @@ impl<const BUFSIZE: usize, const NCHAN: usize> SchedulerData<BUFSIZE, NCHAN> {
         old: &SchedulerData<BUFSIZE, NCHAN>,
         shift: f64,
         mut data: Generator,
-        ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
-        globals: &sync::Arc<GlobalVariables>,
         block_tags: &BTreeSet<String>,
         solo_tags: &BTreeSet<String>,
     ) -> Self {
@@ -81,12 +64,6 @@ impl<const BUFSIZE: usize, const NCHAN: usize> SchedulerData<BUFSIZE, NCHAN> {
             generator: sync::Arc::new(Mutex::new(data)),
             finished: sync::Arc::new(AtomicBool::new(false)),
             synced_generators: old.synced_generators.clone(), // carry over synced gens ...
-            ruffbox: sync::Arc::clone(ruffbox),
-            globals: sync::Arc::clone(globals),
-            osc_client: old.osc_client.clone(),
-            output_mode: old.output_mode,
-            sample_set: old.sample_set.clone(),
-            sync_mode: old.sync_mode,
             block_tags: block_tags.clone(),
             solo_tags: solo_tags.clone(),
         }
@@ -98,8 +75,6 @@ impl<const BUFSIZE: usize, const NCHAN: usize> SchedulerData<BUFSIZE, NCHAN> {
         old: &SchedulerData<BUFSIZE, NCHAN>,
         shift: f64,
         data: Generator,
-        ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
-        globals: &sync::Arc<GlobalVariables>,
         block_tags: &BTreeSet<String>,
         solo_tags: &BTreeSet<String>,
     ) -> Self {
@@ -115,12 +90,6 @@ impl<const BUFSIZE: usize, const NCHAN: usize> SchedulerData<BUFSIZE, NCHAN> {
             generator: sync::Arc::new(Mutex::new(data)),
             finished: sync::Arc::new(AtomicBool::new(false)),
             synced_generators: sync::Arc::new(Mutex::new(Vec::new())),
-            ruffbox: sync::Arc::clone(ruffbox),
-            globals: sync::Arc::clone(globals),
-            osc_client: old.osc_client.clone(),
-            sample_set: old.sample_set.clone(),
-            output_mode: old.output_mode,
-            sync_mode: old.sync_mode,
             block_tags: block_tags.clone(),
             solo_tags: solo_tags.clone(),
         }
@@ -131,12 +100,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> SchedulerData<BUFSIZE, NCHAN> {
     pub fn from_data(
         data: Generator,
         shift: f64,
-        osc_client: OscClient,
         ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
-        globals: &sync::Arc<GlobalVariables>,
-        sample_set: SampleAndWavematrixSet,
-        output_mode: OutputMode,
-        sync_mode: SyncMode,
         block_tags: &BTreeSet<String>,
         solo_tags: &BTreeSet<String>,
     ) -> Self {
@@ -152,12 +116,6 @@ impl<const BUFSIZE: usize, const NCHAN: usize> SchedulerData<BUFSIZE, NCHAN> {
             generator: sync::Arc::new(Mutex::new(data)),
             finished: sync::Arc::new(AtomicBool::new(false)),
             synced_generators: sync::Arc::new(Mutex::new(Vec::new())),
-            ruffbox: sync::Arc::clone(ruffbox),
-            globals: sync::Arc::clone(globals),
-            osc_client,
-            sample_set,
-            output_mode,
-            sync_mode,
             block_tags: block_tags.clone(),
             solo_tags: solo_tags.clone(),
         }

@@ -27,10 +27,6 @@ pub fn open_midi_input_port<const BUFSIZE: usize, const NCHAN: usize>(
     in_port_num: usize,
     function_map: sync::Arc<Mutex<FunctionMap>>,
     session: Session<BUFSIZE, NCHAN>,
-    ruffbox: sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
-    sample_set: SampleAndWavematrixSet,
-    globals: sync::Arc<GlobalVariables>,
-    mode: OutputMode,
     base_dir: String,
 ) {
     let mut midi_in = MidiInput::new("midir reading input").unwrap();
@@ -81,10 +77,10 @@ pub fn open_midi_input_port<const BUFSIZE: usize, const NCHAN: usize>(
                             eval_expression(
                                 expr,
                                 &functions,
-                                &globals,
+                                &session.globals,
                                 Some(&local_args),
-                                sample_set.clone(),
-                                mode,
+                                session.sample_set.clone(),
+                                session.output_mode,
                             )
                         })
                         .collect::<Option<Vec<EvaluatedExpr>>>()
@@ -95,10 +91,6 @@ pub fn open_midi_input_port<const BUFSIZE: usize, const NCHAN: usize>(
                                 eval_expr,
                                 &function_map,
                                 session.clone(),
-                                &ruffbox,
-                                sample_set.clone(),
-                                &globals,
-                                mode,
                                 base_dir.clone(),
                             );
                         }

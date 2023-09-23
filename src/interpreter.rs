@@ -21,18 +21,14 @@ pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
     c: Command,
     function_map: &sync::Arc<Mutex<FunctionMap>>,
     session: &mut Session<BUFSIZE, NCHAN>,
-    ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
-    sample_set: SampleAndWavematrixSet,
-    globals: &sync::Arc<GlobalVariables>,
-    output_mode: OutputMode,
     base_dir: String,
 ) {
     match c {
         Command::Push(id, te) => {
-            commands::push(id, te, globals);
+            commands::push(id, te, &session.globals);
         }
         Command::Insert(id, key, value) => {
-            commands::insert(id, key, value, globals);
+            commands::insert(id, key, value, &session.globals);
         }
         Command::Print(te) => {
             println!("{te:#?}");
@@ -58,22 +54,28 @@ pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
             commands::stop_recording(session);
         }
         Command::ImportSampleSet(resource) => {
-            let ruffbox2 = sync::Arc::clone(ruffbox);
+            let ruffbox2 = sync::Arc::clone(&session.ruffbox);
             let fmap2 = sync::Arc::clone(function_map);
-
+            let session2 = session.clone();
             thread::spawn(move || {
-                commands::fetch_sample_set(&fmap2, &ruffbox2, sample_set, base_dir, resource);
+                commands::fetch_sample_set(
+                    &fmap2,
+                    &ruffbox2,
+                    session2.sample_set,
+                    base_dir,
+                    resource,
+                );
             });
         }
         Command::LoadSample(set, mut keywords, path, downmix_stereo) => {
-            let ruffbox2 = sync::Arc::clone(ruffbox);
+            let ruffbox2 = sync::Arc::clone(&session.ruffbox);
             let fmap2 = sync::Arc::clone(function_map);
-
+            let session2 = session.clone();
             thread::spawn(move || {
                 commands::load_sample(
                     &fmap2,
                     &ruffbox2,
-                    sample_set.clone(),
+                    session2.sample_set.clone(),
                     set,
                     &mut keywords,
                     path,
@@ -83,9 +85,10 @@ pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
             });
         }
         Command::LoadSampleAsWavematrix(key, path, method, matrix_size, start) => {
+            let session2 = session.clone();
             thread::spawn(move || {
                 commands::load_sample_as_wavematrix(
-                    sample_set.clone(),
+                    session2.sample_set.clone(),
                     key,
                     path,
                     &method,
@@ -96,21 +99,29 @@ pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
             });
         }
         Command::LoadSampleSets(path, downmix_stereo) => {
-            let ruffbox2 = sync::Arc::clone(ruffbox);
+            let ruffbox2 = sync::Arc::clone(&session.ruffbox);
             let fmap2 = sync::Arc::clone(function_map);
+            let session2 = session.clone();
             thread::spawn(move || {
-                commands::load_sample_sets(&fmap2, &ruffbox2, sample_set, path, downmix_stereo);
+                commands::load_sample_sets(
+                    &fmap2,
+                    &ruffbox2,
+                    session2.sample_set,
+                    path,
+                    downmix_stereo,
+                );
                 println!("a command (load sample sets)");
             });
         }
         Command::LoadSampleSet(path, downmix_stereo) => {
-            let ruffbox2 = sync::Arc::clone(ruffbox);
+            let ruffbox2 = sync::Arc::clone(&session.ruffbox);
             let fmap2 = sync::Arc::clone(function_map);
+            let session2 = session.clone();
             thread::spawn(move || {
                 commands::load_sample_set_string(
                     &fmap2,
                     &ruffbox2,
-                    sample_set,
+                    session2.sample_set,
                     path,
                     downmix_stereo,
                 );
@@ -118,26 +129,26 @@ pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
             });
         }
         Command::FreezeBuffer(freezbuf, inbuf) => {
-            commands::freeze_buffer(ruffbox, freezbuf, inbuf);
+            commands::freeze_buffer(&session.ruffbox, freezbuf, inbuf);
             println!("freeze buffer");
         }
         Command::Tmod(p) => {
-            commands::set_global_tmod(globals, p);
+            commands::set_global_tmod(&session.globals, p);
         }
         Command::Latency(p) => {
-            commands::set_global_latency(globals, p);
+            commands::set_global_latency(&session.globals, p);
         }
         Command::DefaultDuration(d) => {
-            commands::set_default_duration(globals, d);
+            commands::set_default_duration(&session.globals, d);
         }
         Command::Bpm(b) => {
-            commands::set_default_duration(globals, b);
+            commands::set_default_duration(&session.globals, b);
         }
         Command::GlobRes(v) => {
-            commands::set_global_lifemodel_resources(globals, v);
+            commands::set_global_lifemodel_resources(&session.globals, v);
         }
         Command::GlobalRuffboxParams(mut m) => {
-            commands::set_global_ruffbox_parameters(ruffbox, globals, &mut m);
+            commands::set_global_ruffbox_parameters(&session.ruffbox, &session.globals, &mut m);
         }
         Command::ExportDotStatic(f, g) => {
             commands::export_dot_static(&f, &g);
@@ -146,18 +157,10 @@ pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
             commands::export_dot_running(&f, &t, session);
         }
         Command::Once(mut s, c) => {
-            commands::once(
-                ruffbox,
-                globals,
-                sample_set,
-                session,
-                &mut s,
-                &c,
-                output_mode,
-            );
+            commands::once(session, &mut s, &c);
         }
         Command::StepPart(name) => {
-            commands::step_part(ruffbox, globals, sample_set, session, output_mode, name);
+            commands::step_part(session, name);
         }
         Command::OscDefineClient(client_name, host) => {
             commands::define_osc_client(
@@ -198,34 +201,17 @@ pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
             //println!("send msg {client_name} {osc_addr}");
         }
         Command::OscStartReceiver(target) => {
-            let ruffbox2 = sync::Arc::clone(ruffbox);
             let fmap2 = sync::Arc::clone(function_map);
-            let globals2 = sync::Arc::clone(globals);
-            OscReceiver::start_receiver_thread_udp(
-                target,
-                fmap2,
-                session.clone(),
-                ruffbox2,
-                sample_set,
-                globals2,
-                output_mode,
-                base_dir,
-            );
+            OscReceiver::start_receiver_thread_udp(target, fmap2, session.clone(), base_dir);
         }
         Command::MidiStartReceiver(midi_in_port) => {
             let function_map_midi = sync::Arc::clone(function_map);
-            let ruffbox_midi = sync::Arc::clone(ruffbox);
-            let var_midi = sync::Arc::clone(globals);
             let session2 = session.clone();
             thread::spawn(move || {
                 midi_input::open_midi_input_port(
                     midi_in_port,
                     function_map_midi,
                     session2,
-                    ruffbox_midi,
-                    sample_set,
-                    var_midi,
-                    output_mode,
                     base_dir,
                 );
             });
@@ -241,10 +227,6 @@ pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
     parsed_in: EvaluatedExpr,
     function_map: &sync::Arc<Mutex<FunctionMap>>,
     mut session: Session<BUFSIZE, NCHAN>,
-    ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
-    sample_set: SampleAndWavematrixSet,
-    globals: &sync::Arc<GlobalVariables>,
-    output_mode: OutputMode,
     base_dir: String,
 ) {
     match parsed_in {
@@ -292,19 +274,10 @@ pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
                 "\n\n############### a context called \'{}\' ###############",
                 s.name
             );
-            Session::handle_context(&mut s, &session, ruffbox, globals, sample_set, output_mode);
+            Session::handle_context(&mut s, &session);
         }
         EvaluatedExpr::Command(c) => {
-            interpret_command(
-                c,
-                function_map,
-                &mut session,
-                ruffbox,
-                sample_set,
-                globals,
-                output_mode,
-                base_dir,
-            );
+            interpret_command(c, function_map, &mut session, base_dir);
         }
         EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f))) => {
             println!("a number: {f}")
@@ -336,20 +309,11 @@ pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
         }
         EvaluatedExpr::VariableDefinition(name, var) => {
             println!("a variable definition {name:#?}");
-            globals.insert(name, var);
+            session.globals.insert(name, var);
         }
         EvaluatedExpr::Progn(exprs) => {
             for expr in exprs {
-                interpret(
-                    expr,
-                    function_map,
-                    session.clone(),
-                    ruffbox,
-                    sample_set.clone(),
-                    globals,
-                    output_mode,
-                    base_dir.clone(),
-                );
+                interpret(expr, function_map, session.clone(), base_dir.clone());
             }
         }
         EvaluatedExpr::Match(temp, exprs) => {
@@ -357,16 +321,7 @@ pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
                 for (comp, expr) in exprs {
                     if let EvaluatedExpr::Typed(TypedEntity::Comparable(t2)) = comp {
                         if t1 == t2 {
-                            interpret(
-                                expr,
-                                function_map,
-                                session.clone(),
-                                ruffbox,
-                                sample_set.clone(),
-                                globals,
-                                output_mode,
-                                base_dir.clone(),
-                            );
+                            interpret(expr, function_map, session.clone(), base_dir.clone());
                         }
                     }
                 }

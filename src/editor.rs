@@ -22,18 +22,14 @@ use crate::session::{OutputMode, Session};
 pub fn run_editor<const BUFSIZE: usize, const NCHAN: usize>(
     function_map: &sync::Arc<Mutex<FunctionMap>>,
     session: Session<BUFSIZE, NCHAN>,
-    ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
-    sample_set: SampleAndWavematrixSet,
-    globals: &sync::Arc<GlobalVariables>,
     base_dir: String,
     create_sketch: bool,
-    mode: OutputMode,
     font: Option<&str>,
     font_size: f32,
 ) -> std::result::Result<(), eframe::Error> {
     let function_map2 = sync::Arc::clone(function_map);
-    let ruffbox2 = sync::Arc::clone(ruffbox);
-    let globals2 = sync::Arc::clone(globals);
+    let ruffbox2 = sync::Arc::clone(&session.ruffbox);
+    let globals2 = sync::Arc::clone(&session.globals);
     let base_dir_2 = base_dir.clone();
 
     let callback_ref: sync::Arc<Mutex<dyn FnMut(&String)>> =
@@ -42,8 +38,8 @@ pub fn run_editor<const BUFSIZE: usize, const NCHAN: usize>(
                 text,
                 &function_map2.lock(),
                 &globals2,
-                sample_set.clone(),
-                mode,
+                session.sample_set.clone(),
+                session.output_mode,
             );
             match pfa_in {
                 Ok(pfa) => {
@@ -51,10 +47,6 @@ pub fn run_editor<const BUFSIZE: usize, const NCHAN: usize>(
                         pfa,
                         &function_map2,
                         session.clone(),
-                        &ruffbox2,
-                        sample_set.clone(),
-                        &globals2,
-                        mode,
                         base_dir_2.to_string(),
                     );
                 }

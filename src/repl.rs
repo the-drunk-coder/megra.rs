@@ -19,10 +19,6 @@ use crate::session::{OutputMode, Session};
 pub fn start_repl<const BUFSIZE: usize, const NCHAN: usize>(
     function_map: &sync::Arc<Mutex<FunctionMap>>,
     session: Session<BUFSIZE, NCHAN>,
-    ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
-    sample_set: SampleAndWavematrixSet,
-    globals: &sync::Arc<GlobalVariables>,
-    mode: OutputMode,
     base_dir: String,
 ) -> Result<(), anyhow::Error> {
     // `()` can be used when no completer is required
@@ -43,9 +39,9 @@ pub fn start_repl<const BUFSIZE: usize, const NCHAN: usize>(
                 let pfa_in = parser::eval_from_str(
                     line.as_str(),
                     &function_map.lock(),
-                    globals,
-                    sample_set.clone(),
-                    mode,
+                    &session.globals,
+                    session.sample_set.clone(),
+                    session.output_mode,
                 );
 
                 match pfa_in {
@@ -67,9 +63,9 @@ pub fn start_repl<const BUFSIZE: usize, const NCHAN: usize>(
                                         let inner_pfa_in = parser::eval_from_str(
                                             line_buffer.as_str(),
                                             &function_map.lock(),
-                                            globals,
-                                            sample_set.clone(),
-                                            mode,
+                                            &session.globals,
+                                            session.sample_set.clone(),
+                                            session.output_mode,
                                         );
                                         match inner_pfa_in {
                                             Ok(pfa) => {
@@ -77,10 +73,6 @@ pub fn start_repl<const BUFSIZE: usize, const NCHAN: usize>(
                                                     pfa,
                                                     function_map,
                                                     session.clone(),
-                                                    ruffbox,
-                                                    sample_set.clone(),
-                                                    globals,
-                                                    mode,
                                                     base_dir.clone(),
                                                 );
                                                 rl.add_history_entry(line_buffer.as_str());
@@ -106,10 +98,6 @@ pub fn start_repl<const BUFSIZE: usize, const NCHAN: usize>(
                             pfa,
                             function_map,
                             session.clone(),
-                            ruffbox,
-                            sample_set.clone(),
-                            globals,
-                            mode,
                             base_dir.clone(),
                         );
                         rl.add_history_entry(line.as_str());
