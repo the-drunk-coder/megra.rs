@@ -14,7 +14,6 @@ use crate::parser::{EvaluatedExpr, FunctionMap};
 use crate::session::Session;
 use crate::visualizer_client::VisualizerClient;
 
-#[allow(clippy::too_many_arguments)]
 pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
     c: Command,
     function_map: &sync::Arc<Mutex<FunctionMap>>,
@@ -220,7 +219,6 @@ pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
     };
 }
 
-#[allow(clippy::too_many_arguments)]
 pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
     parsed_in: EvaluatedExpr,
     function_map: &sync::Arc<Mutex<FunctionMap>>,

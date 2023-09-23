@@ -20,7 +20,6 @@ pub fn list_midi_input_ports() {
     }
 }
 
-#[allow(clippy::too_many_arguments)]
 pub fn open_midi_input_port<const BUFSIZE: usize, const NCHAN: usize>(
     in_port_num: usize,
     function_map: sync::Arc<Mutex<FunctionMap>>,

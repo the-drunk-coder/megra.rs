@@ -37,7 +37,6 @@ pub struct SchedulerData<const BUFSIZE: usize, const NCHAN: usize> {
 
 impl<const BUFSIZE: usize, const NCHAN: usize> SchedulerData<BUFSIZE, NCHAN> {
     #[allow(clippy::manual_map)]
-    #[allow(clippy::too_many_arguments)]
     pub fn from_previous(
         old: &SchedulerData<BUFSIZE, NCHAN>,
         shift: f64,
@@ -70,7 +69,6 @@ impl<const BUFSIZE: usize, const NCHAN: usize> SchedulerData<BUFSIZE, NCHAN> {
     }
 
     #[allow(clippy::manual_map)]
-    #[allow(clippy::too_many_arguments)]
     pub fn from_time_data(
         old: &SchedulerData<BUFSIZE, NCHAN>,
         shift: f64,
@@ -95,7 +93,6 @@ impl<const BUFSIZE: usize, const NCHAN: usize> SchedulerData<BUFSIZE, NCHAN> {
         }
     }
 
-    #[allow(clippy::too_many_arguments)]
     #[allow(clippy::manual_map)]
     pub fn from_data(
         data: Generator,

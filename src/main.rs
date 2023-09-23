@@ -374,7 +374,6 @@ fn main() -> Result<(), anyhow::Error> {
     Ok(())
 }
 
-#[allow(clippy::too_many_arguments)]
 fn run<const NCHAN: usize>(
     input_device: &cpal::Device,
     output_device: &cpal::Device,

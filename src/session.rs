@@ -482,7 +482,6 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
     }
 
     /// if a generater is already active, it'll be resumed by replacing its scheduler data
-    #[allow(clippy::too_many_arguments)]
     fn resume_generator(
         gen: Generator,
         session: &Session<BUFSIZE, NCHAN>,
@@ -528,7 +527,6 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
         }
     }
 
-    #[allow(clippy::too_many_arguments)]
     fn resume_generator_sync(
         gen: Generator,
         session: &Session<BUFSIZE, NCHAN>,
@@ -628,7 +626,6 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
         }
     }
 
-    #[allow(clippy::too_many_arguments)]
     pub fn start_generator_no_sync(
         gen: Generator,
         session: &Session<BUFSIZE, NCHAN>,

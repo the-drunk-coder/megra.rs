@@ -15,7 +15,6 @@ use crate::parser::FunctionMap;
 
 use crate::session::Session;
 
-#[allow(clippy::too_many_arguments)]
 pub fn run_editor<const BUFSIZE: usize, const NCHAN: usize>(
     function_map: &sync::Arc<Mutex<FunctionMap>>,
     session: Session<BUFSIZE, NCHAN>,
