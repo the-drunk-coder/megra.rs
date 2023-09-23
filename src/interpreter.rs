@@ -4,16 +4,14 @@ use rosc::OscType;
 use std::sync;
 use std::thread;
 
-use ruffbox_synth::ruffbox::RuffboxControls;
-
 use crate::builtin_types::*;
 
 use crate::commands;
 use crate::midi_input;
 use crate::osc_receiver::OscReceiver;
 use crate::parser::{EvaluatedExpr, FunctionMap};
-use crate::sample_set::SampleAndWavematrixSet;
-use crate::session::{OutputMode, Session};
+
+use crate::session::Session;
 use crate::visualizer_client::VisualizerClient;
 
 #[allow(clippy::too_many_arguments)]

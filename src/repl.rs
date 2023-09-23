@@ -2,18 +2,15 @@ use parking_lot::Mutex;
 
 use std::sync;
 
-use ruffbox_synth::ruffbox::RuffboxControls;
 use rustyline::error::ReadlineError;
 use rustyline::Editor;
-
-use crate::builtin_types::*;
 
 use crate::interpreter;
 
 use crate::parser;
 use crate::parser::FunctionMap;
-use crate::sample_set::SampleAndWavematrixSet;
-use crate::session::{OutputMode, Session};
+
+use crate::session::Session;
 
 #[allow(clippy::too_many_arguments)]
 pub fn start_repl<const BUFSIZE: usize, const NCHAN: usize>(

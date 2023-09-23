@@ -7,9 +7,7 @@ use std::sync;
 
 use crate::builtin_types::Comparable;
 use crate::parser::{eval_expression, EvaluatedExpr, FunctionMap};
-use crate::{interpreter, GlobalVariables, OutputMode, SampleAndWavematrixSet, Session};
-
-use ruffbox_synth::ruffbox::RuffboxControls;
+use crate::{interpreter, Session};
 
 pub fn list_midi_input_ports() {
     if let Ok(mut midi_in) = MidiInput::new("midir reading input") {

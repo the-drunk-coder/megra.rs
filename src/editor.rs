@@ -3,20 +3,17 @@ mod livecode_text_edit;
 mod syntax_highlighting;
 
 use parking_lot::Mutex;
-use ruffbox_synth::ruffbox::RuffboxControls;
 
 use std::sync;
 
 mod megra_editor;
 use megra_editor::{EditorFont, MegraEditor};
 
-use crate::builtin_types::*;
-
 use crate::interpreter;
 use crate::parser;
 use crate::parser::FunctionMap;
-use crate::sample_set::SampleAndWavematrixSet;
-use crate::session::{OutputMode, Session};
+
+use crate::session::Session;
 
 #[allow(clippy::too_many_arguments)]
 pub fn run_editor<const BUFSIZE: usize, const NCHAN: usize>(
@@ -28,7 +25,7 @@ pub fn run_editor<const BUFSIZE: usize, const NCHAN: usize>(
     font_size: f32,
 ) -> std::result::Result<(), eframe::Error> {
     let function_map2 = sync::Arc::clone(function_map);
-    let ruffbox2 = sync::Arc::clone(&session.ruffbox);
+    let _ruffbox2 = sync::Arc::clone(&session.ruffbox);
     let globals2 = sync::Arc::clone(&session.globals);
     let base_dir_2 = base_dir.clone();
 
