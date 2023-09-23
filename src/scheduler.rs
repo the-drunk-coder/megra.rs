@@ -2,6 +2,7 @@ use crate::builtin_types::*;
 use crate::generator::Generator;
 use crate::osc_client::OscClient;
 use crate::session::{OutputMode, Session, SyncMode};
+use crossbeam::atomic::AtomicCell;
 use parking_lot::Mutex;
 use ruffbox_synth::ruffbox::RuffboxControls;
 
@@ -23,27 +24,30 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Default for Scheduler<BUFSIZE, NC
     }
 }
 
+#[derive(Clone)]
 pub struct SchedulerData<const BUFSIZE: usize, const NCHAN: usize> {
-    pub start_time: Instant,
-    pub stream_time: f64,
-    pub logical_time: f64,
-    pub last_diff: f64,
-    pub shift: f64,
-    pub generator: Box<Generator>,
-    pub finished: bool,
-    pub synced_generators: Vec<(Box<Generator>, f64)>,
-    pub ruffbox: sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
-    pub globals: sync::Arc<GlobalVariables>,
+    pub start_time: std::sync::Arc<Mutex<Instant>>,
+    pub stream_time: std::sync::Arc<AtomicCell<f64>>,
+    pub logical_time: std::sync::Arc<AtomicCell<f64>>,
+    pub last_diff: std::sync::Arc<AtomicCell<f64>>,
+    pub shift: std::sync::Arc<AtomicCell<f64>>,
+    pub generator: std::sync::Arc<Mutex<Generator>>,
+    pub finished: std::sync::Arc<AtomicBool>,
+    pub synced_generators: std::sync::Arc<Mutex<Vec<(Generator, f64)>>>,
+
+    pub block_tags: BTreeSet<String>,
+    pub solo_tags: BTreeSet<String>,
     // the osc client reverence here might be a bit
     // redundant, as there's already a reference in the
     // session, but that way we can access the client without
     // having to lock the session
+    // ONCE THE SCHED DATA IS LOCKFREE ALL OF THE BELOW CAN BE MOVED TO SESSION NOW ...
     pub osc_client: OscClient,
     pub sample_set: SampleAndWavematrixSet,
     pub output_mode: OutputMode,
     pub sync_mode: SyncMode,
-    pub block_tags: BTreeSet<String>,
-    pub solo_tags: BTreeSet<String>,
+    pub ruffbox: sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
+    pub globals: sync::Arc<GlobalVariables>,
 }
 
 impl<const BUFSIZE: usize, const NCHAN: usize> SchedulerData<BUFSIZE, NCHAN> {
@@ -52,30 +56,30 @@ impl<const BUFSIZE: usize, const NCHAN: usize> SchedulerData<BUFSIZE, NCHAN> {
     pub fn from_previous(
         old: &SchedulerData<BUFSIZE, NCHAN>,
         shift: f64,
-        mut data: Box<Generator>,
+        mut data: Generator,
         ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
         globals: &sync::Arc<GlobalVariables>,
         block_tags: &BTreeSet<String>,
         solo_tags: &BTreeSet<String>,
     ) -> Self {
-        let shift_diff = shift - old.shift;
+        let shift_diff = shift - old.shift.load();
 
-        //println!("{:?} {}", data.id_tags, data.keep_root);
+        println!("{:?} {}", data.id_tags, data.keep_root);
 
         if !data.keep_root {
-            data.transfer_state(&old.generator);
+            data.transfer_state(&old.generator.lock());
         } else {
-            data.root_generator = old.generator.root_generator.clone();
+            data.root_generator = old.generator.lock().root_generator.clone();
         }
 
         SchedulerData {
-            start_time: old.start_time,
-            stream_time: old.stream_time + shift_diff,
-            logical_time: old.logical_time + shift_diff,
-            shift,
-            last_diff: old.last_diff,
-            generator: data,
-            finished: false,
+            start_time: old.start_time.clone(),
+            stream_time: sync::Arc::new(AtomicCell::new(old.stream_time.load() + shift_diff)),
+            logical_time: sync::Arc::new(AtomicCell::new(old.logical_time.load() + shift_diff)),
+            shift: sync::Arc::new(AtomicCell::new(shift)),
+            last_diff: old.last_diff.clone(),
+            generator: sync::Arc::new(Mutex::new(data)),
+            finished: sync::Arc::new(AtomicBool::new(false)),
             synced_generators: old.synced_generators.clone(), // carry over synced gens ...
             ruffbox: sync::Arc::clone(ruffbox),
             globals: sync::Arc::clone(globals),
@@ -93,24 +97,24 @@ impl<const BUFSIZE: usize, const NCHAN: usize> SchedulerData<BUFSIZE, NCHAN> {
     pub fn from_time_data(
         old: &SchedulerData<BUFSIZE, NCHAN>,
         shift: f64,
-        data: Box<Generator>,
+        data: Generator,
         ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
         globals: &sync::Arc<GlobalVariables>,
         block_tags: &BTreeSet<String>,
         solo_tags: &BTreeSet<String>,
     ) -> Self {
-        let shift_diff = shift - old.shift;
+        let shift_diff = shift - old.shift.load();
 
         // keep scheduling, retain time
         SchedulerData {
-            start_time: old.start_time,
-            stream_time: old.stream_time + shift_diff,
-            logical_time: old.logical_time + shift_diff,
-            shift,
-            last_diff: 0.0,
-            generator: data,
-            finished: false,
-            synced_generators: Vec::new(),
+            start_time: old.start_time.clone(),
+            stream_time: sync::Arc::new(AtomicCell::new(old.stream_time.load() + shift_diff)),
+            logical_time: sync::Arc::new(AtomicCell::new(old.logical_time.load() + shift_diff)),
+            shift: sync::Arc::new(AtomicCell::new(shift)),
+            last_diff: sync::Arc::new(AtomicCell::new(0.0)),
+            generator: sync::Arc::new(Mutex::new(data)),
+            finished: sync::Arc::new(AtomicBool::new(false)),
+            synced_generators: sync::Arc::new(Mutex::new(Vec::new())),
             ruffbox: sync::Arc::clone(ruffbox),
             globals: sync::Arc::clone(globals),
             osc_client: old.osc_client.clone(),
@@ -125,7 +129,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> SchedulerData<BUFSIZE, NCHAN> {
     #[allow(clippy::too_many_arguments)]
     #[allow(clippy::manual_map)]
     pub fn from_data(
-        data: Box<Generator>,
+        data: Generator,
         shift: f64,
         osc_client: OscClient,
         ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
@@ -140,14 +144,14 @@ impl<const BUFSIZE: usize, const NCHAN: usize> SchedulerData<BUFSIZE, NCHAN> {
         let stream_time = ruffbox.get_now();
 
         SchedulerData {
-            start_time: Instant::now(),
-            stream_time: stream_time + shift,
-            logical_time: shift,
-            last_diff: 0.0,
-            shift,
-            generator: data,
-            finished: false,
-            synced_generators: Vec::new(),
+            start_time: sync::Arc::new(Mutex::new(Instant::now())),
+            stream_time: sync::Arc::new(AtomicCell::new(stream_time + shift)),
+            logical_time: sync::Arc::new(AtomicCell::new(shift)),
+            last_diff: sync::Arc::new(AtomicCell::new(0.0)),
+            shift: sync::Arc::new(AtomicCell::new(shift)),
+            generator: sync::Arc::new(Mutex::new(data)),
+            finished: sync::Arc::new(AtomicBool::new(false)),
+            synced_generators: sync::Arc::new(Mutex::new(Vec::new())),
             ruffbox: sync::Arc::clone(ruffbox),
             globals: sync::Arc::clone(globals),
             osc_client,
@@ -176,7 +180,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Scheduler<BUFSIZE, NCHAN> {
             &mut SchedulerData<BUFSIZE, NCHAN>,
             &std::sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
         ) -> (f64, bool, bool),
-        data: sync::Arc<Mutex<SchedulerData<BUFSIZE, NCHAN>>>,
+        mut sched_data: SchedulerData<BUFSIZE, NCHAN>,
         session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
     ) {
         self.running.store(true, Ordering::SeqCst);
@@ -192,14 +196,13 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Scheduler<BUFSIZE, NCHAN> {
                         let ldif: f64;
                         let cur: f64;
                         {
-                            let mut sched_data = data.lock();
                             // call event processing function that'll return
                             // the sync flag and
                             let sched_result = (fun)(&mut sched_data, &session2);
                             let sync = sched_result.1;
 			    let end = sched_result.2;
                             if sync {
-                                let mut syncs = sched_data.synced_generators.clone();
+                                let mut syncs = sched_data.synced_generators.lock();
                                 for (g, s) in syncs.drain(..) {
                                     Session::start_generator_data_sync(
                                         g,
@@ -209,18 +212,17 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Scheduler<BUFSIZE, NCHAN> {
 					&sched_data.block_tags,
 					&sched_data.solo_tags,
                                     );
-                                }
-                                 sched_data.synced_generators.clear();
-                            }
+				}
+			    }
 			    if end {
-				sched_data.finished = true;
+				sched_data.finished.store(true, Ordering::SeqCst);
 				running.store(false, Ordering::SeqCst);
 				return;
 			    }
-			    cur = sched_data.start_time.elapsed().as_secs_f64();
-                            sched_data.last_diff = cur - sched_data.logical_time;
+			    cur = sched_data.start_time.lock().elapsed().as_secs_f64();
+                            sched_data.last_diff.store(cur - sched_data.logical_time.load());
                             next = sched_result.0;
-                            ldif = sched_data.last_diff;
+                            ldif = sched_data.last_diff.load();
                             // compensate for eventual lateness ...
                             if (next - ldif) < 0.0 {
                                 let handle = thread::current();
@@ -228,17 +230,17 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Scheduler<BUFSIZE, NCHAN> {
                                     "{} negative duration found: cur before {} cur after {} {} {} {}",
                                     handle.name().unwrap(),
                                     cur,
-				    sched_data.start_time.elapsed().as_secs_f64(),
-                                    sched_data.logical_time,
+				    sched_data.start_time.lock().elapsed().as_secs_f64(),
+                                    sched_data.logical_time.load(),
                                     next,
                                     ldif
                                 );
-				sched_data.finished = true;
+				sched_data.finished.store(true, Ordering::SeqCst);
 				running.store(false, Ordering::SeqCst);
 				return;
                             }
-                            sched_data.logical_time += next;
-                            sched_data.stream_time += next;
+                            sched_data.logical_time.store(sched_data.logical_time.load() + next);
+                            sched_data.stream_time.store(sched_data.stream_time.load() + next);
                         }
 
                         thread::sleep(Duration::from_secs_f64(next - ldif));

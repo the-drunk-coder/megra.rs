@@ -637,11 +637,10 @@ pub fn export_dot_running<const BUFSIZE: usize, const NCHAN: usize>(
 
     {
         let sess = session.lock();
-        for (id_tags, (_, sched_data)) in sess.schedulers.iter() {
+        for (id_tags, (_, data)) in sess.schedulers.iter() {
             if !tags.is_disjoint(id_tags) {
-                let data = sched_data.lock();
                 // get a snapshot of the generator in it's current state
-                gens.push((id_tags.clone(), data.generator.clone()));
+                gens.push((id_tags.clone(), data.generator.lock().clone()));
             }
         }
     }
