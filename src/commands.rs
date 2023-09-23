@@ -536,7 +536,7 @@ pub fn stop_recording<const BUFSIZE: usize, const NCHAN: usize>(session: &Sessio
 
 /// execute a pre-defined part step by step
 pub fn step_part<const BUFSIZE: usize, const NCHAN: usize>(
-    session: &mut Session<BUFSIZE, NCHAN>,
+    session: &Session<BUFSIZE, NCHAN>,
     part_name: String,
 ) {
     let mut sound_events = Vec::new();

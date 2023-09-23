@@ -73,7 +73,7 @@ pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
                 commands::load_sample(
                     &fmap2,
                     &ruffbox2,
-                    session2.sample_set.clone(),
+                    session2.sample_set,
                     set,
                     &mut keywords,
                     path,
@@ -86,7 +86,7 @@ pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
             let session2 = session.clone();
             thread::spawn(move || {
                 commands::load_sample_as_wavematrix(
-                    session2.sample_set.clone(),
+                    session2.sample_set,
                     key,
                     path,
                     &method,
