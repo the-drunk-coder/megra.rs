@@ -661,9 +661,8 @@ fn run<const NCHAN: usize>(
     out_stream.play()?;
 
     // global data
-    let mut raw_session = Session::new();
-    raw_session.rec_control = sync::Arc::new(Mutex::new(Some(rec_control)));
-    let session = sync::Arc::new(Mutex::new(raw_session));
+    let mut session = Session::new();
+    session.rec_control = sync::Arc::new(Mutex::new(Some(rec_control)));
 
     let globals = sync::Arc::new(GlobalVariables::new());
     let sample_set = SampleAndWavematrixSet::new();
@@ -743,7 +742,7 @@ fn run<const NCHAN: usize>(
     if options.editor {
         editor::run_editor(
             &stdlib,
-            &session,
+            session,
             &controls_arc,
             sample_set,
             &globals,
@@ -759,7 +758,7 @@ fn run<const NCHAN: usize>(
         // start the megra repl
         repl::start_repl(
             &stdlib,
-            &session,
+            session,
             &controls_arc,
             sample_set,
             &globals,

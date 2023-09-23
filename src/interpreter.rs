@@ -20,7 +20,7 @@ use crate::visualizer_client::VisualizerClient;
 pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
     c: Command,
     function_map: &sync::Arc<Mutex<FunctionMap>>,
-    session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
+    session: &mut Session<BUFSIZE, NCHAN>,
     ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
     sample_set: SampleAndWavematrixSet,
     globals: &sync::Arc<GlobalVariables>,
@@ -38,14 +38,13 @@ pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
             println!("{te:#?}");
         }
         Command::Clear => {
-            let session2 = sync::Arc::clone(session);
+            let session2 = session.clone();
             thread::spawn(move || {
-                Session::clear_session(&session2);
+                Session::clear_session(session2);
                 println!("a command (stop session)");
             });
         }
         Command::ConnectVisualizer => {
-            let mut session = session.lock();
             if session.osc_client.vis.is_none() {
                 session.osc_client.vis = Some(sync::Arc::new(VisualizerClient::start()));
             } else {
@@ -165,7 +164,7 @@ pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
                 client_name,
                 host,
                 "127.0.0.1:51580".to_string(),
-                &session.lock().osc_client.custom,
+                &session.osc_client.custom,
             );
         }
         Command::OscSendMessage(client_name, osc_addr, args) => {
@@ -193,7 +192,7 @@ pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
                     _ => {}
                 }
             }
-            if let Some(thing) = &session.lock().osc_client.custom.get(&client_name) {
+            if let Some(thing) = &session.osc_client.custom.get(&client_name) {
                 let _ = thing.value().send_message(osc_addr, osc_args);
             }
             //println!("send msg {client_name} {osc_addr}");
@@ -201,12 +200,11 @@ pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
         Command::OscStartReceiver(target) => {
             let ruffbox2 = sync::Arc::clone(ruffbox);
             let fmap2 = sync::Arc::clone(function_map);
-            let session2 = sync::Arc::clone(session);
             let globals2 = sync::Arc::clone(globals);
             OscReceiver::start_receiver_thread_udp(
                 target,
                 fmap2,
-                session2,
+                session.clone(),
                 ruffbox2,
                 sample_set,
                 globals2,
@@ -216,14 +214,14 @@ pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
         }
         Command::MidiStartReceiver(midi_in_port) => {
             let function_map_midi = sync::Arc::clone(function_map);
-            let session_midi = sync::Arc::clone(session);
             let ruffbox_midi = sync::Arc::clone(ruffbox);
             let var_midi = sync::Arc::clone(globals);
+            let session2 = session.clone();
             thread::spawn(move || {
                 midi_input::open_midi_input_port(
                     midi_in_port,
                     function_map_midi,
-                    session_midi,
+                    session2,
                     ruffbox_midi,
                     sample_set,
                     var_midi,
@@ -242,7 +240,7 @@ pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
 pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
     parsed_in: EvaluatedExpr,
     function_map: &sync::Arc<Mutex<FunctionMap>>,
-    session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
+    mut session: Session<BUFSIZE, NCHAN>,
     ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
     sample_set: SampleAndWavematrixSet,
     globals: &sync::Arc<GlobalVariables>,
@@ -294,13 +292,13 @@ pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
                 "\n\n############### a context called \'{}\' ###############",
                 s.name
             );
-            Session::handle_context(&mut s, session, ruffbox, globals, sample_set, output_mode);
+            Session::handle_context(&mut s, &session, ruffbox, globals, sample_set, output_mode);
         }
         EvaluatedExpr::Command(c) => {
             interpret_command(
                 c,
                 function_map,
-                session,
+                &mut session,
                 ruffbox,
                 sample_set,
                 globals,
@@ -345,7 +343,7 @@ pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
                 interpret(
                     expr,
                     function_map,
-                    session,
+                    session.clone(),
                     ruffbox,
                     sample_set.clone(),
                     globals,
@@ -362,7 +360,7 @@ pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
                             interpret(
                                 expr,
                                 function_map,
-                                session,
+                                session.clone(),
                                 ruffbox,
                                 sample_set.clone(),
                                 globals,

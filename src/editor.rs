@@ -21,7 +21,7 @@ use crate::session::{OutputMode, Session};
 #[allow(clippy::too_many_arguments)]
 pub fn run_editor<const BUFSIZE: usize, const NCHAN: usize>(
     function_map: &sync::Arc<Mutex<FunctionMap>>,
-    session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
+    session: Session<BUFSIZE, NCHAN>,
     ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
     sample_set: SampleAndWavematrixSet,
     globals: &sync::Arc<GlobalVariables>,
@@ -31,10 +31,8 @@ pub fn run_editor<const BUFSIZE: usize, const NCHAN: usize>(
     font: Option<&str>,
     font_size: f32,
 ) -> std::result::Result<(), eframe::Error> {
-    let session2 = sync::Arc::clone(session);
     let function_map2 = sync::Arc::clone(function_map);
     let ruffbox2 = sync::Arc::clone(ruffbox);
-
     let globals2 = sync::Arc::clone(globals);
     let base_dir_2 = base_dir.clone();
 
@@ -52,7 +50,7 @@ pub fn run_editor<const BUFSIZE: usize, const NCHAN: usize>(
                     interpreter::interpret(
                         pfa,
                         &function_map2,
-                        &session2,
+                        session.clone(),
                         &ruffbox2,
                         sample_set.clone(),
                         &globals2,

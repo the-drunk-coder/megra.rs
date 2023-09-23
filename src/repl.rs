@@ -18,7 +18,7 @@ use crate::session::{OutputMode, Session};
 #[allow(clippy::too_many_arguments)]
 pub fn start_repl<const BUFSIZE: usize, const NCHAN: usize>(
     function_map: &sync::Arc<Mutex<FunctionMap>>,
-    session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
+    session: Session<BUFSIZE, NCHAN>,
     ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
     sample_set: SampleAndWavematrixSet,
     globals: &sync::Arc<GlobalVariables>,
@@ -76,7 +76,7 @@ pub fn start_repl<const BUFSIZE: usize, const NCHAN: usize>(
                                                 interpreter::interpret(
                                                     pfa,
                                                     function_map,
-                                                    session,
+                                                    session.clone(),
                                                     ruffbox,
                                                     sample_set.clone(),
                                                     globals,
@@ -105,7 +105,7 @@ pub fn start_repl<const BUFSIZE: usize, const NCHAN: usize>(
                         interpreter::interpret(
                             pfa,
                             function_map,
-                            session,
+                            session.clone(),
                             ruffbox,
                             sample_set.clone(),
                             globals,

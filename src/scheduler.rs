@@ -176,18 +176,15 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Scheduler<BUFSIZE, NCHAN> {
     pub fn start(
         &mut self,
         name: &str,
-        fun: fn(
-            &mut SchedulerData<BUFSIZE, NCHAN>,
-            &std::sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
-        ) -> (f64, bool, bool),
+        fun: fn(&mut SchedulerData<BUFSIZE, NCHAN>, &Session<BUFSIZE, NCHAN>) -> (f64, bool, bool),
         mut sched_data: SchedulerData<BUFSIZE, NCHAN>,
-        session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
+        session: Session<BUFSIZE, NCHAN>,
     ) {
         self.running.store(true, Ordering::SeqCst);
         let running = self.running.clone();
 
         let builder = thread::Builder::new().name(name.into());
-        let session2 = std::sync::Arc::clone(session);
+
         self.handle = Some(
             builder
                 .spawn(move || {
@@ -198,7 +195,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Scheduler<BUFSIZE, NCHAN> {
                         {
                             // call event processing function that'll return
                             // the sync flag and
-                            let sched_result = (fun)(&mut sched_data, &session2);
+                            let sched_result = (fun)(&mut sched_data, &session);
                             let sync = sched_result.1;
 			    let end = sched_result.2;
                             if sync {
@@ -206,7 +203,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Scheduler<BUFSIZE, NCHAN> {
                                 for (g, s) in syncs.drain(..) {
                                     Session::start_generator_data_sync(
                                         g,
-					&session2,
+					&session,
                                         &sched_data,
                                         s,
 					&sched_data.block_tags,

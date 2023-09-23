@@ -420,12 +420,12 @@ pub fn load_sample_sets_path<const BUFSIZE: usize, const NCHAN: usize>(
 
 /// start a recording of the output
 pub fn start_recording<const BUFSIZE: usize, const NCHAN: usize>(
-    session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
+    session: &Session<BUFSIZE, NCHAN>,
     prefix: Option<String>,
     base_dir: String,
     rec_input: bool,
 ) {
-    let maybe_rec_ctrl = session.lock().rec_control.lock().take();
+    let maybe_rec_ctrl = session.rec_control.lock().take();
     if let Some(mut rec_ctrl) = maybe_rec_ctrl {
         //println!("rec state {} {}", rec_ctrl.is_recording_output.load(Ordering::SeqCst) ,rec_ctrl.is_recording_input.load(Ordering::SeqCst));
 
@@ -502,15 +502,13 @@ pub fn start_recording<const BUFSIZE: usize, const NCHAN: usize>(
             }
         }
 
-        *session.lock().rec_control.lock() = Some(rec_ctrl);
+        *session.rec_control.lock() = Some(rec_ctrl);
     }
 }
 
 /// stop a running recording
-pub fn stop_recording<const BUFSIZE: usize, const NCHAN: usize>(
-    session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
-) {
-    let maybe_rec_ctrl = session.lock().rec_control.lock().take();
+pub fn stop_recording<const BUFSIZE: usize, const NCHAN: usize>(session: &Session<BUFSIZE, NCHAN>) {
+    let maybe_rec_ctrl = session.rec_control.lock().take();
     if let Some(mut rec_ctrl) = maybe_rec_ctrl {
         //println!("rec state {} {}", rec_ctrl.is_recording_output.load(Ordering::SeqCst), rec_ctrl.is_recording_input.load(Ordering::SeqCst));
         if rec_ctrl.is_recording_output.load(Ordering::SeqCst) {
@@ -532,7 +530,7 @@ pub fn stop_recording<const BUFSIZE: usize, const NCHAN: usize>(
             println!("can't stop input recording that isn't running !");
         }
 
-        *session.lock().rec_control.lock() = Some(rec_ctrl);
+        *session.rec_control.lock() = Some(rec_ctrl);
     }
 }
 
@@ -541,7 +539,7 @@ pub fn step_part<const BUFSIZE: usize, const NCHAN: usize>(
     ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
     globals: &sync::Arc<GlobalVariables>,
     sample_set: SampleAndWavematrixSet,
-    session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
+    session: &Session<BUFSIZE, NCHAN>,
     output_mode: OutputMode,
     part_name: String,
 ) {
@@ -631,19 +629,16 @@ pub fn export_dot_static(filename: &str, generator: &Generator) {
 pub fn export_dot_running<const BUFSIZE: usize, const NCHAN: usize>(
     filename: &str,
     tags: &BTreeSet<String>,
-    session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
+    session: &Session<BUFSIZE, NCHAN>,
 ) {
     let mut gens = Vec::new();
 
-    {
-        let sess = session.lock();
-        for sc in sess.schedulers.iter() {
-            let (id_tags, (_, data)) = sc.pair();
+    for sc in session.schedulers.iter() {
+        let (id_tags, (_, data)) = sc.pair();
 
-            if !tags.is_disjoint(id_tags) {
-                // get a snapshot of the generator in it's current state
-                gens.push((id_tags.clone(), data.generator.lock().clone()));
-            }
+        if !tags.is_disjoint(id_tags) {
+            // get a snapshot of the generator in it's current state
+            gens.push((id_tags.clone(), data.generator.lock().clone()));
         }
     }
 
@@ -668,7 +663,7 @@ pub fn once<const BUFSIZE: usize, const NCHAN: usize>(
     ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
     globals: &sync::Arc<GlobalVariables>,
     sample_set: SampleAndWavematrixSet,
-    session: &sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
+    session: &Session<BUFSIZE, NCHAN>,
     sound_events: &mut [StaticEvent],
     control_events: &[ControlEvent],
     output_mode: OutputMode,

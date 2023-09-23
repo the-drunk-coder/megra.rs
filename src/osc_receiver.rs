@@ -20,7 +20,7 @@ impl OscReceiver {
     pub fn start_receiver_thread_udp<const BUFSIZE: usize, const NCHAN: usize>(
         target: String,
         function_map: sync::Arc<Mutex<FunctionMap>>,
-        session: sync::Arc<Mutex<Session<BUFSIZE, NCHAN>>>,
+        session: Session<BUFSIZE, NCHAN>,
         ruffbox: sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
         sample_set: SampleAndWavematrixSet,
         globals: sync::Arc<GlobalVariables>,
@@ -113,7 +113,7 @@ impl OscReceiver {
                                         interpreter::interpret(
                                             eval_expr,
                                             &function_map,
-                                            &session,
+                                            session.clone(),
                                             &ruffbox,
                                             sample_set.clone(),
                                             &globals,
