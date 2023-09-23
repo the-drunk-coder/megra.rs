@@ -773,7 +773,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
         }
     }
 
-    pub fn clear_session(mut session: Session<BUFSIZE, NCHAN>) {
+    pub fn clear_session(session: Session<BUFSIZE, NCHAN>) {
         for mut sc in session.schedulers.iter_mut() {
             let (sched, _) = sc.value_mut();
             sched.stop();
