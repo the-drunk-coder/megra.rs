@@ -509,42 +509,28 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
     ) {
         let id_tags = gen.id_tags.clone();
 
-        let mut finished = false;
-
         // start scheduler if it exists ...
-        if let Some(v) = session.schedulers.get_mut(&id_tags) {
-            let (_, data) = v.value();
-            print!("resume generator \'");
-            for tag in id_tags.iter() {
-                print!("{tag} ");
-            }
-            println!("\'");
+        if let Some(mut v) = session.schedulers.get_mut(&id_tags) {
+            let (_, data) = v.value_mut();
 
-            // keep the scheduler running, just replace the data ...
-            finished = data.finished.load(sync::atomic::Ordering::SeqCst);
-        };
+            if data.finished.load(sync::atomic::Ordering::SeqCst) {
+                Session::stop_generator(session, &id_tags);
+                Session::start_generator_no_sync(gen, session, shift, block_tags, solo_tags);
+                println!("restarted finished gen");
+            } else {
+                // update scheduler data if scheduler exists ...
 
-        if finished {
-            Session::stop_generator(session, &id_tags);
-            Session::start_generator_no_sync(gen, session, shift, block_tags, solo_tags);
-            println!("restarted finished gen");
-        } else {
-            // start scheduler if it exists ...
-            if let Some(mut v) = session.schedulers.get_mut(&id_tags) {
-                let (_, data) = v.value_mut();
                 print!("resume generator \'");
                 for tag in id_tags.iter() {
                     print!("{tag} ");
                 }
                 println!("\'");
                 // keep the scheduler running, just replace the data ...
-                *data.generator.lock() = gen;
-                data.block_tags = block_tags.clone();
-                data.solo_tags = block_tags.clone();
+                data.update(shift, gen, block_tags.clone(), solo_tags.clone());
 
                 println!("replaced sched data");
             }
-        }
+        };
     }
 
     fn resume_generator_sync(
