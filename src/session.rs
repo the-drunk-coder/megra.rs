@@ -105,6 +105,7 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
 
     // GENERATOR LOCK !!!
     let (time, mut events, end_state) = {
+        // HERE IT IS ... LOCK, LOCK, LOCK
         let mut gen = data.generator.lock();
 
         if session
@@ -141,7 +142,8 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
         //}
         let end_state = gen.reached_end_state();
         (time, events, end_state)
-    };
+    }; // END GENERATOR LOCK ...
+
     // the sync flag will be returned alongside the
     // time to let the scheduler know that it should
     // trigger the synced generators
@@ -244,6 +246,13 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
                 }
             }
             InterpretableEvent::Control(c) => {
+                // include control events in sync, count them as "non-silent" because it ... kinda makes sense ?
+                if session.sync_mode == SyncMode::NotOnSilence || session.sync_mode == SyncMode::All
+                {
+                    //println!("sync silence");
+                    sync = true;
+                }
+
                 if let Some(mut contexts) = c.ctx.clone() {
                     // this is the worst clone ....
                     for mut sx in contexts.drain(..) {
