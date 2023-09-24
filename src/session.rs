@@ -107,6 +107,10 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
     let (time, mut events, end_state) = {
         let mut gen = data.generator.lock();
 
+        if session
+            .osc_client
+            .vis_connected
+            .load(sync::atomic::Ordering::SeqCst)
         {
             if let Some(cli) = session.osc_client.vis.try_read() {
                 if let Some(ref vc) = *cli {
@@ -120,7 +124,7 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
                     }
                 }
             }
-        }
+        };
 
         let time = if let SynthParameterValue::ScalarF32(t) =
             gen.current_transition(&session.globals).params[&SynthParameterLabel::Duration]
@@ -727,13 +731,17 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                 sched_prox = None;
             }
 
+            if session
+                .osc_client
+                .vis_connected
+                .load(sync::atomic::Ordering::SeqCst)
             {
                 if let Some(cli) = session.osc_client.vis.try_read() {
                     if let Some(ref vc) = *cli {
                         vc.clear(gen_name);
                     }
                 }
-            }
+            };
         }
 
         if let Some((mut sched, data)) = sched_prox {
@@ -744,6 +752,10 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                 print!("{tag} ");
             }
             println!("\'");
+            if session
+                .osc_client
+                .vis_connected
+                .load(sync::atomic::Ordering::SeqCst)
             {
                 if let Some(cli) = session.osc_client.vis.try_read() {
                     if let Some(ref vc) = *cli {
@@ -752,7 +764,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                         }
                     }
                 }
-            }
+            };
         }
     }
 
@@ -765,13 +777,17 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                 sched_proxies.push(v);
             }
 
+            if session
+                .osc_client
+                .vis_connected
+                .load(sync::atomic::Ordering::SeqCst)
             {
                 if let Some(cli) = session.osc_client.vis.try_read() {
                     if let Some(ref vc) = *cli {
                         vc.clear(name);
                     }
                 }
-            }
+            };
         }
 
         // stop
@@ -779,6 +795,11 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
         for (mut sched, data) in sched_proxies.drain(..) {
             sched.stop();
             sched_proxies2.push(sched);
+
+            if session
+                .osc_client
+                .vis_connected
+                .load(sync::atomic::Ordering::SeqCst)
             {
                 if let Some(cli) = session.osc_client.vis.try_read() {
                     if let Some(ref vc) = *cli {
@@ -787,7 +808,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                         }
                     }
                 }
-            }
+            };
         }
 
         // join
@@ -812,6 +833,10 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
             println!("\'");
         }
 
+        if session
+            .osc_client
+            .vis_connected
+            .load(sync::atomic::Ordering::SeqCst)
         {
             if let Some(cli) = session.osc_client.vis.try_read() {
                 if let Some(ref vc) = *cli {
@@ -824,7 +849,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                     }
                 }
             }
-        }
+        };
 
         session.schedulers.clear();
         session.contexts.clear();

@@ -38,9 +38,19 @@ pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
             });
         }
         Command::ConnectVisualizer => {
-            let mut wr = session.osc_client.vis.write();
-            if wr.is_none() {
-                wr.replace(VisualizerClient::start());
+            if !session
+                .osc_client
+                .vis_connected
+                .load(sync::atomic::Ordering::SeqCst)
+            {
+                let mut wr = session.osc_client.vis.write();
+                if wr.is_none() {
+                    wr.replace(VisualizerClient::start());
+                }
+                session
+                    .osc_client
+                    .vis_connected
+                    .store(true, sync::atomic::Ordering::SeqCst);
             } else {
                 println!("visualizer already connected !");
             }
