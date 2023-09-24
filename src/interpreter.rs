@@ -17,7 +17,7 @@ use crate::visualizer_client::VisualizerClient;
 pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
     c: Command,
     function_map: &sync::Arc<Mutex<FunctionMap>>,
-    session: &mut Session<BUFSIZE, NCHAN>,
+    session: &Session<BUFSIZE, NCHAN>,
     base_dir: String,
 ) {
     match c {
@@ -233,7 +233,7 @@ pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
 pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
     parsed_in: EvaluatedExpr,
     function_map: &sync::Arc<Mutex<FunctionMap>>,
-    mut session: Session<BUFSIZE, NCHAN>,
+    session: Session<BUFSIZE, NCHAN>,
     base_dir: String,
 ) {
     match parsed_in {
@@ -284,7 +284,7 @@ pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
             Session::handle_context(&mut s, &session);
         }
         EvaluatedExpr::Command(c) => {
-            interpret_command(c, function_map, &mut session, base_dir);
+            interpret_command(c, function_map, &session, base_dir);
         }
         EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f))) => {
             println!("a number: {f}")

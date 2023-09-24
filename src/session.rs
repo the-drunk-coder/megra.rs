@@ -120,7 +120,7 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
                     }
                     vc.update_active_node(&gen);
                     for (_, proc) in gen.processors.iter_mut() {
-                        proc.visualize_if_possible(&vc);
+                        proc.visualize_if_possible(vc);
                     }
                 }
             }
@@ -760,7 +760,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                 if let Some(cli) = session.osc_client.vis.try_read() {
                     if let Some(ref vc) = *cli {
                         for (_, proc) in data.generator.lock().processors.iter() {
-                            proc.clear_visualization(&vc);
+                            proc.clear_visualization(vc);
                         }
                     }
                 }
@@ -844,7 +844,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                         let (k, (_, data)) = sc.pair();
                         vc.clear(k);
                         for (_, proc) in data.generator.lock().processors.iter() {
-                            proc.clear_visualization(&vc);
+                            proc.clear_visualization(vc);
                         }
                     }
                 }
