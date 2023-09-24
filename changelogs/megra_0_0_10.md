@@ -20,3 +20,4 @@
 * 16-channel mode
 * arbitrary labels for `learn`
 * allow defining event mappings for `learn` as map
+* sync on `ctrl` events
