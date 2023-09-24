@@ -2,7 +2,6 @@ use crate::generator::Generator;
 use crate::session::Session;
 use crossbeam::atomic::AtomicCell;
 use parking_lot::Mutex;
-use ruffbox_synth::ruffbox::RuffboxControls;
 
 use std::collections::BTreeSet;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -36,40 +35,32 @@ pub struct SchedulerData<const BUFSIZE: usize, const NCHAN: usize> {
 }
 
 impl<const BUFSIZE: usize, const NCHAN: usize> SchedulerData<BUFSIZE, NCHAN> {
-    #[allow(clippy::manual_map)]
-    pub fn from_previous(
-        old: &SchedulerData<BUFSIZE, NCHAN>,
+    pub fn update(
+        &mut self,
         shift: f64,
         mut data: Generator,
-        block_tags: &BTreeSet<String>,
-        solo_tags: &BTreeSet<String>,
-    ) -> Self {
-        let shift_diff = shift - old.shift.load();
-
-        println!("{:?} {}", data.id_tags, data.keep_root);
-
+        block_tags: BTreeSet<String>,
+        solo_tags: BTreeSet<String>,
+    ) {
         if !data.keep_root {
-            data.transfer_state(&old.generator.lock());
+            data.transfer_state(&self.generator.lock());
         } else {
-            data.root_generator = old.generator.lock().root_generator.clone();
+            data.root_generator = self.generator.lock().root_generator.clone();
         }
 
-        SchedulerData {
-            start_time: old.start_time.clone(),
-            stream_time: sync::Arc::new(AtomicCell::new(old.stream_time.load() + shift_diff)),
-            logical_time: sync::Arc::new(AtomicCell::new(old.logical_time.load() + shift_diff)),
-            shift: sync::Arc::new(AtomicCell::new(shift)),
-            last_diff: old.last_diff.clone(),
-            generator: sync::Arc::new(Mutex::new(data)),
-            finished: sync::Arc::new(AtomicBool::new(false)),
-            synced_generators: old.synced_generators.clone(), // carry over synced gens ...
-            block_tags: block_tags.clone(),
-            solo_tags: solo_tags.clone(),
-        }
+        let shift_diff = shift - self.shift.load();
+        self.stream_time.store(self.stream_time.load() + shift_diff);
+        self.logical_time
+            .store(self.logical_time.load() + shift_diff);
+        self.shift.store(shift);
+        *self.generator.lock() = data;
+        self.finished.store(false, Ordering::SeqCst);
+        self.block_tags = block_tags;
+        self.solo_tags = solo_tags;
     }
 
     #[allow(clippy::manual_map)]
-    pub fn from_time_data(
+    pub fn new_sync(
         old: &SchedulerData<BUFSIZE, NCHAN>,
         shift: f64,
         data: Generator,
@@ -93,16 +84,36 @@ impl<const BUFSIZE: usize, const NCHAN: usize> SchedulerData<BUFSIZE, NCHAN> {
         }
     }
 
+    pub fn update_sync(
+        &mut self,
+        old: &SchedulerData<BUFSIZE, NCHAN>,
+        shift: f64,
+        data: Generator,
+        block_tags: BTreeSet<String>,
+        solo_tags: BTreeSet<String>,
+    ) {
+        let shift_diff = shift - old.shift.load();
+        self.start_time = old.start_time.clone();
+        self.stream_time.store(old.stream_time.load() + shift_diff);
+        self.logical_time
+            .store(old.logical_time.load() + shift_diff);
+        self.shift.store(shift);
+        self.last_diff.store(0.0);
+        *self.generator.lock() = data;
+        self.finished.store(false, Ordering::SeqCst);
+        self.block_tags = block_tags;
+        self.solo_tags = solo_tags;
+    }
+
     #[allow(clippy::manual_map)]
-    pub fn from_data(
+    pub fn new(
         data: Generator,
         shift: f64,
-        ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
+        stream_time: f64,
         block_tags: &BTreeSet<String>,
         solo_tags: &BTreeSet<String>,
     ) -> Self {
         // get logical time since start from ruffbox
-        let stream_time = ruffbox.get_now();
 
         SchedulerData {
             start_time: sync::Arc::new(Mutex::new(Instant::now())),

@@ -512,8 +512,8 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
             println!("restarted finished gen");
         } else {
             // start scheduler if it exists ...
-            if let Some(v) = session.schedulers.get_mut(&id_tags) {
-                let (_, data) = v.value();
+            if let Some(mut v) = session.schedulers.get_mut(&id_tags) {
+                let (_, data) = v.value_mut();
                 print!("resume generator \'");
                 for tag in id_tags.iter() {
                     print!("{tag} ");
@@ -521,6 +521,8 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                 println!("\'");
                 // keep the scheduler running, just replace the data ...
                 *data.generator.lock() = gen;
+                data.block_tags = block_tags.clone();
+                data.solo_tags = block_tags.clone();
 
                 println!("replaced sched data");
             }
@@ -555,9 +557,14 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                 }
                 println!("\'");
 
-                // keep the scheduler running, just replace the data ...
-                *data = SchedulerData::<BUFSIZE, NCHAN>::from_time_data(
-                    &sync_data, shift, gen, block_tags, solo_tags,
+                // update the scheduler data,
+                // re-sync
+                data.update_sync(
+                    &sync_data,
+                    shift,
+                    gen,
+                    block_tags.clone(),
+                    solo_tags.clone(),
                 );
             } else {
                 // resume sync: later ...
@@ -566,11 +573,8 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                     print!("{tag} ");
                 }
                 println!("\'");
-                // keep the scheduler running, just replace the data ...
-                //let mut sched_data = data.lock();
-                *data = SchedulerData::<BUFSIZE, NCHAN>::from_previous(
-                    data, shift, gen, block_tags, solo_tags,
-                );
+                // update scheduler data ...
+                data.update(shift, gen, block_tags.clone(), solo_tags.clone());
             }
         }
     }
@@ -593,9 +597,8 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
         println!("\'");
         // sync to data
         // create sched data from data
-        let sched_data = SchedulerData::<BUFSIZE, NCHAN>::from_time_data(
-            data, shift, gen, block_tags, solo_tags,
-        );
+        let sched_data =
+            SchedulerData::<BUFSIZE, NCHAN>::new_sync(data, shift, gen, block_tags, solo_tags);
         Session::start_scheduler(session, sched_data, id_tags)
     }
 
@@ -641,10 +644,10 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
         }
         println!("\'");
 
-        let sched_data = SchedulerData::<BUFSIZE, NCHAN>::from_data(
+        let sched_data = SchedulerData::<BUFSIZE, NCHAN>::new(
             gen,
             shift,
-            &session.ruffbox,
+            session.ruffbox.get_now(),
             block_tags,
             solo_tags,
         );
