@@ -84,7 +84,7 @@ impl GeneratorProcessor for GeneratorWrapperProcessor {
         }
     }
 
-    fn visualize_if_possible(&mut self, vis_client: &sync::Arc<VisualizerClient>) {
+    fn visualize_if_possible(&mut self, vis_client: &VisualizerClient) {
         if self.wrapped_generator.root_generator.is_modified() {
             vis_client.create_or_update(&self.wrapped_generator);
             self.wrapped_generator.root_generator.clear_modified();
@@ -95,7 +95,7 @@ impl GeneratorProcessor for GeneratorWrapperProcessor {
         }
     }
 
-    fn clear_visualization(&self, vc: &sync::Arc<VisualizerClient>) {
+    fn clear_visualization(&self, vc: &VisualizerClient) {
         vc.clear(&self.wrapped_generator.id_tags);
         for (_, proc) in self.wrapped_generator.processors.iter() {
             proc.clear_visualization(vc);

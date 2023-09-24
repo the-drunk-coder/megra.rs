@@ -1,5 +1,5 @@
 use dashmap::DashMap;
-use parking_lot::Mutex;
+use parking_lot::{Mutex, RwLock, RwLockReadGuard};
 use std::collections::{BTreeSet, HashMap};
 use std::{sync, thread};
 
@@ -106,14 +106,19 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
     // GENERATOR LOCK !!!
     let (time, mut events, end_state) = {
         let mut gen = data.generator.lock();
-        if let Some(vc) = &session.osc_client.vis {
-            if gen.root_generator.is_modified() {
-                vc.create_or_update(&gen);
-                gen.root_generator.clear_modified()
-            }
-            vc.update_active_node(&gen);
-            for (_, proc) in gen.processors.iter_mut() {
-                proc.visualize_if_possible(vc);
+
+        {
+            if let Some(cli) = session.osc_client.vis.try_read() {
+                if let Some(ref vc) = *cli {
+                    if gen.root_generator.is_modified() {
+                        vc.create_or_update(&gen);
+                        gen.root_generator.clear_modified()
+                    }
+                    vc.update_active_node(&gen);
+                    for (_, proc) in gen.processors.iter_mut() {
+                        proc.visualize_if_possible(&vc);
+                    }
+                }
             }
         }
 
@@ -722,8 +727,12 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                 sched_prox = None;
             }
 
-            if let Some(c) = &sess.osc_client.vis {
-                c.clear(gen_name);
+            {
+                if let Some(cli) = session.osc_client.vis.try_read() {
+                    if let Some(ref vc) = *cli {
+                        vc.clear(gen_name);
+                    }
+                }
             }
         }
 
@@ -735,10 +744,13 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                 print!("{tag} ");
             }
             println!("\'");
-            let sess = session;
-            if let Some(c) = &sess.osc_client.vis {
-                for (_, proc) in data.generator.lock().processors.iter() {
-                    proc.clear_visualization(c);
+            {
+                if let Some(cli) = session.osc_client.vis.try_read() {
+                    if let Some(ref vc) = *cli {
+                        for (_, proc) in data.generator.lock().processors.iter() {
+                            proc.clear_visualization(&vc);
+                        }
+                    }
                 }
             }
         }
@@ -753,8 +765,12 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                 sched_proxies.push(v);
             }
 
-            if let Some(c) = &session.osc_client.vis {
-                c.clear(name);
+            {
+                if let Some(cli) = session.osc_client.vis.try_read() {
+                    if let Some(ref vc) = *cli {
+                        vc.clear(name);
+                    }
+                }
             }
         }
 
@@ -763,9 +779,13 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
         for (mut sched, data) in sched_proxies.drain(..) {
             sched.stop();
             sched_proxies2.push(sched);
-            if let Some(c) = &session.osc_client.vis {
-                for (_, proc) in data.generator.lock().processors.iter() {
-                    proc.clear_visualization(c);
+            {
+                if let Some(cli) = session.osc_client.vis.try_read() {
+                    if let Some(ref vc) = *cli {
+                        for (_, proc) in data.generator.lock().processors.iter() {
+                            proc.clear_visualization(vc);
+                        }
+                    }
                 }
             }
         }
@@ -792,12 +812,16 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
             println!("\'");
         }
 
-        if let Some(c) = &session.osc_client.vis {
-            for sc in session.schedulers.iter() {
-                let (k, (_, data)) = sc.pair();
-                c.clear(k);
-                for (_, proc) in data.generator.lock().processors.iter() {
-                    proc.clear_visualization(c);
+        {
+            if let Some(cli) = session.osc_client.vis.try_read() {
+                if let Some(ref vc) = *cli {
+                    for sc in session.schedulers.iter() {
+                        let (k, (_, data)) = sc.pair();
+                        vc.clear(k);
+                        for (_, proc) in data.generator.lock().processors.iter() {
+                            proc.clear_visualization(&vc);
+                        }
+                    }
                 }
             }
         }

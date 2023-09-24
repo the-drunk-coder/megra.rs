@@ -66,12 +66,12 @@ pub trait GeneratorProcessor: GeneratorProcessorClone {
 
     /// if the processor holds something that can be visualized
     /// such as a markov chain ...
-    fn visualize_if_possible(&mut self, _vis_client: &sync::Arc<VisualizerClient>) {
+    fn visualize_if_possible(&mut self, _vis_client: &VisualizerClient) {
         /* most won't need this */
     }
 
     /// only if visualization is possible ...
-    fn clear_visualization(&self, _vis_client: &sync::Arc<VisualizerClient>) {
+    fn clear_visualization(&self, _vis_client: &VisualizerClient) {
         /* most won't need this */
     }
 }
