@@ -15,7 +15,7 @@
 * osc callbacks (toplevel functions with args)
 * much more flexible midi callback (toplevel functions with args)
 * start midi port from language instead of from command line
-* negative rates for samples (can't believe I didn't think about that before ...)
+* negative playback rates for samples (can't believe I didn't think about that before ...)
 * (kinda) lazy evaluation for the arithmetic functions
 * 16-channel mode
 * arbitrary labels for `learn`
