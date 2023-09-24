@@ -35,6 +35,8 @@ pub struct SchedulerData<const BUFSIZE: usize, const NCHAN: usize> {
 }
 
 impl<const BUFSIZE: usize, const NCHAN: usize> SchedulerData<BUFSIZE, NCHAN> {
+    /// update this scheduler data with a new generator and shift
+    /// adjustments
     pub fn update(
         &mut self,
         shift: f64,
@@ -59,7 +61,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> SchedulerData<BUFSIZE, NCHAN> {
         self.solo_tags = solo_tags;
     }
 
-    #[allow(clippy::manual_map)]
+    /// new scheduler data, synchronized to another scheduler
     pub fn new_sync(
         old: &SchedulerData<BUFSIZE, NCHAN>,
         shift: f64,
@@ -84,6 +86,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> SchedulerData<BUFSIZE, NCHAN> {
         }
     }
 
+    /// update this scheduler data and synchronize with another scheduler ...
     pub fn update_sync(
         &mut self,
         old: &SchedulerData<BUFSIZE, NCHAN>,
@@ -105,7 +108,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> SchedulerData<BUFSIZE, NCHAN> {
         self.solo_tags = solo_tags;
     }
 
-    #[allow(clippy::manual_map)]
+    /// create fresh data for a scheduler ...
     pub fn new(
         data: Generator,
         shift: f64,
