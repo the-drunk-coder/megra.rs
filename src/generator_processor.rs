@@ -2,7 +2,6 @@ use std::collections::HashMap;
 use std::sync::*;
 
 use crate::visualizer_client::VisualizerClient;
-use std::sync;
 
 use crate::{
     builtin_types::{ConfigParameter, GlobalVariables},

@@ -1,5 +1,5 @@
 use dashmap::DashMap;
-use parking_lot::{Mutex, RwLock, RwLockReadGuard};
+use parking_lot::Mutex;
 use std::collections::{BTreeSet, HashMap};
 use std::{sync, thread};
 
