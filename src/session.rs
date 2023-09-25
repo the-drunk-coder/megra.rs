@@ -1,4 +1,4 @@
-use dashmap::DashMap;
+use dashmap::{DashMap, DashSet};
 use parking_lot::Mutex;
 use std::collections::{BTreeSet, HashMap};
 use std::{sync, thread};
@@ -64,6 +64,16 @@ pub struct Session<const BUFSIZE: usize, const NCHAN: usize> {
     pub osc_client: OscClient,
     pub rec_control:
         sync::Arc<Mutex<Option<real_time_streaming::RecordingControl<BUFSIZE, NCHAN>>>>,
+}
+
+// naive disjoint test, assume unsorted
+// should be ok performance-wise, as the tag sets are typically very very small
+fn is_disjoint(a: &DashSet<String>, b: &BTreeSet<String>) -> bool {
+    if a.len() <= b.len() {
+        a.iter().all(|v| !b.contains(v.key()))
+    } else {
+        b.iter().all(|v| !a.contains(v))
+    }
 }
 
 //////////////////////////////////////
@@ -177,12 +187,12 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
                 //println!("solo: {:?}", data.solo_tags);
                 //println!("block: {:?}", data.block_tags);
 
-                if !data.block_tags.is_empty() && !data.block_tags.is_disjoint(&s.tags) {
+                if !data.block_tags.is_empty() && !is_disjoint(&data.block_tags, &s.tags) {
                     // ignore event
                     continue;
                 }
 
-                if !data.solo_tags.is_empty() && data.solo_tags.is_disjoint(&s.tags) {
+                if !data.solo_tags.is_empty() && is_disjoint(&data.solo_tags, &s.tags) {
                     // ignore event
                     continue;
                 }
@@ -589,8 +599,8 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
         session: &Session<BUFSIZE, NCHAN>,
         data: &SchedulerData<BUFSIZE, NCHAN>,
         shift: f64,
-        block_tags: &BTreeSet<String>,
-        solo_tags: &BTreeSet<String>,
+        block_tags: &sync::Arc<DashSet<String>>,
+        solo_tags: &sync::Arc<DashSet<String>>,
     ) {
         let id_tags = gen.id_tags.clone();
 
@@ -652,8 +662,8 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
             gen,
             shift,
             session.ruffbox.get_now(),
-            block_tags,
-            solo_tags,
+            block_tags.clone(),
+            solo_tags.clone(),
         );
         Session::start_scheduler(session, sched_data, id_tags)
     }

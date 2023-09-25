@@ -1,6 +1,7 @@
 use crate::generator::Generator;
 use crate::session::Session;
 use crossbeam::atomic::AtomicCell;
+use dashmap::DashSet;
 use parking_lot::Mutex;
 
 use std::collections::BTreeSet;
@@ -30,8 +31,9 @@ pub struct SchedulerData<const BUFSIZE: usize, const NCHAN: usize> {
     pub generator: std::sync::Arc<Mutex<Generator>>,
     pub finished: std::sync::Arc<AtomicBool>,
     pub synced_generators: std::sync::Arc<Mutex<Vec<(Generator, f64)>>>,
-    pub block_tags: BTreeSet<String>,
-    pub solo_tags: BTreeSet<String>,
+
+    pub block_tags: std::sync::Arc<DashSet<String>>,
+    pub solo_tags: std::sync::Arc<DashSet<String>>,
 }
 
 impl<const BUFSIZE: usize, const NCHAN: usize> SchedulerData<BUFSIZE, NCHAN> {
@@ -57,8 +59,16 @@ impl<const BUFSIZE: usize, const NCHAN: usize> SchedulerData<BUFSIZE, NCHAN> {
         self.shift.store(shift);
         *self.generator.lock() = data;
         self.finished.store(false, Ordering::SeqCst);
-        self.block_tags = block_tags;
-        self.solo_tags = solo_tags;
+
+        self.block_tags.clear();
+        for tag in block_tags {
+            self.block_tags.insert(tag);
+        }
+
+        self.solo_tags.clear();
+        for tag in solo_tags {
+            self.solo_tags.insert(tag);
+        }
     }
 
     /// new scheduler data, synchronized to another scheduler
@@ -66,8 +76,8 @@ impl<const BUFSIZE: usize, const NCHAN: usize> SchedulerData<BUFSIZE, NCHAN> {
         old: &SchedulerData<BUFSIZE, NCHAN>,
         shift: f64,
         data: Generator,
-        block_tags: &BTreeSet<String>,
-        solo_tags: &BTreeSet<String>,
+        block_tags: &sync::Arc<DashSet<String>>,
+        solo_tags: &sync::Arc<DashSet<String>>,
     ) -> Self {
         let shift_diff = shift - old.shift.load();
 
@@ -81,8 +91,8 @@ impl<const BUFSIZE: usize, const NCHAN: usize> SchedulerData<BUFSIZE, NCHAN> {
             generator: sync::Arc::new(Mutex::new(data)),
             finished: sync::Arc::new(AtomicBool::new(false)),
             synced_generators: sync::Arc::new(Mutex::new(Vec::new())),
-            block_tags: block_tags.clone(),
-            solo_tags: solo_tags.clone(),
+            block_tags: sync::Arc::clone(block_tags),
+            solo_tags: sync::Arc::clone(solo_tags),
         }
     }
 
@@ -104,8 +114,16 @@ impl<const BUFSIZE: usize, const NCHAN: usize> SchedulerData<BUFSIZE, NCHAN> {
         self.last_diff.store(0.0);
         *self.generator.lock() = data;
         self.finished.store(false, Ordering::SeqCst);
-        self.block_tags = block_tags;
-        self.solo_tags = solo_tags;
+
+        self.block_tags.clear();
+        for tag in block_tags {
+            self.block_tags.insert(tag);
+        }
+
+        self.solo_tags.clear();
+        for tag in solo_tags {
+            self.solo_tags.insert(tag);
+        }
     }
 
     /// create fresh data for a scheduler ...
@@ -113,10 +131,18 @@ impl<const BUFSIZE: usize, const NCHAN: usize> SchedulerData<BUFSIZE, NCHAN> {
         data: Generator,
         shift: f64,
         stream_time: f64,
-        block_tags: &BTreeSet<String>,
-        solo_tags: &BTreeSet<String>,
+        block_tags_in: BTreeSet<String>,
+        solo_tags_in: BTreeSet<String>,
     ) -> Self {
-        // get logical time since start from ruffbox
+        let block_tags = DashSet::new();
+        for tag in block_tags_in {
+            block_tags.insert(tag);
+        }
+
+        let solo_tags = DashSet::new();
+        for tag in solo_tags_in {
+            solo_tags.insert(tag);
+        }
 
         SchedulerData {
             start_time: sync::Arc::new(Mutex::new(Instant::now())),
@@ -127,8 +153,8 @@ impl<const BUFSIZE: usize, const NCHAN: usize> SchedulerData<BUFSIZE, NCHAN> {
             generator: sync::Arc::new(Mutex::new(data)),
             finished: sync::Arc::new(AtomicBool::new(false)),
             synced_generators: sync::Arc::new(Mutex::new(Vec::new())),
-            block_tags: block_tags.clone(),
-            solo_tags: solo_tags.clone(),
+            block_tags: sync::Arc::new(block_tags),
+            solo_tags: sync::Arc::new(solo_tags),
         }
     }
 }
