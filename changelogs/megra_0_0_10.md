@@ -19,5 +19,7 @@
 * (kinda) lazy evaluation for the arithmetic functions
 * 16-channel mode
 * arbitrary labels for `learn`
-* allow defining event mappings for `learn` as map
+* allow defining event mappings for `learn` as `map`
+* allow defining samples for `learn` as `vec`
 * sync on `ctrl` events
+* `:tie` flag for `learn` (auto-restart in case generator gets stuck)

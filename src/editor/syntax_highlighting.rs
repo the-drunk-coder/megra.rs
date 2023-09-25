@@ -171,7 +171,6 @@ fn is_function(word: &str) -> bool {
             | "exh"
             | "inexh"
             | "stages"
-            | "progn"
     )
 }
 
@@ -198,6 +197,27 @@ fn is_command(word: &str) -> bool {
             | "div"
             | "mod"
             | "pow"
+            | "fun"
+            | "callback"
+            | "osc-send"
+            | "osc-sender"
+            | "osc-receiver"
+            | "map"
+            | "pair"
+            | "vec"
+            | "let"
+            | "progn"
+            | "match"
+            | "print"
+            | "concat"
+            | "insert"
+            | "push"
+            | "i64"
+            | "i32"
+            | "f64"
+            | "mtof"
+            | "mtosym"
+            | "veltodyn"
     )
 }
 
