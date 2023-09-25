@@ -23,3 +23,4 @@
 * allow defining samples for `learn` as `vec`
 * sync on `ctrl` events
 * `:tie` flag for `learn` (auto-restart in case generator gets stuck)
+* reliable playback for long samples
