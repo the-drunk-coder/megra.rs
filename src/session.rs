@@ -519,27 +519,32 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
     ) {
         let id_tags = gen.id_tags.clone();
 
-        // start scheduler if it exists ...
-        if let Some(mut v) = session.schedulers.get_mut(&id_tags) {
+        // get finished flag here to avoid deadlock in dash_map
+        let finished = if let Some(v) = session.schedulers.get(&id_tags) {
+            let (_, data) = v.value();
+            data.finished.load(sync::atomic::Ordering::SeqCst)
+        } else {
+            false
+        };
+
+        if finished {
+            Session::stop_generator(session, &id_tags);
+            Session::start_generator_no_sync(gen, session, shift, block_tags, solo_tags);
+            println!("restarted finished gen");
+        } else if let Some(mut v) = session.schedulers.get_mut(&id_tags) {
             let (_, data) = v.value_mut();
 
-            if data.finished.load(sync::atomic::Ordering::SeqCst) {
-                Session::stop_generator(session, &id_tags);
-                Session::start_generator_no_sync(gen, session, shift, block_tags, solo_tags);
-                println!("restarted finished gen");
-            } else {
-                // update scheduler data if scheduler exists ...
+            // update scheduler data if scheduler exists ...
 
-                print!("resume generator \'");
-                for tag in id_tags.iter() {
-                    print!("{tag} ");
-                }
-                println!("\'");
-                // keep the scheduler running, just replace the data ...
-                data.update(shift, gen, block_tags.clone(), solo_tags.clone());
-
-                println!("replaced sched data");
+            print!("resume generator \'");
+            for tag in id_tags.iter() {
+                print!("{tag} ");
             }
+            println!("\'");
+            // keep the scheduler running, just replace the data ...
+            data.update(shift, gen, block_tags.clone(), solo_tags.clone());
+
+            println!("replaced sched data");
         };
     }
 
@@ -725,17 +730,8 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
             print!("{tag} ");
         }
         println!("\'");
-        // get sched out of map, try to keep lock only shortly ...
-        let sched_prox;
-        {
-            let sess = session;
 
-            if let Some((_, v)) = sess.schedulers.remove(gen_name) {
-                sched_prox = Some(v);
-            } else {
-                sched_prox = None;
-            }
-
+        if let Some((_, (mut sched, data))) = session.schedulers.remove(gen_name) {
             if session
                 .osc_client
                 .vis_connected
@@ -747,11 +743,10 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                     }
                 }
             };
-        }
 
-        if let Some((mut sched, data)) = sched_prox {
             sched.stop();
             sched.join();
+
             print!("stopped/removed generator \'");
             for tag in gen_name.iter() {
                 print!("{tag} ");
