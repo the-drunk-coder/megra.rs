@@ -57,6 +57,8 @@ fn print_help(program: &str, opts: Options) {
 
 Mégra is a DSL to make music with markov chains.
 
+Version: 0.0.10
+
 Usage:
     {program} [options] [FILES...]
       ",
