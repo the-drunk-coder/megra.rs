@@ -57,7 +57,7 @@ fn print_help(program: &str, opts: Options) {
 
 Mégra is a DSL to make music with markov chains.
 
-Version: 0.0.10
+Version: 0.0.11
 
 Usage:
     {program} [options] [FILES...]
@@ -181,7 +181,7 @@ fn main() -> Result<(), anyhow::Error> {
     };
 
     if matches.opt_present("v") {
-        println!("0.0.10");
+        println!("0.0.11");
         return Ok(());
     }
 
