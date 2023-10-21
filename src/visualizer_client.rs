@@ -1,11 +1,12 @@
 use crate::generator::Generator;
 
-use rosc::encoder;
-use rosc::{OscMessage, OscPacket, OscType};
+use rosc::encoder::{self, encode};
+use rosc::{OscBundle, OscMessage, OscPacket, OscTime, OscType};
 
 use std::collections::BTreeSet;
 use std::net;
 use std::str::FromStr;
+use std::time::SystemTime;
 
 pub struct VisualizerClient {
     pub host_addr: net::SocketAddrV4,
@@ -35,16 +36,17 @@ impl VisualizerClient {
     pub fn create_or_update(&self, g: &Generator) {
         let gen_name = tags_to_string(&g.id_tags);
         // switch view
-        let msg_buf_add = encoder::encode(&OscPacket::Message(OscMessage {
+        let mut all_msgs: Vec<OscPacket> = Vec::new();
+
+        // switch view
+        all_msgs.push(OscPacket::Message(OscMessage {
             addr: "/graph/add".to_string(),
             args: vec![OscType::String(gen_name.clone())],
-        }))
-        .unwrap();
-        self.socket.send_to(&msg_buf_add, self.to_addr).unwrap();
+        }));
 
         // nodes
         for (key, label) in g.root_generator.generator.labels.iter() {
-            let msg_buf_node = encoder::encode(&OscPacket::Message(OscMessage {
+            all_msgs.push(OscPacket::Message(OscMessage {
                 addr: "/node/add".to_string(),
                 args: vec![
                     // needs full tag id
@@ -52,14 +54,12 @@ impl VisualizerClient {
                     OscType::Int(*key as i32),
                     OscType::String(label.iter().collect()),
                 ],
-            }))
-            .unwrap();
-            self.socket.send_to(&msg_buf_node, self.to_addr).unwrap();
+            }));
         }
         // edges
         for (src, children) in g.root_generator.generator.children.iter() {
             for ch in children.iter() {
-                let msg_buf_edge = encoder::encode(&OscPacket::Message(OscMessage {
+                all_msgs.push(OscPacket::Message(OscMessage {
                     addr: "/edge/add".to_string(),
                     args: vec![
                         OscType::String(gen_name.clone()),
@@ -68,19 +68,23 @@ impl VisualizerClient {
                         OscType::String(ch.child.last().unwrap().to_string()),
                         OscType::Int((ch.prob * 100.0) as i32),
                     ],
-                }))
-                .unwrap();
-                self.socket.send_to(&msg_buf_edge, self.to_addr).unwrap();
+                }));
             }
         }
 
         // send render command ...
-        let msg_buf_render = encoder::encode(&OscPacket::Message(OscMessage {
+        all_msgs.push(OscPacket::Message(OscMessage {
             addr: "/render".to_string(),
             args: vec![
                 OscType::String(gen_name),
                 OscType::String("cose".to_string()), // layout type
             ],
+        }));
+
+        // send render command ...
+        let msg_buf_render = encode(&OscPacket::Bundle(OscBundle {
+            timetag: OscTime::try_from(SystemTime::now()).unwrap(),
+            content: all_msgs,
         }))
         .unwrap();
         self.socket.send_to(&msg_buf_render, self.to_addr).unwrap();
