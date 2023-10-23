@@ -313,6 +313,7 @@ pub fn define_standard_library() -> FunctionMap {
     standard_library.std_lib.insert("compose".to_string(), eval::compose::compose);
     standard_library.std_lib.insert("ls".to_string(), eval::generator_list::generator_list);
     standard_library.std_lib.insert("list".to_string(), eval::generator_list::generator_list);
+    standard_library.std_lib.insert("spread".to_string(), eval::generator_list::spread_list);
 
     // multiplyer
     standard_library.std_lib.insert("xspread".to_string(), eval::multiplyer::eval_xspread);

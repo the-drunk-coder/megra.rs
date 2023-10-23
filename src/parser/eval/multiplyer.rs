@@ -15,7 +15,7 @@ use super::resolver::resolve_globals;
 
 pub type GenSpreader = fn(&mut [Generator], &OutputMode);
 
-fn spread_gens(gens: &mut [Generator], out_mode: &OutputMode) {
+pub fn spread_gens(gens: &mut [Generator], out_mode: &OutputMode) {
     let positions = match out_mode {
         OutputMode::Stereo => {
             if gens.len() == 1 {
