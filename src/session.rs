@@ -47,6 +47,7 @@ pub struct SyncContext {
     pub shift: i32,
     pub block_tags: BTreeSet<String>,
     pub solo_tags: BTreeSet<String>,
+    pub resync: bool,
 }
 
 #[derive(Clone)]
@@ -432,6 +433,41 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                         &ctx.block_tags,
                         &ctx.solo_tags,
                     );
+                }
+            } else if ctx.resync {
+                if let Some(int_sync) = internal_sync.clone() {
+                    for rem in remainders.drain(..) {
+                        if rem != int_sync {
+                            let gen = gen_map.remove(&rem).unwrap();
+                            Session::resume_generator_sync(
+                                gen,
+                                session,
+                                &int_sync,
+                                ctx.shift as f64 * 0.001,
+                                &ctx.block_tags,
+                                &ctx.solo_tags,
+                            );
+                        }
+                    }
+                    let gen = gen_map.remove(&int_sync).unwrap();
+                    Session::resume_generator(
+                        gen,
+                        session,
+                        ctx.shift as f64 * 0.001,
+                        &ctx.block_tags,
+                        &ctx.solo_tags,
+                    );
+                } else {
+                    for rem in remainders.drain(..) {
+                        let gen = gen_map.remove(&rem).unwrap();
+                        Session::resume_generator(
+                            gen,
+                            session,
+                            ctx.shift as f64 * 0.001,
+                            &ctx.block_tags,
+                            &ctx.solo_tags,
+                        );
+                    }
                 }
             } else {
                 for rem in remainders.drain(..) {

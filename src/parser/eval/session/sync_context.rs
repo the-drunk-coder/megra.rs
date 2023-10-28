@@ -47,6 +47,7 @@ pub fn sync_context(
             shift: 0,
             block_tags: BTreeSet::new(),
             solo_tags: BTreeSet::new(),
+            resync: false,
         }));
     }
 
@@ -57,6 +58,7 @@ pub fn sync_context(
     let mut collect_solo_tags: bool = false;
     let mut block_tags: BTreeSet<String> = BTreeSet::new();
     let mut solo_tags: BTreeSet<String> = BTreeSet::new();
+    let mut resync = false;
 
     while let Some(c) = tail_drain.next() {
         match c {
@@ -70,6 +72,16 @@ pub fn sync_context(
                         ))) = tail_drain.next().unwrap()
                         {
                             sync_to = Some(sync);
+                        }
+                    }
+                    "resync" => {
+                        collect_solo_tags = false;
+                        collect_block_tags = false;
+                        if let EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Boolean(
+                            b,
+                        ))) = tail_drain.next().unwrap()
+                        {
+                            resync = b;
                         }
                     }
                     "shift" => {
@@ -125,6 +137,7 @@ pub fn sync_context(
         shift,
         block_tags,
         solo_tags,
+        resync,
     }))
 }
 
