@@ -22,6 +22,7 @@ pub fn run_editor<const BUFSIZE: usize, const NCHAN: usize>(
     create_sketch: bool,
     font: Option<&str>,
     font_size: f32,
+    karl_yerkes_mode: bool,
 ) -> std::result::Result<(), eframe::Error> {
     let function_map2 = sync::Arc::clone(function_map);
     let _ruffbox2 = sync::Arc::clone(&session.ruffbox);
@@ -63,6 +64,7 @@ pub fn run_editor<const BUFSIZE: usize, const NCHAN: usize>(
     // static lifetime somehow ...
     let fs = sync::Arc::new(font_size);
     let cs = sync::Arc::new(create_sketch);
+    let kybr = sync::Arc::new(karl_yerkes_mode);
 
     let native_options = eframe::NativeOptions::default();
 
@@ -70,10 +72,11 @@ pub fn run_editor<const BUFSIZE: usize, const NCHAN: usize>(
         "Mégra Editor",
         native_options,
         Box::new(|cc| {
-            let mut inner_app = MegraEditor::new(cc, base_dir, cs);
+            let mut inner_app = MegraEditor::new(cc, base_dir, cs, kybr);
             inner_app.set_font_size(fs);
             inner_app.set_font(ifont);
             inner_app.set_callback(callback_ref);
+
             Box::new(inner_app)
         }),
     )

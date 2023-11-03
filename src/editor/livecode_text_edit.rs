@@ -39,6 +39,9 @@ pub struct LivecodeTextEditState {
     // If IME candidate window is shown on this text edit.
     #[cfg_attr(feature = "serde", serde(skip))]
     pub has_ime: bool,
+
+    #[serde(skip)]
+    pub karl_yerkes_mode: bool,
 }
 
 impl LivecodeTextEditState {
@@ -115,6 +118,7 @@ pub struct LivecodeTextEdit<'t> {
     desired_height_rows: usize,
     cursor_at_end: bool,
     eval_callback: Option<Arc<Mutex<dyn FnMut(&String)>>>,
+    karl_yerkes_mode: bool,
 }
 
 impl<'t> WidgetWithState for LivecodeTextEdit<'t> {
@@ -135,6 +139,7 @@ impl<'t> LivecodeTextEdit<'t> {
             desired_height_rows: 4,
             cursor_at_end: true,
             eval_callback: None,
+            karl_yerkes_mode: false,
         }
     }
 
@@ -153,6 +158,11 @@ impl<'t> LivecodeTextEdit<'t> {
 
     pub fn font(mut self, font: FontId) -> Self {
         self.font_selection = FontSelection::FontId(font);
+        self
+    }
+
+    pub fn karl_yerkes_mode(mut self, on: bool) -> Self {
+        self.karl_yerkes_mode = on;
         self
     }
 
@@ -240,6 +250,7 @@ impl<'t> LivecodeTextEdit<'t> {
             desired_height_rows,
             cursor_at_end,
             eval_callback,
+            karl_yerkes_mode,
         } = self;
 
         let text_color = text_color
@@ -294,6 +305,8 @@ impl<'t> LivecodeTextEdit<'t> {
             }
         });
         let mut state = LivecodeTextEditState::load(ui.ctx(), id).unwrap_or_default();
+
+        state.karl_yerkes_mode = karl_yerkes_mode;
 
         // On touch screens (e.g. mobile in egui_web), should
         // dragging select text, or scroll the enclosing `ScrollArea` (if any)?
@@ -526,6 +539,37 @@ impl<'t> LivecodeTextEdit<'t> {
 
 // ----------------------------------------------------------------------------
 
+fn call_callback(
+    state: &mut LivecodeTextEditState,
+    cursor_range: &CursorRange,
+    text: &mut dyn TextBuffer,
+    galley: &Galley,
+    eval_callback: &Option<Arc<Mutex<dyn FnMut(&String)>>>,
+    flash: bool,
+) {
+    if let Some(sexp_cursors) = find_toplevel_sexp(text.as_str(), &cursor_range) {
+        let cup = CursorRange {
+            primary: galley.from_ccursor(sexp_cursors.primary),
+            secondary: galley.from_ccursor(sexp_cursors.secondary),
+        };
+
+        // flash selected sexp ...
+        let sel = selected_str(text, &cup);
+
+        if flash {
+            state.flash_cursor_range = Some(cup);
+            state.flash_alpha = 240; // set flash alpha ()
+        }
+
+        if let Some(cb) = eval_callback {
+            let mut cb_loc = cb.lock();
+            cb_loc(&sel.to_string());
+        } else {
+            println!("no callback!");
+        }
+    }
+}
+
 /// Check for (keyboard) events to edit the cursor and/or text.
 #[allow(clippy::too_many_arguments)]
 fn livecode_events(
@@ -713,24 +757,8 @@ fn livecode_events(
                 state.selection_toggle = false;
                 state.clear_paren_selection();
 
-                if modifiers.command {
-                    if let Some(sexp_cursors) = find_toplevel_sexp(text.as_str(), &cursor_range) {
-                        let cup = CursorRange {
-                            primary: galley.from_ccursor(sexp_cursors.primary),
-                            secondary: galley.from_ccursor(sexp_cursors.secondary),
-                        };
-
-                        // flash selected sexp ...
-                        let sel = selected_str(text, &cup);
-                        state.flash_cursor_range = Some(cup);
-                        state.flash_alpha = 240; // set flash alpha ()
-                        if let Some(cb) = eval_callback {
-                            let mut cb_loc = cb.lock();
-                            cb_loc(&sel.to_string());
-                        } else {
-                            println!("no callback!");
-                        }
-                    }
+                if modifiers.command && !state.karl_yerkes_mode {
+                    call_callback(state, &cursor_range, text, galley, &eval_callback, true);
                     break; // need to break here because of callback move ...
                 } else {
                     // let's check if we're in an s-expression
@@ -803,6 +831,7 @@ fn livecode_events(
                 } else {
                     state.clear_paren_selection();
                 }
+
                 None
             }
             Event::Key {
@@ -858,6 +887,10 @@ fn livecode_events(
                 primary: galley.from_ccursor(new_ccursor_range.primary),
                 secondary: galley.from_ccursor(new_ccursor_range.secondary),
             };
+
+            if state.karl_yerkes_mode {
+                call_callback(state, &cursor_range, text, galley, &eval_callback, false);
+            }
         }
     }
 

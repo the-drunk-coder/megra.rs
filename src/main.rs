@@ -99,6 +99,7 @@ struct RunOptions {
     font_size: f32,
     downmix_stereo: bool,
     ambisonic_binaural: bool,
+    karl_yerkes_mode: bool,
 }
 
 fn main() -> Result<(), anyhow::Error> {
@@ -115,6 +116,11 @@ fn main() -> Result<(), anyhow::Error> {
     );
 
     opts.optflag("", "nosketch", "don't create new sketch in editor mode");
+    opts.optflag(
+        "",
+        "karl-yerkes-mode",
+        "immediately execute current expression on any edit",
+    );
     opts.optflag("", "ambisonic-binaural", "enable ambisonic-binaural mode");
     opts.optflag(
         "",
@@ -190,6 +196,7 @@ fn main() -> Result<(), anyhow::Error> {
     let load_samples: bool = !matches.opt_present("n");
     let downmix_stereo: bool = !matches.opt_present("use-stereo-samples");
     let ambisonic_binaural: bool = matches.opt_present("ambisonic-binaural");
+    let karl_yerkes_mode: bool = matches.opt_present("karl-yerkes-mode");
 
     if matches.opt_present("h") {
         print_help(&program, opts);
@@ -345,6 +352,7 @@ fn main() -> Result<(), anyhow::Error> {
         font_size,
         downmix_stereo,
         ambisonic_binaural,
+        karl_yerkes_mode,
     };
 
     let mut out_conf: cpal::StreamConfig = out_config.into();
@@ -756,6 +764,7 @@ fn run<const NCHAN: usize>(
             options.create_sketch,
             options.font.as_deref(),
             options.font_size,
+            options.karl_yerkes_mode,
         )
         .unwrap();
         Ok(())

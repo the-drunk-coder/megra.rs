@@ -37,6 +37,8 @@ pub struct MegraEditor {
     font: Option<EditorFont>,
     #[serde(skip)]
     font_size: f32,
+    #[serde(skip)]
+    karl_yerkes_mode: bool,
 }
 
 impl Default for MegraEditor {
@@ -50,6 +52,7 @@ impl Default for MegraEditor {
             sketch_number: 0,
             font: None,
             font_size: 15.0,
+            karl_yerkes_mode: false,
         }
     }
 }
@@ -71,9 +74,12 @@ impl MegraEditor {
         cc: &eframe::CreationContext<'_>,
         base_dir: String,
         create_sketch: Arc<bool>,
+        karl_yerkes_mode: Arc<bool>,
     ) -> Self {
         let mut ed = Self::default();
         let mut fonts = FontDefinitions::default();
+
+        ed.karl_yerkes_mode = *karl_yerkes_mode;
 
         // Two built-in options ...
         fonts.font_data.insert(
@@ -275,6 +281,7 @@ impl eframe::App for MegraEditor {
                         .code_editor()
                         .desired_width(800.0)
                         .eval_callback(cb)
+                        .karl_yerkes_mode(self.karl_yerkes_mode)
                         .layouter(&mut layouter)
                 } else {
                     LivecodeTextEdit::multiline(&mut self.content)
