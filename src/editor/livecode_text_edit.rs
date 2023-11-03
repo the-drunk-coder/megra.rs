@@ -113,7 +113,6 @@ pub struct LivecodeTextEdit<'t> {
     layouter: Option<&'t mut dyn FnMut(&Ui, &str, f32) -> Arc<Galley>>,
     desired_width: Option<f32>,
     desired_height_rows: usize,
-    lock_focus: bool,
     cursor_at_end: bool,
     eval_callback: Option<Arc<Mutex<dyn FnMut(&String)>>>,
 }
@@ -134,7 +133,6 @@ impl<'t> LivecodeTextEdit<'t> {
             layouter: None,
             desired_width: None,
             desired_height_rows: 4,
-            lock_focus: false,
             cursor_at_end: true,
             eval_callback: None,
         }
@@ -145,7 +143,7 @@ impl<'t> LivecodeTextEdit<'t> {
     /// - monospaced font
     /// - focus lock
     pub fn code_editor(self) -> Self {
-        self.font(FontId::monospace(15.0)).lock_focus(true)
+        self.font(FontId::monospace(15.0))
     }
 
     pub fn eval_callback(mut self, callback: &Arc<Mutex<dyn FnMut(&String)>>) -> Self {
@@ -200,16 +198,6 @@ impl<'t> LivecodeTextEdit<'t> {
         self.desired_height_rows = desired_height_rows;
         self
     }
-
-    /// When `false` (default), pressing TAB will move focus
-    /// to the next widget.
-    ///
-    /// When `true`, the widget will keep the focus and pressing TAB
-    /// will insert the `'\t'` character.
-    pub fn lock_focus(mut self, b: bool) -> Self {
-        self.lock_focus = b;
-        self
-    }
 }
 
 // ----------------------------------------------------------------------------
@@ -250,7 +238,6 @@ impl<'t> LivecodeTextEdit<'t> {
             layouter,
             desired_width: _,
             desired_height_rows,
-            lock_focus,
             cursor_at_end,
             eval_callback,
         } = self;
@@ -389,7 +376,16 @@ impl<'t> LivecodeTextEdit<'t> {
         let mut cursor_range = None;
         let prev_cursor_range = state.cursor_range(&galley);
         if ui.memory(|mem| mem.has_focus(id)) {
-            ui.memory_mut(|mem| mem.lock_focus(id, lock_focus));
+            ui.memory_mut(|mem| {
+                mem.set_focus_lock_filter(
+                    id,
+                    EventFilter {
+                        tab: true,
+                        arrows: true,
+                        escape: true,
+                    },
+                )
+            });
 
             let default_cursor_range = if cursor_at_end {
                 CursorRange::one(galley.end())
@@ -944,7 +940,7 @@ fn paint_cursor_end(
 
     painter.line_segment(
         [top, bottom],
-        (ui.visuals().text_cursor_width, stroke.color),
+        (ui.visuals().text_cursor.width, stroke.color),
     );
 
     if false {
