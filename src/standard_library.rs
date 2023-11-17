@@ -49,6 +49,7 @@ pub fn define_standard_library() -> FunctionMap {
     standard_library.std_lib.insert("stop-rec".to_string(), eval::commands::stop_recording);
     standard_library.std_lib.insert("import-sample-set".to_string(), eval::commands::import_sample_set);
     standard_library.std_lib.insert("print".to_string(), eval::print::print);
+    standard_library.std_lib.insert("load-file".to_string(), eval::commands::load_file);
 
     // progn and other constructs
     standard_library.std_lib.insert("progn".to_string(), eval::progn::progn);

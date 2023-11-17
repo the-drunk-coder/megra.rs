@@ -744,3 +744,20 @@ pub fn stop_recording(
 ) -> Option<EvaluatedExpr> {
     Some(EvaluatedExpr::Command(Command::StopRecording))
 }
+
+pub fn load_file(
+    _: &FunctionMap,
+    tail: &mut Vec<EvaluatedExpr>,
+    _: &sync::Arc<GlobalVariables>,
+    _: SampleAndWavematrixSet,
+    _: OutputMode,
+) -> Option<EvaluatedExpr> {
+    let mut tail_drain = tail.drain(..).skip(1);
+    if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::String(s)))) =
+        tail_drain.next()
+    {
+        Some(EvaluatedExpr::Command(Command::LoadFile(s)))
+    } else {
+        None
+    }
+}

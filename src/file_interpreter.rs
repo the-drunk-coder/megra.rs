@@ -1,7 +1,6 @@
 use std::{fs, path, sync};
 
 use crate::{
-    builtin_types::GlobalVariables,
     interpreter,
     parser::{self, FunctionMap},
     session::Session,
@@ -76,10 +75,9 @@ pub fn segment_expressions(text: String) -> Vec<String> {
 pub fn parse_file<const BUFSIZE: usize, const NCHAN: usize>(
     path: String,
     functions: &sync::Arc<parking_lot::Mutex<FunctionMap>>,
-    globals: &sync::Arc<GlobalVariables>,
-    session: Session<BUFSIZE, NCHAN>,
+    session: &Session<BUFSIZE, NCHAN>,
     base_dir: String,
-) -> Result<(), anyhow::Error> {
+) {
     let p = path::Path::new(&path);
     match fs::read_to_string(p) {
         Ok(s) => {
@@ -91,7 +89,7 @@ pub fn parse_file<const BUFSIZE: usize, const NCHAN: usize>(
                     parser::eval_from_str(
                         &expr,
                         &funs,
-                        globals,
+                        &session.globals,
                         session.sample_set.clone(),
                         session.output_mode,
                     )
@@ -101,12 +99,9 @@ pub fn parse_file<const BUFSIZE: usize, const NCHAN: usize>(
                     interpreter::interpret(res, functions, session.clone(), base_dir.clone());
                 }
             }
-
-            Ok(())
         }
         Err(e) => {
             println!("couldn't load file {e}");
-            Err(e.into())
         }
     }
 }

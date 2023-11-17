@@ -123,6 +123,7 @@ pub enum Command {
     Print(TypedEntity),
     Push(VariableId, TypedEntity),
     Insert(VariableId, VariableId, TypedEntity),
+    LoadFile(String),
 }
 
 #[derive(Clone)]

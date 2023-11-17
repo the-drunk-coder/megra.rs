@@ -7,6 +7,7 @@ use std::thread;
 use crate::builtin_types::*;
 
 use crate::commands;
+use crate::file_interpreter;
 use crate::midi_input;
 use crate::osc_receiver::OscReceiver;
 use crate::parser::{EvaluatedExpr, FunctionMap};
@@ -21,6 +22,9 @@ pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
     base_dir: String,
 ) {
     match c {
+        Command::LoadFile(f) => {
+            file_interpreter::parse_file(f, function_map, session, base_dir);
+        }
         Command::Push(id, te) => {
             commands::push(id, te, &session.globals);
         }
