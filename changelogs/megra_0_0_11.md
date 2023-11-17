@@ -5,3 +5,4 @@
 * `resync` flag for `sx`
 * experimental `--karl-yerkes-mode` (evaluate current expression on every modification)
 * `load-file` - load other megra files
+* startup file

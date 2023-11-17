@@ -141,6 +141,7 @@ impl MegraEditor {
         // create sketch and load sketch file list ...
 
         let base_dir_buf = std::path::PathBuf::from(base_dir);
+
         let sketchbook_path = base_dir_buf.join("sketchbook");
         if sketchbook_path.exists() {
             if *create_sketch {

@@ -739,6 +739,21 @@ fn run<const NCHAN: usize>(
         println!("create megra recordings directory {recordings_path:?}");
         std::fs::create_dir_all(recordings_path.to_str().unwrap())?;
     }
+
+    let init_file_path = sketchbook_path.join("init.megra3");
+    if !init_file_path.exists() {
+        println!("no startup file found");
+    } else {
+        let init_path_string = init_file_path.to_str().unwrap().to_string();
+        println!("loading init file {init_path_string}");
+        file_interpreter::parse_file(
+            init_path_string,
+            &stdlib,
+            &session,
+            base_dir.to_str().unwrap().to_string(),
+        );
+    };
+
     // load the default sample set ...
     if options.load_samples {
         println!("load samples from path: {samples_path:?}");
