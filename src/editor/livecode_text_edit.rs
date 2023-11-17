@@ -8,6 +8,8 @@ use egui::widgets::text_edit::{CCursorRange, CursorRange};
 
 use parking_lot::Mutex;
 
+use crate::file_interpreter;
+
 /// The text edit state stored between frames.
 #[derive(Clone, Default)]
 #[cfg_attr(feature = "serde", derive(serde::Deserialize, serde::Serialize))]
@@ -1619,49 +1621,17 @@ fn sexp_indent_level(input: &str) -> i32 {
 }
 
 fn find_closing_paren(text: &str, ccursor: &CCursor) -> Option<CCursor> {
-    let mut pos = ccursor.index;
-    let mut par_lvl = 1;
-
-    // spool forward to current position
-    for next_char in text.chars().skip(pos) {
-        if next_char == '(' {
-            par_lvl += 1;
-        } else if next_char == ')' {
-            par_lvl -= 1;
-        }
-        pos += 1;
-        if par_lvl == 0 {
-            return Some(CCursor {
-                index: pos,
-                prefer_next_row: false,
-            });
-        }
-    }
-    None
+    file_interpreter::find_closing_paren(text, ccursor.index).map(|p| CCursor {
+        index: p,
+        prefer_next_row: false,
+    })
 }
 
 fn find_opening_paren(text: &str, ccursor: &CCursor) -> Option<CCursor> {
-    let pos = ccursor.index;
-    let rev_pos = text.chars().count() - pos;
-
-    // well, should be reverse par level ...
-    let mut par_lvl = 1;
-    let mut count = 0;
-    for next_char in text.chars().rev().skip(rev_pos) {
-        if next_char == '(' {
-            par_lvl -= 1;
-        } else if next_char == ')' {
-            par_lvl += 1;
-        }
-        count += 1;
-        if par_lvl == 0 {
-            return Some(CCursor {
-                index: pos - count,
-                prefer_next_row: false,
-            });
-        }
-    }
-    None
+    file_interpreter::find_opening_paren(text, ccursor.index).map(|p| CCursor {
+        index: p,
+        prefer_next_row: false,
+    })
 }
 
 fn find_first_open_paren_in_row(text: &str, ccursor: &CCursor) -> Option<CCursor> {

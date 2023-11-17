@@ -10,6 +10,7 @@ pub mod cyc_parser;
 pub mod editor;
 pub mod event;
 pub mod event_helpers;
+pub mod file_interpreter;
 pub mod generator;
 pub mod generator_processor;
 pub mod interpreter;

@@ -25,7 +25,6 @@ pub fn run_editor<const BUFSIZE: usize, const NCHAN: usize>(
     karl_yerkes_mode: bool,
 ) -> std::result::Result<(), eframe::Error> {
     let function_map2 = sync::Arc::clone(function_map);
-    let _ruffbox2 = sync::Arc::clone(&session.ruffbox);
     let globals2 = sync::Arc::clone(&session.globals);
     let base_dir_2 = base_dir.clone();
 
