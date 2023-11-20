@@ -41,8 +41,9 @@ use crate::builtin_types::*;
 use crate::osc_client::OscClient;
 use crate::sample_set::SampleAndWavematrixSet;
 use crate::session::{OutputMode, Session};
+use anyhow::anyhow;
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
-use cpal::Stream;
+use cpal::{Stream, StreamConfig};
 use dashmap::DashMap;
 use directories_next::ProjectDirs;
 use getopts::Options;
@@ -324,21 +325,14 @@ fn main() -> Result<(), anyhow::Error> {
     } else {
         host.output_devices()?
             .find(|x| x.name().map(|y| y == out_device).unwrap_or(false))
-    }
-    .expect("failed to find output device");
+    };
 
     let input_device = if out_device == "default" {
         host.default_input_device()
     } else {
         host.input_devices()?
             .find(|x| x.name().map(|y| y == out_device).unwrap_or(false))
-    }
-    .expect("failed to find input device");
-
-    println!("odev {}", output_device.name().unwrap());
-
-    let out_config: cpal::SupportedStreamConfig = output_device.default_output_config().unwrap();
-    let in_config: cpal::SupportedStreamConfig = input_device.default_input_config().unwrap();
+    };
 
     let run_opts = RunOptions {
         mode: out_mode,
@@ -358,30 +352,11 @@ fn main() -> Result<(), anyhow::Error> {
         karl_yerkes_mode,
     };
 
-    let mut out_conf: cpal::StreamConfig = out_config.into();
-    let mut in_conf: cpal::StreamConfig = in_config.into();
-
     match out_mode {
-        OutputMode::Stereo => {
-            in_conf.channels = num_live_buffers;
-            out_conf.channels = 2;
-            run::<2>(&input_device, &output_device, &out_conf, &in_conf, run_opts)?
-        }
-        OutputMode::FourChannel => {
-            in_conf.channels = num_live_buffers;
-            out_conf.channels = 4;
-            run::<4>(&input_device, &output_device, &out_conf, &in_conf, run_opts)?
-        }
-        OutputMode::EightChannel => {
-            in_conf.channels = num_live_buffers;
-            out_conf.channels = 8;
-            run::<8>(&input_device, &output_device, &out_conf, &in_conf, run_opts)?
-        }
-        OutputMode::SixteenChannel => {
-            in_conf.channels = num_live_buffers;
-            out_conf.channels = 16;
-            run::<16>(&input_device, &output_device, &out_conf, &in_conf, run_opts)?
-        }
+        OutputMode::Stereo => run::<2>(input_device, output_device, run_opts)?,
+        OutputMode::FourChannel => run::<4>(input_device, output_device, run_opts)?,
+        OutputMode::EightChannel => run::<8>(input_device, output_device, run_opts)?,
+        OutputMode::SixteenChannel => run::<16>(input_device, output_device, run_opts)?,
     }
 
     Ok(())
@@ -389,11 +364,14 @@ fn main() -> Result<(), anyhow::Error> {
 
 fn run_input<const NCHAN: usize>(
     input_device: &cpal::Device,
-    in_config: &cpal::StreamConfig,
     playhead_in: sync::Arc<Mutex<RuffboxPlayhead<BLOCKSIZE, NCHAN>>>,
     is_recording_input: sync::Arc<AtomicBool>,
     throw_in: Throw<BLOCKSIZE, NCHAN>,
+    options: &RunOptions,
 ) -> Result<Stream, anyhow::Error> {
+    let mut in_config: StreamConfig = input_device.default_input_config()?.into();
+    in_config.channels = options.num_live_buffers as u16;
+
     let in_channels = in_config.channels as usize;
 
     println!("[INPUT] start input stream with {in_channels} channels");
@@ -402,7 +380,7 @@ fn run_input<const NCHAN: usize>(
 
     #[cfg(not(feature = "ringbuffer"))]
     let in_stream = input_device.build_input_stream(
-        in_config,
+        &in_config,
         move |data: &[f32], _: &cpal::InputCallbackInfo| {
             // these are the only two locks that are left.
             // Maybe, in the future, I could get around them using
@@ -441,7 +419,7 @@ fn run_input<const NCHAN: usize>(
 
     #[cfg(feature = "ringbuffer")]
     let in_stream = input_device.build_input_stream(
-        in_config,
+        &in_config,
         move |data: &[f32], _: &cpal::InputCallbackInfo| {
             // these are the only two locks that are left.
             // Maybe, in the future, I could get around them using
@@ -509,14 +487,14 @@ fn run_input<const NCHAN: usize>(
 
 fn run_output<const NCHAN: usize>(
     output_device: &cpal::Device,
-    out_config: &cpal::StreamConfig,
     playhead_out: sync::Arc<Mutex<RuffboxPlayhead<BLOCKSIZE, NCHAN>>>,
     is_recording_output: sync::Arc<AtomicBool>,
     throw_out: Throw<BLOCKSIZE, NCHAN>,
 ) -> Result<Stream, anyhow::Error> {
-    let out_channels = out_config.channels as usize;
+    let mut out_config: StreamConfig = output_device.default_output_config()?.into();
+    out_config.channels = NCHAN as u16;
 
-    println!("[OUTPUT] start output stream with {out_channels} channels");
+    println!("[OUTPUT] start output stream with {NCHAN} channels");
 
     let err_fn = |err| eprintln!("an error occurred on input stream: {err}");
 
@@ -526,7 +504,7 @@ fn run_output<const NCHAN: usize>(
     // (i.e. jack, coreaudio)
     #[cfg(not(feature = "ringbuffer"))]
     let out_stream = output_device.build_output_stream(
-        out_config,
+        &out_config,
         move |data: &mut [f32], _: &cpal::OutputCallbackInfo| {
             // about this lock, see note in the input stream ...
             let mut ruff = playhead_out.lock();
@@ -540,8 +518,8 @@ fn run_output<const NCHAN: usize>(
             }
 
             // there might be a faster way to de-interleave here ...
-            for (frame_count, frame) in data.chunks_mut(out_channels).enumerate() {
-                for ch in 0..out_channels {
+            for (frame_count, frame) in data.chunks_mut(NCHAN).enumerate() {
+                for ch in 0..NCHAN {
                     frame[ch] = ruff_out[ch][frame_count];
                 }
             }
@@ -566,7 +544,7 @@ fn run_output<const NCHAN: usize>(
     let mut read_idx: usize = 0;
     #[cfg(feature = "ringbuffer")]
     let out_stream = output_device.build_output_stream(
-        out_config,
+        &out_config,
         move |data: &mut [f32], _: &cpal::OutputCallbackInfo| {
             // about this lock, see note in the input stream ...
             let mut ruff = playhead_out.lock();
@@ -580,7 +558,7 @@ fn run_output<const NCHAN: usize>(
             };
             //let mut produced:usize = 0;
 
-            let current_blocksize = data.len() / out_channels;
+            let current_blocksize = data.len() / NCHAN;
 
             //println!(
             //   "av {} need {} read {} write {}",
@@ -598,7 +576,7 @@ fn run_output<const NCHAN: usize>(
                     }
 
                     //produced += BLOCKSIZE;
-                    for ch in 0..out_channels {
+                    for ch in 0..NCHAN {
                         let mut tmp_write_idx = write_idx;
                         for s in 0..BLOCKSIZE {
                             ringbuffer[ch][tmp_write_idx] = ruff_out[ch][s];
@@ -623,8 +601,8 @@ fn run_output<const NCHAN: usize>(
             }
 
             // there might be a faster way to de-interleave here ...
-            for (_, frame) in data.chunks_mut(out_channels).enumerate() {
-                for ch in 0..out_channels {
+            for (_, frame) in data.chunks_mut(NCHAN).enumerate() {
+                for ch in 0..NCHAN {
                     frame[ch] = ringbuffer[ch][read_idx];
                 }
                 read_idx += 1;
@@ -655,14 +633,23 @@ fn run_output<const NCHAN: usize>(
 }
 
 fn run<const NCHAN: usize>(
-    input_device: &cpal::Device,
-    output_device: &cpal::Device,
-    out_config: &cpal::StreamConfig,
-    in_config: &cpal::StreamConfig,
+    input_device: Option<cpal::Device>,
+    output_device: Option<cpal::Device>,
     options: RunOptions,
 ) -> Result<(), anyhow::Error> {
-    // at some point i'll need to implement more samplerates i suppose ...
-    let sample_rate = out_config.sample_rate.0 as f32;
+    // try getting samplerate
+    let sample_rate = if let Some(ref dev) = output_device {
+        if let Ok(cfg) = dev.default_output_config() {
+            let scfg: StreamConfig = cfg.into();
+            scfg.sample_rate.0 as f32
+        } else {
+            // just as a default guess
+            44100.0
+        }
+    } else {
+        // just as a default guess
+        44100.0
+    };
 
     let (controls, playhead) = init_ruffbox::<BLOCKSIZE, NCHAN>(
         options.num_live_buffers,
@@ -700,17 +687,15 @@ fn run<const NCHAN: usize>(
     };
 
     let playhead_out = sync::Arc::new(Mutex::new(playhead)); // the one for the audio thread (out stream)...
-    let playhead_in = sync::Arc::clone(&playhead_out); // the one for the audio thread (in stream)...
 
     // keep stream handles alive by
     // keeping them in scope
-    let in_stream = run_input(
-        input_device,
-        in_config,
-        playhead_in,
-        is_recording_input,
-        throw_in,
-    );
+    let in_stream = if let Some(in_dev) = input_device {
+        let playhead_in = sync::Arc::clone(&playhead_out); // the one for the audio thread (in stream)...
+        run_input(&in_dev, playhead_in, is_recording_input, throw_in, &options)
+    } else {
+        Err(anyhow!("can't start input stream"))
+    };
 
     if in_stream.is_ok() {
         println!("[INPUT] input started!");
@@ -718,13 +703,11 @@ fn run<const NCHAN: usize>(
         eprintln!("[INPUT] error starting input!");
     }
 
-    let out_stream = run_output(
-        output_device,
-        out_config,
-        playhead_out,
-        is_recording_output,
-        throw_out,
-    );
+    let out_stream = if let Some(out_dev) = output_device {
+        run_output(&out_dev, playhead_out, is_recording_output, throw_out)
+    } else {
+        Err(anyhow!("can't start output stream"))
+    };
 
     if out_stream.is_ok() {
         println!("[OUTPUT] output started!");
