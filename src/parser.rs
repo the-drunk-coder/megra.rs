@@ -271,6 +271,31 @@ pub fn parse_expr(i: &str) -> IResult<&str, Expr, VerboseError<&str>> {
     alt((parse_definition, parse_application, parse_constant))(i)
 }
 
+// evaluate as argument identifiers, or better, constans only, no applications
+// or definitions
+pub fn eval_as_arg(e: &Expr) -> Option<EvaluatedExpr> {
+    match e {
+        Expr::Constant(c) => Some(match c {
+            Atom::Float(f) => EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(*f))),
+            Atom::Symbol(s) => {
+                EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(s.to_string())))
+            }
+            Atom::Keyword(k) => EvaluatedExpr::Keyword(k.to_string()),
+            Atom::String(s) => {
+                EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::String(s.to_string())))
+            }
+            Atom::Boolean(b) => {
+                EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Boolean(*b)))
+            }
+            Atom::Identifier(f) => {
+                // eval local vars at eval time ???
+                EvaluatedExpr::Identifier(f.to_string())
+            }
+        }),
+        _ => None,
+    }
+}
+
 /// This one reduces the abstract syntax tree ...
 /// does not resolve global variables at this point,
 /// as there might be different points in time where it makes
@@ -310,14 +335,13 @@ pub fn eval_expression(
             }
         }),
         Expr::Application(head, tail) => {
-            if let Some(EvaluatedExpr::Identifier(f)) = eval_expression(
-                head,
-                functions,
-                globals,
-                locals,
-                sample_set.clone(),
-                out_mode,
-            ) {
+            // local variables aren't evaluated for the head, which is supposed to be the identifier
+            // in some context it might be nice to have the head procedurally generated as well,
+            // but it'd cause a whole lotta trouble right now and I have no desire currently to use it ...
+            // there's more explicit ways to do the whole thing ...
+            if let Some(EvaluatedExpr::Identifier(f)) =
+                eval_expression(head, functions, globals, None, sample_set.clone(), out_mode)
+            {
                 // check if we have this function ...
                 if functions.std_lib.contains_key(&f) {
                     let mut reduced_tail = tail
@@ -416,44 +440,24 @@ pub fn eval_expression(
 
                     let mut positional_args = Vec::new();
                     let mut rem_args = false;
+                    // evaluate positional arguments ...
                     if let Some(Expr::Application(head, fun_tail)) = tail_clone.get(0) {
-                        if let Some(EvaluatedExpr::Identifier(f)) = eval_expression(
-                            head,
-                            functions,
-                            globals,
-                            None,
-                            sample_set.clone(),
-                            out_mode,
-                        ) {
-                            // only assume it's positional args when it's not a known function ...
-                            // that way, the definition becomes optional
-                            if !(functions.std_lib.contains_key(&f)
-                                || functions.usr_lib.contains_key(&f))
-                            {
-                                positional_args.push(f);
+                        if let Some(EvaluatedExpr::Identifier(f)) = eval_as_arg(head) {
+                            positional_args.push(f);
 
-                                let reduced_tail = fun_tail
-                                    .iter()
-                                    .map(|expr| {
-                                        eval_expression(
-                                            expr,
-                                            functions,
-                                            globals,
-                                            None,
-                                            sample_set.clone(),
-                                            out_mode,
-                                        )
-                                    })
-                                    .collect::<Option<Vec<EvaluatedExpr>>>()?;
+                            let reduced_tail = fun_tail
+                                .iter()
+                                .map(|expr| eval_as_arg(expr))
+                                .collect::<Option<Vec<EvaluatedExpr>>>()?;
 
-                                for ee in reduced_tail {
-                                    if let EvaluatedExpr::Identifier(ff) = ee {
-                                        positional_args.push(ff);
-                                    }
+                            for ee in reduced_tail {
+                                if let EvaluatedExpr::Identifier(ff) = ee {
+                                    positional_args.push(ff);
                                 }
-
-                                rem_args = true;
                             }
+
+                            rem_args = true;
+                            //}
                         }
                     }
 
