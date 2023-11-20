@@ -447,7 +447,7 @@ pub fn eval_expression(
 
                             let reduced_tail = fun_tail
                                 .iter()
-                                .map(|expr| eval_as_arg(expr))
+                                .map(eval_as_arg)
                                 .collect::<Option<Vec<EvaluatedExpr>>>()?;
 
                             for ee in reduced_tail {

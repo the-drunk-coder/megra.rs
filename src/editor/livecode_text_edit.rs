@@ -544,12 +544,12 @@ impl<'t> LivecodeTextEdit<'t> {
 fn call_callback(
     state: &mut LivecodeTextEditState,
     cursor_range: &CursorRange,
-    text: &mut dyn TextBuffer,
+    text: &dyn TextBuffer,
     galley: &Galley,
     eval_callback: &Option<Arc<Mutex<dyn FnMut(&String)>>>,
     flash: bool,
 ) {
-    if let Some(sexp_cursors) = find_toplevel_sexp(text.as_str(), &cursor_range) {
+    if let Some(sexp_cursors) = find_toplevel_sexp(text.as_str(), cursor_range) {
         let cup = CursorRange {
             primary: galley.from_ccursor(sexp_cursors.primary),
             secondary: galley.from_ccursor(sexp_cursors.secondary),
