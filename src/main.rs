@@ -42,11 +42,13 @@ use crate::osc_client::OscClient;
 use crate::sample_set::SampleAndWavematrixSet;
 use crate::session::{OutputMode, Session};
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
+use cpal::Stream;
 use dashmap::DashMap;
 use directories_next::ProjectDirs;
 use getopts::Options;
 use parking_lot::Mutex;
-use ruffbox_synth::ruffbox::{init_ruffbox, ReverbMode};
+use real_time_streaming::Throw;
+use ruffbox_synth::ruffbox::{init_ruffbox, ReverbMode, RuffboxPlayhead};
 use standard_library::define_standard_library;
 
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -385,58 +387,18 @@ fn main() -> Result<(), anyhow::Error> {
     Ok(())
 }
 
-fn run<const NCHAN: usize>(
+fn run_input<const NCHAN: usize>(
     input_device: &cpal::Device,
-    output_device: &cpal::Device,
-    out_config: &cpal::StreamConfig,
     in_config: &cpal::StreamConfig,
-    options: RunOptions,
-) -> Result<(), anyhow::Error> {
-    // at some point i'll need to implement more samplerates i suppose ...
-    let sample_rate = out_config.sample_rate.0 as f32;
-    let out_channels = out_config.channels as usize;
+    playhead_in: sync::Arc<Mutex<RuffboxPlayhead<BLOCKSIZE, NCHAN>>>,
+    is_recording_input: sync::Arc<AtomicBool>,
+    throw_in: Throw<BLOCKSIZE, NCHAN>,
+) -> Result<Stream, anyhow::Error> {
     let in_channels = in_config.channels as usize;
-    let err_fn = |err| eprintln!("an error occurred on stream: {err}");
 
-    println!("samplerate: {sample_rate} in chan: {in_channels} out chan: {out_channels}");
+    println!("[INPUT] start input stream with {in_channels} channels");
 
-    let (controls, playhead) = init_ruffbox::<BLOCKSIZE, NCHAN>(
-        options.num_live_buffers,
-        options.live_buffer_time.into(),
-        &options.reverb_mode,
-        sample_rate.into(),
-        options.max_sample_buffers,
-        10,
-        options.ambisonic_binaural,
-    );
-
-    // OUTPUT RECORDING
-    let (throw_out, catch_out) = real_time_streaming::init_real_time_stream::<BLOCKSIZE, NCHAN>(
-        (BLOCKSIZE_FLOAT / sample_rate) as f64,
-        0.25,
-    );
-
-    // INPUT MONITOR RECORDING
-    let (throw_in, catch_in) = real_time_streaming::init_real_time_stream::<BLOCKSIZE, NCHAN>(
-        (BLOCKSIZE_FLOAT / sample_rate) as f64,
-        0.25,
-    );
-
-    let is_recording_output = sync::Arc::new(AtomicBool::new(false));
-    let is_recording_input = sync::Arc::new(AtomicBool::new(false));
-
-    let rec_control = real_time_streaming::RecordingControl {
-        is_recording_output: sync::Arc::clone(&is_recording_output),
-        is_recording_input: sync::Arc::clone(&is_recording_input),
-        catch_out: Some(catch_out),
-        catch_out_handle: None,
-        catch_in: Some(catch_in),
-        catch_in_handle: None,
-        samplerate: sample_rate as u32,
-    };
-
-    let playhead_out = sync::Arc::new(Mutex::new(playhead)); // the one for the audio thread (out stream)...
-    let playhead_in = sync::Arc::clone(&playhead_out); // the one for the audio thread (in stream)...
+    let err_fn = |err| eprintln!("an error occurred on input stream: {err}");
 
     #[cfg(not(feature = "ringbuffer"))]
     let in_stream = input_device.build_input_stream(
@@ -539,6 +501,24 @@ fn run<const NCHAN: usize>(
         err_fn,
         None,
     )?;
+
+    in_stream.play()?;
+
+    Ok(in_stream)
+}
+
+fn run_output<const NCHAN: usize>(
+    output_device: &cpal::Device,
+    out_config: &cpal::StreamConfig,
+    playhead_out: sync::Arc<Mutex<RuffboxPlayhead<BLOCKSIZE, NCHAN>>>,
+    is_recording_output: sync::Arc<AtomicBool>,
+    throw_out: Throw<BLOCKSIZE, NCHAN>,
+) -> Result<Stream, anyhow::Error> {
+    let out_channels = out_config.channels as usize;
+
+    println!("[OUTPUT] start output stream with {out_channels} channels");
+
+    let err_fn = |err| eprintln!("an error occurred on input stream: {err}");
 
     // main audio callback (plain)
     // the plain audio callback for platforms where the blocksize
@@ -669,11 +649,90 @@ fn run<const NCHAN: usize>(
         None,
     )?;
 
-    in_stream.play()?;
     out_stream.play()?;
 
-    // global dat
+    Ok(out_stream)
+}
 
+fn run<const NCHAN: usize>(
+    input_device: &cpal::Device,
+    output_device: &cpal::Device,
+    out_config: &cpal::StreamConfig,
+    in_config: &cpal::StreamConfig,
+    options: RunOptions,
+) -> Result<(), anyhow::Error> {
+    // at some point i'll need to implement more samplerates i suppose ...
+    let sample_rate = out_config.sample_rate.0 as f32;
+
+    let (controls, playhead) = init_ruffbox::<BLOCKSIZE, NCHAN>(
+        options.num_live_buffers,
+        options.live_buffer_time.into(),
+        &options.reverb_mode,
+        sample_rate.into(),
+        options.max_sample_buffers,
+        10,
+        options.ambisonic_binaural,
+    );
+
+    // OUTPUT RECORDING
+    let (throw_out, catch_out) = real_time_streaming::init_real_time_stream::<BLOCKSIZE, NCHAN>(
+        (BLOCKSIZE_FLOAT / sample_rate) as f64,
+        0.25,
+    );
+
+    // INPUT MONITOR RECORDING
+    let (throw_in, catch_in) = real_time_streaming::init_real_time_stream::<BLOCKSIZE, NCHAN>(
+        (BLOCKSIZE_FLOAT / sample_rate) as f64,
+        0.25,
+    );
+
+    let is_recording_output = sync::Arc::new(AtomicBool::new(false));
+    let is_recording_input = sync::Arc::new(AtomicBool::new(false));
+
+    let rec_control = real_time_streaming::RecordingControl {
+        is_recording_output: sync::Arc::clone(&is_recording_output),
+        is_recording_input: sync::Arc::clone(&is_recording_input),
+        catch_out: Some(catch_out),
+        catch_out_handle: None,
+        catch_in: Some(catch_in),
+        catch_in_handle: None,
+        samplerate: sample_rate as u32,
+    };
+
+    let playhead_out = sync::Arc::new(Mutex::new(playhead)); // the one for the audio thread (out stream)...
+    let playhead_in = sync::Arc::clone(&playhead_out); // the one for the audio thread (in stream)...
+
+    // keep stream handles alive by
+    // keeping them in scope
+    let in_stream = run_input(
+        input_device,
+        in_config,
+        playhead_in,
+        is_recording_input,
+        throw_in,
+    );
+
+    if in_stream.is_ok() {
+        println!("[INPUT] input started!");
+    } else {
+        eprintln!("[INPUT] error starting input!");
+    }
+
+    let out_stream = run_output(
+        output_device,
+        out_config,
+        playhead_out,
+        is_recording_output,
+        throw_out,
+    );
+
+    if out_stream.is_ok() {
+        println!("[OUTPUT] output started!");
+    } else {
+        eprintln!("[OUTPUT] error starting output!");
+    }
+
+    // global data
     let session = Session {
         schedulers: sync::Arc::new(DashMap::new()),
         contexts: sync::Arc::new(DashMap::new()),
