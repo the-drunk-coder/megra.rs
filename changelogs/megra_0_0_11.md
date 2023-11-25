@@ -6,3 +6,5 @@
 * experimental `--karl-yerkes-mode` (evaluate current expression on every modification)
 * `load-file` - load other megra files
 * startup file
+* allow `vec` to construct `cyc` and `loop`
+* allow nested `vec` to create chords in `loop` and `cyc`

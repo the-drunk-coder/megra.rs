@@ -188,6 +188,40 @@ pub fn a_loop(
                     dur_vec.push(DynVal::with_value(f));
                 }
             }
+            // resolve to levels of vecs (for now ...)
+            EvaluatedExpr::Typed(TypedEntity::Vec(v)) => {
+                for x in v {
+                    match *x {
+                        TypedEntity::SoundEvent(e) => {
+                            ev_vecs.push(vec![SourceEvent::Sound(e)]);
+                            dur_vec.push(dur.clone());
+                        }
+                        TypedEntity::ControlEvent(e) => {
+                            ev_vecs.push(vec![SourceEvent::Control(e)]);
+                            dur_vec.push(dur.clone());
+                        }
+                        TypedEntity::Vec(mut v2) => {
+                            v2.retain(|x| {
+                                matches!(**x, TypedEntity::SoundEvent(_))
+                                    || matches!(**x, TypedEntity::ControlEvent(_))
+                            });
+                            let mut chord = Vec::new();
+                            for y in v2 {
+                                match *y {
+                                    TypedEntity::SoundEvent(s) => chord.push(SourceEvent::Sound(s)),
+                                    TypedEntity::ControlEvent(s) => {
+                                        chord.push(SourceEvent::Control(s))
+                                    }
+                                    _ => {}
+                                }
+                            }
+                            ev_vecs.push(chord);
+                            dur_vec.push(dur.clone());
+                        }
+                        _ => {}
+                    }
+                }
+            }
             EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::String(d))) => {
                 let mut parsed_cycle = cyc_parser::eval_cyc_from_str(
                     &d,
