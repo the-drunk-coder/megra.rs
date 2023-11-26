@@ -4,7 +4,7 @@ use ruffbox_synth::building_blocks::{
 use ruffbox_synth::synths::SynthType;
 use std::collections::HashMap;
 
-//
+/// generate the ruffbox synth type from available data ...
 pub fn map_synth_type(
     name: &str,
     params: &HashMap<SynthParameterAddress, SynthParameterValue>,
