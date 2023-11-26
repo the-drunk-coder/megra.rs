@@ -57,18 +57,15 @@ pub fn map_synth_type(
                         FilterType::BiquadHpf12dB
                     },
                     if params
-                        .get(&SynthParameterLabel::PeakFrequency.into())
+                        .get(&SynthParameterLabel::PeakFrequency.with_index(0))
                         .is_some()
-                        || params
-                            .get(&SynthParameterLabel::Peak1Frequency.into())
-                            .is_some()
                     {
                         FilterType::PeakEQ
                     } else {
                         FilterType::Dummy
                     },
                     if params
-                        .get(&SynthParameterLabel::Peak2Frequency.into())
+                        .get(&SynthParameterLabel::PeakFrequency.with_index(1))
                         .is_some()
                     {
                         FilterType::PeakEQ
@@ -94,18 +91,15 @@ pub fn map_synth_type(
                         FilterType::BiquadHpf12dB
                     },
                     if params
-                        .get(&SynthParameterLabel::PeakFrequency.into())
+                        .get(&SynthParameterLabel::PeakFrequency.with_index(0))
                         .is_some()
-                        || params
-                            .get(&SynthParameterLabel::Peak1Frequency.into())
-                            .is_some()
                     {
                         FilterType::PeakEQ
                     } else {
                         FilterType::Dummy
                     },
                     if params
-                        .get(&SynthParameterLabel::Peak2Frequency.into())
+                        .get(&SynthParameterLabel::PeakFrequency.with_index(1))
                         .is_some()
                     {
                         FilterType::PeakEQ
@@ -132,18 +126,15 @@ pub fn map_synth_type(
                 FilterType::BiquadHpf12dB
             },
             if params
-                .get(&SynthParameterLabel::PeakFrequency.into())
+                .get(&SynthParameterLabel::PeakFrequency.with_index(0))
                 .is_some()
-                || params
-                    .get(&SynthParameterLabel::Peak1Frequency.into())
-                    .is_some()
             {
                 FilterType::PeakEQ
             } else {
                 FilterType::Dummy
             },
             if params
-                .get(&SynthParameterLabel::Peak2Frequency.into())
+                .get(&SynthParameterLabel::PeakFrequency.with_index(1))
                 .is_some()
             {
                 FilterType::PeakEQ
@@ -168,18 +159,15 @@ pub fn map_synth_type(
                 FilterType::BiquadHpf12dB
             },
             if params
-                .get(&SynthParameterLabel::PeakFrequency.into())
+                .get(&SynthParameterLabel::PeakFrequency.with_index(0))
                 .is_some()
-                || params
-                    .get(&SynthParameterLabel::Peak1Frequency.into())
-                    .is_some()
             {
                 FilterType::PeakEQ
             } else {
                 FilterType::Dummy
             },
             if params
-                .get(&SynthParameterLabel::Peak2Frequency.into())
+                .get(&SynthParameterLabel::PeakFrequency.with_index(1))
                 .is_some()
             {
                 FilterType::PeakEQ
@@ -248,53 +236,82 @@ pub fn map_synth_type(
     }
 }
 
-pub fn map_parameter(name: &str) -> SynthParameterLabel {
+pub fn map_parameter(name: &str) -> SynthParameterAddress {
     match name {
-        "freq" => SynthParameterLabel::PitchFrequency,
-        "note" => SynthParameterLabel::PitchNote,
-        "atk" => SynthParameterLabel::Attack,
-        "atkt" => SynthParameterLabel::AttackType,
-        "atkp" => SynthParameterLabel::AttackPeakLevel,
-        "dec" => SynthParameterLabel::Decay,
-        "dect" => SynthParameterLabel::DecayType,
-        "rel" => SynthParameterLabel::Release,
-        "relt" => SynthParameterLabel::ReleaseType,
-        "sus" => SynthParameterLabel::Sustain,
-        "env" => SynthParameterLabel::Envelope,
-        "pos" => SynthParameterLabel::ChannelPosition,
-        "lvl" => SynthParameterLabel::EnvelopeLevel,
-        "amp" => SynthParameterLabel::OscillatorAmplitude,
-        "gain" => SynthParameterLabel::OscillatorAmplitude, // a bit of a compromise, for legacy reasons ...
-        "dur" => SynthParameterLabel::Duration,
-        "lpf" => SynthParameterLabel::LowpassCutoffFrequency,
-        "lpd" => SynthParameterLabel::LowpassFilterDistortion,
-        "lpq" => SynthParameterLabel::LowpassQFactor,
-        "lpt" => SynthParameterLabel::LowpassFilterType,
-        "hpf" => SynthParameterLabel::HighpassCutoffFrequency,
-        "hpq" => SynthParameterLabel::HighpassQFactor,
-        "hpt" => SynthParameterLabel::HighpassFilterType,
-        "pff" => SynthParameterLabel::Peak1Frequency,
-        "pfbw" => SynthParameterLabel::Peak1Bandwidth,
-        "pfg" => SynthParameterLabel::Peak1Gain,
-        "pff1" => SynthParameterLabel::Peak1Frequency,
-        "pfbw1" => SynthParameterLabel::Peak1Bandwidth,
-        "pfg2" => SynthParameterLabel::Peak2Gain,
-        "pff2" => SynthParameterLabel::Peak2Frequency,
-        "pfbw2" => SynthParameterLabel::Peak2Bandwidth,
-        "pfg1" => SynthParameterLabel::Peak1Gain,
-        "pw" => SynthParameterLabel::Pulsewidth,
-        "rate" => SynthParameterLabel::PlaybackRate,
-        "start" => SynthParameterLabel::PlaybackStart,
-        "loop" => SynthParameterLabel::PlaybackLoop,
-        "bufnum" => SynthParameterLabel::SampleBufferNumber,
-        "rev" => SynthParameterLabel::ReverbMix,
-        "del" => SynthParameterLabel::DelayMix,
-        "azi" => SynthParameterLabel::AmbisonicAzimuth,
-        "ele" => SynthParameterLabel::AmbisonicElevation,
-        "wt" | "wavetable" => SynthParameterLabel::Wavetable,
-        "wm" | "wavematrix" => SynthParameterLabel::Wavematrix,
-        "ti" | "tableindex" => SynthParameterLabel::WavematrixTableIndex,
-        "dist" => SynthParameterLabel::WaveshaperMix,
-        _ => SynthParameterLabel::PitchFrequency,
+        "freq" => SynthParameterLabel::PitchFrequency.into(),
+        "note" => SynthParameterLabel::PitchNote.into(),
+        "atk" => SynthParameterLabel::Attack.into(),
+        "atkt" => SynthParameterLabel::AttackType.into(),
+        "atkp" => SynthParameterLabel::AttackPeakLevel.into(),
+        "dec" => SynthParameterLabel::Decay.into(),
+        "dect" => SynthParameterLabel::DecayType.into(),
+        "rel" => SynthParameterLabel::Release.into(),
+        "relt" => SynthParameterLabel::ReleaseType.into(),
+        "sus" => SynthParameterLabel::Sustain.into(),
+        "env" => SynthParameterLabel::Envelope.into(),
+        "pos" => SynthParameterLabel::ChannelPosition.into(),
+        "lvl" => SynthParameterLabel::EnvelopeLevel.into(),
+        "amp" => SynthParameterLabel::OscillatorAmplitude.into(),
+        "gain" => SynthParameterLabel::OscillatorAmplitude.into(), // a bit of a compromise.into(), for legacy reasons ...
+        "dur" => SynthParameterLabel::Duration.into(),
+        "lpf" => SynthParameterLabel::LowpassCutoffFrequency.into(),
+        "lpd" => SynthParameterLabel::LowpassFilterDistortion.into(),
+        "lpq" => SynthParameterLabel::LowpassQFactor.into(),
+        "lpt" => SynthParameterLabel::LowpassFilterType.into(),
+        "hpf" => SynthParameterLabel::HighpassCutoffFrequency.into(),
+        "hpq" => SynthParameterLabel::HighpassQFactor.into(),
+        "hpt" => SynthParameterLabel::HighpassFilterType.into(),
+        "pff" => SynthParameterAddress {
+            label: SynthParameterLabel::PeakFrequency,
+            idx: Some(0),
+        },
+        "pfbw" => SynthParameterAddress {
+            label: SynthParameterLabel::PeakBandwidth,
+            idx: Some(0),
+        },
+        "pfg" => SynthParameterAddress {
+            label: SynthParameterLabel::PeakGain,
+            idx: Some(0),
+        },
+        "pff1" => SynthParameterAddress {
+            label: SynthParameterLabel::PeakFrequency,
+            idx: Some(0),
+        },
+        "pfbw1" => SynthParameterAddress {
+            label: SynthParameterLabel::PeakBandwidth,
+            idx: Some(0),
+        },
+        "pfg1" => SynthParameterAddress {
+            label: SynthParameterLabel::PeakGain,
+            idx: Some(0),
+        },
+        "pff2" => SynthParameterAddress {
+            label: SynthParameterLabel::PeakFrequency,
+            idx: Some(1),
+        },
+        "pfg2" => SynthParameterAddress {
+            label: SynthParameterLabel::PeakGain,
+            idx: Some(1),
+        },
+
+        "pfbw2" => SynthParameterAddress {
+            label: SynthParameterLabel::PeakBandwidth,
+            idx: Some(1),
+        },
+
+        "pw" => SynthParameterLabel::Pulsewidth.into(),
+        "rate" => SynthParameterLabel::PlaybackRate.into(),
+        "start" => SynthParameterLabel::PlaybackStart.into(),
+        "loop" => SynthParameterLabel::PlaybackLoop.into(),
+        "bufnum" => SynthParameterLabel::SampleBufferNumber.into(),
+        "rev" => SynthParameterLabel::ReverbMix.into(),
+        "del" => SynthParameterLabel::DelayMix.into(),
+        "azi" => SynthParameterLabel::AmbisonicAzimuth.into(),
+        "ele" => SynthParameterLabel::AmbisonicElevation.into(),
+        "wt" | "wavetable" => SynthParameterLabel::Wavetable.into(),
+        "wm" | "wavematrix" => SynthParameterLabel::Wavematrix.into(),
+        "ti" | "tableindex" => SynthParameterLabel::WavematrixTableIndex.into(),
+        "dist" => SynthParameterLabel::WaveshaperMix.into(),
+        _ => SynthParameterLabel::PitchFrequency.into(),
     }
 }

@@ -197,10 +197,10 @@ pub fn parameter(
                     }
                     EvaluatedExpr::Typed(TypedEntity::ParameterValue(m)) => Some(m),
                     EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(s)))
-                        if param_key == SynthParameterLabel::PitchFrequency
-                            || param_key == SynthParameterLabel::LowpassCutoffFrequency
-                            || param_key == SynthParameterLabel::HighpassCutoffFrequency
-                            || param_key == SynthParameterLabel::PeakFrequency =>
+                        if param_key.label == SynthParameterLabel::PitchFrequency
+                            || param_key.label == SynthParameterLabel::LowpassCutoffFrequency
+                            || param_key.label == SynthParameterLabel::HighpassCutoffFrequency
+                            || param_key.label == SynthParameterLabel::PeakFrequency =>
                     {
                         music_theory::from_string(&s).map(|note| {
                             ParameterValue::Scalar(DynVal::with_value(music_theory::to_freq(

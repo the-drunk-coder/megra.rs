@@ -55,7 +55,7 @@ pub fn collect_lifemodel(
         if collect_keeps {
             match c {
                 EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(ref s))) => {
-                    proc.keep_param.insert(map_parameter(s));
+                    proc.keep_param.insert(map_parameter(s).label);
                 }
                 _ => {
                     collect_keeps = false;
