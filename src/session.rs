@@ -3,7 +3,9 @@ use parking_lot::Mutex;
 use std::collections::{BTreeSet, HashMap};
 use std::{sync, thread};
 
-use ruffbox_synth::building_blocks::{SynthParameterLabel, SynthParameterValue};
+use ruffbox_synth::building_blocks::{
+    SynthParameterAddress, SynthParameterLabel, SynthParameterValue,
+};
 use ruffbox_synth::ruffbox::RuffboxControls;
 
 use crate::builtin_types::{Command, ConfigParameter, GlobalVariables, VariableId};
@@ -230,25 +232,29 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
                 ) {
                     // set parameters and trigger instance
                     for (k, v) in s.params.iter() {
+                        let addr = SynthParameterAddress {
+                            label: *k,
+                            idx: None,
+                        };
                         // special handling for stereo param
                         match k {
                             SynthParameterLabel::ChannelPosition => {
                                 if session.output_mode == OutputMode::Stereo {
-                                    inst.set_instance_parameter(*k, &translate_stereo(v.clone()));
+                                    inst.set_instance_parameter(addr, &translate_stereo(v.clone()));
                                 } else {
-                                    inst.set_instance_parameter(*k, v);
+                                    inst.set_instance_parameter(addr, v);
                                 }
                             }
                             // convert milliseconds to seconds
                             SynthParameterLabel::Duration => {
                                 if let SynthParameterValue::ScalarF32(val) = v {
                                     inst.set_instance_parameter(
-                                        *k,
+                                        addr,
                                         &SynthParameterValue::ScalarF32(*val * 0.001),
                                     )
                                 }
                             }
-                            _ => inst.set_instance_parameter(*k, v),
+                            _ => inst.set_instance_parameter(addr, v),
                         }
                     }
                     session.ruffbox.trigger(inst);
