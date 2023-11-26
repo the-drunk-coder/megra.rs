@@ -284,7 +284,7 @@ pub fn cyc(
                     // i.e (rep 80 2 (cyc ...)) vs (cyc 'foo :rep 80 :max-rep 2 ...)
                     let mut dur_ev = Event::with_name("transition".to_string());
                     dur_ev.params.insert(
-                        SynthParameterLabel::Duration,
+                        SynthParameterLabel::Duration.into(),
                         ParameterValue::Scalar(DynVal::with_value(
                             dur.static_val / num_events as f32,
                         )),
@@ -344,7 +344,7 @@ pub fn cyc(
                 if count < num_events - 1 {
                     let mut dur_ev = Event::with_name("transition".to_string());
                     dur_ev.params.insert(
-                        SynthParameterLabel::Duration,
+                        SynthParameterLabel::Duration.into(),
                         ParameterValue::Scalar(DynVal::with_value(
                             dur.static_val / num_events as f32,
                         )),
@@ -362,7 +362,7 @@ pub fn cyc(
             // create duration event (otherwise not needed ...)
             let mut dur_ev = Event::with_name("transition".to_string());
             dur_ev.params.insert(
-                SynthParameterLabel::Duration,
+                SynthParameterLabel::Duration.into(),
                 ParameterValue::Scalar(DynVal::with_value(dur.static_val / num_events as f32)),
             );
             duration_mapping.insert((last_char, first_char), dur_ev);

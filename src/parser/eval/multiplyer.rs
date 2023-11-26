@@ -71,7 +71,7 @@ pub fn spread_gens(gens: &mut [Generator], out_mode: &OutputMode) {
         let mut p = PearProcessor::new();
         let mut ev = Event::with_name_and_operation("pos".to_string(), EventOperation::Replace);
         ev.params.insert(
-            SynthParameterLabel::ChannelPosition,
+            SynthParameterLabel::ChannelPosition.into(),
             ParameterValue::Scalar(DynVal::with_value(positions[i])),
         );
         let mut filtered_events = HashMap::new();

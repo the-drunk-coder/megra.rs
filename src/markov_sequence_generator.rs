@@ -101,7 +101,7 @@ impl MarkovSequenceGenerator {
             } else {
                 let mut t = Event::with_name("transition".to_string()).get_static(globals);
                 t.params.insert(
-                    SynthParameterLabel::Duration,
+                    SynthParameterLabel::Duration.into(),
                     SynthParameterValue::ScalarF32(self.default_duration as f32),
                 );
                 t
@@ -111,7 +111,7 @@ impl MarkovSequenceGenerator {
             // these double else blocks doing the same thing sometimes make rust ugly
             let mut t = Event::with_name("transition".to_string()).get_static(globals);
             t.params.insert(
-                SynthParameterLabel::Duration,
+                SynthParameterLabel::Duration.into(),
                 SynthParameterValue::ScalarF32(self.default_duration as f32),
             );
             t

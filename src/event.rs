@@ -1,6 +1,7 @@
 use core::fmt;
 use ruffbox_synth::building_blocks::{
-    EnvelopeSegmentInfo, EnvelopeSegmentType, SynthParameterLabel, SynthParameterValue, ValOp,
+    EnvelopeSegmentInfo, EnvelopeSegmentType, SynthParameterAddress, SynthParameterLabel,
+    SynthParameterValue, ValOp,
 };
 use std::collections::{BTreeSet, HashMap, HashSet};
 use std::fmt::*;
@@ -26,7 +27,7 @@ pub enum EventOperation {
 #[derive(Clone)]
 pub struct Event {
     pub name: String,
-    pub params: HashMap<SynthParameterLabel, ParameterValue>,
+    pub params: HashMap<SynthParameterAddress, ParameterValue>,
     pub tags: BTreeSet<String>,
     pub op: EventOperation,
     // sample lookup is handled apart from the
@@ -48,7 +49,7 @@ impl Debug for Event {
 #[derive(Clone, Debug)]
 pub struct StaticEvent {
     pub name: String,
-    pub params: HashMap<SynthParameterLabel, SynthParameterValue>,
+    pub params: HashMap<SynthParameterAddress, SynthParameterValue>,
     pub tags: BTreeSet<String>,
     pub op: EventOperation,
     pub sample_lookup: Option<SampleLookup>,
@@ -213,22 +214,27 @@ impl StaticEvent {
     pub fn build_envelope(&mut self) {
         // if this event already has a complete envelope,
         // we don't need to do anything ...
-        if self.params.contains_key(&SynthParameterLabel::Envelope) {
+        if self
+            .params
+            .contains_key(&SynthParameterLabel::Envelope.into())
+        {
             return;
         }
 
         let mut segments = Vec::new();
 
-        let sustain_level = if let Some(SynthParameterValue::ScalarF32(a)) =
-            self.params.remove(&SynthParameterLabel::EnvelopeLevel)
+        let sustain_level = if let Some(SynthParameterValue::ScalarF32(a)) = self
+            .params
+            .remove(&SynthParameterLabel::EnvelopeLevel.into())
         {
             a
         } else {
             0.7
         };
 
-        let attack_level = if let Some(SynthParameterValue::ScalarF32(a)) =
-            self.params.remove(&SynthParameterLabel::AttackPeakLevel)
+        let attack_level = if let Some(SynthParameterValue::ScalarF32(a)) = self
+            .params
+            .remove(&SynthParameterLabel::AttackPeakLevel.into())
         {
             a
         } else {
@@ -240,14 +246,14 @@ impl StaticEvent {
 
         // ATTACK
         if let Some(SynthParameterValue::ScalarF32(a)) =
-            self.params.remove(&SynthParameterLabel::Attack)
+            self.params.remove(&SynthParameterLabel::Attack.into())
         {
             segments.push(EnvelopeSegmentInfo {
                 from: 0.0,
                 to: attack_level,
                 time: a * 0.001, // ms to sec
                 segment_type: if let Some(SynthParameterValue::EnvelopeSegmentType(e)) =
-                    self.params.remove(&SynthParameterLabel::AttackType)
+                    self.params.remove(&SynthParameterLabel::AttackType.into())
                 {
                     e
                 } else {
@@ -258,14 +264,14 @@ impl StaticEvent {
 
         // DECAY (if applicable)
         if let Some(SynthParameterValue::ScalarF32(d)) =
-            self.params.remove(&SynthParameterLabel::Decay)
+            self.params.remove(&SynthParameterLabel::Decay.into())
         {
             segments.push(EnvelopeSegmentInfo {
                 from: attack_level,
                 to: sustain_level,
                 time: d * 0.001, // ms to sec
                 segment_type: if let Some(SynthParameterValue::EnvelopeSegmentType(e)) =
-                    self.params.remove(&SynthParameterLabel::DecayType)
+                    self.params.remove(&SynthParameterLabel::DecayType.into())
                 {
                     e
                 } else {
@@ -276,7 +282,7 @@ impl StaticEvent {
 
         // SUSTAIN
         if let Some(SynthParameterValue::ScalarF32(s)) =
-            self.params.remove(&SynthParameterLabel::Sustain)
+            self.params.remove(&SynthParameterLabel::Sustain.into())
         {
             segments.push(EnvelopeSegmentInfo {
                 from: sustain_level,
@@ -288,14 +294,14 @@ impl StaticEvent {
 
         // RELEASE
         if let Some(SynthParameterValue::ScalarF32(r)) =
-            self.params.remove(&SynthParameterLabel::Release)
+            self.params.remove(&SynthParameterLabel::Release.into())
         {
             segments.push(EnvelopeSegmentInfo {
                 from: sustain_level,
                 to: 0.0,
                 time: r * 0.001, // ms to sec
                 segment_type: if let Some(SynthParameterValue::EnvelopeSegmentType(e)) =
-                    self.params.remove(&SynthParameterLabel::ReleaseType)
+                    self.params.remove(&SynthParameterLabel::ReleaseType.into())
                 {
                     e
                 } else {
@@ -307,7 +313,7 @@ impl StaticEvent {
         // only add if there's actual envelope info to be found ...
         if !segments.is_empty() {
             self.params.insert(
-                SynthParameterLabel::Envelope,
+                SynthParameterLabel::Envelope.into(),
                 SynthParameterValue::MultiPointEnvelope(segments, false, ValOp::Replace),
             );
         }
@@ -342,11 +348,11 @@ impl Event {
     pub fn evaluate_parameters(
         &mut self,
         globals: &std::sync::Arc<GlobalVariables>,
-    ) -> HashMap<SynthParameterLabel, SynthParameterValue> {
+    ) -> HashMap<SynthParameterAddress, SynthParameterValue> {
         let mut map = HashMap::new();
 
         for (k, v) in self.params.iter_mut() {
-            map.insert(*k, resolve_parameter(*k, v, globals));
+            map.insert(*k, resolve_parameter(k.label, v, globals));
         }
 
         map
@@ -354,7 +360,7 @@ impl Event {
 
     pub fn shake(&mut self, factor: f32, keep: &HashSet<SynthParameterLabel>) {
         for (k, v) in self.params.iter_mut() {
-            if !keep.contains(k) && *k != SynthParameterLabel::SampleBufferNumber {
+            if !keep.contains(&k.label) && k.label != SynthParameterLabel::SampleBufferNumber {
                 shake_parameter(v, factor);
             }
         }

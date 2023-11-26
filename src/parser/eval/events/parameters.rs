@@ -144,12 +144,12 @@ pub fn transpose(
         };
 
         ev.params.insert(
-            SynthParameterLabel::PlaybackRate,
+            SynthParameterLabel::PlaybackRate.into(),
             ParameterValue::Scalar(DynVal::with_value(factor)),
         );
 
         ev.params.insert(
-            SynthParameterLabel::PitchFrequency,
+            SynthParameterLabel::PitchFrequency.into(),
             ParameterValue::Scalar(DynVal::with_value(factor)),
         );
         Some(EvaluatedExpr::Typed(TypedEntity::SoundEvent(ev)))
@@ -217,7 +217,7 @@ pub fn parameter(
                 };
 
                 if let Some(p) = par {
-                    ev.params.insert(param_key, p);
+                    ev.params.insert(param_key.into(), p);
                 }
 
                 //println!("{:?}", ev);

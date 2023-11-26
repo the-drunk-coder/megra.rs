@@ -349,7 +349,7 @@ pub fn a_loop(
                 if count < num_events - 1 {
                     let mut dur_ev = Event::with_name("transition".to_string());
                     dur_ev.params.insert(
-                        SynthParameterLabel::Duration,
+                        SynthParameterLabel::Duration.into(),
                         ParameterValue::Scalar(dur_vec[count].clone()),
                     );
                     duration_mapping.insert((last_char, next_char), dur_ev);
@@ -365,7 +365,7 @@ pub fn a_loop(
             // create duration event (otherwise not needed ...)
             let mut dur_ev = Event::with_name("transition".to_string());
             dur_ev.params.insert(
-                SynthParameterLabel::Duration,
+                SynthParameterLabel::Duration.into(),
                 ParameterValue::Scalar(dur_vec.last().unwrap().clone()),
             );
             duration_mapping.insert((last_char, first_char), dur_ev);

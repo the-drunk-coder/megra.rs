@@ -141,7 +141,7 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
         };
 
         let time = if let SynthParameterValue::ScalarF32(t) =
-            gen.current_transition(&session.globals).params[&SynthParameterLabel::Duration]
+            gen.current_transition(&session.globals).params[&SynthParameterLabel::Duration.into()]
         {
             (t * 0.001) as f64 * tmod
         } else {
@@ -209,12 +209,12 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
                         bufnum = res_bufnum;
                         // is this really needed ??
                         s.params.insert(
-                            SynthParameterLabel::SampleBufferNumber,
+                            SynthParameterLabel::SampleBufferNumber.into(),
                             SynthParameterValue::ScalarUsize(bufnum),
                         );
 
                         s.params
-                            .entry(SynthParameterLabel::Sustain)
+                            .entry(SynthParameterLabel::Sustain.into())
                             .or_insert_with(|| {
                                 SynthParameterValue::ScalarF32((duration - 2) as f32)
                             });
@@ -231,30 +231,29 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
                     bufnum,
                 ) {
                     // set parameters and trigger instance
-                    for (k, v) in s.params.iter() {
-                        let addr = SynthParameterAddress {
-                            label: *k,
-                            idx: None,
-                        };
+                    for (addr, v) in s.params.iter() {
                         // special handling for stereo param
-                        match k {
+                        match addr.label {
                             SynthParameterLabel::ChannelPosition => {
                                 if session.output_mode == OutputMode::Stereo {
-                                    inst.set_instance_parameter(addr, &translate_stereo(v.clone()));
+                                    inst.set_instance_parameter(
+                                        *addr,
+                                        &translate_stereo(v.clone()),
+                                    );
                                 } else {
-                                    inst.set_instance_parameter(addr, v);
+                                    inst.set_instance_parameter(*addr, v);
                                 }
                             }
                             // convert milliseconds to seconds
                             SynthParameterLabel::Duration => {
                                 if let SynthParameterValue::ScalarF32(val) = v {
                                     inst.set_instance_parameter(
-                                        addr,
+                                        *addr,
                                         &SynthParameterValue::ScalarF32(*val * 0.001),
                                     )
                                 }
                             }
-                            _ => inst.set_instance_parameter(addr, v),
+                            _ => inst.set_instance_parameter(*addr, v),
                         }
                     }
                     session.ruffbox.trigger(inst);

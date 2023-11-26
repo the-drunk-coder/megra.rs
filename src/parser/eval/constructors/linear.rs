@@ -86,7 +86,7 @@ pub fn linear(
 
             let mut dur_ev = Event::with_name("transition".to_string());
             dur_ev.params.insert(
-                SynthParameterLabel::Duration,
+                SynthParameterLabel::Duration.into(),
                 ParameterValue::Scalar(dur_vec[count].clone()),
             );
 

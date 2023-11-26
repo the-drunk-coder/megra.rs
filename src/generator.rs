@@ -19,7 +19,9 @@ pub struct TimeMod {
 
 impl TimeMod {
     fn apply_to(&self, ev: &mut StaticEvent) {
-        if let SynthParameterValue::ScalarF32(old_val) = ev.params[&SynthParameterLabel::Duration] {
+        if let SynthParameterValue::ScalarF32(old_val) =
+            ev.params[&SynthParameterLabel::Duration.into()]
+        {
             let new_val = match self.op {
                 EventOperation::Multiply => old_val * self.val,
                 EventOperation::Divide => old_val / self.val,
@@ -28,7 +30,7 @@ impl TimeMod {
                 EventOperation::Replace => self.val,
             };
             ev.params.insert(
-                SynthParameterLabel::Duration,
+                SynthParameterLabel::Duration.into(),
                 SynthParameterValue::ScalarF32(new_val),
             );
         }

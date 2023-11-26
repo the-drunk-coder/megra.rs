@@ -96,7 +96,7 @@ pub fn grow_raw(
                         let dur_val = durations.choose(&mut rand::thread_rng()).unwrap().clone();
                         //println!("add from stash {} {} {}", sym, added_sym, dur_val.static_val);
                         dur_ev.params.insert(
-                            SynthParameterLabel::Duration,
+                            SynthParameterLabel::Duration.into(),
                             ParameterValue::Scalar(dur_val),
                         );
                         dur_mapping_to_add.insert((*sym, added_sym), dur_ev);
@@ -112,7 +112,7 @@ pub fn grow_raw(
                         let dur_val = durations.choose(&mut rand::thread_rng()).unwrap().clone();
                         //println!("add from stash {} {} {}", added_sym, sym, dur_val.static_val);
                         dur_ev.params.insert(
-                            SynthParameterLabel::Duration,
+                            SynthParameterLabel::Duration.into(),
                             ParameterValue::Scalar(dur_val),
                         );
                         dur_mapping_to_add.insert((added_sym, *sym), dur_ev);
@@ -133,7 +133,7 @@ pub fn grow_raw(
                                 durations.choose(&mut rand::thread_rng()).unwrap().clone();
                             //println!("add from stash {} {} {}", src, dest, dur_val.static_val);
                             dur_ev.params.insert(
-                                SynthParameterLabel::Duration,
+                                SynthParameterLabel::Duration.into(),
                                 ParameterValue::Scalar(dur_val),
                             );
                             dur_mapping_to_add.insert((*src, *dest), dur_ev);

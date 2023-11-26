@@ -159,7 +159,7 @@ pub fn infer(
             if let EvaluatedExpr::Typed(TypedEntity::Rule(s)) = c {
                 let mut dur_ev = Event::with_name("transition".to_string());
                 dur_ev.params.insert(
-                    SynthParameterLabel::Duration,
+                    SynthParameterLabel::Duration.into(),
                     ParameterValue::Scalar(DynVal::with_value(s.duration as f32)),
                 );
                 duration_mapping.insert((*s.source.last().unwrap(), s.symbol), dur_ev);

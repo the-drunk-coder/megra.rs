@@ -1,5 +1,5 @@
 use ruffbox_synth::building_blocks::{
-    FilterType, OscillatorType, SynthParameterLabel, SynthParameterValue,
+    FilterType, OscillatorType, SynthParameterAddress, SynthParameterLabel, SynthParameterValue,
 };
 use ruffbox_synth::synths::SynthType;
 use std::collections::HashMap;
@@ -7,7 +7,7 @@ use std::collections::HashMap;
 //
 pub fn map_synth_type(
     name: &str,
-    params: &HashMap<SynthParameterLabel, SynthParameterValue>,
+    params: &HashMap<SynthParameterAddress, SynthParameterValue>,
 ) -> SynthType {
     match name {
         "sine" | "tri" | "sqr" | "saw" | "rsaw" | "wsaw" | "fmsqr" | "fmsaw" | "fmtri" | "cub"
@@ -28,14 +28,14 @@ pub fn map_synth_type(
                 _ => OscillatorType::Sine,
             },
             if let Some(SynthParameterValue::FilterType(t)) =
-                params.get(&SynthParameterLabel::LowpassFilterType)
+                params.get(&SynthParameterLabel::LowpassFilterType.into())
             {
                 *t
             } else {
                 FilterType::Lpf18
             },
             if let Some(SynthParameterValue::FilterType(t)) =
-                params.get(&SynthParameterLabel::HighpassFilterType)
+                params.get(&SynthParameterLabel::HighpassFilterType.into())
             {
                 *t
             } else {
@@ -44,32 +44,39 @@ pub fn map_synth_type(
         ),
         "risset" => SynthType::RissetBell,
         "sampler" => {
-            if params.contains_key(&SynthParameterLabel::AmbisonicAzimuth)
-                || params.contains_key(&SynthParameterLabel::AmbisonicElevation)
+            if params.contains_key(&SynthParameterLabel::AmbisonicAzimuth.into())
+                || params.contains_key(&SynthParameterLabel::AmbisonicElevation.into())
             {
                 SynthType::AmbisonicSampler(
                     // assemble sampler
                     if let Some(SynthParameterValue::FilterType(t)) =
-                        params.get(&SynthParameterLabel::HighpassFilterType)
+                        params.get(&SynthParameterLabel::HighpassFilterType.into())
                     {
                         *t
                     } else {
                         FilterType::BiquadHpf12dB
                     },
-                    if params.get(&SynthParameterLabel::PeakFrequency).is_some()
-                        || params.get(&SynthParameterLabel::Peak1Frequency).is_some()
+                    if params
+                        .get(&SynthParameterLabel::PeakFrequency.into())
+                        .is_some()
+                        || params
+                            .get(&SynthParameterLabel::Peak1Frequency.into())
+                            .is_some()
                     {
                         FilterType::PeakEQ
                     } else {
                         FilterType::Dummy
                     },
-                    if params.get(&SynthParameterLabel::Peak2Frequency).is_some() {
+                    if params
+                        .get(&SynthParameterLabel::Peak2Frequency.into())
+                        .is_some()
+                    {
                         FilterType::PeakEQ
                     } else {
                         FilterType::Dummy
                     },
                     if let Some(SynthParameterValue::FilterType(t)) =
-                        params.get(&SynthParameterLabel::LowpassFilterType)
+                        params.get(&SynthParameterLabel::LowpassFilterType.into())
                     {
                         *t
                     } else {
@@ -80,26 +87,33 @@ pub fn map_synth_type(
                 SynthType::Sampler(
                     // assemble sampler
                     if let Some(SynthParameterValue::FilterType(t)) =
-                        params.get(&SynthParameterLabel::HighpassFilterType)
+                        params.get(&SynthParameterLabel::HighpassFilterType.into())
                     {
                         *t
                     } else {
                         FilterType::BiquadHpf12dB
                     },
-                    if params.get(&SynthParameterLabel::PeakFrequency).is_some()
-                        || params.get(&SynthParameterLabel::Peak1Frequency).is_some()
+                    if params
+                        .get(&SynthParameterLabel::PeakFrequency.into())
+                        .is_some()
+                        || params
+                            .get(&SynthParameterLabel::Peak1Frequency.into())
+                            .is_some()
                     {
                         FilterType::PeakEQ
                     } else {
                         FilterType::Dummy
                     },
-                    if params.get(&SynthParameterLabel::Peak2Frequency).is_some() {
+                    if params
+                        .get(&SynthParameterLabel::Peak2Frequency.into())
+                        .is_some()
+                    {
                         FilterType::PeakEQ
                     } else {
                         FilterType::Dummy
                     },
                     if let Some(SynthParameterValue::FilterType(t)) =
-                        params.get(&SynthParameterLabel::LowpassFilterType)
+                        params.get(&SynthParameterLabel::LowpassFilterType.into())
                     {
                         *t
                     } else {
@@ -111,26 +125,33 @@ pub fn map_synth_type(
         "livesampler" => SynthType::LiveSampler(
             // assemble sampler
             if let Some(SynthParameterValue::FilterType(t)) =
-                params.get(&SynthParameterLabel::HighpassFilterType)
+                params.get(&SynthParameterLabel::HighpassFilterType.into())
             {
                 *t
             } else {
                 FilterType::BiquadHpf12dB
             },
-            if params.get(&SynthParameterLabel::PeakFrequency).is_some()
-                || params.get(&SynthParameterLabel::Peak1Frequency).is_some()
+            if params
+                .get(&SynthParameterLabel::PeakFrequency.into())
+                .is_some()
+                || params
+                    .get(&SynthParameterLabel::Peak1Frequency.into())
+                    .is_some()
             {
                 FilterType::PeakEQ
             } else {
                 FilterType::Dummy
             },
-            if params.get(&SynthParameterLabel::Peak2Frequency).is_some() {
+            if params
+                .get(&SynthParameterLabel::Peak2Frequency.into())
+                .is_some()
+            {
                 FilterType::PeakEQ
             } else {
                 FilterType::Dummy
             },
             if let Some(SynthParameterValue::FilterType(t)) =
-                params.get(&SynthParameterLabel::LowpassFilterType)
+                params.get(&SynthParameterLabel::LowpassFilterType.into())
             {
                 *t
             } else {
@@ -140,26 +161,33 @@ pub fn map_synth_type(
         "frozensampler" => SynthType::FrozenSampler(
             // assemble sampler
             if let Some(SynthParameterValue::FilterType(t)) =
-                params.get(&SynthParameterLabel::HighpassFilterType)
+                params.get(&SynthParameterLabel::HighpassFilterType.into())
             {
                 *t
             } else {
                 FilterType::BiquadHpf12dB
             },
-            if params.get(&SynthParameterLabel::PeakFrequency).is_some()
-                || params.get(&SynthParameterLabel::Peak1Frequency).is_some()
+            if params
+                .get(&SynthParameterLabel::PeakFrequency.into())
+                .is_some()
+                || params
+                    .get(&SynthParameterLabel::Peak1Frequency.into())
+                    .is_some()
             {
                 FilterType::PeakEQ
             } else {
                 FilterType::Dummy
             },
-            if params.get(&SynthParameterLabel::Peak2Frequency).is_some() {
+            if params
+                .get(&SynthParameterLabel::Peak2Frequency.into())
+                .is_some()
+            {
                 FilterType::PeakEQ
             } else {
                 FilterType::Dummy
             },
             if let Some(SynthParameterValue::FilterType(t)) =
-                params.get(&SynthParameterLabel::LowpassFilterType)
+                params.get(&SynthParameterLabel::LowpassFilterType.into())
             {
                 *t
             } else {
@@ -169,14 +197,14 @@ pub fn map_synth_type(
         "wavetable" => SynthType::SingleOscillator(
             OscillatorType::Wavetable,
             if let Some(SynthParameterValue::FilterType(t)) =
-                params.get(&SynthParameterLabel::LowpassFilterType)
+                params.get(&SynthParameterLabel::LowpassFilterType.into())
             {
                 *t
             } else {
                 FilterType::Lpf18
             },
             if let Some(SynthParameterValue::FilterType(t)) =
-                params.get(&SynthParameterLabel::HighpassFilterType)
+                params.get(&SynthParameterLabel::HighpassFilterType.into())
             {
                 *t
             } else {
@@ -186,14 +214,14 @@ pub fn map_synth_type(
         "wavematrix" => SynthType::SingleOscillator(
             OscillatorType::Wavematrix,
             if let Some(SynthParameterValue::FilterType(t)) =
-                params.get(&SynthParameterLabel::LowpassFilterType)
+                params.get(&SynthParameterLabel::LowpassFilterType.into())
             {
                 *t
             } else {
                 FilterType::Lpf18
             },
             if let Some(SynthParameterValue::FilterType(t)) =
-                params.get(&SynthParameterLabel::HighpassFilterType)
+                params.get(&SynthParameterLabel::HighpassFilterType.into())
             {
                 *t
             } else {
@@ -203,14 +231,14 @@ pub fn map_synth_type(
         _ => SynthType::SingleOscillator(
             OscillatorType::Sine,
             if let Some(SynthParameterValue::FilterType(t)) =
-                params.get(&SynthParameterLabel::LowpassFilterType)
+                params.get(&SynthParameterLabel::LowpassFilterType.into())
             {
                 *t
             } else {
                 FilterType::Lpf18
             },
             if let Some(SynthParameterValue::FilterType(t)) =
-                params.get(&SynthParameterLabel::HighpassFilterType)
+                params.get(&SynthParameterLabel::HighpassFilterType.into())
             {
                 *t
             } else {

@@ -163,7 +163,8 @@ fn get_pitch_param(
         _ => Some(ParameterValue::Scalar(DynVal::with_value(100.0))),
     };
     if let Some(p) = par {
-        ev.params.insert(SynthParameterLabel::PitchFrequency, p);
+        ev.params
+            .insert(SynthParameterLabel::PitchFrequency.into(), p);
     }
 
     if advance {
@@ -177,7 +178,7 @@ fn get_bufnum_param(
     tail_drain: &mut std::iter::Peekable<std::vec::Drain<EvaluatedExpr>>,
 ) {
     ev.params.insert(
-        SynthParameterLabel::SampleBufferNumber,
+        SynthParameterLabel::SampleBufferNumber.into(),
         ParameterValue::Scalar(match tail_drain.peek() {
             Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(n)))) => {
                 let nn = *n;
@@ -201,32 +202,32 @@ fn get_bufnum_param(
 fn synth_defaults(ev: &mut Event) {
     // set some defaults 2
     ev.params.insert(
-        SynthParameterLabel::EnvelopeLevel,
+        SynthParameterLabel::EnvelopeLevel.into(),
         ParameterValue::Scalar(DynVal::with_value(0.5)),
     );
     // no distortion per default ...
     ev.params.insert(
-        SynthParameterLabel::WaveshaperMix,
+        SynthParameterLabel::WaveshaperMix.into(),
         ParameterValue::Scalar(DynVal::with_value(0.0)),
     );
     ev.params.insert(
-        SynthParameterLabel::OscillatorAmplitude,
+        SynthParameterLabel::OscillatorAmplitude.into(),
         ParameterValue::Scalar(DynVal::with_value(0.6)),
     );
     ev.params.insert(
-        SynthParameterLabel::Attack,
+        SynthParameterLabel::Attack.into(),
         ParameterValue::Scalar(DynVal::with_value(1.0)),
     );
     ev.params.insert(
-        SynthParameterLabel::Sustain,
+        SynthParameterLabel::Sustain.into(),
         ParameterValue::Scalar(DynVal::with_value(48.0)),
     );
     ev.params.insert(
-        SynthParameterLabel::Release,
+        SynthParameterLabel::Release.into(),
         ParameterValue::Scalar(DynVal::with_value(100.0)),
     );
     ev.params.insert(
-        SynthParameterLabel::ChannelPosition,
+        SynthParameterLabel::ChannelPosition.into(),
         ParameterValue::Scalar(DynVal::with_value(0.00)),
     );
 }
@@ -234,40 +235,40 @@ fn synth_defaults(ev: &mut Event) {
 fn sample_defaults(ev: &mut Event) {
     // set some defaults
     ev.params.insert(
-        SynthParameterLabel::EnvelopeLevel,
+        SynthParameterLabel::EnvelopeLevel.into(),
         ParameterValue::Scalar(DynVal::with_value(0.5)),
     );
     // no distortion per default ...
     ev.params.insert(
-        SynthParameterLabel::WaveshaperMix,
+        SynthParameterLabel::WaveshaperMix.into(),
         ParameterValue::Scalar(DynVal::with_value(0.0)),
     );
     ev.params.insert(
-        SynthParameterLabel::OscillatorAmplitude,
+        SynthParameterLabel::OscillatorAmplitude.into(),
         ParameterValue::Scalar(DynVal::with_value(0.77)),
     );
     ev.params.insert(
-        SynthParameterLabel::Attack,
+        SynthParameterLabel::Attack.into(),
         ParameterValue::Scalar(DynVal::with_value(1.0)),
     );
     ev.params.insert(
-        SynthParameterLabel::Release,
+        SynthParameterLabel::Release.into(),
         ParameterValue::Scalar(DynVal::with_value(1.0)),
     );
     ev.params.insert(
-        SynthParameterLabel::ChannelPosition,
+        SynthParameterLabel::ChannelPosition.into(),
         ParameterValue::Scalar(DynVal::with_value(0.00)),
     );
     ev.params.insert(
-        SynthParameterLabel::PlaybackRate,
+        SynthParameterLabel::PlaybackRate.into(),
         ParameterValue::Scalar(DynVal::with_value(1.0)),
     );
     ev.params.insert(
-        SynthParameterLabel::LowpassFilterDistortion,
+        SynthParameterLabel::LowpassFilterDistortion.into(),
         ParameterValue::Scalar(DynVal::with_value(0.0)),
     );
     ev.params.insert(
-        SynthParameterLabel::PlaybackStart,
+        SynthParameterLabel::PlaybackStart.into(),
         ParameterValue::Scalar(DynVal::with_value(0.0)),
     );
 }
@@ -275,47 +276,47 @@ fn sample_defaults(ev: &mut Event) {
 fn nofilter_defaults(ev: &mut Event) {
     // set some defaults
     ev.params.insert(
-        SynthParameterLabel::EnvelopeLevel,
+        SynthParameterLabel::EnvelopeLevel.into(),
         ParameterValue::Scalar(DynVal::with_value(0.5)),
     );
     ev.params.insert(
-        SynthParameterLabel::LowpassFilterType,
+        SynthParameterLabel::LowpassFilterType.into(),
         ParameterValue::FilterType(FilterType::Dummy),
     );
     ev.params.insert(
-        SynthParameterLabel::HighpassFilterType,
+        SynthParameterLabel::HighpassFilterType.into(),
         ParameterValue::FilterType(FilterType::Dummy),
     );
     ev.params.insert(
-        SynthParameterLabel::OscillatorAmplitude,
+        SynthParameterLabel::OscillatorAmplitude.into(),
         ParameterValue::Scalar(DynVal::with_value(0.77)),
     );
     ev.params.insert(
-        SynthParameterLabel::Attack,
+        SynthParameterLabel::Attack.into(),
         ParameterValue::Scalar(DynVal::with_value(1.0)),
     );
     ev.params.insert(
-        SynthParameterLabel::Sustain,
+        SynthParameterLabel::Sustain.into(),
         ParameterValue::Scalar(DynVal::with_value(48.0)),
     );
     ev.params.insert(
-        SynthParameterLabel::Release,
+        SynthParameterLabel::Release.into(),
         ParameterValue::Scalar(DynVal::with_value(100.0)),
     );
     ev.params.insert(
-        SynthParameterLabel::ChannelPosition,
+        SynthParameterLabel::ChannelPosition.into(),
         ParameterValue::Scalar(DynVal::with_value(0.00)),
     );
     ev.params.insert(
-        SynthParameterLabel::PlaybackRate,
+        SynthParameterLabel::PlaybackRate.into(),
         ParameterValue::Scalar(DynVal::with_value(1.0)),
     );
     ev.params.insert(
-        SynthParameterLabel::LowpassFilterDistortion,
+        SynthParameterLabel::LowpassFilterDistortion.into(),
         ParameterValue::Scalar(DynVal::with_value(0.0)),
     );
     ev.params.insert(
-        SynthParameterLabel::PlaybackStart,
+        SynthParameterLabel::PlaybackStart.into(),
         ParameterValue::Scalar(DynVal::with_value(0.0)),
     );
 }
@@ -520,18 +521,22 @@ pub fn sound(
                 if let Some(wavematrix) = sample_set.get_wavematrix(s) {
                     //println!("found wavematrix {}", s);
                     ev.params
-                        .insert(map_parameter(&k), ParameterValue::Matrix(wavematrix));
+                        .insert(map_parameter(&k).into(), ParameterValue::Matrix(wavematrix));
                     tail_drain.next();
                 } else {
                     println!("couldn't find wavematrix {s}")
                 }
             } else {
-                ev.params
-                    .insert(map_parameter(&k), collect_param_value(&mut tail_drain));
+                ev.params.insert(
+                    map_parameter(&k).into(),
+                    collect_param_value(&mut tail_drain),
+                );
             }
         } else {
-            ev.params
-                .insert(map_parameter(&k), collect_param_value(&mut tail_drain));
+            ev.params.insert(
+                map_parameter(&k).into(),
+                collect_param_value(&mut tail_drain),
+            );
         }
     }
 

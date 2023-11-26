@@ -87,7 +87,7 @@ pub fn facts(
                     EventOperation::Multiply,
                 );
                 e.params.insert(
-                    map_parameter(&param),
+                    map_parameter(&param).into(),
                     ParameterValue::Scalar(DynVal::with_value(f)),
                 );
                 ev_vecs.push(vec![SourceEvent::Sound(e)]);
@@ -99,7 +99,7 @@ pub fn facts(
                     EventOperation::Multiply,
                 );
                 e.params
-                    .insert(map_parameter(&param), ParameterValue::Scalar(p));
+                    .insert(map_parameter(&param).into(), ParameterValue::Scalar(p));
                 ev_vecs.push(vec![SourceEvent::Sound(e)]);
                 continue;
             }
@@ -135,7 +135,7 @@ pub fn facts(
 
                 let mut dur_ev = Event::with_name("transition".to_string());
                 dur_ev.params.insert(
-                    SynthParameterLabel::Duration,
+                    SynthParameterLabel::Duration.into(),
                     ParameterValue::Scalar(dur.clone()),
                 );
 
@@ -153,7 +153,7 @@ pub fn facts(
 
         let mut dur_ev = Event::with_name("transition".to_string());
         dur_ev.params.insert(
-            SynthParameterLabel::Duration,
+            SynthParameterLabel::Duration.into(),
             ParameterValue::Scalar(dur.clone()),
         );
 

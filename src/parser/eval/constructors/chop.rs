@@ -126,12 +126,12 @@ pub fn chop(
             for ev in events.iter() {
                 let mut slice_event = ev.clone();
                 slice_event.params.insert(
-                    SynthParameterLabel::PlaybackStart,
+                    SynthParameterLabel::PlaybackStart.into(),
                     ParameterValue::Scalar(DynVal::with_value(s as f32 * (1.0 / slices as f32))),
                 );
 
                 let sus = if let Some(ParameterValue::Scalar(old_sus)) =
-                    slice_event.params.get(&SynthParameterLabel::Sustain)
+                    slice_event.params.get(&SynthParameterLabel::Sustain.into())
                 {
                     old_sus.static_val / slices as f32
                 } else {
@@ -139,7 +139,7 @@ pub fn chop(
                 };
 
                 slice_event.params.insert(
-                    SynthParameterLabel::Sustain,
+                    SynthParameterLabel::Sustain.into(),
                     ParameterValue::Scalar(DynVal::with_value(sus)),
                 );
 
@@ -162,7 +162,7 @@ pub fn chop(
 
             let mut dur_ev = Event::with_name("transition".to_string());
             dur_ev.params.insert(
-                SynthParameterLabel::Duration,
+                SynthParameterLabel::Duration.into(),
                 ParameterValue::Scalar(dur.clone()),
             );
             duration_mapping.insert((last_char, next_char), dur_ev);
@@ -216,7 +216,7 @@ pub fn chop(
             // close the cycle
             let mut dur_ev = Event::with_name("transition".to_string());
             dur_ev.params.insert(
-                SynthParameterLabel::Duration,
+                SynthParameterLabel::Duration.into(),
                 ParameterValue::Scalar(dur.clone()),
             );
             duration_mapping.insert((last_char, first_char), dur_ev);
