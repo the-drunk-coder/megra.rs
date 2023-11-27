@@ -345,6 +345,8 @@ pub fn define_standard_library() -> FunctionMap {
     standard_library.std_lib.insert("div".to_string(), eval::arithmetic::div);
     standard_library.std_lib.insert("mod".to_string(), eval::arithmetic::modulo);
     standard_library.std_lib.insert("pow".to_string(), eval::arithmetic::pow);
+    standard_library.std_lib.insert("max".to_string(), eval::arithmetic::max);
+    standard_library.std_lib.insert("min".to_string(), eval::arithmetic::min);
 
     // midi helpers
     standard_library.std_lib.insert("mtof".to_string(), eval::midi_helpers::mtof);

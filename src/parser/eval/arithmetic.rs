@@ -232,3 +232,75 @@ pub fn pow(
         None
     }
 }
+
+pub fn max(
+    _: &FunctionMap,
+    tail: &mut Vec<EvaluatedExpr>,
+    _: &sync::Arc<GlobalVariables>,
+    _: SampleAndWavematrixSet,
+    _: OutputMode,
+) -> Option<EvaluatedExpr> {
+    if needs_resolve(&tail[1..]) {
+        return Some(EvaluatedExpr::Typed(TypedEntity::LazyArithmetic(
+            LazyArithmetic::Mul(collect_lazy_vals(tail)),
+        )));
+    }
+
+    let mut tail_drain = tail.drain(..);
+    tail_drain.next(); // don't need the function name
+
+    let mut result =
+        if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f)))) =
+            tail_drain.next()
+        {
+            f
+        } else {
+            f32::MIN
+        };
+
+    for n in tail_drain {
+        if let EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f))) = n {
+            result = f32::max(result, f);
+        }
+    }
+
+    Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+        Comparable::Float(result),
+    )))
+}
+
+pub fn min(
+    _: &FunctionMap,
+    tail: &mut Vec<EvaluatedExpr>,
+    _: &sync::Arc<GlobalVariables>,
+    _: SampleAndWavematrixSet,
+    _: OutputMode,
+) -> Option<EvaluatedExpr> {
+    if needs_resolve(&tail[1..]) {
+        return Some(EvaluatedExpr::Typed(TypedEntity::LazyArithmetic(
+            LazyArithmetic::Mul(collect_lazy_vals(tail)),
+        )));
+    }
+
+    let mut tail_drain = tail.drain(..);
+    tail_drain.next(); // don't need the function name
+
+    let mut result =
+        if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f)))) =
+            tail_drain.next()
+        {
+            f
+        } else {
+            f32::MAX
+        };
+
+    for n in tail_drain {
+        if let EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f))) = n {
+            result = f32::min(result, f);
+        }
+    }
+
+    Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+        Comparable::Float(result),
+    )))
+}

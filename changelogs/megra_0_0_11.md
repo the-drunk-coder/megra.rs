@@ -8,3 +8,5 @@
 * startup file
 * allow `vec` to construct `cyc` and `loop`
 * allow nested `vec` to create chords in `loop` and `cyc`
+* `mosc` (multi-oscillator synth)
+* `min` and `max` limiters
