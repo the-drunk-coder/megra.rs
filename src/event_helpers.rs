@@ -216,6 +216,63 @@ pub fn map_synth_type(
                 FilterType::BiquadHpf12dB
             },
         ),
+        "mosc" => {
+            let mut osc_types = Vec::new();
+            if let Some(SynthParameterValue::OscillatorType(o)) =
+                params.get(&SynthParameterLabel::OscillatorType.with_index(0))
+            {
+                if osc_types.is_empty() {
+                    osc_types.push(*o);
+                } else {
+                    osc_types[0] = *o;
+                }
+            }
+            if let Some(SynthParameterValue::OscillatorType(o)) =
+                params.get(&SynthParameterLabel::OscillatorType.with_index(1))
+            {
+                if osc_types.len() < 2 {
+                    for _ in osc_types.len()..2 {
+                        osc_types.push(OscillatorType::Sine);
+                    }
+                }
+                osc_types[1] = *o;
+            }
+            if let Some(SynthParameterValue::OscillatorType(o)) =
+                params.get(&SynthParameterLabel::OscillatorType.with_index(2))
+            {
+                if osc_types.len() < 3 {
+                    for _ in osc_types.len()..3 {
+                        osc_types.push(OscillatorType::Sine);
+                    }
+                }
+                osc_types[2] = *o;
+            }
+            if let Some(SynthParameterValue::OscillatorType(o)) =
+                params.get(&SynthParameterLabel::OscillatorType.with_index(3))
+            {
+                if osc_types.len() < 4 {
+                    for _ in osc_types.len()..4 {
+                        osc_types.push(OscillatorType::Sine);
+                    }
+                }
+                osc_types[3] = *o;
+            }
+            let lp_type = if let Some(SynthParameterValue::FilterType(t)) =
+                params.get(&SynthParameterLabel::LowpassFilterType.into())
+            {
+                *t
+            } else {
+                FilterType::Lpf18
+            };
+            let hp_type = if let Some(SynthParameterValue::FilterType(t)) =
+                params.get(&SynthParameterLabel::HighpassFilterType.into())
+            {
+                *t
+            } else {
+                FilterType::BiquadHpf12dB
+            };
+            SynthType::MultiOscillator(osc_types, lp_type, hp_type)
+        }
         _ => SynthType::SingleOscillator(
             OscillatorType::Sine,
             if let Some(SynthParameterValue::FilterType(t)) =
@@ -239,6 +296,14 @@ pub fn map_synth_type(
 pub fn map_parameter(name: &str) -> SynthParameterAddress {
     match name {
         "freq" => SynthParameterLabel::PitchFrequency.into(),
+        "freq1" => SynthParameterLabel::PitchFrequency.with_index(0),
+        "freq2" => SynthParameterLabel::PitchFrequency.with_index(1),
+        "freq3" => SynthParameterLabel::PitchFrequency.with_index(2),
+        "freq4" => SynthParameterLabel::PitchFrequency.with_index(3),
+        "osc1" => SynthParameterLabel::OscillatorType.with_index(0),
+        "osc2" => SynthParameterLabel::OscillatorType.with_index(1),
+        "osc3" => SynthParameterLabel::OscillatorType.with_index(2),
+        "osc4" => SynthParameterLabel::OscillatorType.with_index(3),
         "note" => SynthParameterLabel::PitchNote.into(),
         "atk" => SynthParameterLabel::Attack.into(),
         "atkt" => SynthParameterLabel::AttackType.into(),
@@ -252,6 +317,10 @@ pub fn map_parameter(name: &str) -> SynthParameterAddress {
         "pos" => SynthParameterLabel::ChannelPosition.into(),
         "lvl" => SynthParameterLabel::EnvelopeLevel.into(),
         "amp" => SynthParameterLabel::OscillatorAmplitude.into(),
+        "amp1" => SynthParameterLabel::OscillatorAmplitude.with_index(0),
+        "amp2" => SynthParameterLabel::OscillatorAmplitude.with_index(1),
+        "amp3" => SynthParameterLabel::OscillatorAmplitude.with_index(2),
+        "amp4" => SynthParameterLabel::OscillatorAmplitude.with_index(3),
         "gain" => SynthParameterLabel::OscillatorAmplitude.into(), // a bit of a compromise.into(), for legacy reasons ...
         "dur" => SynthParameterLabel::Duration.into(),
         "lpf" => SynthParameterLabel::LowpassCutoffFrequency.into(),
@@ -261,45 +330,17 @@ pub fn map_parameter(name: &str) -> SynthParameterAddress {
         "hpf" => SynthParameterLabel::HighpassCutoffFrequency.into(),
         "hpq" => SynthParameterLabel::HighpassQFactor.into(),
         "hpt" => SynthParameterLabel::HighpassFilterType.into(),
-        "pff" => SynthParameterAddress {
-            label: SynthParameterLabel::PeakFrequency,
-            idx: Some(0),
-        },
-        "pfbw" => SynthParameterAddress {
-            label: SynthParameterLabel::PeakBandwidth,
-            idx: Some(0),
-        },
-        "pfg" => SynthParameterAddress {
-            label: SynthParameterLabel::PeakGain,
-            idx: Some(0),
-        },
-        "pff1" => SynthParameterAddress {
-            label: SynthParameterLabel::PeakFrequency,
-            idx: Some(0),
-        },
-        "pfbw1" => SynthParameterAddress {
-            label: SynthParameterLabel::PeakBandwidth,
-            idx: Some(0),
-        },
-        "pfg1" => SynthParameterAddress {
-            label: SynthParameterLabel::PeakGain,
-            idx: Some(0),
-        },
-        "pff2" => SynthParameterAddress {
-            label: SynthParameterLabel::PeakFrequency,
-            idx: Some(1),
-        },
-        "pfg2" => SynthParameterAddress {
-            label: SynthParameterLabel::PeakGain,
-            idx: Some(1),
-        },
-
-        "pfbw2" => SynthParameterAddress {
-            label: SynthParameterLabel::PeakBandwidth,
-            idx: Some(1),
-        },
-
+        "pff" | "pff1" => SynthParameterLabel::PeakFrequency.with_index(0),
+        "pfbw" | "pfbw1" => SynthParameterLabel::PeakBandwidth.with_index(0),
+        "pfg" | "pfg1" => SynthParameterLabel::PeakGain.with_index(0),
+        "pff2" => SynthParameterLabel::PeakFrequency.with_index(1),
+        "pfbw2" => SynthParameterLabel::PeakBandwidth.with_index(1),
+        "pfg2" => SynthParameterLabel::PeakGain.with_index(1),
         "pw" => SynthParameterLabel::Pulsewidth.into(),
+        "pw1" => SynthParameterLabel::Pulsewidth.with_index(0),
+        "pw2" => SynthParameterLabel::Pulsewidth.with_index(1),
+        "pw3" => SynthParameterLabel::Pulsewidth.with_index(2),
+        "pw4" => SynthParameterLabel::Pulsewidth.with_index(3),
         "rate" => SynthParameterLabel::PlaybackRate.into(),
         "start" => SynthParameterLabel::PlaybackStart.into(),
         "loop" => SynthParameterLabel::PlaybackLoop.into(),

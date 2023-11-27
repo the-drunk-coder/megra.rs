@@ -7,7 +7,9 @@ use crate::parser::{EvaluatedExpr, FunctionMap};
 use crate::sample_set::SampleLookup;
 use crate::{GlobalVariables, OutputMode, SampleAndWavematrixSet, VariableId};
 
-use ruffbox_synth::building_blocks::{EnvelopeSegmentType, FilterType, SynthParameterLabel};
+use ruffbox_synth::building_blocks::{
+    EnvelopeSegmentType, FilterType, OscillatorType, SynthParameterLabel,
+};
 use std::collections::HashSet;
 use std::sync;
 
@@ -48,6 +50,18 @@ pub fn map_symbolic_param_value(sym: &str) -> Option<ParameterValue> {
         "const" => Some(ParameterValue::EnvelopeSegmentType(
             EnvelopeSegmentType::Constant,
         )),
+        "sine" => Some(ParameterValue::OscillatorType(OscillatorType::Sine)),
+        "tri" => Some(ParameterValue::OscillatorType(OscillatorType::LFTri)),
+        "sqr" => Some(ParameterValue::OscillatorType(OscillatorType::LFSquare)),
+        "saw" => Some(ParameterValue::OscillatorType(OscillatorType::LFSaw)),
+        "rsaw" => Some(ParameterValue::OscillatorType(OscillatorType::LFRsaw)),
+        "wsaw" => Some(ParameterValue::OscillatorType(OscillatorType::WTSaw)),
+        "fmsqr" => Some(ParameterValue::OscillatorType(OscillatorType::FMSquare)),
+        "fmsaw" => Some(ParameterValue::OscillatorType(OscillatorType::FMSaw)),
+        "fmtri" => Some(ParameterValue::OscillatorType(OscillatorType::FMTri)),
+        "cub" => Some(ParameterValue::OscillatorType(OscillatorType::LFCub)),
+        "white" => Some(ParameterValue::OscillatorType(OscillatorType::WhiteNoise)),
+        "brown" => Some(ParameterValue::OscillatorType(OscillatorType::BrownNoise)),
         _ => None,
     }
 }
@@ -431,6 +445,12 @@ pub fn sound(
         "brown" => {
             let mut ev =
                 Event::with_name_and_operation("brown".to_string(), EventOperation::Replace);
+            synth_defaults(&mut ev);
+            ev
+        }
+        "mosc" => {
+            let mut ev =
+                Event::with_name_and_operation("mosc".to_string(), EventOperation::Replace);
             synth_defaults(&mut ev);
             ev
         }

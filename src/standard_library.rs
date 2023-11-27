@@ -86,6 +86,7 @@ pub fn define_standard_library() -> FunctionMap {
     standard_library.std_lib.insert("wmat".to_string(), eval::events::sound::sound);
     standard_library.std_lib.insert("white".to_string(), eval::events::sound::sound);
     standard_library.std_lib.insert("brown".to_string(), eval::events::sound::sound);
+    standard_library.std_lib.insert("mosc".to_string(), eval::events::sound::sound);
 
     // modulators
     standard_library.std_lib.insert("lfo~".to_string(), eval::events::modulators::lfo_modulator);

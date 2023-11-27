@@ -5,7 +5,7 @@ use rand::Rng;
 use std::boxed::Box;
 use std::fmt::*;
 
-use ruffbox_synth::building_blocks::{EnvelopeSegmentInfo, EnvelopeSegmentType};
+use ruffbox_synth::building_blocks::{EnvelopeSegmentInfo, EnvelopeSegmentType, OscillatorType};
 use ruffbox_synth::building_blocks::{FilterType, SynthParameterLabel, SynthParameterValue, ValOp};
 
 use crate::builtin_types::{Comparable, LazyArithmetic};
@@ -19,6 +19,7 @@ pub enum ParameterValue {
     Vector(Vec<DynVal>),
     Matrix(Vec<Vec<DynVal>>),
     FilterType(FilterType),
+    OscillatorType(OscillatorType),
     Lfo(DynVal, Box<ParameterValue>, DynVal, Box<ParameterValue>, DynVal, ValOp), // init, freq, phase, amp, add, op
     LFSaw(DynVal, Box<ParameterValue>, DynVal, Box<ParameterValue>, DynVal, ValOp), // init, freq, phase, amp, add, op
     LFRSaw(DynVal, Box<ParameterValue>, DynVal, Box<ParameterValue>, DynVal, ValOp), // init, freq, phase, amp, add, op
@@ -221,6 +222,7 @@ pub fn resolve_parameter(
         }
         ParameterValue::Lazy(l) => SynthParameterValue::ScalarF32(resolve_lazy(l.clone(), globals)),
         ParameterValue::FilterType(t) => SynthParameterValue::FilterType(*t),
+        ParameterValue::OscillatorType(t) => SynthParameterValue::OscillatorType(*t),
         ParameterValue::Scalar(val) => {
             if k == SynthParameterLabel::SampleBufferNumber {
                 val.evaluate_val_usize()
