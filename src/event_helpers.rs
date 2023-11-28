@@ -294,65 +294,77 @@ pub fn map_synth_type(
 }
 
 pub fn map_parameter(name: &str) -> SynthParameterAddress {
-    match name {
-        "freq" => SynthParameterLabel::PitchFrequency.into(),
-        "freq1" => SynthParameterLabel::PitchFrequency.with_index(0),
-        "freq2" => SynthParameterLabel::PitchFrequency.with_index(1),
-        "freq3" => SynthParameterLabel::PitchFrequency.with_index(2),
-        "freq4" => SynthParameterLabel::PitchFrequency.with_index(3),
-        "osc1" => SynthParameterLabel::OscillatorType.with_index(0),
-        "osc2" => SynthParameterLabel::OscillatorType.with_index(1),
-        "osc3" => SynthParameterLabel::OscillatorType.with_index(2),
-        "osc4" => SynthParameterLabel::OscillatorType.with_index(3),
-        "note" => SynthParameterLabel::PitchNote.into(),
-        "atk" => SynthParameterLabel::Attack.into(),
-        "atkt" => SynthParameterLabel::AttackType.into(),
-        "atkp" => SynthParameterLabel::AttackPeakLevel.into(),
-        "dec" => SynthParameterLabel::Decay.into(),
-        "dect" => SynthParameterLabel::DecayType.into(),
-        "rel" => SynthParameterLabel::Release.into(),
-        "relt" => SynthParameterLabel::ReleaseType.into(),
-        "sus" => SynthParameterLabel::Sustain.into(),
-        "env" => SynthParameterLabel::Envelope.into(),
-        "pos" => SynthParameterLabel::ChannelPosition.into(),
-        "lvl" => SynthParameterLabel::EnvelopeLevel.into(),
-        "amp" => SynthParameterLabel::OscillatorAmplitude.into(),
-        "amp1" => SynthParameterLabel::OscillatorAmplitude.with_index(0),
-        "amp2" => SynthParameterLabel::OscillatorAmplitude.with_index(1),
-        "amp3" => SynthParameterLabel::OscillatorAmplitude.with_index(2),
-        "amp4" => SynthParameterLabel::OscillatorAmplitude.with_index(3),
-        "gain" => SynthParameterLabel::OscillatorAmplitude.into(), // a bit of a compromise.into(), for legacy reasons ...
-        "dur" => SynthParameterLabel::Duration.into(),
-        "lpf" => SynthParameterLabel::LowpassCutoffFrequency.into(),
-        "lpd" => SynthParameterLabel::LowpassFilterDistortion.into(),
-        "lpq" => SynthParameterLabel::LowpassQFactor.into(),
-        "lpt" => SynthParameterLabel::LowpassFilterType.into(),
-        "hpf" => SynthParameterLabel::HighpassCutoffFrequency.into(),
-        "hpq" => SynthParameterLabel::HighpassQFactor.into(),
-        "hpt" => SynthParameterLabel::HighpassFilterType.into(),
-        "pff" | "pff1" => SynthParameterLabel::PeakFrequency.with_index(0),
-        "pfbw" | "pfbw1" => SynthParameterLabel::PeakBandwidth.with_index(0),
-        "pfg" | "pfg1" => SynthParameterLabel::PeakGain.with_index(0),
-        "pff2" => SynthParameterLabel::PeakFrequency.with_index(1),
-        "pfbw2" => SynthParameterLabel::PeakBandwidth.with_index(1),
-        "pfg2" => SynthParameterLabel::PeakGain.with_index(1),
-        "pw" => SynthParameterLabel::Pulsewidth.into(),
-        "pw1" => SynthParameterLabel::Pulsewidth.with_index(0),
-        "pw2" => SynthParameterLabel::Pulsewidth.with_index(1),
-        "pw3" => SynthParameterLabel::Pulsewidth.with_index(2),
-        "pw4" => SynthParameterLabel::Pulsewidth.with_index(3),
-        "rate" => SynthParameterLabel::PlaybackRate.into(),
-        "start" => SynthParameterLabel::PlaybackStart.into(),
-        "loop" => SynthParameterLabel::PlaybackLoop.into(),
-        "bufnum" => SynthParameterLabel::SampleBufferNumber.into(),
-        "rev" => SynthParameterLabel::ReverbMix.into(),
-        "del" => SynthParameterLabel::DelayMix.into(),
-        "azi" => SynthParameterLabel::AmbisonicAzimuth.into(),
-        "ele" => SynthParameterLabel::AmbisonicElevation.into(),
-        "wt" | "wavetable" => SynthParameterLabel::Wavetable.into(),
-        "wm" | "wavematrix" => SynthParameterLabel::Wavematrix.into(),
-        "ti" | "tableindex" => SynthParameterLabel::WavematrixTableIndex.into(),
-        "dist" => SynthParameterLabel::WaveshaperMix.into(),
-        _ => SynthParameterLabel::PitchFrequency.into(),
+    let mut id_str = "".to_string();
+    let mut idx_str = "".to_string();
+
+    // split into index and id ...
+    // yes, this COULD be handled through the parser ...
+    // but that's more complicated ...
+    for c in name.chars() {
+        if c.is_ascii_digit() {
+            idx_str.push(c);
+        } else {
+            id_str.push(c);
+        }
+    }
+
+    let label = match id_str.as_str() {
+        "freq" => SynthParameterLabel::PitchFrequency,
+        "osc" => SynthParameterLabel::OscillatorType,
+        "note" => SynthParameterLabel::PitchNote,
+        "atk" => SynthParameterLabel::Attack,
+        "atkt" => SynthParameterLabel::AttackType,
+        "atkp" => SynthParameterLabel::AttackPeakLevel,
+        "dec" => SynthParameterLabel::Decay,
+        "dect" => SynthParameterLabel::DecayType,
+        "rel" => SynthParameterLabel::Release,
+        "relt" => SynthParameterLabel::ReleaseType,
+        "sus" => SynthParameterLabel::Sustain,
+        "env" => SynthParameterLabel::Envelope,
+        "pos" => SynthParameterLabel::ChannelPosition,
+        "lvl" => SynthParameterLabel::EnvelopeLevel,
+        "amp" => SynthParameterLabel::OscillatorAmplitude,
+        "amp1" => SynthParameterLabel::OscillatorAmplitude,
+        "amp2" => SynthParameterLabel::OscillatorAmplitude,
+        "amp3" => SynthParameterLabel::OscillatorAmplitude,
+        "amp4" => SynthParameterLabel::OscillatorAmplitude,
+        "gain" => SynthParameterLabel::OscillatorAmplitude, // a bit of a compromise, for legacy reasons ...
+        "dur" => SynthParameterLabel::Duration,
+        "lpf" => SynthParameterLabel::LowpassCutoffFrequency,
+        "lpd" => SynthParameterLabel::LowpassFilterDistortion,
+        "lpq" => SynthParameterLabel::LowpassQFactor,
+        "lpt" => SynthParameterLabel::LowpassFilterType,
+        "hpf" => SynthParameterLabel::HighpassCutoffFrequency,
+        "hpq" => SynthParameterLabel::HighpassQFactor,
+        "hpt" => SynthParameterLabel::HighpassFilterType,
+        "pff" => SynthParameterLabel::PeakFrequency,
+        "pfbw" => SynthParameterLabel::PeakBandwidth,
+        "pfg" => SynthParameterLabel::PeakGain,
+        "pw" => SynthParameterLabel::Pulsewidth,
+        "rate" => SynthParameterLabel::PlaybackRate,
+        "start" => SynthParameterLabel::PlaybackStart,
+        "loop" => SynthParameterLabel::PlaybackLoop,
+        "bufnum" => SynthParameterLabel::SampleBufferNumber,
+        "rev" => SynthParameterLabel::ReverbMix,
+        "del" => SynthParameterLabel::DelayMix,
+        "azi" => SynthParameterLabel::AmbisonicAzimuth,
+        "ele" => SynthParameterLabel::AmbisonicElevation,
+        "wt" | "wavetable" => SynthParameterLabel::Wavetable,
+        "wm" | "wavematrix" => SynthParameterLabel::Wavematrix,
+        "ti" | "tableindex" => SynthParameterLabel::WavematrixTableIndex,
+        "dist" => SynthParameterLabel::WaveshaperMix,
+        _ => SynthParameterLabel::PitchFrequency,
+    };
+
+    if let Ok(idx) = idx_str.parse::<usize>() {
+        if idx > 0 {
+            // we start counting at one in this case,
+            // zero is the same as no index ...
+            label.with_index(idx - 1)
+        } else {
+            label.into()
+        }
+    } else {
+        label.into()
     }
 }
