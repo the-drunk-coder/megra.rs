@@ -216,6 +216,7 @@ pub fn parameter(
                     _ => Some(ParameterValue::Scalar(DynVal::with_value(0.5))), // should be save ...
                 };
 
+                // see if we have an explicit index for a parameter address
                 let idx = if let Some(EvaluatedExpr::Keyword(k)) = tail_drain.next() {
                     if k == "idx" {
                         if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(

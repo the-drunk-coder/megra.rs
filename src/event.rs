@@ -103,12 +103,35 @@ impl StaticEvent {
         }
 
         // TODO: handle vector values here ...
-        for (k, v) in other.params.iter() {
-            if self.params.contains_key(k) {
-                self.params
-                    .insert(*k, calc_spv(&self.params[k], v, other.op));
-            } else {
-                self.params.insert(*k, v.clone());
+
+        for (ko, vo) in other.params.iter() {
+            let mut label_found = true;
+
+            for (ks, vs) in self.params.iter_mut() {
+                // if the labels don't match, don't do anything
+                if ko.label == ks.label {
+                    // if the incoming event has an index specified,
+                    // apply if the index matches
+                    if let Some(idxo) = ko.idx {
+                        if let Some(idxs) = ks.idx {
+                            if idxs == idxo {
+                                *vs = calc_spv(vs, vo, other.op);
+                            }
+                        }
+                    } else {
+                        // if the incoming has no index specified,
+                        // apply to all self params that have the
+                        // same label
+                        *vs = calc_spv(vs, vo, other.op);
+                    }
+                    label_found = true;
+                }
+            }
+
+            // if the label hasn't been found at all,
+            // add the parameer
+            if !label_found {
+                self.params.insert(*ko, vo.clone());
             }
         }
 
