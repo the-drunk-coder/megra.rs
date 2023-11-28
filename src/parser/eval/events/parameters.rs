@@ -216,8 +216,30 @@ pub fn parameter(
                     _ => Some(ParameterValue::Scalar(DynVal::with_value(0.5))), // should be save ...
                 };
 
+                let idx = if let Some(EvaluatedExpr::Keyword(k)) = tail_drain.next() {
+                    if k == "idx" {
+                        if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+                            Comparable::Float(i),
+                        ))) = tail_drain.next()
+                        {
+                            Some(i.floor() as usize)
+                        } else {
+                            None
+                        }
+                    } else {
+                        None
+                    }
+                } else {
+                    None
+                };
+
                 if let Some(p) = par {
-                    ev.params.insert(param_key.into(), p);
+                    if let Some(i) = idx {
+                        // set the index ...
+                        ev.params.insert(param_key.label.with_index(i), p);
+                    } else {
+                        ev.params.insert(param_key.into(), p);
+                    }
                 }
 
                 //println!("{:?}", ev);
