@@ -87,7 +87,7 @@ pub fn vals(
                     EventOperation::Replace,
                 );
                 e.params.insert(
-                    map_parameter(&param).into(),
+                    map_parameter(&param),
                     ParameterValue::Scalar(DynVal::with_value(f)),
                 );
                 ev_vecs.push(vec![SourceEvent::Sound(e)]);
@@ -99,7 +99,7 @@ pub fn vals(
                     EventOperation::Multiply,
                 );
                 e.params
-                    .insert(map_parameter(&param).into(), ParameterValue::Scalar(p));
+                    .insert(map_parameter(&param), ParameterValue::Scalar(p));
                 ev_vecs.push(vec![SourceEvent::Sound(e)]);
                 continue;
             }

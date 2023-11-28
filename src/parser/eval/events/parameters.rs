@@ -238,7 +238,7 @@ pub fn parameter(
                         // set the index ...
                         ev.params.insert(param_key.label.with_index(i), p);
                     } else {
-                        ev.params.insert(param_key.into(), p);
+                        ev.params.insert(param_key, p);
                     }
                 }
 

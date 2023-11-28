@@ -541,22 +541,18 @@ pub fn sound(
                 if let Some(wavematrix) = sample_set.get_wavematrix(s) {
                     //println!("found wavematrix {}", s);
                     ev.params
-                        .insert(map_parameter(&k).into(), ParameterValue::Matrix(wavematrix));
+                        .insert(map_parameter(&k), ParameterValue::Matrix(wavematrix));
                     tail_drain.next();
                 } else {
                     println!("couldn't find wavematrix {s}")
                 }
             } else {
-                ev.params.insert(
-                    map_parameter(&k).into(),
-                    collect_param_value(&mut tail_drain),
-                );
+                ev.params
+                    .insert(map_parameter(&k), collect_param_value(&mut tail_drain));
             }
         } else {
-            ev.params.insert(
-                map_parameter(&k).into(),
-                collect_param_value(&mut tail_drain),
-            );
+            ev.params
+                .insert(map_parameter(&k), collect_param_value(&mut tail_drain));
         }
     }
 
