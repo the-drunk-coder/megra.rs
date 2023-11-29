@@ -249,6 +249,36 @@ fn synth_defaults(ev: &mut Event) {
     );
 }
 
+// no indexed values ..
+fn multi_synth_defaults(ev: &mut Event) {
+    // set some defaults 2
+    ev.params.insert(
+        SynthParameterLabel::EnvelopeLevel.into(),
+        ParameterValue::Scalar(DynVal::with_value(0.5)),
+    );
+    // no distortion per default ...
+    ev.params.insert(
+        SynthParameterLabel::WaveshaperMix.into(),
+        ParameterValue::Scalar(DynVal::with_value(0.0)),
+    );
+    ev.params.insert(
+        SynthParameterLabel::Attack.into(),
+        ParameterValue::Scalar(DynVal::with_value(1.0)),
+    );
+    ev.params.insert(
+        SynthParameterLabel::Sustain.into(),
+        ParameterValue::Scalar(DynVal::with_value(48.0)),
+    );
+    ev.params.insert(
+        SynthParameterLabel::Release.into(),
+        ParameterValue::Scalar(DynVal::with_value(100.0)),
+    );
+    ev.params.insert(
+        SynthParameterLabel::ChannelPosition.into(),
+        ParameterValue::Scalar(DynVal::with_value(0.00)),
+    );
+}
+
 fn sample_defaults(ev: &mut Event) {
     // set some defaults
     ev.params.insert(
@@ -454,7 +484,7 @@ pub fn sound(
         "mosc" => {
             let mut ev =
                 Event::with_name_and_operation("mosc".to_string(), EventOperation::Replace);
-            synth_defaults(&mut ev);
+            multi_synth_defaults(&mut ev);
             ev
         }
         "silence" => Event::with_name_and_operation("silence".to_string(), EventOperation::Replace),

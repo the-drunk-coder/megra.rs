@@ -265,6 +265,12 @@ pub fn define_standard_library() -> FunctionMap {
     standard_library.std_lib.insert("gain-sub".to_string(), eval::events::parameters::parameter);
     standard_library.std_lib.insert("gain-div".to_string(), eval::events::parameters::parameter);
 
+    standard_library.std_lib.insert("amp".to_string(), eval::events::parameters::parameter);
+    standard_library.std_lib.insert("amp-add".to_string(), eval::events::parameters::parameter);
+    standard_library.std_lib.insert("amp-mul".to_string(), eval::events::parameters::parameter);
+    standard_library.std_lib.insert("amp-sub".to_string(), eval::events::parameters::parameter);
+    standard_library.std_lib.insert("amp-div".to_string(), eval::events::parameters::parameter);
+    
     standard_library.std_lib.insert("dist".to_string(), eval::events::parameters::parameter);
     standard_library.std_lib.insert("dist-add".to_string(), eval::events::parameters::parameter);
     standard_library.std_lib.insert("dist-mul".to_string(), eval::events::parameters::parameter);

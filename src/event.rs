@@ -105,11 +105,13 @@ impl StaticEvent {
         // TODO: handle vector values here ...
 
         for (ko, vo) in other.params.iter() {
-            let mut label_found = true;
+            let mut label_found = false;
 
             for (ks, vs) in self.params.iter_mut() {
                 // if the labels don't match, don't do anything
                 if ko.label == ks.label {
+                    // found label of incoming in current param map
+                    //
                     // if the incoming event has an index specified,
                     // apply if the index matches
                     if let Some(idxo) = ko.idx {
@@ -129,7 +131,7 @@ impl StaticEvent {
             }
 
             // if the label hasn't been found at all,
-            // add the parameer
+            // add the parameter
             if !label_found {
                 self.params.insert(*ko, vo.clone());
             }
