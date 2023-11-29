@@ -98,7 +98,8 @@ fn collect_param_value(
                     tail_drain.next();
                     return pc;
                 } else {
-                    s.to_string();
+                    // skip
+                    tail_drain.next();
                 }
             }
             EvaluatedExpr::Typed(TypedEntity::Parameter(p)) => {
