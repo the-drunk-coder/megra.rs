@@ -62,6 +62,8 @@ pub fn map_symbolic_param_value(sym: &str) -> Option<ParameterValue> {
         "cub" => Some(ParameterValue::OscillatorType(OscillatorType::LFCub)),
         "white" => Some(ParameterValue::OscillatorType(OscillatorType::WhiteNoise)),
         "brown" => Some(ParameterValue::OscillatorType(OscillatorType::BrownNoise)),
+        "wtab" => Some(ParameterValue::OscillatorType(OscillatorType::Wavetable)),
+        "wmat" => Some(ParameterValue::OscillatorType(OscillatorType::Wavematrix)),
         _ => None,
     }
 }
@@ -533,7 +535,8 @@ pub fn sound(
                 ev.tags.insert(s.clone());
                 tail_drain.next();
             }
-        } else if k == "wm" {
+        } else if k.starts_with("wm") {
+            // use start_with to account for possible indices
             // wavematrix lookup
             if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(s)))) =
                 tail_drain.peek()
