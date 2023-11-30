@@ -11,3 +11,4 @@
 * `mosc` (multi-oscillator synth)
 * `min` and `max` limiters
 * `idx` argument for incomplete events (`freq-mul` and the like) to target specific fields
+* improved sound card handling (should work now on soundcards without input)
