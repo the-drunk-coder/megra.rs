@@ -13,6 +13,7 @@ This readme should contain all the necessary information to get Mégra up and ru
 * [Features](#features)
 * [Limitations](#limitations)
 * [Documentation](#documentation)
+* [Questions & Feedback](#questions-feedback)
 
 ## WARNING
 
@@ -50,3 +51,23 @@ It contains:
 * Installation & Configuration Info
 * Tutorial
 * Reference 
+
+## Questions & Feedback 
+
+If you have questions, suggestions, or think the documentation could be improved, please open a ticket 
+in the documentation repository: 
+
+https://github.com/the-drunk-coder/megra-doc/issues
+
+If you found a bug, or have comments or suggestions regarding Mégra itself, please open a ticket in the 
+main repository: 
+
+https://github.com/the-drunk-coder/megra.rs/issues
+
+Don't hesitate to ask any question or post any comment, there's no threshold! 
+
+**If you made a track with Mégra**, you can also post it there and I'll collect them 
+in a meta-ticket :).
+
+If you want to ask something non-publicly, write me an email! You can find the address in
+the `Cargo.toml` file!
