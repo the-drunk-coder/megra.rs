@@ -13,7 +13,7 @@ This readme should contain all the necessary information to get Mégra up and ru
 * [Features](#features)
 * [Limitations](#limitations)
 * [Documentation](#documentation)
-* [Questions & Feedback](#questions-feedback)
+* [Questions & Feedback](#questions--feedback)
 
 ## WARNING
 
