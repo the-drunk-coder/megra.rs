@@ -57,12 +57,12 @@ It contains:
 If you have questions, suggestions, or think the documentation could be improved, please open a ticket 
 in the documentation repository: 
 
-https://github.com/the-drunk-coder/megra-doc/issues
+[https://github.com/the-drunk-coder/megra-doc/issues](https://github.com/the-drunk-coder/megra-doc/issues)
 
 If you found a bug, or have comments or suggestions regarding Mégra itself, please open a ticket in the 
 main repository: 
 
-https://github.com/the-drunk-coder/megra.rs/issues
+[https://github.com/the-drunk-coder/megra.rs/issues](https://github.com/the-drunk-coder/megra.rs/issues)
 
 Don't hesitate to ask any question or post any comment, there's no threshold! 
 
