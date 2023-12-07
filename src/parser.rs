@@ -441,7 +441,7 @@ pub fn eval_expression(
                     let mut positional_args = Vec::new();
                     let mut rem_args = false;
                     // evaluate positional arguments ...
-                    if let Some(Expr::Application(head, fun_tail)) = tail_clone.get(0) {
+                    if let Some(Expr::Application(head, fun_tail)) = tail_clone.first() {
                         if let Some(EvaluatedExpr::Identifier(f)) = eval_as_arg(head) {
                             positional_args.push(f);
 

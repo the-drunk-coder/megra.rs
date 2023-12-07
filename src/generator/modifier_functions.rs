@@ -20,7 +20,7 @@ pub fn haste(
     _globals: &std::sync::Arc<GlobalVariables>,
 ) {
     // sanity check, otherwise nothing happens ...
-    if let Some(ConfigParameter::Numeric(n)) = pos_args.get(0) {
+    if let Some(ConfigParameter::Numeric(n)) = pos_args.first() {
         if let Some(ConfigParameter::Numeric(v)) = pos_args.get(1) {
             haste_raw(&mut gen.time_mods, *v, *n as usize);
         }
@@ -42,7 +42,7 @@ pub fn relax(
     _: &HashMap<String, ConfigParameter>,
     _globals: &std::sync::Arc<GlobalVariables>,
 ) {
-    if let Some(ConfigParameter::Numeric(n)) = pos_args.get(0) {
+    if let Some(ConfigParameter::Numeric(n)) = pos_args.first() {
         if let Some(ConfigParameter::Numeric(v)) = pos_args.get(1) {
             relax_raw(&mut gen.time_mods, *v, *n as usize);
         }
@@ -55,7 +55,7 @@ pub fn grow(
     named_args: &HashMap<String, ConfigParameter>,
     _globals: &std::sync::Arc<GlobalVariables>,
 ) {
-    if let Some(ConfigParameter::Numeric(f)) = pos_args.get(0) {
+    if let Some(ConfigParameter::Numeric(f)) = pos_args.first() {
         // get method or use default ...
         let m = if let Some(ConfigParameter::Symbolic(s)) = named_args.get("method") {
             s.clone()
@@ -79,7 +79,7 @@ pub fn grown(
     named_args: &HashMap<String, ConfigParameter>,
     _globals: &std::sync::Arc<GlobalVariables>,
 ) {
-    if let Some(ConfigParameter::Numeric(n)) = pos_args.get(0) {
+    if let Some(ConfigParameter::Numeric(n)) = pos_args.first() {
         if let Some(ConfigParameter::Numeric(f)) = pos_args.get(1) {
             // get method or use default ...
             let m = if let Some(ConfigParameter::Symbolic(s)) = named_args.get("method") {
@@ -123,7 +123,7 @@ pub fn shake(
     _: &HashMap<String, ConfigParameter>,
     _globals: &std::sync::Arc<GlobalVariables>,
 ) {
-    if let Some(ConfigParameter::Numeric(f)) = pos_args.get(0) {
+    if let Some(ConfigParameter::Numeric(f)) = pos_args.first() {
         shake_raw(&mut gen.root_generator, &HashSet::new(), *f);
     }
 }
@@ -134,7 +134,7 @@ pub fn sharpen(
     _: &HashMap<String, ConfigParameter>,
     _globals: &std::sync::Arc<GlobalVariables>,
 ) {
-    if let Some(ConfigParameter::Numeric(f)) = pos_args.get(0) {
+    if let Some(ConfigParameter::Numeric(f)) = pos_args.first() {
         sharpen_raw(&mut gen.root_generator, *f);
     }
 }
@@ -145,7 +145,7 @@ pub fn blur(
     _: &HashMap<String, ConfigParameter>,
     _globals: &std::sync::Arc<GlobalVariables>,
 ) {
-    if let Some(ConfigParameter::Numeric(f)) = pos_args.get(0) {
+    if let Some(ConfigParameter::Numeric(f)) = pos_args.first() {
         blur_raw(&mut gen.root_generator, *f);
     }
 }
@@ -156,7 +156,7 @@ pub fn skip(
     _: &HashMap<String, ConfigParameter>,
     globals: &std::sync::Arc<GlobalVariables>,
 ) {
-    if let Some(ConfigParameter::Numeric(f)) = pos_args.get(0) {
+    if let Some(ConfigParameter::Numeric(f)) = pos_args.first() {
         skip_raw(&mut gen.root_generator, *f as usize, globals);
     }
 }
@@ -167,7 +167,7 @@ pub fn rewind(
     _: &HashMap<String, ConfigParameter>,
     _globals: &std::sync::Arc<GlobalVariables>,
 ) {
-    if let Some(ConfigParameter::Numeric(f)) = pos_args.get(0) {
+    if let Some(ConfigParameter::Numeric(f)) = pos_args.first() {
         rewind_raw(&mut gen.root_generator, *f as usize);
     }
 }
@@ -178,7 +178,7 @@ pub fn solidify(
     _: &HashMap<String, ConfigParameter>,
     _globals: &std::sync::Arc<GlobalVariables>,
 ) {
-    if let Some(ConfigParameter::Numeric(f)) = pos_args.get(0) {
+    if let Some(ConfigParameter::Numeric(f)) = pos_args.first() {
         solidify_raw(&mut gen.root_generator, *f as usize);
     }
 }
@@ -189,7 +189,7 @@ pub fn rnd(
     _: &HashMap<String, ConfigParameter>,
     _globals: &std::sync::Arc<GlobalVariables>,
 ) {
-    if let Some(ConfigParameter::Numeric(f)) = pos_args.get(0) {
+    if let Some(ConfigParameter::Numeric(f)) = pos_args.first() {
         rnd_raw(&mut gen.root_generator, f / 100.0);
     }
 }
@@ -209,7 +209,7 @@ pub fn rep(
     _: &HashMap<String, ConfigParameter>,
     _globals: &std::sync::Arc<GlobalVariables>,
 ) {
-    if let Some(ConfigParameter::Numeric(r)) = pos_args.get(0) {
+    if let Some(ConfigParameter::Numeric(r)) = pos_args.first() {
         if let Some(ConfigParameter::Numeric(m)) = pos_args.get(1) {
             rep_raw(&mut gen.root_generator, r / 100.0, *m as usize);
         }

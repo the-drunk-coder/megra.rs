@@ -84,7 +84,7 @@ impl SampleAndWavematrixSet {
                 Some((res.bufnum, res.duration))
             } else {
                 // there's always one ...
-                let res = subset.get(0).unwrap();
+                let res = subset.first().unwrap();
                 Some((res.bufnum, res.duration))
             }
         } else {
@@ -98,7 +98,7 @@ impl SampleAndWavematrixSet {
             if let Some(sample_info) = subset.get(pos % subset.len()) {
                 Some((sample_info.bufnum, sample_info.duration))
             } else {
-                let res = subset.get(0).unwrap();
+                let res = subset.first().unwrap();
                 Some((res.bufnum, res.duration))
             }
         } else {

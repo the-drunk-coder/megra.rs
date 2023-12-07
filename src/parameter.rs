@@ -381,7 +381,7 @@ pub fn resolve_parameter(
                 } else {
                     0.2
                 };
-                let mut segment_type = if let Some(t) = types.get(0) {
+                let mut segment_type = if let Some(t) = types.first() {
                     *t
                 } else {
                     EnvelopeSegmentType::Lin
