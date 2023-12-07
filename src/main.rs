@@ -406,7 +406,7 @@ fn run_input<const NCHAN: usize>(
                 throw_in.throw_next(stream_item);
             } else {
                 // there might be a faster way to de-interleave here ...
-                for (_, frame) in data.chunks(in_channels).enumerate() {
+                for frame in data.chunks(in_channels) {
                     for (ch, s) in frame.iter().enumerate() {
                         ruff.write_sample_to_live_buffer(ch, *s);
                     }
@@ -470,7 +470,7 @@ fn run_input<const NCHAN: usize>(
             }
 
             // there might be a faster way to de-interleave here ...
-            for (_, frame) in data.chunks(in_channels).enumerate() {
+            for frame in data.chunks(in_channels) {
                 for (ch, s) in frame.iter().enumerate() {
                     ruff.write_sample_to_live_buffer(ch, *s);
                 }
