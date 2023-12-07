@@ -650,6 +650,27 @@ fn livecode_events(
                 }
             }
             Event::Key {
+                key: Key::S,
+                pressed: true,
+                modifiers,
+                ..
+            } => {
+                if modifiers.ctrl {
+                    if let Some(sexp_cursors) =
+                        find_current_sexp(text.as_str(), &cursor_range.as_ccursor_range().primary)
+                    {
+                        //let old_cursor = cursor_range.as_ccursor_range();
+                        state.selection_toggle = true;
+                        Some(CCursorRange::two(sexp_cursors.0, sexp_cursors.1))
+                    } else {
+                        None
+                    }
+                } else {
+                    None
+                }
+            }
+
+            Event::Key {
                 key: Key::G,
                 pressed: true,
                 modifiers,
