@@ -1231,7 +1231,7 @@ fn on_key_press(
             }
             // now we can be shure that the text isn't empty ...
 
-            move_single_cursor(&mut cursor_range.primary, galley, key, modifiers);
+            move_single_cursor(text, &mut cursor_range.primary, galley, key, modifiers);
             if !modifiers.shift && !state.selection_toggle {
                 cursor_range.secondary = cursor_range.primary;
             }
@@ -1312,7 +1312,13 @@ fn on_key_press(
     }
 }
 
-fn move_single_cursor(cursor: &mut Cursor, galley: &Galley, key: Key, modifiers: &Modifiers) {
+fn move_single_cursor(
+    text: &mut dyn TextBuffer,
+    cursor: &mut Cursor,
+    galley: &Galley,
+    key: Key,
+    modifiers: &Modifiers,
+) {
     match key {
         Key::ArrowLeft => {
             if modifiers.alt || modifiers.ctrl {
@@ -1341,7 +1347,13 @@ fn move_single_cursor(cursor: &mut Cursor, galley: &Galley, key: Key, modifiers:
             }
         }
         Key::ArrowUp => {
-            if modifiers.command {
+            if modifiers.alt {
+                if let Some(sexp_cursors) = find_current_sexp(text.as_str(), &cursor.ccursor) {
+                    *cursor = galley.from_ccursor(sexp_cursors.0);
+                } else {
+                    *cursor = galley.cursor_up_one_row(cursor);
+                }
+            } else if modifiers.command {
                 // mac and windows behavior
                 *cursor = Cursor::default();
             } else {
@@ -1349,7 +1361,13 @@ fn move_single_cursor(cursor: &mut Cursor, galley: &Galley, key: Key, modifiers:
             }
         }
         Key::ArrowDown => {
-            if modifiers.command {
+            if modifiers.alt {
+                if let Some(sexp_cursors) = find_current_sexp(text.as_str(), &cursor.ccursor) {
+                    *cursor = galley.from_ccursor(sexp_cursors.1);
+                } else {
+                    *cursor = galley.cursor_down_one_row(cursor);
+                }
+            } else if modifiers.command {
                 // mac and windows behavior
                 *cursor = galley.end();
             } else {
