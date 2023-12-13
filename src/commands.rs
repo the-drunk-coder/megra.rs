@@ -42,6 +42,7 @@ use std::sync::atomic::Ordering;
 use std::io;
 
 // helper method ...
+#[not(cfg(target_family="wasm"))]
 fn fetch_url(url: String, file_name: String) -> anyhow::Result<()> {
     let response = reqwest::blocking::get(url)?;
     let mut file = std::fs::File::create(file_name)?;
@@ -50,6 +51,7 @@ fn fetch_url(url: String, file_name: String) -> anyhow::Result<()> {
     Ok(())
 }
 
+#[not(cfg(target_family="wasm"))]
 #[allow(deprecated)]
 pub fn fetch_sample_set<const BUFSIZE: usize, const NCHAN: usize>(
     function_map: &sync::Arc<Mutex<FunctionMap>>,

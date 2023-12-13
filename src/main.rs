@@ -16,14 +16,17 @@ pub mod generator_processor;
 pub mod interpreter;
 pub mod load_audio_file;
 pub mod markov_sequence_generator;
+#[not(cfg(target_family="wasm"))]
 pub mod midi_input;
 pub mod music_theory;
+#[not(cfg(target_family="wasm"))]
 pub mod osc_client;
 pub mod parameter;
 pub mod parser;
 pub mod pfa_growth;
 pub mod pfa_reverse;
 pub mod real_time_streaming;
+#[not(cfg(target_family="wasm"))]
 pub mod repl;
 pub mod sample_set;
 pub mod scheduler;
@@ -393,7 +396,8 @@ fn run_input<const NCHAN: usize>(
             // Unless I run into trouble, this might just stay the way it is for now.
             let mut ruff = playhead_in.lock();
 
-            if is_recording_input.load(Ordering::SeqCst) {
+            
+	    if is_recording_input.load(Ordering::SeqCst) {
                 let mut stream_item = throw_in.prep_next().unwrap();
                 // there might be a faster way to de-interleave here ...
                 for (f, frame) in data.chunks(in_channels).enumerate() {
@@ -826,8 +830,9 @@ fn run<const NCHAN: usize>(
         )
         .unwrap();
         Ok(())
-    } else {
+    } else {	
         // start the megra repl
+	#[not(cfg(target_family="wasm"))]
         repl::start_repl(&stdlib, session, base_dir.display().to_string())
     }
 }
