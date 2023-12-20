@@ -5,13 +5,13 @@
 Mégra es un lenguaje de programación específico de dominio (*domain-specific language* en inglés, o DSL, para abreviar) diseñado para **programar música en vivo** 
 con elementos estocásticos. Está implementado en Rust puro. Está fuertemente guiado por la práctica artística del autor, pero debería ser fácil de aprender para tod@s.
 
-La [Documentacíon](#documentation) contiene toda la información necesaria para instalar y aprender Mégra.
+La [Documentacíon](#documentatión) contiene toda la información necesaria para instalar y aprender Mégra.
 
 ## Tabla de contenido
 
 * [Características](#características)
 * [Limitaciones](#limitaciones)
-* [Documentacíon](#documentation)
+* [Documentacíon](#documentatión)
 * [Preguntas & Feedback](#preguntas--feedback)
 
 ## Characterísticas
