@@ -3,40 +3,31 @@
 (Versión español: [LEAME.md](https://github.com/the-drunk-coder/megra.rs/blob/main/LEAME.md))
 
 Mégra is a **domain-specific** programming **language** (DSL for short) designed for **live-coding music** with stochastic elements.
-Its predecessor was implemented in Common Lisp, this one is implemented in pure Rust !
+It's implemented in pure Rust. It's development is heavily influenced by the author's own artistic practice, yet it should be fairly
+easy to learn for anybody else.
 
-This readme should contain all the necessary information to get Mégra up and running.
+The [Documentation](#documentation) contains all infos to get Mégra up and running.
 
 ## Table Of Contents
 
-* [WARNING](#warning)
 * [Features](#features)
 * [Limitations](#limitations)
 * [Documentation](#documentation)
 * [Questions & Feedback](#questions--feedback)
 
-## WARNING
-
-This is still in a relatively early development stage and has some limitations! It hasn't been
-excessively tested on all platforms.
-
-It's also heavily guided by the author's artistic practice, so some design decsisions might seem
-odd if you're familiar with other live coding systems.
-
 ## Features
 
 * It lets you make music with Markov chains!
 * It follows a sequencing paradigm rather than a modular synth paradigm.
-* It comes with its own (simple) editor.
+* It iss a standalone program that comes with its own (simple) editor and synthesizer/sampler.
 * It works with Linux (JACK or PipeWire), Windows 10/11 (WASAPI), and macOS.
 
 ## Limitations
 
-* It isn't a turing-complete programming language. In fact it's mostly a bunch of hard-coded methods at this point.
+* While it recently feels more like a "real" programming language, it's still far from being "turing-complete".
 * It loads all your samples to memory, so if you have a lot of samples, make sure you have enough RAM.
-* It's focused on samples. Synthesis is pretty primitive and limited to some basic waveforms at this point.
-* It currently doesn't allow you to create fancy synths unless you want to code them in Rust.
-* Except for some basic note names, Mégra doesn't reflect (traditional) music theory. There's no scales, scale completions, chords, chord completions or tunings, nor any helpers to work with functional harmony. Maybe there never will be. 
+* While some work has been done on more complex synthesis, it's still primarily focused on using samples.
+* Except for some basic note names, Mégra doesn't reflect music theory, western or otherwise. There's no scales, scale completions, chords, chord completions or tunings, nor any helpers to work with functional harmony. Maybe there never will be. 
 * The editor is fairly primitive (you can use it in REPL mode and integrate in other editors if you want).
 
 These issues are being addressed in no particular order ...
@@ -48,9 +39,10 @@ The (english) documentation can be found here:
 https://megra-doc.readthedocs.io/en/latest/
 
 It contains:
+
 * Installation & Configuration Info
 * Tutorial
-* Reference 
+* Reference
 
 ## Questions & Feedback 
 
