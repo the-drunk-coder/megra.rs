@@ -2,3 +2,4 @@
 
 * Editor: `Ctrl+S` selects current S-Expression
 * Editor: `Alt+Up/Down` moves between S-Expression
+* Language: `@rest` and `@all` for variable argument handling in functions
