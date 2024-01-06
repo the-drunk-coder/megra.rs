@@ -77,6 +77,7 @@ pub enum EvaluatedExpr {
     // everything else is a typed entity
     Typed(TypedEntity),
     // only for collecting arguments
+    // the list field exists only to be flattened
     EvaluatedExprList(Vec<EvaluatedExpr>),
 }
 
@@ -386,7 +387,7 @@ pub fn eval_expression(
                         ArgumentCollector::All => {
                             let mut coll = Vec::new();
                             if let Some(pos_args) = &loc.pos_args {
-                                for (_, arg) in pos_args {
+                                for arg in pos_args.values() {
                                     coll.push(arg.clone())
                                 }
                             }
@@ -411,31 +412,24 @@ pub fn eval_expression(
             {
                 // check if we have this function ...
                 if functions.std_lib.contains_key(&f) {
-                    let mut reduced_tail: Vec<EvaluatedExpr> = tail
-                        .iter()
-                        .map(|expr| {
-                            eval_expression(
-                                expr,
-                                functions,
-                                globals,
-                                locals,
-                                sample_set.clone(),
-                                out_mode,
-                            )
-                        })
-                        .collect::<Option<Vec<EvaluatedExpr>>>()?
-                        .into_iter()
-                        .map(|eexpr| {
-                            // flatten evaluated expr lists that can
-                            // stem from "@rest" and "@all" collectors
-                            if let EvaluatedExpr::EvaluatedExprList(l) = eexpr {
-                                l
+                    let mut reduced_tail: Vec<EvaluatedExpr> = Vec::new();
+                    for expr in tail {
+                        if let Some(e) = eval_expression(
+                            expr,
+                            functions,
+                            globals,
+                            locals,
+                            sample_set.clone(),
+                            out_mode,
+                        ) {
+                            // the list field exists only to be flattened
+                            if let EvaluatedExpr::EvaluatedExprList(mut l) = e {
+                                reduced_tail.append(&mut l);
                             } else {
-                                vec![eexpr]
+                                reduced_tail.push(e);
                             }
-                        })
-                        .flatten()
-                        .collect();
+                        }
+                    }
 
                     // push function name
                     reduced_tail.insert(0, EvaluatedExpr::Identifier(f.clone()));
@@ -494,31 +488,24 @@ pub fn eval_expression(
                     };
 
                     // THIRD
-                    let mut fun_tail: Vec<EvaluatedExpr> = fun_expr
-                        .iter()
-                        .map(|expr| {
-                            eval_expression(
-                                expr,
-                                functions,
-                                globals,
-                                Some(&local_vars),
-                                sample_set.clone(),
-                                out_mode,
-                            )
-                        })
-                        .collect::<Option<Vec<EvaluatedExpr>>>()?
-                        .into_iter()
-                        .map(|eexpr| {
-                            // flatten evaluated expr lists that can
-                            // stem from "@rest" and "@all" collectors
-                            if let EvaluatedExpr::EvaluatedExprList(l) = eexpr {
-                                l
+                    let mut fun_tail: Vec<EvaluatedExpr> = Vec::new();
+                    for expr in fun_expr.iter() {
+                        if let Some(e) = eval_expression(
+                            expr,
+                            functions,
+                            globals,
+                            Some(&local_vars),
+                            sample_set.clone(),
+                            out_mode,
+                        ) {
+                            // the list field exists only to be flattened
+                            if let EvaluatedExpr::EvaluatedExprList(mut l) = e {
+                                fun_tail.append(&mut l);
                             } else {
-                                vec![eexpr]
+                                fun_tail.push(e);
                             }
-                        })
-                        .flatten()
-                        .collect();
+                        }
+                    }
 
                     // return last form result, cl-style
                     fun_tail.pop()
@@ -558,11 +545,8 @@ pub fn eval_expression(
 
                     // evaluate positional arguments ...
                     if let Some(Expr::Application(head, fun_tail)) = tail_clone.first() {
-                        match eval_as_arg(head) {
-                            Some(EvaluatedExpr::Identifier(f)) => {
-                                positional_args.push(f);
-                            }
-                            _ => {}
+                        if let Some(EvaluatedExpr::Identifier(f)) = eval_as_arg(head) {
+                            positional_args.push(f);
                         }
                         // reduce tail args ...
                         let reduced_tail = fun_tail
@@ -571,11 +555,8 @@ pub fn eval_expression(
                             .collect::<Option<Vec<EvaluatedExpr>>>()?;
 
                         for eexpr in reduced_tail {
-                            match eexpr {
-                                EvaluatedExpr::Identifier(f) => {
-                                    positional_args.push(f);
-                                }
-                                _ => {}
+                            if let EvaluatedExpr::Identifier(f) = eexpr {
+                                positional_args.push(f);
                             }
                         }
                         rem_args = true;
@@ -619,31 +600,24 @@ pub fn eval_expression(
                     }
                 };
 
-                let mut reduced_tail: Vec<EvaluatedExpr> = tail
-                    .iter()
-                    .map(|expr| {
-                        eval_expression(
-                            expr,
-                            functions,
-                            globals,
-                            locals,
-                            sample_set.clone(),
-                            out_mode,
-                        )
-                    })
-                    .collect::<Option<Vec<EvaluatedExpr>>>()?
-                    .into_iter()
-                    .map(|eexpr| {
-                        // flatten evaluated expr lists that can
-                        // stem from "@rest" and "@all" collectors
-                        if let EvaluatedExpr::EvaluatedExprList(l) = eexpr {
-                            l
+                let mut reduced_tail: Vec<EvaluatedExpr> = Vec::new();
+                for expr in tail {
+                    if let Some(e) = eval_expression(
+                        expr,
+                        functions,
+                        globals,
+                        locals,
+                        sample_set.clone(),
+                        out_mode,
+                    ) {
+                        // the list field exists only to be flattened
+                        if let EvaluatedExpr::EvaluatedExprList(mut l) = e {
+                            reduced_tail.append(&mut l);
                         } else {
-                            vec![eexpr]
+                            reduced_tail.push(e);
                         }
-                    })
-                    .flatten()
-                    .collect();
+                    }
+                }
 
                 if let Some(EvaluatedExpr::Typed(te)) = reduced_tail.pop() {
                     Some(EvaluatedExpr::VariableDefinition(id, te))
