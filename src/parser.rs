@@ -428,6 +428,9 @@ pub fn eval_expression(
                             } else {
                                 reduced_tail.push(e);
                             }
+                        } else {
+                            // jump out if expression can't be evaluated
+                            return None;
                         }
                     }
 
@@ -504,6 +507,9 @@ pub fn eval_expression(
                             } else {
                                 fun_tail.push(e);
                             }
+                        } else {
+                            // jump out if expression can't be evaluated
+                            return None;
                         }
                     }
 
@@ -616,6 +622,9 @@ pub fn eval_expression(
                         } else {
                             reduced_tail.push(e);
                         }
+                    } else {
+                        // jump out if expression can't be evaluated
+                        return None;
                     }
                 }
 
