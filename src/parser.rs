@@ -23,6 +23,14 @@ use crate::{Command, GlobalVariables, OutputMode, SampleAndWavematrixSet, TypedE
 
 pub mod eval;
 
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub enum ArgumentCollector {
+    All, // collects all arguments to be passed on ...
+    Rest, // collect "unclaimed" arguments
+         //Positional, // collect all positional arguments
+         //Keyword // collect keyword arguments
+}
+
 /// These are the basic building blocks of our casual lisp language.
 /// You might notice that there's no lists in this lisp ... not sure
 /// what to call it in that case ...
@@ -34,6 +42,7 @@ pub enum Atom {
     Symbol(String),
     Boolean(bool),
     Identifier(String),
+    ArgumentCollector(ArgumentCollector),
 }
 
 /// Expression Type
@@ -67,6 +76,8 @@ pub enum EvaluatedExpr {
     VariableDefinition(VariableId, TypedEntity),
     // everything else is a typed entity
     Typed(TypedEntity),
+    // only for collecting arguments
+    EvaluatedExprList(Vec<EvaluatedExpr>),
 }
 
 impl fmt::Debug for EvaluatedExpr {
@@ -84,6 +95,9 @@ impl fmt::Debug for EvaluatedExpr {
             }
             EvaluatedExpr::VariableDefinition(_, _) => {
                 write!(f, "EvaluatedExpr::VariableDefinition")
+            }
+            EvaluatedExpr::EvaluatedExprList(_) => {
+                write!(f, "EvaluatedExpr::EvaluatedExprList")
             }
         }
     }
@@ -152,6 +166,18 @@ fn parse_boolean(i: &str) -> IResult<&str, Atom, VerboseError<&str>> {
     ))(i)
 }
 
+/// arg collectors have a @ prefix
+fn parse_arg_collector(i: &str) -> IResult<&str, Atom, VerboseError<&str>> {
+    alt((
+        map(tag("@rest"), |_| {
+            Atom::ArgumentCollector(ArgumentCollector::Rest)
+        }),
+        map(tag("@all"), |_| {
+            Atom::ArgumentCollector(ArgumentCollector::All)
+        }),
+    ))(i)
+}
+
 fn parse_definition(i: &str) -> IResult<&str, Expr, VerboseError<&str>> {
     alt((
         map(tag("fun"), |_| Expr::FunctionDefinition),
@@ -214,6 +240,7 @@ fn parse_constant(i: &str) -> IResult<&str, Expr, VerboseError<&str>> {
     map(
         alt((
             parse_boolean,
+            parse_arg_collector,
             parse_float,
             parse_keyword,
             parse_symbol,
@@ -271,7 +298,7 @@ pub fn parse_expr(i: &str) -> IResult<&str, Expr, VerboseError<&str>> {
     alt((parse_definition, parse_application, parse_constant))(i)
 }
 
-// evaluate as argument identifiers, or better, constans only, no applications
+// evaluate as argument identifiers, or better, constants only, no applications
 // or definitions
 pub fn eval_as_arg(e: &Expr) -> Option<EvaluatedExpr> {
     match e {
@@ -291,9 +318,16 @@ pub fn eval_as_arg(e: &Expr) -> Option<EvaluatedExpr> {
                 // eval local vars at eval time ???
                 EvaluatedExpr::Identifier(f.to_string())
             }
+            _ => return None,
         }),
         _ => None,
     }
+}
+
+#[derive(Debug)]
+pub struct LocalVariables {
+    pub pos_args: Option<HashMap<String, EvaluatedExpr>>,
+    pub rest: Option<Vec<EvaluatedExpr>>,
 }
 
 /// This one reduces the abstract syntax tree ...
@@ -304,7 +338,7 @@ pub fn eval_expression(
     e: &Expr,
     functions: &FunctionMap,
     globals: &sync::Arc<GlobalVariables>,
-    locals: Option<&HashMap<String, EvaluatedExpr>>,
+    locals: Option<&LocalVariables>,
     sample_set: SampleAndWavematrixSet,
     out_mode: OutputMode,
 ) -> Option<EvaluatedExpr> {
@@ -321,17 +355,50 @@ pub fn eval_expression(
             Atom::Boolean(b) => {
                 EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Boolean(*b)))
             }
+            // if we have an identifier, check whether we have
+            // a matching local (positional) variable to resolve ...
             Atom::Identifier(f) => {
                 // eval local vars at eval time ???
                 if let Some(loc) = locals {
-                    if let Some(arg) = loc.get(f) {
-                        arg.clone()
+                    if let Some(pos_args) = &loc.pos_args {
+                        if let Some(arg) = pos_args.get(f) {
+                            arg.clone()
+                        } else {
+                            EvaluatedExpr::Identifier(f.to_string())
+                        }
                     } else {
                         EvaluatedExpr::Identifier(f.to_string())
                     }
                 } else {
                     EvaluatedExpr::Identifier(f.to_string())
                 }
+            }
+            Atom::ArgumentCollector(argc) => {
+                let mut coll = Vec::new();
+
+                if let Some(loc) = locals {
+                    match argc {
+                        ArgumentCollector::Rest => {
+                            if let Some(rest) = &loc.rest {
+                                coll.append(&mut rest.clone());
+                            }
+                        }
+                        ArgumentCollector::All => {
+                            let mut coll = Vec::new();
+                            if let Some(pos_args) = &loc.pos_args {
+                                for (_, arg) in pos_args {
+                                    coll.push(arg.clone())
+                                }
+                            }
+                            if let Some(rest) = &loc.rest {
+                                coll.append(&mut rest.clone());
+                            }
+                        }
+                    }
+                }
+
+                // even if it's empty, as the @rest arg can be empty ...
+                EvaluatedExpr::EvaluatedExprList(coll)
             }
         }),
         Expr::Application(head, tail) => {
@@ -344,7 +411,7 @@ pub fn eval_expression(
             {
                 // check if we have this function ...
                 if functions.std_lib.contains_key(&f) {
-                    let mut reduced_tail = tail
+                    let mut reduced_tail: Vec<EvaluatedExpr> = tail
                         .iter()
                         .map(|expr| {
                             eval_expression(
@@ -356,7 +423,20 @@ pub fn eval_expression(
                                 out_mode,
                             )
                         })
-                        .collect::<Option<Vec<EvaluatedExpr>>>()?;
+                        .collect::<Option<Vec<EvaluatedExpr>>>()?
+                        .into_iter()
+                        .map(|eexpr| {
+                            // flatten evaluated expr lists that can
+                            // stem from "@rest" and "@all" collectors
+                            if let EvaluatedExpr::EvaluatedExprList(l) = eexpr {
+                                l
+                            } else {
+                                vec![eexpr]
+                            }
+                        })
+                        .flatten()
+                        .collect();
+
                     // push function name
                     reduced_tail.insert(0, EvaluatedExpr::Identifier(f.clone()));
                     functions.std_lib[&f](
@@ -370,7 +450,7 @@ pub fn eval_expression(
                     let (fun_arg_names, fun_expr) = functions.usr_lib.get(&f).unwrap().clone();
 
                     if fun_arg_names.len() > tail.len() {
-                        // not enough arguments
+                        // not enough arguments ... no general currying currently :(
                         return None;
                     }
 
@@ -390,20 +470,55 @@ pub fn eval_expression(
                         }
                     }
 
+                    let mut rest = Vec::new();
+                    for expr in tail[fun_arg_names.len()..].iter() {
+                        if let Some(res) = eval_expression(
+                            expr,
+                            functions,
+                            globals,
+                            None,
+                            sample_set.clone(),
+                            out_mode,
+                        ) {
+                            rest.push(res);
+                        }
+                    }
+
+                    let local_vars = LocalVariables {
+                        pos_args: if local_args.is_empty() {
+                            None
+                        } else {
+                            Some(local_args)
+                        },
+                        rest: if rest.is_empty() { None } else { Some(rest) },
+                    };
+
                     // THIRD
-                    let mut fun_tail = fun_expr
+                    let mut fun_tail: Vec<EvaluatedExpr> = fun_expr
                         .iter()
                         .map(|expr| {
                             eval_expression(
                                 expr,
                                 functions,
                                 globals,
-                                Some(&local_args),
+                                Some(&local_vars),
                                 sample_set.clone(),
                                 out_mode,
                             )
                         })
-                        .collect::<Option<Vec<EvaluatedExpr>>>()?;
+                        .collect::<Option<Vec<EvaluatedExpr>>>()?
+                        .into_iter()
+                        .map(|eexpr| {
+                            // flatten evaluated expr lists that can
+                            // stem from "@rest" and "@all" collectors
+                            if let EvaluatedExpr::EvaluatedExprList(l) = eexpr {
+                                l
+                            } else {
+                                vec![eexpr]
+                            }
+                        })
+                        .flatten()
+                        .collect();
 
                     // return last form result, cl-style
                     fun_tail.pop()
@@ -440,25 +555,30 @@ pub fn eval_expression(
 
                     let mut positional_args = Vec::new();
                     let mut rem_args = false;
+
                     // evaluate positional arguments ...
                     if let Some(Expr::Application(head, fun_tail)) = tail_clone.first() {
-                        if let Some(EvaluatedExpr::Identifier(f)) = eval_as_arg(head) {
-                            positional_args.push(f);
-
-                            let reduced_tail = fun_tail
-                                .iter()
-                                .map(eval_as_arg)
-                                .collect::<Option<Vec<EvaluatedExpr>>>()?;
-
-                            for ee in reduced_tail {
-                                if let EvaluatedExpr::Identifier(ff) = ee {
-                                    positional_args.push(ff);
-                                }
+                        match eval_as_arg(head) {
+                            Some(EvaluatedExpr::Identifier(f)) => {
+                                positional_args.push(f);
                             }
-
-                            rem_args = true;
-                            //}
+                            _ => {}
                         }
+                        // reduce tail args ...
+                        let reduced_tail = fun_tail
+                            .iter()
+                            .map(eval_as_arg)
+                            .collect::<Option<Vec<EvaluatedExpr>>>()?;
+
+                        for eexpr in reduced_tail {
+                            match eexpr {
+                                EvaluatedExpr::Identifier(f) => {
+                                    positional_args.push(f);
+                                }
+                                _ => {}
+                            }
+                        }
+                        rem_args = true;
                     }
 
                     if rem_args {
@@ -499,7 +619,7 @@ pub fn eval_expression(
                     }
                 };
 
-                let mut reduced_tail = tail
+                let mut reduced_tail: Vec<EvaluatedExpr> = tail
                     .iter()
                     .map(|expr| {
                         eval_expression(
@@ -511,7 +631,19 @@ pub fn eval_expression(
                             out_mode,
                         )
                     })
-                    .collect::<Option<Vec<EvaluatedExpr>>>()?;
+                    .collect::<Option<Vec<EvaluatedExpr>>>()?
+                    .into_iter()
+                    .map(|eexpr| {
+                        // flatten evaluated expr lists that can
+                        // stem from "@rest" and "@all" collectors
+                        if let EvaluatedExpr::EvaluatedExprList(l) = eexpr {
+                            l
+                        } else {
+                            vec![eexpr]
+                        }
+                    })
+                    .flatten()
+                    .collect();
 
                 if let Some(EvaluatedExpr::Typed(te)) = reduced_tail.pop() {
                     Some(EvaluatedExpr::VariableDefinition(id, te))

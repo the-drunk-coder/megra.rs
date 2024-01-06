@@ -8,7 +8,7 @@ use std::sync;
 
 use crate::builtin_types::{Comparable, TypedEntity};
 use crate::interpreter;
-use crate::parser::{eval_expression, EvaluatedExpr, FunctionMap};
+use crate::parser::{eval_expression, EvaluatedExpr, FunctionMap, LocalVariables};
 
 use crate::session::Session;
 
@@ -87,6 +87,11 @@ impl OscReceiver {
                                     );
                                 }
 
+                                let local_vars = LocalVariables {
+                                    pos_args: Some(local_args),
+                                    rest: None,
+                                };
+
                                 // THIRD
                                 if let Some(fun_tail) = fun_expr
                                     .iter()
@@ -95,7 +100,7 @@ impl OscReceiver {
                                             expr,
                                             &functions,
                                             &session.globals,
-                                            Some(&local_args),
+                                            Some(&local_vars),
                                             session.sample_set.clone(),
                                             session.output_mode,
                                         )
