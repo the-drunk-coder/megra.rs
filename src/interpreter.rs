@@ -330,10 +330,65 @@ pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
         EvaluatedExpr::Match(temp, exprs) => {
             if let EvaluatedExpr::Typed(TypedEntity::Comparable(t1)) = *temp {
                 for (comp, expr) in exprs {
-                    if let EvaluatedExpr::Typed(TypedEntity::Comparable(t2)) = comp {
-                        if t1 == t2 {
-                            interpret(expr, function_map, session.clone(), base_dir.clone());
+                    match comp {
+                        EvaluatedExpr::Typed(TypedEntity::Comparable(t2)) => {
+                            if t1 == t2 {
+                                interpret(expr, function_map, session.clone(), base_dir.clone());
+                            }
                         }
+                        EvaluatedExpr::Comparator(t2) => match t2 {
+                            Comparator::GreaterEqual(x) => {
+                                if t1 >= x {
+                                    interpret(
+                                        expr,
+                                        function_map,
+                                        session.clone(),
+                                        base_dir.clone(),
+                                    );
+                                }
+                            }
+                            Comparator::Greater(x) => {
+                                if t1 > x {
+                                    interpret(
+                                        expr,
+                                        function_map,
+                                        session.clone(),
+                                        base_dir.clone(),
+                                    );
+                                }
+                            }
+                            Comparator::Equal(x) => {
+                                if t1 == x {
+                                    interpret(
+                                        expr,
+                                        function_map,
+                                        session.clone(),
+                                        base_dir.clone(),
+                                    );
+                                }
+                            }
+                            Comparator::LesserEqual(x) => {
+                                if t1 <= x {
+                                    interpret(
+                                        expr,
+                                        function_map,
+                                        session.clone(),
+                                        base_dir.clone(),
+                                    );
+                                }
+                            }
+                            Comparator::Lesser(x) => {
+                                if t1 < x {
+                                    interpret(
+                                        expr,
+                                        function_map,
+                                        session.clone(),
+                                        base_dir.clone(),
+                                    );
+                                }
+                            }
+                        },
+                        _ => {}
                     }
                 }
             }
