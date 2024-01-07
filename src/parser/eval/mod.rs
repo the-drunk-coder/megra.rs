@@ -1,5 +1,6 @@
 pub mod arithmetic;
 pub mod commands;
+pub mod comparison;
 pub mod compose;
 pub mod constructors;
 pub mod dynpar;

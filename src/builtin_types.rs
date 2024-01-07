@@ -19,7 +19,7 @@ pub enum ConfigParameter {
     Symbolic(String),
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, PartialOrd)]
 pub enum Comparable {
     Float(f32),
     Double(f64),

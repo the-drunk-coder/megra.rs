@@ -220,6 +220,11 @@ fn is_command(word: &str) -> bool {
             | "mtosym"
             | "veltodyn"
             | "load-file"
+            | "<="
+            | "<"
+            | "=="
+            | ">"
+            | ">="
     )
 }
 

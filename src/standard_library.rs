@@ -295,7 +295,6 @@ pub fn define_standard_library() -> FunctionMap {
 
     standard_library.std_lib.insert("random-sample".to_string(), eval::events::parameters::random_sample);
     standard_library.std_lib.insert("rands".to_string(), eval::events::parameters::random_sample);
-
         
     // some shorthands 
     standard_library.std_lib.insert("transpose".to_string(), eval::events::parameters::transpose);
@@ -354,6 +353,13 @@ pub fn define_standard_library() -> FunctionMap {
     standard_library.std_lib.insert("max".to_string(), eval::arithmetic::max);
     standard_library.std_lib.insert("min".to_string(), eval::arithmetic::min);
 
+    // comparison
+    standard_library.std_lib.insert(">=".to_string(), eval::comparison::greater_equal);
+    standard_library.std_lib.insert(">".to_string(), eval::comparison::greater);
+    standard_library.std_lib.insert("==".to_string(), eval::comparison::equal);
+    standard_library.std_lib.insert("<=".to_string(), eval::comparison::lesser_equal);
+    standard_library.std_lib.insert("<".to_string(), eval::comparison::lesser);
+    
     // midi helpers
     standard_library.std_lib.insert("mtof".to_string(), eval::midi_helpers::mtof);
     standard_library.std_lib.insert("mtosym".to_string(), eval::midi_helpers::mtosym);
