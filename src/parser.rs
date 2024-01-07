@@ -439,8 +439,16 @@ pub fn eval_expression(
                             } else {
                                 reduced_tail.push(e);
                             }
+                        } else if f == "match" {
+                            // stupid temporary hack to make the match statement work in cases
+                            // when an arm can't be evaluated, in which case it just evaluates to false.
+                            // I'm pretty sure there's a much better, less sloppy solution to this, but
+                            // I can't pinpoint it right now ...
+                            reduced_tail.push(EvaluatedExpr::Typed(TypedEntity::Comparable(
+                                Comparable::Boolean(false),
+                            )))
                         } else {
-                            // jump out if expression can't be evaluated
+                            // otherwise jump out if expression can't be evaluated
                             return None;
                         }
                     }

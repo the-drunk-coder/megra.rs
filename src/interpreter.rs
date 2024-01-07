@@ -328,57 +328,88 @@ pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
             }
         }
         EvaluatedExpr::Match(temp, exprs) => {
-            if let EvaluatedExpr::Typed(TypedEntity::Comparable(t1)) = *temp {
+            if let EvaluatedExpr::Typed(t1) = *temp {
                 for (comp, expr) in exprs {
                     match comp {
                         EvaluatedExpr::Typed(TypedEntity::Comparable(t2)) => {
-                            if t1 == t2 {
-                                interpret(expr, function_map, session.clone(), base_dir.clone());
+                            if let TypedEntity::Comparable(ref ct1) = t1 {
+                                if *ct1 == t2 {
+                                    interpret(
+                                        expr,
+                                        function_map,
+                                        session.clone(),
+                                        base_dir.clone(),
+                                    );
+                                }
                             }
                         }
                         EvaluatedExpr::Comparator(t2) => match t2 {
                             Comparator::GreaterEqual(x) => {
-                                if t1 >= x {
-                                    interpret(
-                                        expr,
-                                        function_map,
-                                        session.clone(),
-                                        base_dir.clone(),
-                                    );
+                                if let TypedEntity::Comparable(ref ct1) = t1 {
+                                    if *ct1 >= x {
+                                        interpret(
+                                            expr,
+                                            function_map,
+                                            session.clone(),
+                                            base_dir.clone(),
+                                        );
+                                    }
                                 }
                             }
                             Comparator::Greater(x) => {
-                                if t1 > x {
-                                    interpret(
-                                        expr,
-                                        function_map,
-                                        session.clone(),
-                                        base_dir.clone(),
-                                    );
+                                if let TypedEntity::Comparable(ref ct1) = t1 {
+                                    if *ct1 > x {
+                                        interpret(
+                                            expr,
+                                            function_map,
+                                            session.clone(),
+                                            base_dir.clone(),
+                                        );
+                                    }
                                 }
                             }
                             Comparator::Equal(x) => {
-                                if t1 == x {
-                                    interpret(
-                                        expr,
-                                        function_map,
-                                        session.clone(),
-                                        base_dir.clone(),
-                                    );
+                                if let TypedEntity::Comparable(ref ct1) = t1 {
+                                    if *ct1 == x {
+                                        interpret(
+                                            expr,
+                                            function_map,
+                                            session.clone(),
+                                            base_dir.clone(),
+                                        );
+                                    }
                                 }
                             }
                             Comparator::LesserEqual(x) => {
-                                if t1 <= x {
-                                    interpret(
-                                        expr,
-                                        function_map,
-                                        session.clone(),
-                                        base_dir.clone(),
-                                    );
+                                if let TypedEntity::Comparable(ref ct1) = t1 {
+                                    if *ct1 <= x {
+                                        interpret(
+                                            expr,
+                                            function_map,
+                                            session.clone(),
+                                            base_dir.clone(),
+                                        );
+                                    }
                                 }
                             }
                             Comparator::Lesser(x) => {
-                                if t1 < x {
+                                if let TypedEntity::Comparable(ref ct1) = t1 {
+                                    if *ct1 < x {
+                                        interpret(
+                                            expr,
+                                            function_map,
+                                            session.clone(),
+                                            base_dir.clone(),
+                                        );
+                                    }
+                                }
+                            }
+                            Comparator::IsNumerical => {
+                                if matches!(t1, TypedEntity::Comparable(Comparable::Double(_)))
+                                    || matches!(t1, TypedEntity::Comparable(Comparable::Float(_)))
+                                    || matches!(t1, TypedEntity::Comparable(Comparable::Int32(_)))
+                                    || matches!(t1, TypedEntity::Comparable(Comparable::Int64(_)))
+                                {
                                     interpret(
                                         expr,
                                         function_map,
@@ -387,7 +418,47 @@ pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
                                     );
                                 }
                             }
-                            _ => {}
+
+                            Comparator::IsString => {
+                                if matches!(t1, TypedEntity::Comparable(Comparable::String(_))) {
+                                    interpret(
+                                        expr,
+                                        function_map,
+                                        session.clone(),
+                                        base_dir.clone(),
+                                    );
+                                }
+                            }
+                            Comparator::IsSymbol => {
+                                if matches!(t1, TypedEntity::Comparable(Comparable::Symbol(_))) {
+                                    interpret(
+                                        expr,
+                                        function_map,
+                                        session.clone(),
+                                        base_dir.clone(),
+                                    );
+                                }
+                            }
+                            Comparator::IsMap => {
+                                if matches!(t1, TypedEntity::Map(_)) {
+                                    interpret(
+                                        expr,
+                                        function_map,
+                                        session.clone(),
+                                        base_dir.clone(),
+                                    );
+                                }
+                            }
+                            Comparator::IsVec => {
+                                if matches!(t1, TypedEntity::Vec(_)) {
+                                    interpret(
+                                        expr,
+                                        function_map,
+                                        session.clone(),
+                                        base_dir.clone(),
+                                    );
+                                }
+                            }
                         },
                         _ => {}
                     }
