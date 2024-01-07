@@ -359,11 +359,13 @@ pub fn define_standard_library() -> FunctionMap {
     standard_library.std_lib.insert("==".to_string(), eval::comparison::equal);
     standard_library.std_lib.insert("<=".to_string(), eval::comparison::lesser_equal);
     standard_library.std_lib.insert("<".to_string(), eval::comparison::lesser);
+    standard_library.std_lib.insert("istype".to_string(), eval::comparison::is_type);
     
     // midi helpers
     standard_library.std_lib.insert("mtof".to_string(), eval::midi_helpers::mtof);
     standard_library.std_lib.insert("mtosym".to_string(), eval::midi_helpers::mtosym);
     standard_library.std_lib.insert("veltodyn".to_string(), eval::midi_helpers::veltodyn);
+    standard_library.std_lib.insert("symtof".to_string(), eval::midi_helpers::symtofreq);
 
     // string helpers
     standard_library.std_lib.insert("concat".to_string(), eval::string_helpers::concat);

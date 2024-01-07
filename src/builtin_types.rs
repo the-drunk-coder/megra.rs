@@ -38,7 +38,11 @@ pub enum Comparator {
     Equal(Comparable),
     LesserEqual(Comparable),
     Lesser(Comparable),
-    //IsType(TypedEntity),
+    IsNumerical,
+    IsVec,
+    IsMap,
+    IsSymbol,
+    IsString,
 }
 
 #[derive(Clone, Debug)]

@@ -1,4 +1,5 @@
 use crate::builtin_types::{Comparable, TypedEntity};
+use crate::music_theory::{from_string, to_freq};
 use crate::parser::{EvaluatedExpr, FunctionMap};
 use crate::{GlobalVariables, OutputMode, SampleAndWavematrixSet};
 
@@ -101,6 +102,24 @@ pub fn veltodyn(
 
         Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
             Comparable::Symbol(dynsym.to_string()),
+        )))
+    } else {
+        None
+    }
+}
+
+pub fn symtofreq(
+    _: &FunctionMap,
+    tail: &mut Vec<EvaluatedExpr>,
+    _: &sync::Arc<GlobalVariables>,
+    _: SampleAndWavematrixSet,
+    _: OutputMode,
+) -> Option<EvaluatedExpr> {
+    let note_str = tail.drain(1..).next()?;
+    if let EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(s))) = note_str {
+        let note = from_string(&s)?;
+        Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+            Comparable::Float(to_freq(note, crate::music_theory::Tuning::EqualTemperament)),
         )))
     } else {
         None
