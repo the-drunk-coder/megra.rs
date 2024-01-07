@@ -164,6 +164,7 @@ fn parse_boolean(i: &str) -> IResult<&str, Atom, VerboseError<&str>> {
     alt((
         map(tag("#t"), |_| Atom::Boolean(true)),
         map(tag("#f"), |_| Atom::Boolean(false)),
+        map(tag("()"), |_| Atom::Boolean(false)),
     ))(i)
 }
 
