@@ -1,7 +1,7 @@
 use std::sync;
 
 use crate::{
-    builtin_types::{Comparable, GlobalVariables, TypedEntity},
+    builtin_types::{Comparable, Comparator, GlobalVariables, TypedEntity},
     parser::{EvaluatedExpr, FunctionMap},
     sample_set::SampleAndWavematrixSet,
     session::OutputMode,
@@ -20,19 +20,19 @@ pub fn greater_equal(
     let a = tail_drain.next();
     let b = tail_drain.next();
 
-    let result = if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(aa))) = a {
+    if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(aa))) = a {
         if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(bb))) = b {
-            aa >= bb
+            Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+                Comparable::Boolean(aa >= bb),
+            )))
         } else {
-            false
+            Some(EvaluatedExpr::Comparator(Comparator::GreaterEqual(aa)))
         }
     } else {
-        false
-    };
-
-    Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
-        Comparable::Boolean(result),
-    )))
+        Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+            Comparable::Boolean(false),
+        )))
+    }
 }
 
 pub fn greater(
@@ -48,19 +48,19 @@ pub fn greater(
     let a = tail_drain.next();
     let b = tail_drain.next();
 
-    let result = if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(aa))) = a {
+    if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(aa))) = a {
         if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(bb))) = b {
-            aa > bb
+            Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+                Comparable::Boolean(aa > bb),
+            )))
         } else {
-            false
+            Some(EvaluatedExpr::Comparator(Comparator::Greater(aa)))
         }
     } else {
-        false
-    };
-
-    Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
-        Comparable::Boolean(result),
-    )))
+        Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+            Comparable::Boolean(false),
+        )))
+    }
 }
 
 pub fn equal(
@@ -76,19 +76,19 @@ pub fn equal(
     let a = tail_drain.next();
     let b = tail_drain.next();
 
-    let result = if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(aa))) = a {
+    if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(aa))) = a {
         if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(bb))) = b {
-            aa == bb
+            Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+                Comparable::Boolean(aa == bb),
+            )))
         } else {
-            false
+            Some(EvaluatedExpr::Comparator(Comparator::Equal(aa)))
         }
     } else {
-        false
-    };
-
-    Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
-        Comparable::Boolean(result),
-    )))
+        Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+            Comparable::Boolean(false),
+        )))
+    }
 }
 
 pub fn lesser_equal(
@@ -104,19 +104,19 @@ pub fn lesser_equal(
     let a = tail_drain.next();
     let b = tail_drain.next();
 
-    let result = if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(aa))) = a {
+    if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(aa))) = a {
         if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(bb))) = b {
-            aa <= bb
+            Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+                Comparable::Boolean(aa <= bb),
+            )))
         } else {
-            false
+            Some(EvaluatedExpr::Comparator(Comparator::LesserEqual(aa)))
         }
     } else {
-        false
-    };
-
-    Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
-        Comparable::Boolean(result),
-    )))
+        Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+            Comparable::Boolean(false),
+        )))
+    }
 }
 
 pub fn lesser(
@@ -132,17 +132,17 @@ pub fn lesser(
     let a = tail_drain.next();
     let b = tail_drain.next();
 
-    let result = if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(aa))) = a {
+    if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(aa))) = a {
         if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(bb))) = b {
-            aa < bb
+            Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+                Comparable::Boolean(aa < bb),
+            )))
         } else {
-            false
+            Some(EvaluatedExpr::Comparator(Comparator::Lesser(aa)))
         }
     } else {
-        false
-    };
-
-    Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
-        Comparable::Boolean(result),
-    )))
+        Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+            Comparable::Boolean(false),
+        )))
+    }
 }

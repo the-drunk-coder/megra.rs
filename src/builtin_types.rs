@@ -32,6 +32,16 @@ pub enum Comparable {
 }
 
 #[derive(Clone, Debug)]
+pub enum Comparator {
+    GreaterEqual(Comparable),
+    Greater(Comparable),
+    Equal(Comparable),
+    LesserEqual(Comparable),
+    Lesser(Comparable),
+    //IsType(TypedEntity),
+}
+
+#[derive(Clone, Debug)]
 pub enum TypedEntity {
     Comparable(Comparable),
     ConfigParameter(ConfigParameter),

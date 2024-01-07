@@ -338,6 +338,9 @@ pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
                 }
             }
         }
+        EvaluatedExpr::Comparator(c) => {
+            println!("a comparator {c:?}");
+        }
         _ => println!("unknown"),
     }
 }

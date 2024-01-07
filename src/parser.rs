@@ -16,7 +16,7 @@ use std::collections::HashMap;
 use std::{fmt, sync};
 
 use crate::{
-    builtin_types::{Comparable, VariableId},
+    builtin_types::{Comparable, Comparator, VariableId},
     session::SyncContext,
 };
 use crate::{Command, GlobalVariables, OutputMode, SampleAndWavematrixSet, TypedEntity};
@@ -79,6 +79,7 @@ pub enum EvaluatedExpr {
     // only for collecting arguments
     // the list field exists only to be flattened
     EvaluatedExprList(Vec<EvaluatedExpr>),
+    Comparator(Comparator),
 }
 
 impl fmt::Debug for EvaluatedExpr {
@@ -99,6 +100,9 @@ impl fmt::Debug for EvaluatedExpr {
             }
             EvaluatedExpr::EvaluatedExprList(_) => {
                 write!(f, "EvaluatedExpr::EvaluatedExprList")
+            }
+            EvaluatedExpr::Comparator(_) => {
+                write!(f, "EvaluatedExpr::Comparator")
             }
         }
     }
