@@ -387,6 +387,7 @@ pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
                                     );
                                 }
                             }
+                            _ => {}
                         },
                         _ => {}
                     }
