@@ -322,14 +322,18 @@ pub fn learn(
                 char_event_mapping.insert(c, v);
             }
         }
+
         // single-char mapping
         for c in sample[0].chars() {
-            s_v.push(c);
+            // filter out whitespace
+            if !(c.is_whitespace() || c.is_ascii_whitespace()) {
+                s_v.push(c);
+            }
         }
         None
     };
 
-    // println!("baked sample {s_v:?}");
+    //println!("baked sample {s_v:?}");
 
     let mut pfa = if !keep_root && !s_v.is_empty() && !char_event_mapping.is_empty() {
         // only regenerate if necessary
