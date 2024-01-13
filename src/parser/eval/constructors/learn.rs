@@ -68,7 +68,11 @@ pub fn learn(
             match c {
                 EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(ref s))) => {
                     if !cur_key.is_empty() && !ev_vec.is_empty() {
-                        //println!("found event {}", cur_key);
+                        // switch to long-name mode if a long name has been found ...
+                        if s.len() > 1 {
+                            longnames = true;
+                        }
+
                         event_mapping.insert(cur_key, ev_vec.clone());
                         ev_vec.clear();
                     }
@@ -167,14 +171,6 @@ pub fn learn(
 
         match c {
             EvaluatedExpr::Keyword(k) => match k.as_str() {
-                "longid" => {
-                    if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
-                        Comparable::Boolean(b),
-                    ))) = tail_drain.next()
-                    {
-                        longnames = b
-                    }
-                }
                 "sample" => match tail_drain.next() {
                     Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::String(
                         desc,
@@ -199,9 +195,18 @@ pub fn learn(
                         for arg in args {
                             match *arg {
                                 TypedEntity::Comparable(Comparable::String(s)) => {
+                                    println!("found string {s:?}");
+                                    if s.len() > 1 {
+                                        // switch longnames mode on of a long string has been found
+                                        longnames = true;
+                                    }
                                     sample.push(s);
                                 }
                                 TypedEntity::Comparable(Comparable::Symbol(s)) => {
+                                    if s.len() > 1 {
+                                        // switch longnames mode on of a long string has been found
+                                        longnames = true;
+                                    }
                                     sample.push(s);
                                 }
                                 TypedEntity::Comparable(Comparable::Character(s)) => {
@@ -291,6 +296,8 @@ pub fn learn(
         );
     }
 
+    //println!("raw sample {sample:?}");
+    //println!("longnames? {longnames}");
     // create internal mapping from
     // string labels ...
     let mut char_event_mapping = BTreeMap::new();
@@ -324,10 +331,12 @@ pub fn learn(
         }
 
         // single-char mapping
-        for c in sample[0].chars() {
-            // filter out whitespace
-            if !(c.is_whitespace() || c.is_ascii_whitespace()) {
-                s_v.push(c);
+        for token in sample {
+            for c in token.chars() {
+                // filter out whitespace
+                if !(c.is_whitespace() || c.is_ascii_whitespace()) {
+                    s_v.push(c);
+                }
             }
         }
         None
