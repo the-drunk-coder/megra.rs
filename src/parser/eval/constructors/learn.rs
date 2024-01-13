@@ -42,6 +42,10 @@ pub fn learn(
     let mut tie = true;
     let mut epsilon = 0.01;
     let mut pfa_size = 30;
+
+    // flag to see whether we allow long names in sample
+    let mut longnames = false;
+
     let mut dur: DynVal = if let TypedEntity::ConfigParameter(ConfigParameter::Numeric(d)) = globals
         .entry(VariableId::DefaultDuration)
         .or_insert(TypedEntity::ConfigParameter(ConfigParameter::Numeric(
@@ -163,13 +167,20 @@ pub fn learn(
 
         match c {
             EvaluatedExpr::Keyword(k) => match k.as_str() {
+                "longid" => {
+                    if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+                        Comparable::Boolean(b),
+                    ))) = tail_drain.next()
+                    {
+                        longnames = b
+                    }
+                }
                 "sample" => match tail_drain.next() {
                     Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::String(
                         desc,
                     )))) => {
-                        // if the string contains whitespace, assume it's the "new" behavior,
-                        // where longer strings are allowed ...
-                        if desc.contains(' ') {
+                        // long id behaviour now has to be explicilty specified
+                        if longnames {
                             // remove symbol markers ...
                             for token in desc.split_whitespace() {
                                 if let Some(stripped) = token.strip_prefix('\'') {
@@ -283,43 +294,42 @@ pub fn learn(
     // create internal mapping from
     // string labels ...
     let mut char_event_mapping = BTreeMap::new();
-    let mut label_mapping = BTreeMap::new();
-    let mut reverse_label_mapping = BTreeMap::new();
-    let mut next_char: char = '1';
-
-    for (k, v) in event_mapping.into_iter() {
-        char_event_mapping.insert(next_char, v);
-        label_mapping.insert(next_char, k.clone());
-        reverse_label_mapping.insert(k, next_char);
-        next_char = std::char::from_u32(next_char as u32 + 1).unwrap();
-    }
 
     // assemble the sample ...
     let mut s_v: std::vec::Vec<char> = Vec::new();
 
-    //println!("raw sample {sample:?}");
-
-    // if the sample has no whitespace, replicate
-    // the previous behaviour ...
-    if sample.len() == 1 && !sample[0].contains(' ') {
-        for c in sample[0].chars() {
-            let key = format!("{c}");
-            if reverse_label_mapping.contains_key(&key) {
-                s_v.push(*reverse_label_mapping.get(&key).unwrap());
-            }
+    let label_mapping = if longnames {
+        let mut label_mapping = BTreeMap::new();
+        let mut reverse_label_mapping = BTreeMap::new();
+        let mut next_char: char = '1';
+        for (k, v) in event_mapping.into_iter() {
+            char_event_mapping.insert(next_char, v);
+            label_mapping.insert(next_char, k.clone());
+            reverse_label_mapping.insert(k, next_char);
+            next_char = std::char::from_u32(next_char as u32 + 1).unwrap();
         }
-    } else {
         // otherwise, tokenize by whitespace
         for token in sample {
             if reverse_label_mapping.contains_key(&token) {
                 s_v.push(*reverse_label_mapping.get(&token).unwrap());
             }
         }
-    }
+        Some(label_mapping)
+    } else {
+        for (k, v) in event_mapping.into_iter() {
+            // assume the label is not empty ...
+            if let Some(c) = k.chars().next() {
+                char_event_mapping.insert(c, v);
+            }
+        }
+        // single-char mapping
+        for c in sample[0].chars() {
+            s_v.push(c);
+        }
+        None
+    };
 
-    //println!("cooked sample {s_v:?}");
-    //println!("map {label_mapping:#?}");
-    //println!("rev map {reverse_label_mapping:#?}");
+    // println!("baked sample {s_v:?}");
 
     let mut pfa = if !keep_root && !s_v.is_empty() && !char_event_mapping.is_empty() {
         // only regenerate if necessary
@@ -339,7 +349,7 @@ pub fn learn(
             name,
             generator: pfa,
             event_mapping: char_event_mapping,
-            label_mapping: Some(label_mapping),
+            label_mapping,
             duration_mapping: HashMap::new(), // unsolved ...
             modified: true,
             symbol_ages: HashMap::new(),
