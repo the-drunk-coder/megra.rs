@@ -4,7 +4,7 @@ use epaint::text::{cursor::*, Galley, LayoutJob};
 
 use egui::{output::OutputEvent, *};
 
-use egui::widgets::text_edit::{CCursorRange, CursorRange};
+use egui::text::{CCursorRange, CursorRange};
 
 use parking_lot::Mutex;
 
@@ -65,7 +65,7 @@ pub struct LivecodeTextEditOutput {
     pub state: LivecodeTextEditState,
 
     /// Where the text cursor is.
-    pub cursor_range: Option<egui::widgets::text_edit::CursorRange>,
+    pub cursor_range: Option<CursorRange>,
 }
 
 type Undoer = egui::util::undoer::Undoer<(CCursorRange, String)>;
@@ -396,7 +396,8 @@ impl<'t> LivecodeTextEdit<'t> {
                     id,
                     EventFilter {
                         tab: true,
-                        arrows: true,
+                        horizontal_arrows: true,
+                        vertical_arrows: true,
                         escape: true,
                     },
                 )
@@ -437,7 +438,7 @@ impl<'t> LivecodeTextEdit<'t> {
         };
 
         if ui.is_rect_visible(rect) {
-            painter.galley(text_draw_pos, galley.clone());
+            painter.galley(text_draw_pos, galley.clone(), Color32::from_rgb(0, 0, 0));
 
             if ui.memory(|mem| mem.has_focus(id)) {
                 if let Some(cursor_range) = state.cursor_range(&galley) {
@@ -503,14 +504,6 @@ impl<'t> LivecodeTextEdit<'t> {
 
                     if response.changed() || selection_changed {
                         ui.scroll_to_rect(cursor_pos, None); // keep cursor in view
-                    }
-
-                    if text.is_mutable() {
-                        // egui_web uses `text_cursor_pos` when showing IME,
-                        // so only set it when text is editable and visible!
-                        ui.ctx().output_mut(|o| {
-                            o.text_cursor_pos = Some(cursor_pos.left_top());
-                        });
                     }
                 }
             }
@@ -825,7 +818,7 @@ fn livecode_events(
                     .lock()
                     .undo(&(cursor_range.as_ccursor_range(), text.as_str().to_owned()))
                 {
-                    text.replace(undo_txt);
+                    text.replace_with(undo_txt);
                     Some(*undo_ccursor_range)
                 } else {
                     None
