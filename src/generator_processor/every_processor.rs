@@ -52,7 +52,7 @@ impl GeneratorProcessor for EveryProcessor {
         self.last_static.clear();
         for (step, filtered_events, _) in self.things_to_be_applied.iter_mut() {
             // genmodfuns not needed here ...
-            let cur_step: usize = (step.evaluate_numerical() as usize) % 101; // make sure prob is always between 0 and 100
+            let cur_step: usize = step.evaluate_numerical() as usize;
             if self.step_count % cur_step == 0 {
                 let mut stat_evs = HashMap::new();
                 for (filter, (mode, evs)) in filtered_events.iter_mut() {
@@ -81,7 +81,7 @@ impl GeneratorProcessor for EveryProcessor {
     fn process_generator(&mut self, gen: &mut Generator, globals: &Arc<GlobalVariables>) {
         for (step, _, gen_mods) in self.things_to_be_applied.iter_mut() {
             // genmodfuns not needed here ...
-            let cur_step: usize = (step.static_val as usize) % 101;
+            let cur_step: usize = step.static_val as usize;
             if self.step_count % cur_step == 0 {
                 for (gen_mod_fun, pos_args, named_args) in gen_mods.iter() {
                     gen_mod_fun(gen, pos_args, named_args, globals)
