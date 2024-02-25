@@ -28,15 +28,33 @@ impl PearProcessor {
 // zip mode etc seem to be outdated ... going for any mode for now
 impl GeneratorProcessor for PearProcessor {
     // this one only processes the event stream ...
-    fn process_events(
-        &mut self,
-        events: &mut Vec<InterpretableEvent>,
-        globals: &Arc<GlobalVariables>,
-    ) {
-        self.last_static.clear();
+    fn process_events(&mut self, events: &mut Vec<InterpretableEvent>, _: &Arc<GlobalVariables>) {
         let mut rng = rand::thread_rng();
-        // the four nested loops are intimidating but keep in mind that the
-        // event count is usually very small ...
+
+        for (cur_prob, static_events) in self.last_static.iter() {
+            for (filter, inner_static) in static_events.iter() {
+                for (static_event, mode) in inner_static.iter() {
+                    for in_ev in events.iter_mut() {
+                        match in_ev {
+                            InterpretableEvent::Sound(s) => {
+                                if rng.gen_range(0..100) < *cur_prob {
+                                    s.apply(&static_event, filter, *mode);
+                                }
+                            }
+                            InterpretableEvent::Control(_) => {
+                                // ??
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    // .. including transition events
+    fn process_transition(&mut self, trans: &mut StaticEvent, globals: &Arc<GlobalVariables>) {
+        // generate static events, as this is always called first ...
+        self.last_static.clear();
+
         for (prob, filtered_events) in self.events_to_be_applied.iter_mut() {
             let mut stat_evs = HashMap::new();
             let cur_prob: usize = (prob.evaluate_numerical() as usize) % 101; // make sure prob is always between 0 and 100
@@ -45,38 +63,20 @@ impl GeneratorProcessor for PearProcessor {
                 let mut evs_static = Vec::new();
                 for ev in evs.iter_mut() {
                     let ev_static = ev.get_static(globals);
-                    for in_ev in events.iter_mut() {
-                        match in_ev {
-                            InterpretableEvent::Sound(s) => {
-                                if rng.gen_range(0..100) < cur_prob {
-                                    s.apply(&ev_static, filter, *mode);
-                                }
-                            }
-                            InterpretableEvent::Control(_) => {
-                                // ??
-                            }
-                        }
-                    }
-                    evs_static.push(ev_static);
+
+                    evs_static.push((ev_static, *mode));
                 }
                 stat_evs.insert(filter.to_vec(), evs_static);
             }
             self.last_static.push((cur_prob, stat_evs));
         }
-    }
-    // .. including transition events
-    fn process_transition(&mut self, trans: &mut StaticEvent, g: &Arc<GlobalVariables>) {
-        // init last_static so it can be applied to the first transition,
-        // giving more predictable behaviour ...
-        if self.last_static.is_empty() {
-            self.process_events(&mut vec![], g);
-        }
+
         let mut rng = rand::thread_rng();
         for (prob, filtered_events) in self.last_static.iter_mut() {
             for (filter, evs) in filtered_events.iter_mut() {
-                for ev in evs.iter() {
+                for (ev, mode) in evs.iter() {
                     if (rng.gen_range(0..100) as usize) < *prob {
-                        trans.apply(ev, filter, true); // not sure
+                        trans.apply(ev, &filter, *mode); // not sure
                     }
                 }
             }
