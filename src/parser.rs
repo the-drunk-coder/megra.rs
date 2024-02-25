@@ -396,7 +396,6 @@ pub fn eval_expression(
                             }
                         }
                         ArgumentCollector::All => {
-                            let mut coll = Vec::new();
                             if let Some(pos_args) = &loc.pos_args {
                                 for arg in pos_args.values() {
                                     coll.push(arg.clone())

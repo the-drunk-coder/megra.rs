@@ -6,3 +6,4 @@
 * Language: `()` (empty parenthesis) now evaluate to `false`
 * Language: comparisons, comparators and a more powerful `match` statement
 * Language: better naming behaviour for `learn`, handling sample strings with line breaks correctly
+* Language: corrected behaviour of `every`, which had an incorrect modulo operation
