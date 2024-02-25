@@ -14,7 +14,7 @@ pub struct EveryProcessor {
     pub id: Option<String>,
     pub step_count: usize,
     pub things_to_be_applied: Vec<(DynVal, EventsAndFilters, GenModFunsAndArgs)>,
-    pub last_static: Vec<(usize, StaticEventsAndFilters)>, // only needed for events, not filters
+    pub last_static: Vec<StaticEventsAndFilters>, // only needed for events, not filters
 }
 
 impl EveryProcessor {
@@ -44,36 +44,22 @@ impl GeneratorProcessor for EveryProcessor {
     }
 
     // this one
-    fn process_events(
-        &mut self,
-        events: &mut Vec<InterpretableEvent>,
-        globals: &Arc<GlobalVariables>,
-    ) {
-        self.last_static.clear();
-        for (step, filtered_events, _) in self.things_to_be_applied.iter_mut() {
-            // genmodfuns not needed here ...
-            let cur_step: usize = step.evaluate_numerical() as usize;
-            if self.step_count % cur_step == 0 {
-                let mut stat_evs = HashMap::new();
-                for (filter, (mode, evs)) in filtered_events.iter_mut() {
-                    let mut evs_static = Vec::new();
-                    for ev in evs.iter_mut() {
-                        let ev_static = ev.get_static(globals);
-                        for in_ev in events.iter_mut() {
-                            match in_ev {
-                                InterpretableEvent::Sound(s) => {
-                                    s.apply(&ev_static, filter, *mode);
-                                }
-                                InterpretableEvent::Control(_) => {
-                                    // ??
-                                }
+    fn process_events(&mut self, events: &mut Vec<InterpretableEvent>, _: &Arc<GlobalVariables>) {
+        // last_static compiled in `process_transitions`, which is always called first ...
+        for static_events in self.last_static.iter() {
+            for (filter, inner_static) in static_events.iter() {
+                for (static_event, mode) in inner_static.iter() {
+                    for in_ev in events.iter_mut() {
+                        match in_ev {
+                            InterpretableEvent::Sound(s) => {
+                                s.apply(&static_event, &filter, *mode);
+                            }
+                            InterpretableEvent::Control(_) => {
+                                // ??
                             }
                         }
-                        evs_static.push(ev_static);
                     }
-                    stat_evs.insert(filter.to_vec(), evs_static);
                 }
-                self.last_static.push((cur_step, stat_evs));
             }
         }
     }
@@ -92,13 +78,32 @@ impl GeneratorProcessor for EveryProcessor {
         self.step_count += 1;
     }
 
-    fn process_transition(&mut self, trans: &mut StaticEvent, _: &Arc<GlobalVariables>) {
-        for (cur_step, filtered_events) in self.last_static.iter() {
+    fn process_transition(&mut self, trans: &mut StaticEvent, globals: &Arc<GlobalVariables>) {
+        // process_transition is always compiled first, so here we compile the static events ...
+        self.last_static.clear();
+
+        for (step, filtered_events, _) in self.things_to_be_applied.iter_mut() {
+            // genmodfuns not needed here ...
+            let cur_step: usize = step.evaluate_numerical() as usize;
             if self.step_count % cur_step == 0 {
-                for (filter, evs) in filtered_events.iter() {
-                    for ev in evs.iter() {
-                        trans.apply(ev, filter, true); // not sure
+                let mut stat_evs = HashMap::new();
+                for (filter, (mode, evs)) in filtered_events.iter_mut() {
+                    let mut evs_static = Vec::new();
+                    for ev in evs.iter_mut() {
+                        let ev_static = ev.get_static(globals);
+
+                        evs_static.push((ev_static, *mode));
                     }
+                    stat_evs.insert(filter.to_vec(), evs_static);
+                }
+                self.last_static.push(stat_evs);
+            }
+        }
+
+        for static_events in self.last_static.iter() {
+            for (filter, inner_static) in static_events.iter() {
+                for (static_event, mode) in inner_static.iter() {
+                    trans.apply(static_event, filter, *mode);
                 }
             }
         }
