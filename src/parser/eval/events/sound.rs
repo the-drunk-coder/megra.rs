@@ -475,6 +475,12 @@ pub fn sound(
             synth_defaults(&mut ev);
             ev
         }
+        "kpp" => {
+            let mut ev = Event::with_name_and_operation("kpp".to_string(), EventOperation::Replace);
+            get_pitch_param(&mut ev, &mut tail_drain);
+            synth_defaults(&mut ev);
+            ev
+        }
         "brown" => {
             let mut ev =
                 Event::with_name_and_operation("brown".to_string(), EventOperation::Replace);

@@ -78,6 +78,7 @@ pub fn define_standard_library() -> FunctionMap {
     standard_library.std_lib.insert("cub".to_string(), eval::events::sound::sound);
     standard_library.std_lib.insert("tri".to_string(), eval::events::sound::sound);
     standard_library.std_lib.insert("sine".to_string(), eval::events::sound::sound);
+    standard_library.std_lib.insert("kpp".to_string(), eval::events::sound::sound);
     standard_library.std_lib.insert("~".to_string(), eval::events::sound::sound);
     standard_library.std_lib.insert("silence".to_string(), eval::events::sound::sound);
     standard_library.std_lib.insert("feedr".to_string(), eval::events::sound::sound);

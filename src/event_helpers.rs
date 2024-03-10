@@ -42,6 +42,29 @@ pub fn map_synth_type(
                 FilterType::Dummy
             },
         ),
+        "kpp" => SynthType::KarPlusPlus(
+            if let Some(SynthParameterValue::OscillatorType(t)) =
+                params.get(&SynthParameterLabel::OscillatorType.into())
+            {
+                *t
+            } else {
+                OscillatorType::WhiteNoise
+            },
+            if let Some(SynthParameterValue::FilterType(t)) =
+                params.get(&SynthParameterLabel::DelayDampeningFilterType.into())
+            {
+                *t
+            } else {
+                FilterType::Dummy
+            },
+            if let Some(SynthParameterValue::FilterType(t)) =
+                params.get(&SynthParameterLabel::FilterType.into())
+            {
+                *t
+            } else {
+                FilterType::Dummy
+            },
+        ),
         "risset" => SynthType::RissetBell,
         "sampler" => {
             if params.contains_key(&SynthParameterLabel::AmbisonicAzimuth.into())
@@ -353,6 +376,11 @@ pub fn map_parameter(name: &str) -> SynthParameterAddress {
         "wm" | "wavematrix" => SynthParameterLabel::Wavematrix,
         "ti" | "tableindex" => SynthParameterLabel::WavematrixTableIndex,
         "dist" => SynthParameterLabel::WaveshaperMix,
+        "del-fb" => SynthParameterLabel::DelayFeedback,
+        "del-df" => SynthParameterLabel::DelayDampeningFrequency,
+        "del-ft" => SynthParameterLabel::DelayDampeningFilterType,
+        "ft" => SynthParameterLabel::FilterType,
+        "osct" => SynthParameterLabel::OscillatorType,
         _ => SynthParameterLabel::PitchFrequency,
     };
 
