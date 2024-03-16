@@ -8,3 +8,4 @@
 * Language: better naming behaviour for `learn`, handling sample strings with line breaks correctly
 * Language: corrected behaviour of `every`, which had an incorrect modulo operation
 * Language: `every` now also works correctly on transitions with `dur` events
+* Synth: `kpp` - KarPlusPlus, a Karplus-Strong approximation.
