@@ -52,7 +52,7 @@ impl GeneratorProcessor for EveryProcessor {
                     for in_ev in events.iter_mut() {
                         match in_ev {
                             InterpretableEvent::Sound(s) => {
-                                s.apply(&static_event, &filter, *mode);
+                                s.apply(static_event, filter, *mode);
                             }
                             InterpretableEvent::Control(_) => {
                                 // ??
