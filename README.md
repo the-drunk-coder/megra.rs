@@ -58,8 +58,10 @@ main repository:
 
 Don't hesitate to ask any question or post any comment, there's no threshold! 
 
-**If you made a track with Mégra**, you can also post it there and I'll collect them 
-in a meta-ticket :).
+You can also ping me on Mastodon: https://social.toplap.org/@megra
+
+**If you made a track with Mégra**, you can also post it in a ticket on Github, and I'll collect them 
+in a meta-ticket :). Or you can mention/tag Mégra on Mastodon (see above).
 
 If you want to ask something non-publicly, write me an email! You can find the address in
 the `Cargo.toml` file!
