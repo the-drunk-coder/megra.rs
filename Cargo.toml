@@ -51,3 +51,6 @@ assert_approx_eq = "1.1.0"
 default = ["serde"] # enable ringbuffer for WASAPI !
 ringbuffer = []
 low_latency = [] # blocksize 128 instead of 512
+
+[package.metadata.appimage]
+auto_link = true
