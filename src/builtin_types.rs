@@ -126,7 +126,7 @@ pub enum Command {
     ExportDotStatic(String, Generator),            // filename, generator
     ExportDotRunning((String, BTreeSet<String>)),  // filename, generator id
     Once(Vec<StaticEvent>, Vec<ControlEvent>),     // execute event(s) once
-    ConnectVisualizer,                             // connect visualizer
+    ConnectVisualizer(BTreeSet<String>),           // connect visualizer
     StartRecording(Option<String>, bool),          // start recording, prefix, input
     StopRecording,                                 // stop recording ...
     OscDefineClient(String, String),

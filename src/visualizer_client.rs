@@ -12,6 +12,7 @@ pub struct VisualizerClient {
     pub host_addr: net::SocketAddrV4,
     pub to_addr: net::SocketAddrV4,
     pub socket: net::UdpSocket,
+    pub exclusion_list: BTreeSet<String>,
 }
 
 fn tags_to_string(tags: &BTreeSet<String>) -> String {
@@ -23,17 +24,22 @@ fn tags_to_string(tags: &BTreeSet<String>) -> String {
 }
 
 impl VisualizerClient {
-    pub fn start() -> Self {
+    pub fn start(exclusion_list: BTreeSet<String>) -> Self {
         let to_addr = net::SocketAddrV4::from_str("127.0.0.1:57121").unwrap();
         let host_addr = net::SocketAddrV4::from_str("127.0.0.1:57122").unwrap();
         VisualizerClient {
             host_addr,
             to_addr,
             socket: net::UdpSocket::bind(host_addr).unwrap(),
+            exclusion_list,
         }
     }
 
     pub fn create_or_update(&self, g: &Generator) {
+        if !g.id_tags.is_disjoint(&self.exclusion_list) {
+            return;
+        };
+
         let gen_name = tags_to_string(&g.id_tags);
         // switch view
         let mut all_msgs: Vec<OscPacket> = Vec::new();
@@ -91,6 +97,10 @@ impl VisualizerClient {
     }
 
     pub fn update_active_node(&self, g: &Generator) {
+        if !g.id_tags.is_disjoint(&self.exclusion_list) {
+            return;
+        };
+
         let gen_name = tags_to_string(&g.id_tags);
         if let Some(h) = g.root_generator.generator.current_state {
             let msg_buf_active_node = encoder::encode(&OscPacket::Message(OscMessage {
@@ -105,6 +115,10 @@ impl VisualizerClient {
     }
 
     pub fn clear(&self, id_tags: &BTreeSet<String>) {
+        if !id_tags.is_disjoint(&self.exclusion_list) {
+            return;
+        };
+
         let gen_name = tags_to_string(id_tags);
         let msg_buf_clear = encoder::encode(&OscPacket::Message(OscMessage {
             addr: "/clear".to_string(),

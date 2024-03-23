@@ -692,12 +692,33 @@ pub fn clear(
 
 pub fn connect_visualizer(
     _: &FunctionMap,
-    _: &mut Vec<EvaluatedExpr>,
+    tail: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
-    Some(EvaluatedExpr::Command(Command::ConnectVisualizer))
+    let mut tail_drain = tail.drain(..).skip(1);
+
+    let mut exclusion_list: BTreeSet<String> = BTreeSet::new();
+
+    let mut collect_excludes = false;
+    while let Some(c) = tail_drain.next() {
+        if let EvaluatedExpr::Keyword(ref k) = c {
+            if k.as_str() == "exclude" {
+                collect_excludes = true;
+                continue;
+            }
+        }
+        if collect_excludes {
+            if let EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(s))) = c {
+                exclusion_list.insert(s);
+            }
+        }
+    }
+
+    Some(EvaluatedExpr::Command(Command::ConnectVisualizer(
+        exclusion_list,
+    )))
 }
 
 pub fn start_recording(

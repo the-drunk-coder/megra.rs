@@ -41,7 +41,7 @@ pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
                 println!("a command (stop session)");
             });
         }
-        Command::ConnectVisualizer => {
+        Command::ConnectVisualizer(excludes) => {
             if !session
                 .osc_client
                 .vis_connected
@@ -49,7 +49,7 @@ pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
             {
                 let mut wr = session.osc_client.vis.write();
                 if wr.is_none() {
-                    wr.replace(VisualizerClient::start());
+                    wr.replace(VisualizerClient::start(excludes));
                 }
                 session
                     .osc_client
