@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{BTreeSet, HashMap};
 use std::sync::*;
 
 use crate::visualizer_client::VisualizerClient;
@@ -22,9 +22,15 @@ pub enum GeneratorProcessorState {
 pub trait GeneratorProcessor: GeneratorProcessorClone {
     /// some generator processors have a state flag,
     /// others are stateless ...
+    /// the ones that have a state need an ID
     fn get_id(&self) -> Option<String> {
         None
     }
+
+    /// some processors need some internal IDs to be updated
+    /// (mostly for visualization)
+    /// (so far only the GeneratorWrapperProcessor)
+    fn inherit_id(&mut self, _: &BTreeSet<String>) {}
 
     /// implement this if you want to modify the previous
     /// processor's event stream

@@ -328,7 +328,9 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
             let mut new_gens = BTreeSet::new();
             let mut gen_map: HashMap<BTreeSet<String>, Generator> = HashMap::new();
             // collect id_tags and organize in map
-            for g in ctx.generators.drain(..) {
+            for mut g in ctx.generators.drain(..) {
+                // we might need to fix some IDs internally for visualization
+                g.update_internal_ids();
                 new_gens.insert(g.id_tags.clone());
                 gen_map.insert(g.id_tags.clone(), g);
             }

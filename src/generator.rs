@@ -60,6 +60,12 @@ impl fmt::Debug for Generator {
 }
 
 impl Generator {
+    pub fn update_internal_ids(&mut self) {
+        for (_, p) in self.processors.iter_mut() {
+            p.inherit_id(&self.id_tags);
+        }
+    }
+
     pub fn transfer_state(&mut self, other: &Generator) {
         self.root_generator.transfer_state(&other.root_generator);
         // this will only work if the generators remain in the same order,

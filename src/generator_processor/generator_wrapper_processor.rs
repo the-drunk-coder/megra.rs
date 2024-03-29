@@ -27,6 +27,10 @@ impl GeneratorWrapperProcessor {
 
 // zip mode etc seem to be outdated ... going for any mode for now
 impl GeneratorProcessor for GeneratorWrapperProcessor {
+    fn inherit_id(&mut self, ids: &BTreeSet<String>) {
+        self.wrapped_generator.id_tags.append(&mut ids.clone());
+    }
+
     /// id helps us to preserve state ...
     fn get_id(&self) -> Option<String> {
         let mut id = "".to_string();
