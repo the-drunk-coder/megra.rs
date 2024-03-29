@@ -29,6 +29,9 @@ impl GeneratorWrapperProcessor {
 impl GeneratorProcessor for GeneratorWrapperProcessor {
     fn inherit_id(&mut self, ids: &BTreeSet<String>) {
         self.wrapped_generator.id_tags.append(&mut ids.clone());
+        for g in self.wrapped_generator.processors.iter_mut() {
+            g.inherit_id(&self.wrapped_generator.id_tags)
+        }
     }
 
     /// id helps us to preserve state ...
