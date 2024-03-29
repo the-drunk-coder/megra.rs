@@ -91,13 +91,13 @@ fn eval_generator_processor(
     Some(match last {
         Some(EvaluatedExpr::Typed(TypedEntity::Generator(mut g))) => {
             let gp = collector(tail);
-            g.processors.push((gp.get_id(), gp));
+            g.processors.push(gp);
             EvaluatedExpr::Typed(TypedEntity::Generator(g))
         }
         Some(EvaluatedExpr::Typed(TypedEntity::GeneratorList(mut gl))) => {
             let gp = collector(tail);
             for gen in gl.iter_mut() {
-                gen.processors.push((gp.get_id(), gp.clone()));
+                gen.processors.push(gp.clone());
             }
             EvaluatedExpr::Typed(TypedEntity::GeneratorList(gl))
         }

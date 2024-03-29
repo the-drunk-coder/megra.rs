@@ -94,14 +94,14 @@ impl GeneratorProcessor for GeneratorWrapperProcessor {
             self.wrapped_generator.root_generator.clear_modified();
         }
         vis_client.update_active_node(&self.wrapped_generator);
-        for (_, proc) in self.wrapped_generator.processors.iter_mut() {
+        for proc in self.wrapped_generator.processors.iter_mut() {
             proc.visualize_if_possible(vis_client);
         }
     }
 
     fn clear_visualization(&self, vc: &VisualizerClient) {
         vc.clear(&self.wrapped_generator.id_tags);
-        for (_, proc) in self.wrapped_generator.processors.iter() {
+        for proc in self.wrapped_generator.processors.iter() {
             proc.clear_visualization(vc);
         }
     }

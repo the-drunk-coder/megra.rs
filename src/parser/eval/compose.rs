@@ -48,9 +48,7 @@ pub fn compose(
 
             for gpom in proc_or_mods.drain(..) {
                 match gpom {
-                    GeneratorProcessorOrModifier::GeneratorProcessor(gp) => {
-                        procs.push((gp.get_id(), gp))
-                    }
+                    GeneratorProcessorOrModifier::GeneratorProcessor(gp) => procs.push(gp),
                     GeneratorProcessorOrModifier::GeneratorModifierFunction((fun, pos, named)) => {
                         fun(&mut g, &pos, &named, globals)
                     }
@@ -66,7 +64,7 @@ pub fn compose(
                 for gpom in gp.iter() {
                     match gpom {
                         GeneratorProcessorOrModifier::GeneratorProcessor(gproc) => {
-                            gen.processors.push((gproc.get_id(), gproc.clone()))
+                            gen.processors.push(gproc.clone())
                         }
                         GeneratorProcessorOrModifier::GeneratorModifierFunction((
                             fun,
