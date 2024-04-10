@@ -66,6 +66,13 @@ impl Generator {
         }
     }
 
+    // get processor ids
+    pub fn collect_supplemental_ids(&self, supplemental: &mut BTreeSet<BTreeSet<String>>) {
+        for p in self.processors.iter() {
+            p.collect_id_set(supplemental);
+        }
+    }
+
     pub fn transfer_state(&mut self, other: &Generator) {
         self.root_generator.transfer_state(&other.root_generator);
         // this will only work if the generators remain in the same order,

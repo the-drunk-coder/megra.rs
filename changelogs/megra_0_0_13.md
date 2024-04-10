@@ -2,3 +2,4 @@
 
 * Visualizer: `:exclude` keyword to selectively exclude parts from being visualized
 * Visualizer: using `ls` with `compose` now leads to individual visualizations for the composed markov chains
+* Visualizer: correctly clearing composed, wrapped generators

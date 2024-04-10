@@ -50,6 +50,13 @@ pub struct SyncContext {
     pub resync: bool,
 }
 
+pub struct ContextGeneratorIds {
+    /// root generators
+    pub root: BTreeSet<BTreeSet<String>>,
+    /// supplemental (internal, composed) generators
+    pub supplemental: BTreeSet<BTreeSet<String>>,
+}
+
 #[derive(Clone)]
 pub struct Session<const BUFSIZE: usize, const NCHAN: usize> {
     pub sample_set: SampleAndWavematrixSet,
@@ -57,11 +64,10 @@ pub struct Session<const BUFSIZE: usize, const NCHAN: usize> {
     pub sync_mode: SyncMode,
     pub ruffbox: sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
     pub globals: sync::Arc<GlobalVariables>,
-
     pub schedulers: sync::Arc<
         DashMap<BTreeSet<String>, (Scheduler<BUFSIZE, NCHAN>, SchedulerData<BUFSIZE, NCHAN>)>,
     >,
-    pub contexts: sync::Arc<DashMap<String, BTreeSet<BTreeSet<String>>>>,
+    pub contexts: sync::Arc<DashMap<String, ContextGeneratorIds>>,
     pub osc_client: OscClient,
     pub rec_control:
         sync::Arc<Mutex<Option<real_time_streaming::RecordingControl<BUFSIZE, NCHAN>>>>,
@@ -325,13 +331,17 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
         let name = ctx.name.clone(); // keep a copy for later
         if ctx.active {
             // otherwise, handle internal sync relations ...
-            let mut new_gens = BTreeSet::new();
+            let mut new_gens = ContextGeneratorIds {
+                root: BTreeSet::new(),
+                supplemental: BTreeSet::new(),
+            };
             let mut gen_map: HashMap<BTreeSet<String>, Generator> = HashMap::new();
             // collect id_tags and organize in map
             for mut g in ctx.generators.drain(..) {
                 // we might need to fix some IDs internally for visualization
                 g.update_internal_ids();
-                new_gens.insert(g.id_tags.clone());
+                g.collect_supplemental_ids(&mut new_gens.supplemental);
+                new_gens.root.insert(g.id_tags.clone());
                 gen_map.insert(g.id_tags.clone(), g);
             }
 
@@ -342,9 +352,23 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
 
             if let Some(old_gens) = session.contexts.get(&name) {
                 // this means context is running
-                remainders = new_gens.intersection(&old_gens).cloned().collect();
-                newcomers = new_gens.difference(&old_gens).cloned().collect();
-                quitters = old_gens.difference(&new_gens).cloned().collect();
+                remainders = new_gens
+                    .root
+                    .intersection(&old_gens.root)
+                    .cloned()
+                    .collect();
+                newcomers = new_gens.root.difference(&old_gens.root).cloned().collect();
+                quitters = old_gens.root.difference(&new_gens.root).cloned().collect();
+
+                let supplemental_quitters =
+                    old_gens.supplemental.difference(&new_gens.supplemental);
+                if let Some(cli) = session.osc_client.vis.try_read() {
+                    if let Some(ref vc) = *cli {
+                        for id in supplemental_quitters {
+                            vc.clear(id);
+                        }
+                    }
+                }
             }
 
             println!("newcomers {newcomers:?}");
@@ -366,7 +390,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
 
                 if let Some(sync_gens) = session.contexts.get(sync) {
                     let mut last_len: usize = usize::MAX;
-                    for tags in sync_gens.iter() {
+                    for tags in sync_gens.root.iter() {
                         if tags.len() < last_len {
                             last_len = tags.len();
                             smallest_id = Some(tags.clone());
@@ -541,7 +565,7 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
 
             if let Some(old_ctx) = an_old_ctx {
                 let old_ctx_vec: Vec<BTreeSet<String>> =
-                    old_ctx.difference(&BTreeSet::new()).cloned().collect();
+                    old_ctx.root.difference(&BTreeSet::new()).cloned().collect();
                 let session2 = session.clone();
                 thread::spawn(move || {
                     Session::stop_generators(session2, &old_ctx_vec);

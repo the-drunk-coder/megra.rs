@@ -43,6 +43,13 @@ impl GeneratorProcessor for GeneratorWrapperProcessor {
         Some(id)
     }
 
+    fn collect_id_set(&self, supplemental: &mut BTreeSet<BTreeSet<String>>) {
+        supplemental.insert(self.wrapped_generator.id_tags.clone());
+        for g in self.wrapped_generator.processors.iter() {
+            g.collect_id_set(supplemental);
+        }
+    }
+
     fn set_state(&mut self, other: GeneratorProcessorState) {
         if let GeneratorProcessorState::WrappedGenerator(g) = other {
             //println!("transfer state");

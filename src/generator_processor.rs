@@ -27,6 +27,8 @@ pub trait GeneratorProcessor: GeneratorProcessorClone {
         None
     }
 
+    fn collect_id_set(&self, _supplemental: &mut BTreeSet<BTreeSet<String>>) {}
+
     /// some processors need some internal IDs to be updated
     /// (mostly for visualization)
     /// (so far only the GeneratorWrapperProcessor)
