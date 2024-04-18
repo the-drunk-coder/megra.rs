@@ -697,12 +697,12 @@ pub fn connect_visualizer(
     _: SampleAndWavematrixSet,
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
-    let mut tail_drain = tail.drain(..).skip(1);
+    let tail_drain = tail.drain(..).skip(1);
 
     let mut exclusion_list: BTreeSet<String> = BTreeSet::new();
 
     let mut collect_excludes = false;
-    while let Some(c) = tail_drain.next() {
+    for c in tail_drain {
         if let EvaluatedExpr::Keyword(ref k) = c {
             if k.as_str() == "exclude" {
                 collect_excludes = true;
