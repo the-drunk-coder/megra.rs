@@ -2,6 +2,7 @@ use dashmap::DashMap;
 use parking_lot::Mutex;
 
 use std::env::temp_dir;
+use std::fs::File;
 use std::{
     collections::{BTreeSet, HashMap, HashSet},
     fs,
@@ -36,7 +37,7 @@ use crate::sample_set::SampleAndWavematrixSet;
 use crate::session::*;
 use chrono::Local;
 use directories_next::ProjectDirs;
-use std::io::Cursor;
+use std::io::{prelude::*, BufReader, Cursor};
 use std::sync::atomic::Ordering;
 
 use std::io;
@@ -403,10 +404,33 @@ pub fn load_sample_sets_path<const BUFSIZE: usize, const NCHAN: usize>(
     root_path: &Path,
     downmix_stereo: bool,
 ) {
+    let mut exclude_file_path_buf = root_path.to_path_buf();
+    exclude_file_path_buf.push("exclude");
+    exclude_file_path_buf.set_extension("txt");
+
+    let exclude_path = exclude_file_path_buf.as_path();
+
+    let mut excludes: HashSet<String> = HashSet::new();
+
+    if exclude_path.exists() && exclude_path.is_file() {
+        let f = File::open(exclude_path).unwrap();
+        let mut reader = BufReader::new(f);
+        let mut line = String::new(); // may also use with_capacity if you can guess
+        while reader.read_line(&mut line).unwrap() > 0 {
+            // do something with line
+            if !line.starts_with("#") {
+                excludes.insert(line.trim().to_string());
+            }
+
+            line.clear(); // clear to reuse the buffer
+        }
+    }
+
     if let Ok(entries) = fs::read_dir(root_path) {
         for entry in entries.flatten() {
             let path = entry.path();
-            if path.is_dir() {
+            let foldername = path.file_name().unwrap().to_str().unwrap().to_string();
+            if path.is_dir() && !excludes.contains(&foldername) {
                 load_sample_set(
                     function_map,
                     ruffbox,
@@ -416,7 +440,7 @@ pub fn load_sample_sets_path<const BUFSIZE: usize, const NCHAN: usize>(
                 );
             }
         }
-    }
+    };
 }
 
 /// start a recording of the output
