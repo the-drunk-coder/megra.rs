@@ -1,4 +1,4 @@
-use std::collections::{BTreeMap, BTreeSet, HashMap};
+use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::sync;
 
 use ruffbox_synth::building_blocks::SynthParameterLabel;
@@ -92,6 +92,21 @@ pub fn vals(
                 );
                 ev_vecs.push(vec![SourceEvent::Sound(e)]);
                 continue;
+            }
+            EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(s))) => {
+                if param == "keys" {
+                    let mut ev =
+                        Event::with_name_and_operation("keys".to_string(), EventOperation::Replace);
+                    let mut keyword_set = HashSet::new();
+                    keyword_set.insert(s);
+                    // an "empty" lookup to be merged later down the line ...
+                    ev.sample_lookup = Some(crate::sample_set::SampleLookup::Key(
+                        "".to_string(),
+                        keyword_set,
+                    ));
+                    ev_vecs.push(vec![SourceEvent::Sound(ev)]);
+                    continue;
+                }
             }
             EvaluatedExpr::Typed(TypedEntity::Parameter(p)) => {
                 let mut e = Event::with_name_and_operation(
