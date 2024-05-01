@@ -418,7 +418,7 @@ pub fn load_sample_sets_path<const BUFSIZE: usize, const NCHAN: usize>(
         let mut line = String::new(); // may also use with_capacity if you can guess
         while reader.read_line(&mut line).unwrap() > 0 {
             // do something with line
-            if !line.starts_with("#") {
+            if !line.starts_with('#') {
                 excludes.insert(line.trim().to_string());
             }
 
