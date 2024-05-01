@@ -381,6 +381,9 @@ pub fn map_parameter(name: &str) -> SynthParameterAddress {
         "delft" => SynthParameterLabel::DelayDampeningFilterType,
         "ft" => SynthParameterLabel::FilterType,
         "osct" => SynthParameterLabel::OscillatorType,
+        "bcmix" => SynthParameterLabel::BitcrusherMix,
+        "bcbits" => SynthParameterLabel::BitcrusherBits,
+        "bcdown" => SynthParameterLabel::BitcrusherDownsampling,
         _ => SynthParameterLabel::PitchFrequency,
     };
 
