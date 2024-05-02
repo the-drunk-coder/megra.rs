@@ -11,6 +11,14 @@ pub fn map_synth_type(
     name: &str,
     params: &HashMap<SynthParameterAddress, SynthParameterValue>,
 ) -> SynthType {
+    let bitcrusher_mode = if let Some(SynthParameterValue::BitcrusherMode(m)) =
+        params.get(&SynthParameterLabel::BitcrusherMode.into())
+    {
+        *m
+    } else {
+        BitcrusherMode::Cast
+    };
+
     let mut pre_filter_effects: Vec<EffectType> = params
         .iter()
         .filter_map(|(k, _)| {
@@ -19,7 +27,7 @@ pub fn map_synth_type(
                 SynthParameterLabel::BitcrusherBits
                 | SynthParameterLabel::BitcrusherMix
                 | SynthParameterLabel::BitcrusherDownsampling => {
-                    Some(EffectType::Bitcrusher(BitcrusherMode::Cast))
+                    Some(EffectType::Bitcrusher(bitcrusher_mode))
                 }
                 SynthParameterLabel::WaveshaperMix => Some(EffectType::Waveshaper),
                 _ => None,
@@ -174,7 +182,6 @@ pub fn map_synth_type(
                 })
             }
         }
-
         "livesampler" => SynthType::LiveSampler(SynthDescription {
             oscillator_types: vec![],
             filters: vec![
@@ -447,6 +454,7 @@ pub fn map_parameter(name: &str) -> SynthParameterAddress {
         "bcmix" => SynthParameterLabel::BitcrusherMix,
         "bcbits" => SynthParameterLabel::BitcrusherBits,
         "bcdown" => SynthParameterLabel::BitcrusherDownsampling,
+        "bcmode" => SynthParameterLabel::BitcrusherMode,
         _ => SynthParameterLabel::PitchFrequency,
     };
 

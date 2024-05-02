@@ -7,6 +7,7 @@ use crate::parser::{EvaluatedExpr, FunctionMap};
 use crate::sample_set::SampleLookup;
 use crate::{GlobalVariables, OutputMode, SampleAndWavematrixSet, VariableId};
 
+use ruffbox_synth::building_blocks::bitcrusher::BitcrusherMode;
 use ruffbox_synth::building_blocks::{
     EnvelopeSegmentType, FilterType, OscillatorType, SynthParameterLabel,
 };
@@ -64,6 +65,10 @@ pub fn map_symbolic_param_value(sym: &str) -> Option<ParameterValue> {
         "brown" => Some(ParameterValue::OscillatorType(OscillatorType::BrownNoise)),
         "wtab" => Some(ParameterValue::OscillatorType(OscillatorType::Wavetable)),
         "wmat" => Some(ParameterValue::OscillatorType(OscillatorType::Wavematrix)),
+        "cast" => Some(ParameterValue::BitcrusherMode(BitcrusherMode::Cast)),
+        "floor" => Some(ParameterValue::BitcrusherMode(BitcrusherMode::Floor)),
+        "round" => Some(ParameterValue::BitcrusherMode(BitcrusherMode::Round)),
+        "ceil" => Some(ParameterValue::BitcrusherMode(BitcrusherMode::Ceil)),
         _ => None,
     }
 }

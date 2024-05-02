@@ -2,6 +2,7 @@ pub mod modifier;
 use modifier::*;
 
 use rand::Rng;
+use ruffbox_synth::building_blocks::bitcrusher::BitcrusherMode;
 use std::boxed::Box;
 use std::fmt::*;
 
@@ -20,6 +21,7 @@ pub enum ParameterValue {
     Matrix(Vec<Vec<DynVal>>),
     FilterType(FilterType),
     OscillatorType(OscillatorType),
+    BitcrusherMode(BitcrusherMode),
     Lfo(DynVal, Box<ParameterValue>, DynVal, Box<ParameterValue>, DynVal, ValOp), // init, freq, phase, amp, add, op
     LFSaw(DynVal, Box<ParameterValue>, DynVal, Box<ParameterValue>, DynVal, ValOp), // init, freq, phase, amp, add, op
     LFRSaw(DynVal, Box<ParameterValue>, DynVal, Box<ParameterValue>, DynVal, ValOp), // init, freq, phase, amp, add, op
@@ -223,6 +225,7 @@ pub fn resolve_parameter(
         ParameterValue::Lazy(l) => SynthParameterValue::ScalarF32(resolve_lazy(l.clone(), globals)),
         ParameterValue::FilterType(t) => SynthParameterValue::FilterType(*t),
         ParameterValue::OscillatorType(t) => SynthParameterValue::OscillatorType(*t),
+        ParameterValue::BitcrusherMode(m) => SynthParameterValue::BitcrusherMode(*m),
         ParameterValue::Scalar(val) => {
             if k == SynthParameterLabel::SampleBufferNumber {
                 val.evaluate_val_usize()
