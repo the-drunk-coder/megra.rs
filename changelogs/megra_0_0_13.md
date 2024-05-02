@@ -5,3 +5,4 @@
 * Visualizer: correctly clearing composed, wrapped generators
 * Samples: adding "exclude.txt" to sample folder allows excluding samples
 * Language: `vals` can now define a row of lookup keys when provided the `'keys` symbol as second parameter
+* Effects: add configurable bitcrusher with parameters `bcbits` `bcmode` `bcdown` `bcmix`
