@@ -11,6 +11,7 @@ pub fn map_synth_type(
     name: &str,
     params: &HashMap<SynthParameterAddress, SynthParameterValue>,
 ) -> SynthType {
+    // check whether we have a specified bitcrusher mode ...
     let bitcrusher_mode = if let Some(SynthParameterValue::BitcrusherMode(m)) =
         params.get(&SynthParameterLabel::BitcrusherMode.into())
     {
@@ -19,6 +20,7 @@ pub fn map_synth_type(
         BitcrusherMode::Cast
     };
 
+    // assemble pre-filter effects
     let mut pre_filter_effects: Vec<EffectType> = params
         .iter()
         .filter_map(|(k, _)| {

@@ -278,6 +278,26 @@ pub fn define_standard_library() -> FunctionMap {
     standard_library.std_lib.insert("dist-sub".to_string(), eval::events::parameters::parameter);
     standard_library.std_lib.insert("dist-div".to_string(), eval::events::parameters::parameter);
 
+    standard_library.std_lib.insert("bcbits".to_string(), eval::events::parameters::parameter);
+    standard_library.std_lib.insert("bcbits-add".to_string(), eval::events::parameters::parameter);
+    standard_library.std_lib.insert("bcbits-mul".to_string(), eval::events::parameters::parameter);
+    standard_library.std_lib.insert("bcbits-sub".to_string(), eval::events::parameters::parameter);
+    standard_library.std_lib.insert("bcbits-div".to_string(), eval::events::parameters::parameter);
+
+    standard_library.std_lib.insert("bcdown".to_string(), eval::events::parameters::parameter);
+    standard_library.std_lib.insert("bcdown-add".to_string(), eval::events::parameters::parameter);
+    standard_library.std_lib.insert("bcdown-mul".to_string(), eval::events::parameters::parameter);
+    standard_library.std_lib.insert("bcdown-sub".to_string(), eval::events::parameters::parameter);
+    standard_library.std_lib.insert("bcdown-div".to_string(), eval::events::parameters::parameter);
+
+    standard_library.std_lib.insert("bcmix".to_string(), eval::events::parameters::parameter);
+    standard_library.std_lib.insert("bcmix-add".to_string(), eval::events::parameters::parameter);
+    standard_library.std_lib.insert("bcmix-mul".to_string(), eval::events::parameters::parameter);
+    standard_library.std_lib.insert("bcmix-sub".to_string(), eval::events::parameters::parameter);
+    standard_library.std_lib.insert("bcmix-div".to_string(), eval::events::parameters::parameter);
+
+    standard_library.std_lib.insert("bcmode".to_string(), eval::events::parameters::parameter);
+
     standard_library.std_lib.insert("keys".to_string(), eval::events::parameters::sample_keys);
     standard_library.std_lib.insert("keys-add".to_string(), eval::events::parameters::sample_keys);
     standard_library.std_lib.insert("keys-sub".to_string(), eval::events::parameters::sample_keys);
