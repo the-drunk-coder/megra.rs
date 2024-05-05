@@ -41,6 +41,9 @@ use crate::builtin_types::*;
 use crate::osc_client::OscClient;
 use crate::sample_set::SampleAndWavematrixSet;
 use crate::session::{OutputMode, Session};
+use crate::standard_library::{
+    define_standard_library_cat, define_standard_library_de, define_standard_library_es,
+};
 use anyhow::anyhow;
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use cpal::{Stream, StreamConfig};
@@ -50,7 +53,7 @@ use getopts::Options;
 use parking_lot::Mutex;
 use real_time_streaming::Throw;
 use ruffbox_synth::ruffbox::{init_ruffbox, ReverbMode, RuffboxPlayhead};
-use standard_library::define_standard_library;
+use standard_library::define_standard_library_en;
 
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::{env, sync, thread};
@@ -88,6 +91,13 @@ const BLOCKSIZE: usize = 512;
 #[cfg(not(any(feature = "ringbuffer", feature = "low_latency")))]
 const BLOCKSIZE_FLOAT: f32 = 512.0;
 
+enum Lang {
+    English,
+    German,
+    Catalan,
+    Castellano,
+}
+
 struct RunOptions {
     mode: OutputMode,
     num_live_buffers: usize,
@@ -104,6 +114,7 @@ struct RunOptions {
     downmix_stereo: bool,
     ambisonic_binaural: bool,
     karl_yerkes_mode: bool,
+    lang: Lang,
 }
 
 fn main() -> Result<(), anyhow::Error> {
@@ -135,6 +146,8 @@ fn main() -> Result<(), anyhow::Error> {
     opts.optflag("h", "help", "Print this help");
     opts.optflag("n", "no-samples", "don't load default samples");
     opts.optopt("o", "output-mode", "output mode (stereo, 8ch)", "stereo");
+    opts.optopt("", "language", "language (cat, de, en, es)", "en");
+
     opts.optflag("l", "list-devices", "list available audio devices");
     opts.optopt("d", "device", "choose device", "default");
     opts.optopt(
@@ -216,6 +229,14 @@ fn main() -> Result<(), anyhow::Error> {
             println!("invalid output mode, assume stereo");
             OutputMode::Stereo
         }
+    };
+
+    let lang = match matches.opt_str("language").as_deref() {
+        Some("cat") => Lang::Catalan,
+        Some("de") => Lang::German,
+        Some("en") => Lang::English,
+        Some("es") => Lang::Castellano,
+        _ => Lang::English,
     };
 
     let reverb_mode = match matches.opt_str("reverb-mode").as_deref() {
@@ -350,6 +371,7 @@ fn main() -> Result<(), anyhow::Error> {
         downmix_stereo,
         ambisonic_binaural,
         karl_yerkes_mode,
+        lang,
     };
 
     match out_mode {
@@ -729,7 +751,12 @@ fn run<const NCHAN: usize>(
     };
 
     // define the "standard library"
-    let stdlib = sync::Arc::new(Mutex::new(define_standard_library()));
+    let stdlib = match options.lang {
+        Lang::English => sync::Arc::new(Mutex::new(define_standard_library_en())),
+        Lang::German => sync::Arc::new(Mutex::new(define_standard_library_de())),
+        Lang::Catalan => sync::Arc::new(Mutex::new(define_standard_library_cat())),
+        Lang::Castellano => sync::Arc::new(Mutex::new(define_standard_library_es())),
+    };
 
     let base_dir = if let Some(p) = options.base_folder {
         let bd = std::path::PathBuf::from(p);

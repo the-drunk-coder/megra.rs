@@ -40,7 +40,7 @@ rosc = "~0.10"
 hound = "3.4"
 regex = "1.5"
 midir = "0.8.0"
-reqwest = {version = "0.11.16", features = ["blocking"]}
+reqwest = { version = "0.11.16", features = ["blocking"] }
 zip = "0.6.4"
 sha256 = "1.2"
 
@@ -51,6 +51,7 @@ assert_approx_eq = "1.1.0"
 default = ["serde"] # enable ringbuffer for WASAPI !
 ringbuffer = []
 low_latency = [] # blocksize 128 instead of 512
+localization = []
 
 [package.metadata.appimage]
 auto_link = true
