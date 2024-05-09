@@ -538,6 +538,7 @@ pub fn sound(
                 // instead of resolving the sample buffer number directly,
                 // we send the info down the line so it can be manipulated
                 // along the way and evaluated later on ..
+
                 ev.sample_lookup = match tail_drain.peek() {
                     Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(s)))) => {
                         let mut keyword_set: HashSet<String> = HashSet::new();
@@ -553,7 +554,9 @@ pub fn sound(
                         Some(SampleLookup::Key(fname.to_string(), keyword_set))
                     }
                     Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(pos)))) => {
-                        Some(SampleLookup::N(fname.to_string(), *pos as usize))
+                        let pos = *pos;
+                        tail_drain.next();
+                        Some(SampleLookup::N(fname.to_string(), pos as usize))
                     }
                     _ => {
                         let info = sample_set.random(&fname).unwrap();
