@@ -458,6 +458,7 @@ pub fn map_parameter(name: &str) -> SynthParameterAddress {
         "bcbits" => SynthParameterLabel::BitcrusherBits,
         "bcdown" => SynthParameterLabel::BitcrusherDownsampling,
         "bcmode" => SynthParameterLabel::BitcrusherMode,
+        "nharm" => SynthParameterLabel::NumHarmonics,
         _ => SynthParameterLabel::PitchFrequency,
     };
 
