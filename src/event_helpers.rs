@@ -41,7 +41,7 @@ pub fn map_synth_type(
 
     match name {
         "sine" | "tri" | "sqr" | "saw" | "rsaw" | "wsaw" | "fmsqr" | "fmsaw" | "fmtri" | "cub"
-        | "white" | "brown" => SynthType::SingleOscillator(SynthDescription {
+        | "white" | "brown" | "blit" => SynthType::SingleOscillator(SynthDescription {
             oscillator_types: vec![match name {
                 "sine" => OscillatorType::Sine,
                 "tri" => OscillatorType::LFTri,
@@ -55,6 +55,7 @@ pub fn map_synth_type(
                 "cub" => OscillatorType::LFCub,
                 "white" => OscillatorType::WhiteNoise,
                 "brown" => OscillatorType::BrownNoise,
+                "blit" => OscillatorType::NaiveBlit,
                 _ => OscillatorType::Sine,
             }],
             filters: vec![

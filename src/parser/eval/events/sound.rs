@@ -498,6 +498,13 @@ pub fn sound(
             multi_synth_defaults(&mut ev);
             ev
         }
+        "blit" => {
+            let mut ev =
+                Event::with_name_and_operation("blit".to_string(), EventOperation::Replace);
+            get_pitch_param(&mut ev, &mut tail_drain);
+            synth_defaults(&mut ev);
+            ev
+        }
         "silence" => Event::with_name_and_operation("silence".to_string(), EventOperation::Replace),
         "~" => Event::with_name_and_operation("silence".to_string(), EventOperation::Replace),
         "feedr" => {

@@ -102,7 +102,6 @@ impl Clone for Box<dyn GeneratorProcessor + Sync + Send> {
     }
 }
 
-//type StaticEventsAndFilters = HashMap<Vec<String>, Vec<StaticEvent>>;
 type StaticEventsAndFilters = HashMap<Vec<String>, Vec<(StaticEvent, bool)>>;
 type EventsAndFilters = HashMap<Vec<String>, (bool, Vec<Event>)>;
 type GenModFunsAndArgs = Vec<(
