@@ -299,6 +299,12 @@ pub fn define_standard_library() -> FunctionMap {
 
     standard_library.std_lib.insert("bcmode".to_string(), eval::events::parameters::parameter);
 
+    standard_library.std_lib.insert("nharm".to_string(), eval::events::parameters::parameter);
+    standard_library.std_lib.insert("nharm-add".to_string(), eval::events::parameters::parameter);
+    standard_library.std_lib.insert("nharm-mul".to_string(), eval::events::parameters::parameter);
+    standard_library.std_lib.insert("nharm-sub".to_string(), eval::events::parameters::parameter);
+    standard_library.std_lib.insert("nharm-div".to_string(), eval::events::parameters::parameter);
+
     standard_library.std_lib.insert("keys".to_string(), eval::events::parameters::sample_keys);
     standard_library.std_lib.insert("keys-add".to_string(), eval::events::parameters::sample_keys);
     standard_library.std_lib.insert("keys-sub".to_string(), eval::events::parameters::sample_keys);
