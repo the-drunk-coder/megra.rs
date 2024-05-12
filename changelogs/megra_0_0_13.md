@@ -7,3 +7,4 @@
 * Language: `vals` can now define a row of lookup keys when provided the `'keys` symbol as second parameter
 * Effects: add configurable bitcrusher with parameters `bcbits` `bcmode` `bcdown` `bcmix`
 * Bugfix: sample parameters after sample number are now evaluated
+* Synth: add a simple `BLIT` oscillator
