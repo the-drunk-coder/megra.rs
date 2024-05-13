@@ -71,6 +71,10 @@ pub fn collect_pear(tail: &mut Vec<EvaluatedExpr>) -> Box<dyn GeneratorProcessor
                         } else {
                             last_filters.clear();
                         }
+
+                        // for clears p
+                        cur_prob = DynVal::with_value(100.0); // if nothing is specified, it's always or prob 100
+
                         // collect new filters
                         collect_filters = true;
                     }

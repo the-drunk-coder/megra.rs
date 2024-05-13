@@ -8,3 +8,4 @@
 * Effects: add configurable bitcrusher with parameters `bcbits` `bcmode` `bcdown` `bcmix`
 * Bugfix: sample parameters after sample number are now evaluated
 * Synth: add a simple `BLIT` oscillator
+* Bugfix: `pear` now clears probability (sets it back to 100) after `:for`, as it should be ...
