@@ -60,6 +60,7 @@ pub fn map_symbolic_param_value(sym: &str) -> Option<ParameterValue> {
         "fmsqr" => Some(ParameterValue::OscillatorType(OscillatorType::FMSquare)),
         "fmsaw" => Some(ParameterValue::OscillatorType(OscillatorType::FMSaw)),
         "fmtri" => Some(ParameterValue::OscillatorType(OscillatorType::FMTri)),
+        "blit" => Some(ParameterValue::OscillatorType(OscillatorType::NaiveBlit)),
         "cub" => Some(ParameterValue::OscillatorType(OscillatorType::LFCub)),
         "white" => Some(ParameterValue::OscillatorType(OscillatorType::WhiteNoise)),
         "brown" => Some(ParameterValue::OscillatorType(OscillatorType::BrownNoise)),
