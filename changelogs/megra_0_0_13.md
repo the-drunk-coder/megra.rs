@@ -9,3 +9,4 @@
 * Bugfix: sample parameters after sample number are now evaluated
 * Synth: add a simple `BLIT` oscillator
 * Bugfix: `pear` now clears probability (sets it back to 100) after `:for`, as it should be ...
+* Improvement: allow sending OSC from scheduled control events
