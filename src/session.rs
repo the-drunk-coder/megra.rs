@@ -1,5 +1,6 @@
 use dashmap::{DashMap, DashSet};
 use parking_lot::Mutex;
+use rosc::OscType;
 use std::collections::{BTreeSet, HashMap};
 use std::{sync, thread};
 
@@ -7,7 +8,6 @@ use ruffbox_synth::building_blocks::{SynthParameterLabel, SynthParameterValue};
 use ruffbox_synth::ruffbox::RuffboxControls;
 
 use crate::builtin_types::{Command, ConfigParameter, GlobalVariables, VariableId};
-use crate::commands;
 use crate::event::InterpretableEvent;
 use crate::event_helpers::*;
 use crate::generator::Generator;
@@ -17,6 +17,7 @@ use crate::real_time_streaming;
 use crate::scheduler::{Scheduler, SchedulerData};
 use crate::SampleAndWavematrixSet;
 use crate::TypedEntity;
+use crate::{commands, Comparable};
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub enum OutputMode {
@@ -311,7 +312,35 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
                                 //println!("handle once from gen");
                                 commands::once(session, &mut s, &c);
                             }
-
+                            Command::OscSendMessage(client_name, osc_addr, args) => {
+                                let mut osc_args = Vec::new();
+                                for arg in args.iter() {
+                                    match arg {
+                                        TypedEntity::Comparable(Comparable::Float(n)) => {
+                                            osc_args.push(OscType::Float(*n))
+                                        }
+                                        TypedEntity::Comparable(Comparable::Double(n)) => {
+                                            osc_args.push(OscType::Double(*n))
+                                        }
+                                        TypedEntity::Comparable(Comparable::Int32(n)) => {
+                                            osc_args.push(OscType::Int(*n))
+                                        }
+                                        TypedEntity::Comparable(Comparable::Int64(n)) => {
+                                            osc_args.push(OscType::Long(*n))
+                                        }
+                                        TypedEntity::Comparable(Comparable::String(s)) => {
+                                            osc_args.push(OscType::String(s.to_string()))
+                                        }
+                                        TypedEntity::Comparable(Comparable::Symbol(s)) => {
+                                            osc_args.push(OscType::String(s.to_string()))
+                                        }
+                                        _ => {}
+                                    }
+                                }
+                                if let Some(thing) = &session.osc_client.custom.get(&client_name) {
+                                    let _ = thing.value().send_message(osc_addr, osc_args);
+                                }
+                            }
                             _ => {
                                 println!("ignore command")
                             }
