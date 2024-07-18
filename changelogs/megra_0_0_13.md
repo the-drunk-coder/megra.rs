@@ -10,3 +10,7 @@
 * Synth: add a simple `BLIT` oscillator
 * Bugfix: `pear` now clears probability (sets it back to 100) after `:for`, as it should be ...
 * Improvement: allow sending OSC from scheduled control events
+* Improvement: allow print in ctrl event
+* Improvement: finally implement ctrl events in `step-part`
+* Improvement: `step-part` with identifier AND symbol ...
+
