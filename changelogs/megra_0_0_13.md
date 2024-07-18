@@ -13,4 +13,6 @@
 * Improvement: allow print in ctrl event
 * Improvement: finally implement ctrl events in `step-part`
 * Improvement: `step-part` with identifier AND symbol ...
+* Improvement: `bpm` for ctrl events
+* Improvement: `step-part` for ctrl events
 

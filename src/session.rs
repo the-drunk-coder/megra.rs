@@ -291,6 +291,12 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
                             Command::Tmod(p) => {
                                 commands::set_global_tmod(&session.globals, p);
                             }
+                            Command::Bpm(b) => {
+                                commands::set_default_duration(&session.globals, b);
+                            }
+                            Command::StepPart(p) => {
+                                commands::step_part(session, p);
+                            }
                             Command::GlobRes(v) => {
                                 commands::set_global_lifemodel_resources(&session.globals, v);
                             }
@@ -312,6 +318,7 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
                                 //println!("handle once from gen");
                                 commands::once(session, &mut s, &c);
                             }
+
                             Command::OscSendMessage(client_name, osc_addr, args) => {
                                 let mut osc_args = Vec::new();
                                 for arg in args.iter() {

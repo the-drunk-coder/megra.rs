@@ -698,6 +698,12 @@ pub fn once<const BUFSIZE: usize, const NCHAN: usize>(
                     Command::Tmod(p) => {
                         commands::set_global_tmod(&session.globals, p);
                     }
+                    Command::Bpm(b) => {
+                        commands::set_default_duration(&session.globals, b);
+                    }
+                    Command::StepPart(p) => {
+                        commands::step_part(session, p);
+                    }
                     Command::GlobRes(v) => {
                         commands::set_global_lifemodel_resources(&session.globals, v);
                     }
