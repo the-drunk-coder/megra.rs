@@ -341,6 +341,9 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
                                     let _ = thing.value().send_message(osc_addr, osc_args);
                                 }
                             }
+                            Command::Print(te) => {
+                                println!("{te:#?}");
+                            }
                             _ => {
                                 println!("ignore command")
                             }
