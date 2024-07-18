@@ -1,5 +1,6 @@
 use dashmap::DashMap;
 use parking_lot::Mutex;
+use rosc::OscType;
 
 use std::env::temp_dir;
 use std::fs::File;
@@ -24,13 +25,14 @@ use ruffbox_synth::{
 };
 
 use crate::builtin_types::*;
+use crate::commands;
 use crate::event::*;
 use crate::event_helpers::*;
 use crate::generator::*;
 use crate::load_audio_file;
 use crate::osc_sender::OscSender;
 use crate::parameter::*;
-use crate::parser::eval;
+use crate::parser::eval::{self};
 use crate::parser::FunctionMap;
 use crate::real_time_streaming;
 use crate::sample_set::SampleAndWavematrixSet;
@@ -566,7 +568,6 @@ pub fn step_part<const BUFSIZE: usize, const NCHAN: usize>(
 ) {
     let mut sound_events = Vec::new();
     let mut control_events = Vec::new();
-
     if let Some(mut thing) = session.globals.get_mut(&VariableId::Custom(part_name)) {
         if let TypedEntity::GeneratorList(ref mut gens) = thing.value_mut() {
             for gen in gens.iter_mut() {
@@ -682,6 +683,76 @@ pub fn once<const BUFSIZE: usize, const NCHAN: usize>(
             // this is the worst clone ....
             for mut sx in contexts.drain(..) {
                 Session::handle_context(&mut sx, session);
+            }
+        }
+        if let Some(mut commands) = cev.cmd.clone() {
+            // this is the worst clone ....
+            // some code duplication from session.rs,
+            // should be unified at some point ...
+            for c in commands.drain(..) {
+                match c {
+                    Command::FreezeBuffer(freezbuf, inbuf) => {
+                        commands::freeze_buffer(&session.ruffbox, freezbuf, inbuf);
+                        //println!("freeze buffer");
+                    }
+                    Command::Tmod(p) => {
+                        commands::set_global_tmod(&session.globals, p);
+                    }
+                    Command::GlobRes(v) => {
+                        commands::set_global_lifemodel_resources(&session.globals, v);
+                    }
+                    Command::GlobalRuffboxParams(mut m) => {
+                        commands::set_global_ruffbox_parameters(
+                            &session.ruffbox,
+                            &session.globals,
+                            &mut m,
+                        );
+                    }
+                    Command::Clear => {
+                        let session2 = session.clone();
+                        Session::clear_session(session2);
+                        println!("a command (stop session)");
+                    }
+                    Command::Once(mut s, c) => {
+                        //println!("handle once from gen");
+                        commands::once(session, &mut s, &c);
+                    }
+                    Command::OscSendMessage(client_name, osc_addr, args) => {
+                        let mut osc_args = Vec::new();
+                        for arg in args.iter() {
+                            match arg {
+                                TypedEntity::Comparable(Comparable::Float(n)) => {
+                                    osc_args.push(OscType::Float(*n))
+                                }
+                                TypedEntity::Comparable(Comparable::Double(n)) => {
+                                    osc_args.push(OscType::Double(*n))
+                                }
+                                TypedEntity::Comparable(Comparable::Int32(n)) => {
+                                    osc_args.push(OscType::Int(*n))
+                                }
+                                TypedEntity::Comparable(Comparable::Int64(n)) => {
+                                    osc_args.push(OscType::Long(*n))
+                                }
+                                TypedEntity::Comparable(Comparable::String(s)) => {
+                                    osc_args.push(OscType::String(s.to_string()))
+                                }
+                                TypedEntity::Comparable(Comparable::Symbol(s)) => {
+                                    osc_args.push(OscType::String(s.to_string()))
+                                }
+                                _ => {}
+                            }
+                        }
+                        if let Some(thing) = &session.osc_client.custom.get(&client_name) {
+                            let _ = thing.value().send_message(osc_addr, osc_args);
+                        }
+                    }
+                    Command::Print(te) => {
+                        println!("{te:#?}");
+                    }
+                    _ => {
+                        println!("ignore command")
+                    }
+                };
             }
         }
     }

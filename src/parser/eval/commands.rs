@@ -671,12 +671,12 @@ pub fn step_part(
     _: OutputMode,
 ) -> Option<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..).skip(1);
-    if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(s)))) =
-        tail_drain.next()
-    {
-        Some(EvaluatedExpr::Command(Command::StepPart(s)))
-    } else {
-        None
+    match tail_drain.next() {
+        Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(s)))) => {
+            Some(EvaluatedExpr::Command(Command::StepPart(s)))
+        }
+        Some(EvaluatedExpr::Identifier(s)) => Some(EvaluatedExpr::Command(Command::StepPart(s))),
+        _ => None,
     }
 }
 
