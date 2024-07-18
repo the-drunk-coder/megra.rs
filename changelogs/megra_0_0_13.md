@@ -15,4 +15,5 @@
 * Improvement: `step-part` with identifier AND symbol ...
 * Improvement: `bpm` for ctrl events
 * Improvement: `step-part` for ctrl events
+* Improvement: `vec` for `nuc`
 

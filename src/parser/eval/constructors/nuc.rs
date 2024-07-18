@@ -77,6 +77,20 @@ pub fn nuc(
                 }
                 _ => println!("{k}"),
             },
+            // resolve vec
+            EvaluatedExpr::Typed(TypedEntity::Vec(v)) => {
+                for x in v {
+                    match *x {
+                        TypedEntity::SoundEvent(e) => {
+                            ev_vec.push(SourceEvent::Sound(e));
+                        }
+                        TypedEntity::ControlEvent(e) => {
+                            ev_vec.push(SourceEvent::Control(e));
+                        }
+                        _ => {}
+                    }
+                }
+            }
             _ => println! {"ignored"},
         }
     }
