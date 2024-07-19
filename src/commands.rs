@@ -571,6 +571,25 @@ pub fn step_part<const BUFSIZE: usize, const NCHAN: usize>(
     if let Some(mut thing) = session.globals.get_mut(&VariableId::Custom(part_name)) {
         if let TypedEntity::GeneratorList(ref mut gens) = thing.value_mut() {
             for gen in gens.iter_mut() {
+                if session
+                    .osc_client
+                    .vis_connected
+                    .load(sync::atomic::Ordering::SeqCst)
+                {
+                    if let Some(cli) = session.osc_client.vis.try_read() {
+                        if let Some(ref vc) = *cli {
+                            if gen.root_generator.is_modified() {
+                                vc.create_or_update(&gen);
+                                gen.root_generator.clear_modified()
+                            }
+                            vc.update_active_node(&gen);
+                            for proc in gen.processors.iter_mut() {
+                                proc.visualize_if_possible(vc);
+                            }
+                        }
+                    }
+                };
+
                 gen.current_transition(&session.globals);
                 let mut current_events = gen.current_events(&session.globals);
                 for ev in current_events.drain(..) {
@@ -582,6 +601,24 @@ pub fn step_part<const BUFSIZE: usize, const NCHAN: usize>(
             }
         } else if let TypedEntity::Generator(ref mut gen) = thing.value_mut() {
             gen.current_transition(&session.globals);
+            if session
+                .osc_client
+                .vis_connected
+                .load(sync::atomic::Ordering::SeqCst)
+            {
+                if let Some(cli) = session.osc_client.vis.try_read() {
+                    if let Some(ref vc) = *cli {
+                        if gen.root_generator.is_modified() {
+                            vc.create_or_update(&gen);
+                            gen.root_generator.clear_modified()
+                        }
+                        vc.update_active_node(&gen);
+                        for proc in gen.processors.iter_mut() {
+                            proc.visualize_if_possible(vc);
+                        }
+                    }
+                }
+            };
             let mut current_events = gen.current_events(&session.globals);
             for ev in current_events.drain(..) {
                 match ev {
