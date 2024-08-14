@@ -5,7 +5,7 @@ use crate::parser::{eval, FunctionMap};
  * are defined and bound to their Rust equivalents ...  
  */
 pub fn define_standard_library() -> FunctionMap {
-    let mut standard_library = FunctionMap::new();
+    let standard_library = FunctionMap::new();
     // session
     standard_library.std_lib.insert("sx".to_string(), eval::session::sync_context::sync_context);
 

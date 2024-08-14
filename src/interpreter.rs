@@ -17,7 +17,7 @@ use crate::visualizer_client::VisualizerClient;
 
 pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
     c: Command,
-    function_map: &sync::Arc<Mutex<FunctionMap>>,
+    function_map: &sync::Arc<FunctionMap>,
     session: &Session<BUFSIZE, NCHAN>,
     base_dir: String,
 ) {
@@ -236,7 +236,7 @@ pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
 
 pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
     parsed_in: EvaluatedExpr,
-    function_map: &sync::Arc<Mutex<FunctionMap>>,
+    function_map: &sync::Arc<FunctionMap>,
     session: Session<BUFSIZE, NCHAN>,
     base_dir: String,
 ) {
@@ -316,7 +316,7 @@ pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
         }
         EvaluatedExpr::FunctionDefinition(name, pos_args, body) => {
             println!("a function definition: {name} positional args: {pos_args:?}");
-            function_map.lock().usr_lib.insert(name, (pos_args, body));
+            function_map.usr_lib.insert(name, (pos_args, body));
         }
         EvaluatedExpr::VariableDefinition(name, var) => {
             println!("a variable definition {name:#?}");

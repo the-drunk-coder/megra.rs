@@ -729,7 +729,7 @@ fn run<const NCHAN: usize>(
     };
 
     // define the "standard library"
-    let stdlib = sync::Arc::new(Mutex::new(define_standard_library()));
+    let stdlib = sync::Arc::new(define_standard_library());
 
     let base_dir = if let Some(p) = options.base_folder {
         let bd = std::path::PathBuf::from(p);

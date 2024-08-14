@@ -1,3 +1,4 @@
+use dashmap::DashMap;
 use nom::{
     branch::alt,
     bytes::complete::{tag, take_while, take_while1},
@@ -111,8 +112,8 @@ impl fmt::Debug for EvaluatedExpr {
 // std_lib are hard-coded,
 // usr_lib is for user-defined functions ...
 pub struct FunctionMap {
-    pub usr_lib: HashMap<String, (Vec<String>, Vec<Expr>)>,
-    pub std_lib: HashMap<
+    pub usr_lib: DashMap<String, (Vec<String>, Vec<Expr>)>,
+    pub std_lib: DashMap<
         String,
         fn(
             &FunctionMap,
@@ -127,8 +128,8 @@ pub struct FunctionMap {
 impl FunctionMap {
     pub fn new() -> Self {
         FunctionMap {
-            std_lib: HashMap::new(),
-            usr_lib: HashMap::new(),
+            std_lib: DashMap::new(),
+            usr_lib: DashMap::new(),
         }
     }
 }
@@ -525,7 +526,7 @@ pub fn eval_expression(
 
                     // push function name
                     reduced_tail.insert(0, EvaluatedExpr::Identifier(f.clone()));
-                    functions.std_lib[&f](
+                    functions.std_lib.get(&f).unwrap()(
                         functions,
                         &mut reduced_tail,
                         globals,

@@ -13,7 +13,7 @@ use crate::parser::FunctionMap;
 use crate::session::Session;
 
 pub fn start_repl<const BUFSIZE: usize, const NCHAN: usize>(
-    function_map: &sync::Arc<Mutex<FunctionMap>>,
+    function_map: &sync::Arc<FunctionMap>,
     session: Session<BUFSIZE, NCHAN>,
     base_dir: String,
 ) -> Result<(), anyhow::Error> {
@@ -34,7 +34,7 @@ pub fn start_repl<const BUFSIZE: usize, const NCHAN: usize>(
 
                 let pfa_in = parser::eval_from_str(
                     line.as_str(),
-                    &function_map.lock(),
+                    function_map,
                     &session.globals,
                     session.sample_set.clone(),
                     session.output_mode,
@@ -58,7 +58,7 @@ pub fn start_repl<const BUFSIZE: usize, const NCHAN: usize>(
                                         line_buffer.push_str(line.as_str());
                                         let inner_pfa_in = parser::eval_from_str(
                                             line_buffer.as_str(),
-                                            &function_map.lock(),
+                                            function_map,
                                             &session.globals,
                                             session.sample_set.clone(),
                                             session.output_mode,

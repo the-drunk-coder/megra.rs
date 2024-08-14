@@ -22,7 +22,7 @@ pub fn list_midi_input_ports() {
 
 pub fn open_midi_input_port<const BUFSIZE: usize, const NCHAN: usize>(
     in_port_num: usize,
-    function_map: sync::Arc<Mutex<FunctionMap>>,
+    functions: sync::Arc<FunctionMap>,
     session: Session<BUFSIZE, NCHAN>,
     base_dir: String,
 ) {
@@ -43,8 +43,6 @@ pub fn open_midi_input_port<const BUFSIZE: usize, const NCHAN: usize>(
             in_port,
             "midir-read-input",
             move |_, message, _| {
-                let functions = function_map.lock();
-
                 if functions.usr_lib.contains_key("midi") {
                     let (fun_arg_names, fun_expr) = functions.usr_lib.get("midi").unwrap().clone();
 
@@ -91,7 +89,7 @@ pub fn open_midi_input_port<const BUFSIZE: usize, const NCHAN: usize>(
                         for eval_expr in fun_tail {
                             interpreter::interpret(
                                 eval_expr,
-                                &function_map,
+                                &functions,
                                 session.clone(),
                                 base_dir.clone(),
                             );

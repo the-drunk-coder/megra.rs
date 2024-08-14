@@ -16,7 +16,7 @@ use crate::parser::FunctionMap;
 use crate::session::Session;
 
 pub fn run_editor<const BUFSIZE: usize, const NCHAN: usize>(
-    function_map: &sync::Arc<Mutex<FunctionMap>>,
+    function_map: &sync::Arc<FunctionMap>,
     session: Session<BUFSIZE, NCHAN>,
     base_dir: String,
     create_sketch: bool,
@@ -32,7 +32,7 @@ pub fn run_editor<const BUFSIZE: usize, const NCHAN: usize>(
         sync::Arc::new(Mutex::new(move |text: &String| {
             let pfa_in = parser::eval_from_str(
                 text,
-                &function_map2.lock(),
+                &function_map2,
                 &globals2,
                 session.sample_set.clone(),
                 session.output_mode,

@@ -55,7 +55,7 @@ fn fetch_url(url: String, file_name: String) -> anyhow::Result<()> {
 
 #[allow(deprecated)]
 pub fn fetch_sample_set<const BUFSIZE: usize, const NCHAN: usize>(
-    function_map: &sync::Arc<Mutex<FunctionMap>>,
+    function_map: &sync::Arc<FunctionMap>,
     ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
     sample_set: SampleAndWavematrixSet,
     base_dir: String,
@@ -235,7 +235,7 @@ pub fn load_sample_as_wavematrix(
 }
 
 pub fn load_sample<const BUFSIZE: usize, const NCHAN: usize>(
-    function_map: &sync::Arc<Mutex<FunctionMap>>,
+    function_map: &sync::Arc<FunctionMap>,
     ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
     mut sample_set: SampleAndWavematrixSet,
     set: String,
@@ -319,7 +319,6 @@ pub fn load_sample<const BUFSIZE: usize, const NCHAN: usize>(
 
         sample_set.insert(set.clone(), keyword_set, bufnum, duration);
         function_map
-            .lock()
             .std_lib // add sample functions to std lib for now ...
             .insert(set, eval::events::sound::sound);
     } else {
@@ -328,7 +327,7 @@ pub fn load_sample<const BUFSIZE: usize, const NCHAN: usize>(
 }
 
 pub fn load_sample_set<const BUFSIZE: usize, const NCHAN: usize>(
-    function_map: &sync::Arc<Mutex<FunctionMap>>,
+    function_map: &sync::Arc<FunctionMap>,
     ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
     sample_set: SampleAndWavematrixSet,
     samples_path: &Path,
@@ -378,7 +377,7 @@ pub fn load_sample_set<const BUFSIZE: usize, const NCHAN: usize>(
 }
 
 pub fn load_sample_set_string<const BUFSIZE: usize, const NCHAN: usize>(
-    function_map: &sync::Arc<Mutex<FunctionMap>>,
+    function_map: &sync::Arc<FunctionMap>,
     ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
     sample_set: SampleAndWavematrixSet,
     samples_path: String,
@@ -389,7 +388,7 @@ pub fn load_sample_set_string<const BUFSIZE: usize, const NCHAN: usize>(
 }
 
 pub fn load_sample_sets<const BUFSIZE: usize, const NCHAN: usize>(
-    function_map: &sync::Arc<Mutex<FunctionMap>>,
+    function_map: &sync::Arc<FunctionMap>,
     ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
     sample_set: SampleAndWavematrixSet,
     folder_path: String,
@@ -400,7 +399,7 @@ pub fn load_sample_sets<const BUFSIZE: usize, const NCHAN: usize>(
 }
 
 pub fn load_sample_sets_path<const BUFSIZE: usize, const NCHAN: usize>(
-    function_map: &sync::Arc<Mutex<FunctionMap>>,
+    function_map: &sync::Arc<FunctionMap>,
     ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
     sample_set: SampleAndWavematrixSet,
     root_path: &Path,

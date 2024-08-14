@@ -74,7 +74,7 @@ pub fn segment_expressions(text: String) -> Vec<String> {
 
 pub fn parse_file<const BUFSIZE: usize, const NCHAN: usize>(
     path: String,
-    functions: &sync::Arc<parking_lot::Mutex<FunctionMap>>,
+    functions: &sync::Arc<FunctionMap>,
     session: &Session<BUFSIZE, NCHAN>,
     base_dir: String,
 ) {
@@ -85,10 +85,9 @@ pub fn parse_file<const BUFSIZE: usize, const NCHAN: usize>(
 
             for expr in expressions {
                 let res = {
-                    let funs = functions.lock();
                     parser::eval_from_str(
                         &expr,
-                        &funs,
+                        &functions,
                         &session.globals,
                         session.sample_set.clone(),
                         session.output_mode,
