@@ -299,7 +299,7 @@ pub fn load_sample<const BUFSIZE: usize, const NCHAN: usize>(
         let path2 = Path::new(&path);
         if let Some(os_filename) = path2.file_stem() {
             if let Some(str_filename) = os_filename.to_str() {
-                let tokens = str_filename.split(|c| c == ' ' || c == '_' || c == '-' || c == '.');
+                let tokens = str_filename.split([' ', '_', '-', '.']);
                 for token in tokens {
                     keyword_set.insert(token.to_lowercase().to_string());
                 }
@@ -577,10 +577,10 @@ pub fn step_part<const BUFSIZE: usize, const NCHAN: usize>(
                     if let Some(cli) = session.osc_client.vis.try_read() {
                         if let Some(ref vc) = *cli {
                             if gen.root_generator.is_modified() {
-                                vc.create_or_update(&gen);
+                                vc.create_or_update(gen);
                                 gen.root_generator.clear_modified()
                             }
-                            vc.update_active_node(&gen);
+                            vc.update_active_node(gen);
                             for proc in gen.processors.iter_mut() {
                                 proc.visualize_if_possible(vc);
                             }
@@ -607,10 +607,10 @@ pub fn step_part<const BUFSIZE: usize, const NCHAN: usize>(
                 if let Some(cli) = session.osc_client.vis.try_read() {
                     if let Some(ref vc) = *cli {
                         if gen.root_generator.is_modified() {
-                            vc.create_or_update(&gen);
+                            vc.create_or_update(gen);
                             gen.root_generator.clear_modified()
                         }
-                        vc.update_active_node(&gen);
+                        vc.update_active_node(gen);
                         for proc in gen.processors.iter_mut() {
                             proc.visualize_if_possible(vc);
                         }

@@ -87,7 +87,7 @@ pub fn parse_file<const BUFSIZE: usize, const NCHAN: usize>(
                 let res = {
                     parser::eval_from_str(
                         &expr,
-                        &functions,
+                        functions,
                         &session.globals,
                         session.sample_set.clone(),
                         session.output_mode,

@@ -54,7 +54,7 @@ pub fn concat(
                     accum.push_str(&s);
                 }
                 Comparable::Character(c) => {
-                    accum.push_str(&c.to_string());
+                    accum.push(c);
                 }
             }
         }

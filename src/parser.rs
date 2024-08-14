@@ -538,7 +538,7 @@ pub fn eval_expression(
                     eval_usr_fun(
                         fun_arg_names,
                         fun_expr,
-                        &tail,
+                        tail,
                         functions,
                         globals,
                         sample_set,

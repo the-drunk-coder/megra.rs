@@ -252,41 +252,25 @@ fn main() -> Result<(), anyhow::Error> {
     };
 
     let num_live_buffers: u16 = if let Some(s) = matches.opt_str("live-buffers") {
-        if let Ok(f) = s.parse() {
-            f
-        } else {
-            1
-        }
+        s.parse().unwrap_or(1)
     } else {
         1
     };
 
     let max_sample_buffers: usize = if let Some(s) = matches.opt_str("max-sample-buffers") {
-        if let Ok(f) = s.parse() {
-            f
-        } else {
-            3000
-        }
+        s.parse().unwrap_or(3000)
     } else {
         3000
     };
 
     let live_buffer_time: f32 = if let Some(s) = matches.opt_str("live-buffer-time") {
-        if let Ok(f) = s.parse() {
-            f
-        } else {
-            3.0
-        }
+        s.parse().unwrap_or(3.0)
     } else {
         3.0
     };
 
     let font_size: f32 = if let Some(s) = matches.opt_str("font-size") {
-        if let Ok(f) = s.parse() {
-            f
-        } else {
-            15.0
-        }
+        s.parse().unwrap_or(15.0)
     } else {
         15.0
     };
