@@ -57,15 +57,6 @@ impl LivecodeTextEditState {
 pub struct LivecodeTextEditOutput {
     /// The interaction response.
     pub response: egui::Response,
-
-    /// How the text was displayed.
-    pub galley: Arc<egui::Galley>,
-
-    /// The state we stored after the run/
-    pub state: LivecodeTextEditState,
-
-    /// Where the text cursor is.
-    pub cursor_range: Option<CursorRange>,
 }
 
 type Undoer = egui::util::undoer::Undoer<(CCursorRange, String)>;
@@ -523,12 +514,7 @@ impl<'t> LivecodeTextEdit<'t> {
             response.widget_info(|| WidgetInfo::text_edit(prev_text.as_str(), text.as_str()));
         }
 
-        LivecodeTextEditOutput {
-            response,
-            galley,
-            state,
-            cursor_range,
-        }
+        LivecodeTextEditOutput { response }
     }
 }
 
