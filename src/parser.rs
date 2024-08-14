@@ -145,6 +145,7 @@ fn valid_string_char(chr: char) -> bool {
         || chr == '='
         || chr == '['
         || chr == ']'
+        || chr == '#'
         || is_alphanumeric(chr as u8)
         || is_space(chr as u8)
         || is_newline(chr as u8)
