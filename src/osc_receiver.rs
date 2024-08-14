@@ -1,4 +1,3 @@
-use parking_lot::Mutex;
 use rosc::{OscPacket, OscType};
 
 use std::collections::HashMap;

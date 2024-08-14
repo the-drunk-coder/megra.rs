@@ -526,7 +526,7 @@ mod tests {
         let template_events = Vec::new();
         let event_mappings = HashMap::new();
 
-        let mut fmap: FunctionMap = FunctionMap::new();
+        let fmap: FunctionMap = FunctionMap::new();
         fmap.std_lib.insert(
             "piano".to_string(),
             crate::parser::eval::events::sound::sound,

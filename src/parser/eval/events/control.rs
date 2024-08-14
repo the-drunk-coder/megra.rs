@@ -54,7 +54,7 @@ mod tests {
     #[test]
     fn test_eval_ctrl() {
         let snippet = "(ctrl (sx 'ba #t (nuc 'ad (saw 200))))";
-        let mut functions = FunctionMap::new();
+        let functions = FunctionMap::new();
         let sample_set = SampleAndWavematrixSet::new();
 
         functions

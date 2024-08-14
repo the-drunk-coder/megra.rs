@@ -150,7 +150,7 @@ mod tests {
     #[test]
     fn test_eval_sx() {
         let snippet = "(sx 'ga #t (nuc 'da (bd)))";
-        let mut functions = FunctionMap::new();
+        let functions = FunctionMap::new();
         let sample_set = SampleAndWavematrixSet::new();
 
         functions

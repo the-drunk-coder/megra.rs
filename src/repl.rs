@@ -1,5 +1,3 @@
-use parking_lot::Mutex;
-
 use std::sync;
 
 use rustyline::error::ReadlineError;

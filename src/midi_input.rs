@@ -1,7 +1,5 @@
 use midir::{Ignore, MidiInput};
 
-use parking_lot::Mutex;
-
 use std::collections::HashMap;
 use std::sync;
 

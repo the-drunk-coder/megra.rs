@@ -695,7 +695,7 @@ mod tests {
     fn test_parse_eval() {
         let snippet = "(text 'tar :lvl 1.0 :global #t :relate #f :boost (bounce 0 400))";
 
-        let mut functions = FunctionMap::new();
+        let functions = FunctionMap::new();
         let globals = sync::Arc::new(GlobalVariables::new());
         let sample_set = SampleAndWavematrixSet::new();
 

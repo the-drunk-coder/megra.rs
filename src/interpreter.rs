@@ -1,4 +1,3 @@
-use parking_lot::Mutex;
 use rosc::OscType;
 
 use std::sync;
