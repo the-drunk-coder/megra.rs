@@ -1,10 +1,9 @@
 use midir::{Ignore, MidiInput};
 
 use std::collections::HashMap;
-use std::sync;
 
 use crate::builtin_types::Comparable;
-use crate::parser::{eval_expression, EvaluatedExpr, FunctionMap, LocalVariables};
+use crate::parser::{eval_expression, EvaluatedExpr, LocalVariables};
 use crate::{interpreter, Session};
 
 pub fn list_midi_input_ports() {

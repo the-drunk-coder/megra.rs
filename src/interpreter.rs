@@ -9,7 +9,7 @@ use crate::commands;
 use crate::file_interpreter;
 use crate::midi_input;
 use crate::osc_receiver::OscReceiver;
-use crate::parser::{EvaluatedExpr, FunctionMap};
+use crate::parser::EvaluatedExpr;
 
 use crate::session::Session;
 use crate::visualizer_client::VisualizerClient;

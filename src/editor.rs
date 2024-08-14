@@ -11,7 +11,6 @@ use megra_editor::{EditorFont, MegraEditor};
 
 use crate::interpreter;
 use crate::parser;
-use crate::parser::FunctionMap;
 
 use crate::session::Session;
 

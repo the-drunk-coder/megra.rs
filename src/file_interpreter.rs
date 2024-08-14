@@ -1,8 +1,8 @@
-use std::{fs, path, sync};
+use std::{fs, path};
 
 use crate::{
     interpreter,
-    parser::{self, FunctionMap},
+    parser::{self},
     session::Session,
 };
 
