@@ -1,17 +1,12 @@
-use std::sync;
-
 use rustyline::error::ReadlineError;
 use rustyline::Editor;
 
 use crate::interpreter;
 
 use crate::parser;
-use crate::parser::FunctionMap;
-
 use crate::session::Session;
 
 pub fn start_repl<const BUFSIZE: usize, const NCHAN: usize>(
-    function_map: &sync::Arc<FunctionMap>,
     session: Session<BUFSIZE, NCHAN>,
     base_dir: String,
 ) -> Result<(), anyhow::Error> {
@@ -32,7 +27,7 @@ pub fn start_repl<const BUFSIZE: usize, const NCHAN: usize>(
 
                 let pfa_in = parser::eval_from_str(
                     line.as_str(),
-                    function_map,
+                    &session.functions,
                     &session.globals,
                     session.sample_set.clone(),
                     session.output_mode,
@@ -56,7 +51,7 @@ pub fn start_repl<const BUFSIZE: usize, const NCHAN: usize>(
                                         line_buffer.push_str(line.as_str());
                                         let inner_pfa_in = parser::eval_from_str(
                                             line_buffer.as_str(),
-                                            function_map,
+                                            &session.functions,
                                             &session.globals,
                                             session.sample_set.clone(),
                                             session.output_mode,
@@ -65,7 +60,6 @@ pub fn start_repl<const BUFSIZE: usize, const NCHAN: usize>(
                                             Ok(pfa) => {
                                                 interpreter::interpret(
                                                     pfa,
-                                                    function_map,
                                                     session.clone(),
                                                     base_dir.clone(),
                                                 );
@@ -88,12 +82,7 @@ pub fn start_repl<const BUFSIZE: usize, const NCHAN: usize>(
                         }
                     }
                     Ok(pfa) => {
-                        interpreter::interpret(
-                            pfa,
-                            function_map,
-                            session.clone(),
-                            base_dir.clone(),
-                        );
+                        interpreter::interpret(pfa, session.clone(), base_dir.clone());
                         rl.add_history_entry(line.as_str());
                     }
                 }

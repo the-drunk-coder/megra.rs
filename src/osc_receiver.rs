@@ -16,7 +16,6 @@ pub struct OscReceiver;
 impl OscReceiver {
     pub fn start_receiver_thread_udp<const BUFSIZE: usize, const NCHAN: usize>(
         target: String,
-        functions: sync::Arc<FunctionMap>,
         session: Session<BUFSIZE, NCHAN>,
         base_dir: String,
     ) {
@@ -43,9 +42,9 @@ impl OscReceiver {
 
                             // check whether we have an OSC function stored under this address ...
 
-                            if functions.usr_lib.contains_key(&msg.addr) {
+                            if session.functions.usr_lib.contains_key(&msg.addr) {
                                 let (fun_arg_names, fun_expr) =
-                                    functions.usr_lib.get(&msg.addr).unwrap().clone();
+                                    session.functions.usr_lib.get(&msg.addr).unwrap().clone();
 
                                 // FIRST, eval local args,
                                 // manual zip
@@ -96,7 +95,7 @@ impl OscReceiver {
                                     .map(|expr| {
                                         eval_expression(
                                             expr,
-                                            &functions,
+                                            &session.functions,
                                             &session.globals,
                                             Some(&local_vars),
                                             session.sample_set.clone(),
@@ -109,7 +108,6 @@ impl OscReceiver {
                                     for eval_expr in fun_tail {
                                         interpreter::interpret(
                                             eval_expr,
-                                            &functions,
                                             session.clone(),
                                             base_dir.clone(),
                                         );

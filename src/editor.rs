@@ -16,7 +16,6 @@ use crate::parser::FunctionMap;
 use crate::session::Session;
 
 pub fn run_editor<const BUFSIZE: usize, const NCHAN: usize>(
-    function_map: &sync::Arc<FunctionMap>,
     session: Session<BUFSIZE, NCHAN>,
     base_dir: String,
     create_sketch: bool,
@@ -24,7 +23,6 @@ pub fn run_editor<const BUFSIZE: usize, const NCHAN: usize>(
     font_size: f32,
     karl_yerkes_mode: bool,
 ) -> std::result::Result<(), eframe::Error> {
-    let function_map2 = sync::Arc::clone(function_map);
     let globals2 = sync::Arc::clone(&session.globals);
     let base_dir_2 = base_dir.clone();
 
@@ -32,19 +30,14 @@ pub fn run_editor<const BUFSIZE: usize, const NCHAN: usize>(
         sync::Arc::new(Mutex::new(move |text: &String| {
             let pfa_in = parser::eval_from_str(
                 text,
-                &function_map2,
+                &session.functions,
                 &globals2,
                 session.sample_set.clone(),
                 session.output_mode,
             );
             match pfa_in {
                 Ok(pfa) => {
-                    interpreter::interpret(
-                        pfa,
-                        &function_map2,
-                        session.clone(),
-                        base_dir_2.to_string(),
-                    );
+                    interpreter::interpret(pfa, session.clone(), base_dir_2.to_string());
                 }
                 Err(e) => {
                     println!("could not parse this! {text} {e}")

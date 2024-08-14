@@ -406,7 +406,6 @@ pub fn define_standard_library() -> FunctionMap {
     // midi
     standard_library.std_lib.insert("list-midi-ports".to_string(), eval::midi::eval_list_midi_ports);
     standard_library.std_lib.insert("open-midi-port".to_string(), eval::midi::open_midi_port);
-
         
     // types for osc and other stuff
     standard_library.std_lib.insert("f64".to_string(), eval::types::double);
@@ -414,6 +413,5 @@ pub fn define_standard_library() -> FunctionMap {
     standard_library.std_lib.insert("i64".to_string(), eval::types::long);
     standard_library.std_lib.insert("pair".to_string(), eval::types::pair);
 
-    
     standard_library
 }

@@ -20,7 +20,6 @@ pub fn list_midi_input_ports() {
 
 pub fn open_midi_input_port<const BUFSIZE: usize, const NCHAN: usize>(
     in_port_num: usize,
-    functions: sync::Arc<FunctionMap>,
     session: Session<BUFSIZE, NCHAN>,
     base_dir: String,
 ) {
@@ -41,8 +40,9 @@ pub fn open_midi_input_port<const BUFSIZE: usize, const NCHAN: usize>(
             in_port,
             "midir-read-input",
             move |_, message, _| {
-                if functions.usr_lib.contains_key("midi") {
-                    let (fun_arg_names, fun_expr) = functions.usr_lib.get("midi").unwrap().clone();
+                if session.functions.usr_lib.contains_key("midi") {
+                    let (fun_arg_names, fun_expr) =
+                        session.functions.usr_lib.get("midi").unwrap().clone();
 
                     // FIRST, eval local args,
                     // manual zip
@@ -74,7 +74,7 @@ pub fn open_midi_input_port<const BUFSIZE: usize, const NCHAN: usize>(
                         .map(|expr| {
                             eval_expression(
                                 expr,
-                                &functions,
+                                &session.functions,
                                 &session.globals,
                                 Some(&local_vars),
                                 session.sample_set.clone(),
@@ -85,12 +85,7 @@ pub fn open_midi_input_port<const BUFSIZE: usize, const NCHAN: usize>(
                     {
                         // return last form result, cl-style
                         for eval_expr in fun_tail {
-                            interpreter::interpret(
-                                eval_expr,
-                                &functions,
-                                session.clone(),
-                                base_dir.clone(),
-                            );
+                            interpreter::interpret(eval_expr, session.clone(), base_dir.clone());
                         }
                     }
                 }

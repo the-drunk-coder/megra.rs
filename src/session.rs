@@ -13,6 +13,7 @@ use crate::event_helpers::*;
 use crate::generator::Generator;
 use crate::osc_client::OscClient;
 use crate::parameter::*;
+use crate::parser::FunctionMap;
 use crate::real_time_streaming;
 use crate::scheduler::{Scheduler, SchedulerData};
 use crate::SampleAndWavematrixSet;
@@ -65,6 +66,7 @@ pub struct Session<const BUFSIZE: usize, const NCHAN: usize> {
     pub sync_mode: SyncMode,
     pub ruffbox: sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
     pub globals: sync::Arc<GlobalVariables>,
+    pub functions: sync::Arc<FunctionMap>,
     pub schedulers: sync::Arc<
         DashMap<BTreeSet<String>, (Scheduler<BUFSIZE, NCHAN>, SchedulerData<BUFSIZE, NCHAN>)>,
     >,

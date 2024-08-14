@@ -16,13 +16,12 @@ use crate::visualizer_client::VisualizerClient;
 
 pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
     c: Command,
-    function_map: &sync::Arc<FunctionMap>,
     session: &Session<BUFSIZE, NCHAN>,
     base_dir: String,
 ) {
     match c {
         Command::LoadFile(f) => {
-            file_interpreter::parse_file(f, function_map, session, base_dir);
+            file_interpreter::parse_file(f, session, base_dir);
         }
         Command::Push(id, te) => {
             commands::push(id, te, &session.globals);
@@ -66,7 +65,7 @@ pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
         }
         Command::ImportSampleSet(resource) => {
             let ruffbox2 = sync::Arc::clone(&session.ruffbox);
-            let fmap2 = sync::Arc::clone(function_map);
+            let fmap2 = sync::Arc::clone(&session.functions);
             let session2 = session.clone();
             thread::spawn(move || {
                 commands::fetch_sample_set(
@@ -80,7 +79,7 @@ pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
         }
         Command::LoadSample(set, mut keywords, path, downmix_stereo) => {
             let ruffbox2 = sync::Arc::clone(&session.ruffbox);
-            let fmap2 = sync::Arc::clone(function_map);
+            let fmap2 = sync::Arc::clone(&session.functions);
             let session2 = session.clone();
             thread::spawn(move || {
                 commands::load_sample(
@@ -111,7 +110,7 @@ pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
         }
         Command::LoadSampleSets(path, downmix_stereo) => {
             let ruffbox2 = sync::Arc::clone(&session.ruffbox);
-            let fmap2 = sync::Arc::clone(function_map);
+            let fmap2 = sync::Arc::clone(&session.functions);
             let session2 = session.clone();
             thread::spawn(move || {
                 commands::load_sample_sets(
@@ -126,7 +125,7 @@ pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
         }
         Command::LoadSampleSet(path, downmix_stereo) => {
             let ruffbox2 = sync::Arc::clone(&session.ruffbox);
-            let fmap2 = sync::Arc::clone(function_map);
+            let fmap2 = sync::Arc::clone(&session.functions);
             let session2 = session.clone();
             thread::spawn(move || {
                 commands::load_sample_set_string(
@@ -212,19 +211,12 @@ pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
             //println!("send msg {client_name} {osc_addr}");
         }
         Command::OscStartReceiver(target) => {
-            let fmap2 = sync::Arc::clone(function_map);
-            OscReceiver::start_receiver_thread_udp(target, fmap2, session.clone(), base_dir);
+            OscReceiver::start_receiver_thread_udp(target, session.clone(), base_dir);
         }
         Command::MidiStartReceiver(midi_in_port) => {
-            let function_map_midi = sync::Arc::clone(function_map);
             let session2 = session.clone();
             thread::spawn(move || {
-                midi_input::open_midi_input_port(
-                    midi_in_port,
-                    function_map_midi,
-                    session2,
-                    base_dir,
-                );
+                midi_input::open_midi_input_port(midi_in_port, session2, base_dir);
             });
         }
         Command::MidiListPorts => {
@@ -235,7 +227,6 @@ pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
 
 pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
     parsed_in: EvaluatedExpr,
-    function_map: &sync::Arc<FunctionMap>,
     session: Session<BUFSIZE, NCHAN>,
     base_dir: String,
 ) {
@@ -287,7 +278,7 @@ pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
             Session::handle_context(&mut s, &session);
         }
         EvaluatedExpr::Command(c) => {
-            interpret_command(c, function_map, &session, base_dir);
+            interpret_command(c, &session, base_dir);
         }
         EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f))) => {
             println!("a number: {f}")
@@ -315,7 +306,7 @@ pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
         }
         EvaluatedExpr::FunctionDefinition(name, pos_args, body) => {
             println!("a function definition: {name} positional args: {pos_args:?}");
-            function_map.usr_lib.insert(name, (pos_args, body));
+            session.functions.usr_lib.insert(name, (pos_args, body));
         }
         EvaluatedExpr::VariableDefinition(name, var) => {
             println!("a variable definition {name:#?}");
@@ -323,7 +314,7 @@ pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
         }
         EvaluatedExpr::Progn(exprs) => {
             for expr in exprs {
-                interpret(expr, function_map, session.clone(), base_dir.clone());
+                interpret(expr, session.clone(), base_dir.clone());
             }
         }
         EvaluatedExpr::Match(temp, exprs) => {
@@ -333,12 +324,7 @@ pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
                         EvaluatedExpr::Typed(TypedEntity::Comparable(t2)) => {
                             if let TypedEntity::Comparable(ref ct1) = t1 {
                                 if *ct1 == t2 {
-                                    interpret(
-                                        expr,
-                                        function_map,
-                                        session.clone(),
-                                        base_dir.clone(),
-                                    );
+                                    interpret(expr, session.clone(), base_dir.clone());
                                 }
                             }
                         }
@@ -346,60 +332,35 @@ pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
                             Comparator::GreaterEqual(x) => {
                                 if let TypedEntity::Comparable(ref ct1) = t1 {
                                     if *ct1 >= x {
-                                        interpret(
-                                            expr,
-                                            function_map,
-                                            session.clone(),
-                                            base_dir.clone(),
-                                        );
+                                        interpret(expr, session.clone(), base_dir.clone());
                                     }
                                 }
                             }
                             Comparator::Greater(x) => {
                                 if let TypedEntity::Comparable(ref ct1) = t1 {
                                     if *ct1 > x {
-                                        interpret(
-                                            expr,
-                                            function_map,
-                                            session.clone(),
-                                            base_dir.clone(),
-                                        );
+                                        interpret(expr, session.clone(), base_dir.clone());
                                     }
                                 }
                             }
                             Comparator::Equal(x) => {
                                 if let TypedEntity::Comparable(ref ct1) = t1 {
                                     if *ct1 == x {
-                                        interpret(
-                                            expr,
-                                            function_map,
-                                            session.clone(),
-                                            base_dir.clone(),
-                                        );
+                                        interpret(expr, session.clone(), base_dir.clone());
                                     }
                                 }
                             }
                             Comparator::LesserEqual(x) => {
                                 if let TypedEntity::Comparable(ref ct1) = t1 {
                                     if *ct1 <= x {
-                                        interpret(
-                                            expr,
-                                            function_map,
-                                            session.clone(),
-                                            base_dir.clone(),
-                                        );
+                                        interpret(expr, session.clone(), base_dir.clone());
                                     }
                                 }
                             }
                             Comparator::Lesser(x) => {
                                 if let TypedEntity::Comparable(ref ct1) = t1 {
                                     if *ct1 < x {
-                                        interpret(
-                                            expr,
-                                            function_map,
-                                            session.clone(),
-                                            base_dir.clone(),
-                                        );
+                                        interpret(expr, session.clone(), base_dir.clone());
                                     }
                                 }
                             }
@@ -409,53 +370,28 @@ pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
                                     || matches!(t1, TypedEntity::Comparable(Comparable::Int32(_)))
                                     || matches!(t1, TypedEntity::Comparable(Comparable::Int64(_)))
                                 {
-                                    interpret(
-                                        expr,
-                                        function_map,
-                                        session.clone(),
-                                        base_dir.clone(),
-                                    );
+                                    interpret(expr, session.clone(), base_dir.clone());
                                 }
                             }
 
                             Comparator::IsString => {
                                 if matches!(t1, TypedEntity::Comparable(Comparable::String(_))) {
-                                    interpret(
-                                        expr,
-                                        function_map,
-                                        session.clone(),
-                                        base_dir.clone(),
-                                    );
+                                    interpret(expr, session.clone(), base_dir.clone());
                                 }
                             }
                             Comparator::IsSymbol => {
                                 if matches!(t1, TypedEntity::Comparable(Comparable::Symbol(_))) {
-                                    interpret(
-                                        expr,
-                                        function_map,
-                                        session.clone(),
-                                        base_dir.clone(),
-                                    );
+                                    interpret(expr, session.clone(), base_dir.clone());
                                 }
                             }
                             Comparator::IsMap => {
                                 if matches!(t1, TypedEntity::Map(_)) {
-                                    interpret(
-                                        expr,
-                                        function_map,
-                                        session.clone(),
-                                        base_dir.clone(),
-                                    );
+                                    interpret(expr, session.clone(), base_dir.clone());
                                 }
                             }
                             Comparator::IsVec => {
                                 if matches!(t1, TypedEntity::Vec(_)) {
-                                    interpret(
-                                        expr,
-                                        function_map,
-                                        session.clone(),
-                                        base_dir.clone(),
-                                    );
+                                    interpret(expr, session.clone(), base_dir.clone());
                                 }
                             }
                         },

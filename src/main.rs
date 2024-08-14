@@ -710,10 +710,9 @@ fn run<const NCHAN: usize>(
         ruffbox: sync::Arc::new(controls),
         output_mode: options.mode,
         sync_mode: session::SyncMode::NotOnSilence,
+        // define the "standard library"
+        functions: sync::Arc::new(define_standard_library()),
     };
-
-    // define the "standard library"
-    let stdlib = sync::Arc::new(define_standard_library());
 
     let base_dir = if let Some(p) = options.base_folder {
         let bd = std::path::PathBuf::from(p);
@@ -774,7 +773,6 @@ fn run<const NCHAN: usize>(
         println!("loading init file {init_path_string}");
         file_interpreter::parse_file(
             init_path_string,
-            &stdlib,
             &session,
             base_dir.to_str().unwrap().to_string(),
         );
@@ -784,7 +782,7 @@ fn run<const NCHAN: usize>(
     if options.load_samples {
         println!("load samples from path: {samples_path:?}");
         let controls_arc2 = sync::Arc::clone(&session.ruffbox);
-        let stdlib2 = sync::Arc::clone(&stdlib);
+        let stdlib2 = sync::Arc::clone(&session.functions);
         let sample_set2 = session.sample_set.clone();
         thread::spawn(move || {
             commands::load_sample_sets_path(
@@ -800,7 +798,6 @@ fn run<const NCHAN: usize>(
 
     if options.editor {
         editor::run_editor(
-            &stdlib,
             session,
             base_dir.display().to_string(),
             options.create_sketch,
@@ -812,6 +809,6 @@ fn run<const NCHAN: usize>(
         Ok(())
     } else {
         // start the megra repl
-        repl::start_repl(&stdlib, session, base_dir.display().to_string())
+        repl::start_repl(session, base_dir.display().to_string())
     }
 }
