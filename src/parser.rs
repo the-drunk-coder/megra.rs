@@ -414,6 +414,68 @@ pub fn eval_usr_fun(
     fun_tail.pop()
 }
 
+pub fn eval_usr_fun_evaluated_tail(
+    fun_arg_names: Vec<String>,
+    fun_expr: Vec<Expr>,
+    mut tail: Vec<EvaluatedExpr>,
+    functions: &FunctionMap,
+    globals: &sync::Arc<GlobalVariables>,
+    sample_set: SampleAndWavematrixSet,
+    out_mode: OutputMode,
+) -> Option<EvaluatedExpr> {
+    if fun_arg_names.len() > tail.len() {
+        // not enough arguments ... no general currying currently :(
+        return None;
+    }
+
+    // FIRST, eval local args,
+    // manual zip
+    let mut local_args = HashMap::new();
+    for (i, expr) in tail.drain(..fun_arg_names.len()).enumerate() {
+        local_args.insert(fun_arg_names[i].clone(), expr);
+    }
+
+    let mut rest = Vec::new();
+    for expr in tail.drain(fun_arg_names.len()..) {
+        rest.push(expr);
+    }
+
+    let local_vars = LocalVariables {
+        pos_args: if local_args.is_empty() {
+            None
+        } else {
+            Some(local_args)
+        },
+        rest: if rest.is_empty() { None } else { Some(rest) },
+    };
+
+    // THIRD
+    let mut fun_tail: Vec<EvaluatedExpr> = Vec::new();
+    for expr in fun_expr.iter() {
+        if let Some(e) = eval_expression(
+            expr,
+            functions,
+            globals,
+            Some(&local_vars),
+            sample_set.clone(),
+            out_mode,
+        ) {
+            // the list field exists only to be flattened
+            if let EvaluatedExpr::EvaluatedExprList(mut l) = e {
+                fun_tail.append(&mut l);
+            } else {
+                fun_tail.push(e);
+            }
+        } else {
+            // jump out if expression can't be evaluated
+            return None;
+        }
+    }
+
+    // return last form result, cl-style
+    fun_tail.pop()
+}
+
 /// This one reduces the abstract syntax tree ...
 /// does not resolve global variables at this point,
 /// as there might be different points in time where it makes

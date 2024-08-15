@@ -28,7 +28,14 @@ impl PearProcessor {
 // zip mode etc seem to be outdated ... going for any mode for now
 impl GeneratorProcessor for PearProcessor {
     // this one only processes the event stream ...
-    fn process_events(&mut self, events: &mut Vec<InterpretableEvent>, _: &Arc<GlobalVariables>) {
+    fn process_events(
+        &mut self,
+        events: &mut Vec<InterpretableEvent>,
+        _: &Arc<GlobalVariables>,
+        _functions: &Arc<FunctionMap>,
+        _sample_set: SampleAndWavematrixSet,
+        _out_mode: OutputMode,
+    ) {
         let mut rng = rand::thread_rng();
 
         for (cur_prob, static_events) in self.last_static.iter() {
@@ -51,7 +58,14 @@ impl GeneratorProcessor for PearProcessor {
         }
     }
     // .. including transition events
-    fn process_transition(&mut self, trans: &mut StaticEvent, globals: &Arc<GlobalVariables>) {
+    fn process_transition(
+        &mut self,
+        trans: &mut StaticEvent,
+        globals: &Arc<GlobalVariables>,
+        _functions: &Arc<FunctionMap>,
+        _sample_set: SampleAndWavematrixSet,
+        _out_mode: OutputMode,
+    ) {
         // generate static events, as this is always called first ...
         self.last_static.clear();
 

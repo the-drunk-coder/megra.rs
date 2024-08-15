@@ -53,6 +53,7 @@ pub enum TypedEntity {
     GeneratorProcessorOrModifier(GeneratorProcessorOrModifier),
     ControlEvent(ControlEvent),
     SoundEvent(Event),
+    StaticEvent(InterpretableEvent),
     Parameter(DynVal),
     ParameterValue(ParameterValue),
     Rule(Rule),

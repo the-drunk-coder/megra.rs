@@ -44,7 +44,14 @@ impl GeneratorProcessor for EveryProcessor {
     }
 
     // this one
-    fn process_events(&mut self, events: &mut Vec<InterpretableEvent>, _: &Arc<GlobalVariables>) {
+    fn process_events(
+        &mut self,
+        events: &mut Vec<InterpretableEvent>,
+        _: &Arc<GlobalVariables>,
+        _functions: &Arc<FunctionMap>,
+        _sample_set: SampleAndWavematrixSet,
+        _out_mode: OutputMode,
+    ) {
         // last_static compiled in `process_transitions`, which is always called first ...
         for static_events in self.last_static.iter() {
             for (filter, inner_static) in static_events.iter() {
@@ -78,7 +85,14 @@ impl GeneratorProcessor for EveryProcessor {
         self.step_count += 1;
     }
 
-    fn process_transition(&mut self, trans: &mut StaticEvent, globals: &Arc<GlobalVariables>) {
+    fn process_transition(
+        &mut self,
+        trans: &mut StaticEvent,
+        globals: &Arc<GlobalVariables>,
+        _functions: &Arc<FunctionMap>,
+        _sample_set: SampleAndWavematrixSet,
+        _out_mode: OutputMode,
+    ) {
         // process_transition is always compiled first, so here we compile the static events ...
         self.last_static.clear();
 

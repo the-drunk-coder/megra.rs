@@ -78,7 +78,7 @@ pub enum SourceEvent {
 
 /// This is the "final" event after all the parameters have been evaluated,
 /// so that it can be interpreted to either actual sound or control.
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum InterpretableEvent {
     Sound(StaticEvent),
     Control(ControlEvent),

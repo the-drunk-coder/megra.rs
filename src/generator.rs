@@ -3,6 +3,9 @@ use crate::{
     event::{EventOperation, InterpretableEvent, StaticEvent},
     generator_processor::GeneratorProcessor,
     markov_sequence_generator::MarkovSequenceGenerator,
+    parser::FunctionMap,
+    sample_set::SampleAndWavematrixSet,
+    session::OutputMode,
 };
 use core::fmt;
 use ruffbox_synth::building_blocks::{SynthParameterLabel, SynthParameterValue};
@@ -99,7 +102,13 @@ impl Generator {
         self.root_generator.reached_end_state()
     }
 
-    pub fn current_events(&mut self, globals: &Arc<GlobalVariables>) -> Vec<InterpretableEvent> {
+    pub fn current_events(
+        &mut self,
+        globals: &Arc<GlobalVariables>,
+        functions: &Arc<FunctionMap>,
+        sample_set: SampleAndWavematrixSet,
+        out_mode: OutputMode,
+    ) -> Vec<InterpretableEvent> {
         let mut events = self.root_generator.current_events(globals);
 
         for ev in events.iter_mut() {
@@ -115,7 +124,13 @@ impl Generator {
         tmp_procs.append(&mut self.processors);
 
         for proc in tmp_procs.iter_mut() {
-            proc.process_events(&mut events, globals);
+            proc.process_events(
+                &mut events,
+                globals,
+                functions,
+                sample_set.clone(),
+                out_mode,
+            );
             proc.process_generator(self, globals);
         }
 
@@ -129,10 +144,16 @@ impl Generator {
         events
     }
 
-    pub fn current_transition(&mut self, globals: &Arc<GlobalVariables>) -> StaticEvent {
+    pub fn current_transition(
+        &mut self,
+        globals: &Arc<GlobalVariables>,
+        functions: &Arc<FunctionMap>,
+        sample_set: SampleAndWavematrixSet,
+        out_mode: OutputMode,
+    ) -> StaticEvent {
         let mut trans = self.root_generator.current_transition(globals);
         for proc in self.processors.iter_mut() {
-            proc.process_transition(&mut trans, globals);
+            proc.process_transition(&mut trans, globals, functions, sample_set.clone(), out_mode);
         }
         if let Some(tmod) = self.time_mods.pop() {
             //println!("apply time mod");

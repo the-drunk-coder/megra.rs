@@ -147,8 +147,14 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
             }
         };
 
-        let time = if let SynthParameterValue::ScalarF32(t) =
-            gen.current_transition(&session.globals).params[&SynthParameterLabel::Duration.into()]
+        let time = if let SynthParameterValue::ScalarF32(t) = gen
+            .current_transition(
+                &session.globals,
+                &session.functions,
+                session.sample_set.clone(),
+                session.output_mode,
+            )
+            .params[&SynthParameterLabel::Duration.into()]
         {
             (t * 0.001) as f64 * tmod
         } else {
@@ -156,7 +162,12 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
         };
 
         // retrieve the current events
-        let events = gen.current_events(&session.globals);
+        let events = gen.current_events(
+            &session.globals,
+            &session.functions,
+            session.sample_set.clone(),
+            session.output_mode,
+        );
         //if events.is_empty() {
         //    println!("really no events");
         //}

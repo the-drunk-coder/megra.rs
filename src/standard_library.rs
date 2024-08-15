@@ -339,6 +339,7 @@ pub fn define_standard_library() -> FunctionMap {
     standard_library.std_lib.insert("pear".to_string(), eval::generator_processor::eval_pear);
     standard_library.std_lib.insert("apple".to_string(), eval::generator_processor::eval_apple);
     standard_library.std_lib.insert("every".to_string(), eval::generator_processor::eval_every);
+    standard_library.std_lib.insert("mapper".to_string(), eval::generator_processor::eval_mapper);
     standard_library.std_lib.insert("life".to_string(), eval::generator_processor::eval_lifemodel);
     standard_library.std_lib.insert("inhibit".to_string(), eval::generator_processor::eval_inhibit);
     standard_library.std_lib.insert("exhibit".to_string(), eval::generator_processor::eval_exhibit);
@@ -412,6 +413,11 @@ pub fn define_standard_library() -> FunctionMap {
     standard_library.std_lib.insert("i32".to_string(), eval::types::int);
     standard_library.std_lib.insert("i64".to_string(), eval::types::long);
     standard_library.std_lib.insert("pair".to_string(), eval::types::pair);
+
+    // event getters
+    standard_library.std_lib.insert("ev-param".to_string(), eval::event_getters::event_param);
+    standard_library.std_lib.insert("ev-tag".to_string(), eval::event_getters::event_tag);
+    standard_library.std_lib.insert("ev-name".to_string(), eval::event_getters::event_name);
 
     standard_library
 }

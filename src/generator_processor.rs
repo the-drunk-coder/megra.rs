@@ -1,6 +1,9 @@
 use std::collections::{BTreeSet, HashMap};
 use std::sync::*;
 
+use crate::parser::FunctionMap;
+use crate::sample_set::SampleAndWavematrixSet;
+use crate::session::OutputMode;
 use crate::visualizer_client::VisualizerClient;
 
 use crate::{
@@ -40,6 +43,9 @@ pub trait GeneratorProcessor: GeneratorProcessorClone {
         &mut self,
         _events: &mut Vec<InterpretableEvent>,
         _globals: &Arc<GlobalVariables>,
+        _functions: &Arc<FunctionMap>,
+        _sample_set: SampleAndWavematrixSet,
+        _out_mode: OutputMode,
     ) {
         /* pass by default */
     }
@@ -54,6 +60,9 @@ pub trait GeneratorProcessor: GeneratorProcessorClone {
         &mut self,
         _transition: &mut StaticEvent,
         _globals: &Arc<GlobalVariables>,
+        _functions: &Arc<FunctionMap>,
+        _sample_set: SampleAndWavematrixSet,
+        _out_mode: OutputMode,
     ) {
         /* pass by default */
     }
@@ -124,3 +133,6 @@ pub use lifemodel_processor::*;
 
 mod generator_wrapper_processor;
 pub use generator_wrapper_processor::*;
+
+mod mapper;
+pub use mapper::*;

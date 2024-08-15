@@ -3,6 +3,7 @@ mod every;
 mod exhibit;
 mod inhibit;
 mod lifemodel;
+mod mapper;
 mod pear;
 
 use crate::builtin_types::*;
@@ -69,6 +70,17 @@ pub fn eval_every(
 ) -> Option<EvaluatedExpr> {
     resolve_globals(&mut tail[1..], globals);
     eval_generator_processor(every::collect_every, tail)
+}
+
+pub fn eval_mapper(
+    _: &FunctionMap,
+    tail: &mut Vec<EvaluatedExpr>,
+    globals: &sync::Arc<GlobalVariables>,
+    _: SampleAndWavematrixSet,
+    _: OutputMode,
+) -> Option<EvaluatedExpr> {
+    resolve_globals(&mut tail[1..], globals);
+    eval_generator_processor(mapper::collect_mapper, tail)
 }
 
 pub fn eval_lifemodel(
