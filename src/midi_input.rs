@@ -62,9 +62,9 @@ pub fn open_midi_input_port<const BUFSIZE: usize, const NCHAN: usize>(
                         // }
                     }
 
-                    let local_vars = LocalVariables {
-                        pos_args: Some(local_args),
-                        rest: None,
+                    let mut local_vars = LocalVariables {
+                        pos_args: local_args,
+                        rest: Vec::new(),
                     };
 
                     // THIRD
@@ -75,7 +75,7 @@ pub fn open_midi_input_port<const BUFSIZE: usize, const NCHAN: usize>(
                                 expr,
                                 &session.functions,
                                 &session.globals,
-                                Some(&local_vars),
+                                &mut local_vars,
                                 session.sample_set.clone(),
                                 session.output_mode,
                             )

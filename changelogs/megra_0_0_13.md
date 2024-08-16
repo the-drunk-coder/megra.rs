@@ -16,4 +16,7 @@
 * Improvement: `bpm` for ctrl events
 * Improvement: `step-part` for ctrl events
 * Improvement: `vec` for `nuc`
+* New language construct: `mapper`, a rudimentary event mapper that takes functions
+* New langauge constructs: event getters to extract a parameter from an event `ev-param`, `ev-tag` and `ev-name`
+* New language construct: `note` event (can be used to drive scoreviz in conjunction with `mapper`)
 

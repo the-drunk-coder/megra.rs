@@ -90,6 +90,9 @@ pub fn define_standard_library() -> FunctionMap {
     standard_library.std_lib.insert("mosc".to_string(), eval::events::sound::sound);
     standard_library.std_lib.insert("blit".to_string(), eval::events::sound::sound);
 
+    // note event
+    standard_library.std_lib.insert("note".to_string(), eval::events::note::event_note);
+
     // modulators
     standard_library.std_lib.insert("lfo~".to_string(), eval::events::modulators::lfo_modulator);
     standard_library.std_lib.insert("lfsaw~".to_string(), eval::events::modulators::lfsaw_modulator);

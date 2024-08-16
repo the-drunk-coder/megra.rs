@@ -340,8 +340,17 @@ pub fn eval_as_arg(e: &Expr) -> Option<EvaluatedExpr> {
 
 #[derive(Debug)]
 pub struct LocalVariables {
-    pub pos_args: Option<HashMap<String, EvaluatedExpr>>,
-    pub rest: Option<Vec<EvaluatedExpr>>,
+    pub pos_args: HashMap<String, EvaluatedExpr>,
+    pub rest: Vec<EvaluatedExpr>,
+}
+
+impl LocalVariables {
+    pub fn new() -> Self {
+        LocalVariables {
+            pos_args: HashMap::new(),
+            rest: Vec::new(),
+        }
+    }
 }
 
 pub fn eval_usr_fun(
@@ -350,6 +359,7 @@ pub fn eval_usr_fun(
     tail: &[Expr],
     functions: &FunctionMap,
     globals: &sync::Arc<GlobalVariables>,
+    locals: &mut LocalVariables,
     sample_set: SampleAndWavematrixSet,
     out_mode: OutputMode,
 ) -> Option<EvaluatedExpr> {
@@ -360,32 +370,33 @@ pub fn eval_usr_fun(
 
     // FIRST, eval local args,
     // manual zip
-    let mut local_args = HashMap::new();
+
     for (i, expr) in tail[..fun_arg_names.len()].iter().enumerate() {
-        if let Some(res) =
-            eval_expression(expr, functions, globals, None, sample_set.clone(), out_mode)
-        {
-            local_args.insert(fun_arg_names[i].clone(), res);
+        if let Some(res) = eval_expression(
+            expr,
+            functions,
+            globals,
+            locals,
+            sample_set.clone(),
+            out_mode,
+        ) {
+            locals.pos_args.insert(fun_arg_names[i].clone(), res);
         }
     }
 
     let mut rest = Vec::new();
     for expr in tail[fun_arg_names.len()..].iter() {
-        if let Some(res) =
-            eval_expression(expr, functions, globals, None, sample_set.clone(), out_mode)
-        {
+        if let Some(res) = eval_expression(
+            expr,
+            functions,
+            globals,
+            locals,
+            sample_set.clone(),
+            out_mode,
+        ) {
             rest.push(res);
         }
     }
-
-    let local_vars = LocalVariables {
-        pos_args: if local_args.is_empty() {
-            None
-        } else {
-            Some(local_args)
-        },
-        rest: if rest.is_empty() { None } else { Some(rest) },
-    };
 
     // THIRD
     let mut fun_tail: Vec<EvaluatedExpr> = Vec::new();
@@ -394,7 +405,7 @@ pub fn eval_usr_fun(
             expr,
             functions,
             globals,
-            Some(&local_vars),
+            locals,
             sample_set.clone(),
             out_mode,
         ) {
@@ -420,6 +431,7 @@ pub fn eval_usr_fun_evaluated_tail(
     mut tail: Vec<EvaluatedExpr>,
     functions: &FunctionMap,
     globals: &sync::Arc<GlobalVariables>,
+    locals: &mut LocalVariables,
     sample_set: SampleAndWavematrixSet,
     out_mode: OutputMode,
 ) -> Option<EvaluatedExpr> {
@@ -430,24 +442,15 @@ pub fn eval_usr_fun_evaluated_tail(
 
     // FIRST, eval local args,
     // manual zip
-    let mut local_args = HashMap::new();
     for (i, expr) in tail.drain(..fun_arg_names.len()).enumerate() {
-        local_args.insert(fun_arg_names[i].clone(), expr);
+        locals.pos_args.insert(fun_arg_names[i].clone(), expr);
     }
 
-    let mut rest = Vec::new();
-    for expr in tail.drain(fun_arg_names.len()..) {
-        rest.push(expr);
+    if !tail.is_empty() {
+        for expr in tail.drain(fun_arg_names.len()..) {
+            locals.rest.push(expr);
+        }
     }
-
-    let local_vars = LocalVariables {
-        pos_args: if local_args.is_empty() {
-            None
-        } else {
-            Some(local_args)
-        },
-        rest: if rest.is_empty() { None } else { Some(rest) },
-    };
 
     // THIRD
     let mut fun_tail: Vec<EvaluatedExpr> = Vec::new();
@@ -456,7 +459,7 @@ pub fn eval_usr_fun_evaluated_tail(
             expr,
             functions,
             globals,
-            Some(&local_vars),
+            locals,
             sample_set.clone(),
             out_mode,
         ) {
@@ -484,7 +487,7 @@ pub fn eval_expression(
     e: &Expr,
     functions: &FunctionMap,
     globals: &sync::Arc<GlobalVariables>,
-    locals: Option<&LocalVariables>,
+    locals: &mut LocalVariables,
     sample_set: SampleAndWavematrixSet,
     out_mode: OutputMode,
 ) -> Option<EvaluatedExpr> {
@@ -505,13 +508,10 @@ pub fn eval_expression(
             // a matching local (positional) variable to resolve ...
             Atom::Identifier(f) => {
                 // eval local vars at eval time ???
-                if let Some(loc) = locals {
-                    if let Some(pos_args) = &loc.pos_args {
-                        if let Some(arg) = pos_args.get(f) {
-                            arg.clone()
-                        } else {
-                            EvaluatedExpr::Identifier(f.to_string())
-                        }
+
+                if !locals.pos_args.is_empty() {
+                    if let Some(arg) = locals.pos_args.get(f) {
+                        arg.clone()
                     } else {
                         EvaluatedExpr::Identifier(f.to_string())
                     }
@@ -522,22 +522,20 @@ pub fn eval_expression(
             Atom::ArgumentCollector(argc) => {
                 let mut coll = Vec::new();
 
-                if let Some(loc) = locals {
-                    match argc {
-                        ArgumentCollector::Rest => {
-                            if let Some(rest) = &loc.rest {
-                                coll.append(&mut rest.clone());
+                match argc {
+                    ArgumentCollector::Rest => {
+                        if !locals.rest.is_empty() {
+                            coll.append(&mut locals.rest.clone());
+                        }
+                    }
+                    ArgumentCollector::All => {
+                        if !locals.pos_args.is_empty() {
+                            for arg in locals.pos_args.values() {
+                                coll.push(arg.clone())
                             }
                         }
-                        ArgumentCollector::All => {
-                            if let Some(pos_args) = &loc.pos_args {
-                                for arg in pos_args.values() {
-                                    coll.push(arg.clone())
-                                }
-                            }
-                            if let Some(rest) = &loc.rest {
-                                coll.append(&mut rest.clone());
-                            }
+                        if !locals.rest.is_empty() {
+                            coll.append(&mut locals.rest.clone());
                         }
                     }
                 }
@@ -551,9 +549,14 @@ pub fn eval_expression(
             // in some context it might be nice to have the head procedurally generated as well,
             // but it'd cause a whole lotta trouble right now and I have no desire currently to use it ...
             // there's more explicit ways to do the whole thing ...
-            if let Some(EvaluatedExpr::Identifier(f)) =
-                eval_expression(head, functions, globals, None, sample_set.clone(), out_mode)
-            {
+            if let Some(EvaluatedExpr::Identifier(f)) = eval_expression(
+                head,
+                functions,
+                globals,
+                locals,
+                sample_set.clone(),
+                out_mode,
+            ) {
                 // check if we have this function ...
                 if functions.std_lib.contains_key(&f) {
                     let mut reduced_tail: Vec<EvaluatedExpr> = Vec::new();
@@ -603,6 +606,7 @@ pub fn eval_expression(
                         tail,
                         functions,
                         globals,
+                        locals,
                         sample_set,
                         out_mode,
                     )
@@ -619,7 +623,7 @@ pub fn eval_expression(
                     &tail[0],
                     functions,
                     globals,
-                    None,
+                    &mut LocalVariables::new(),
                     sample_set.clone(),
                     out_mode,
                 ) {
@@ -677,7 +681,7 @@ pub fn eval_expression(
                     &tail[0],
                     functions,
                     globals,
-                    None,
+                    &mut LocalVariables::new(),
                     sample_set.clone(),
                     out_mode,
                 ) {
@@ -743,8 +747,15 @@ pub fn eval_from_str(
     parse_expr(&src_nocomment)
         .map_err(|e: nom::Err<VerboseError<&str>>| format!("{e:#?}"))
         .and_then(|(_, exp)| {
-            eval_expression(&exp, functions, globals, None, sample_set, out_mode)
-                .ok_or_else(|| "eval failed".to_string())
+            eval_expression(
+                &exp,
+                functions,
+                globals,
+                &mut LocalVariables::new(),
+                sample_set,
+                out_mode,
+            )
+            .ok_or_else(|| "eval failed".to_string())
         })
 }
 

@@ -101,6 +101,9 @@ pub fn event_param(
                 Some(SynthParameterValue::ScalarUsize(n)) => Some(EvaluatedExpr::Typed(
                     TypedEntity::Comparable(Comparable::Int64(*n as i64)),
                 )),
+                Some(SynthParameterValue::Symbolic(s)) => Some(EvaluatedExpr::Typed(
+                    TypedEntity::Comparable(Comparable::String(s.clone())),
+                )),
                 _ => None,
             }
         }
@@ -115,6 +118,9 @@ pub fn event_param(
                 )),
                 Some(SynthParameterValue::ScalarUsize(n)) => Some(EvaluatedExpr::Typed(
                     TypedEntity::Comparable(Comparable::Int64(*n as i64)),
+                )),
+                Some(SynthParameterValue::Symbolic(s)) => Some(EvaluatedExpr::Typed(
+                    TypedEntity::Comparable(Comparable::String(s.clone())),
                 )),
                 _ => None,
             }

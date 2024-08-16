@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use crate::{
-    parser::{eval_usr_fun_evaluated_tail, EvaluatedExpr, FunctionMap},
+    parser::{eval_usr_fun_evaluated_tail, EvaluatedExpr, FunctionMap, LocalVariables},
     sample_set::SampleAndWavematrixSet,
     session::OutputMode,
     TypedEntity,
@@ -34,6 +34,7 @@ impl GeneratorProcessor for MapperProcessor {
                     .collect(),
                 functions,
                 globals,
+                &mut LocalVariables::new(),
                 sample_set,
                 out_mode,
             );

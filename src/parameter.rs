@@ -33,7 +33,8 @@ pub enum ParameterValue {
     EnvelopeSegmentType(EnvelopeSegmentType),
     MultiPointEnvelope(Vec<DynVal>, Vec<DynVal>, Vec<EnvelopeSegmentType>, bool, ValOp), // levels, times, loop, op
     Placeholder(VariableId),
-    Lazy(LazyArithmetic)	
+    Lazy(LazyArithmetic),
+    Symbolic(String)
 }
 
 pub fn shake_parameter(v: &mut ParameterValue, factor: f32) {
@@ -418,6 +419,7 @@ pub fn resolve_parameter(
                 SynthParameterValue::ScalarF32(0.0)
             }
         }
+        ParameterValue::Symbolic(s) => SynthParameterValue::Symbolic(s.clone()),
     }
 }
 

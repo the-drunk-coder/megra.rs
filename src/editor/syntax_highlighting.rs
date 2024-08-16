@@ -172,6 +172,7 @@ fn is_function(word: &str) -> bool {
             | "inexh"
             | "stages"
             | "spread"
+            | "mapper"
     )
 }
 

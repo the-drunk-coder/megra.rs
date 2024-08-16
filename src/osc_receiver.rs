@@ -83,9 +83,9 @@ impl OscReceiver {
                                     );
                                 }
 
-                                let local_vars = LocalVariables {
-                                    pos_args: Some(local_args),
-                                    rest: None,
+                                let mut local_vars = LocalVariables {
+                                    pos_args: local_args,
+                                    rest: Vec::new(),
                                 };
 
                                 // THIRD
@@ -96,7 +96,7 @@ impl OscReceiver {
                                             expr,
                                             &session.functions,
                                             &session.globals,
-                                            Some(&local_vars),
+                                            &mut local_vars,
                                             session.sample_set.clone(),
                                             session.output_mode,
                                         )
