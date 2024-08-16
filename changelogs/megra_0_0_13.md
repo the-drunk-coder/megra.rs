@@ -19,4 +19,7 @@
 * New language construct: `mapper`, a rudimentary event mapper that takes functions
 * New langauge constructs: event getters to extract a parameter from an event `ev-param`, `ev-tag` and `ev-name`
 * New language construct: `note` event (can be used to drive scoreviz in conjunction with `mapper`)
+* New (non-lazy) arithmetic functions: `round`, `floor` and `ceil`
+* `midi-mul`, `midi-add`, `midi-sub`, `midi-div`, to work with midi notes
+* `to-string` to turn numbers and some other stuff into strings
 
