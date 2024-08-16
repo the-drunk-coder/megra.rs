@@ -119,6 +119,11 @@ pub fn define_standard_library() -> FunctionMap {
     standard_library.std_lib.insert("pitch-sub".to_string(), eval::events::parameters::parameter);
     standard_library.std_lib.insert("pitch-div".to_string(), eval::events::parameters::parameter);
 
+    standard_library.std_lib.insert("midi-add".to_string(), eval::events::parameters::parameter);
+    standard_library.std_lib.insert("midi-mul".to_string(), eval::events::parameters::parameter);
+    standard_library.std_lib.insert("midi-sub".to_string(), eval::events::parameters::parameter);
+    standard_library.std_lib.insert("midi-div".to_string(), eval::events::parameters::parameter);
+
     standard_library.std_lib.insert("freq".to_string(), eval::events::parameters::parameter);
     standard_library.std_lib.insert("freq-add".to_string(), eval::events::parameters::parameter);
     standard_library.std_lib.insert("freq-mul".to_string(), eval::events::parameters::parameter);
@@ -384,7 +389,10 @@ pub fn define_standard_library() -> FunctionMap {
     standard_library.std_lib.insert("pow".to_string(), eval::arithmetic::pow);
     standard_library.std_lib.insert("max".to_string(), eval::arithmetic::max);
     standard_library.std_lib.insert("min".to_string(), eval::arithmetic::min);
-
+    standard_library.std_lib.insert("round".to_string(), eval::arithmetic::round);
+    standard_library.std_lib.insert("floor".to_string(), eval::arithmetic::floor);
+    standard_library.std_lib.insert("ceil".to_string(), eval::arithmetic::ceil);
+    
     // comparison
     standard_library.std_lib.insert(">=".to_string(), eval::comparison::greater_equal);
     standard_library.std_lib.insert(">".to_string(), eval::comparison::greater);
@@ -398,7 +406,8 @@ pub fn define_standard_library() -> FunctionMap {
     standard_library.std_lib.insert("mtosym".to_string(), eval::midi_helpers::mtosym);
     standard_library.std_lib.insert("veltodyn".to_string(), eval::midi_helpers::veltodyn);
     standard_library.std_lib.insert("symtof".to_string(), eval::midi_helpers::symtofreq);
-
+    standard_library.std_lib.insert("mtovex".to_string(), eval::midi_helpers::mtovex);
+    
     // string helpers
     standard_library.std_lib.insert("concat".to_string(), eval::string_helpers::concat);
 
@@ -416,6 +425,7 @@ pub fn define_standard_library() -> FunctionMap {
     standard_library.std_lib.insert("i32".to_string(), eval::types::int);
     standard_library.std_lib.insert("i64".to_string(), eval::types::long);
     standard_library.std_lib.insert("pair".to_string(), eval::types::pair);
+    standard_library.std_lib.insert("to-string".to_string(), eval::types::to_string);
 
     // event getters
     standard_library.std_lib.insert("ev-param".to_string(), eval::event_getters::event_param);

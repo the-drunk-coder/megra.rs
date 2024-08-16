@@ -408,6 +408,7 @@ pub fn map_parameter(name: &str) -> SynthParameterAddress {
         "freq" => SynthParameterLabel::PitchFrequency,
         "osc" => SynthParameterLabel::OscillatorType,
         "note" => SynthParameterLabel::PitchNote,
+        "midi" => SynthParameterLabel::PitchNote,
         "atk" => SynthParameterLabel::Attack,
         "atkt" => SynthParameterLabel::AttackType,
         "atkp" => SynthParameterLabel::AttackPeakLevel,

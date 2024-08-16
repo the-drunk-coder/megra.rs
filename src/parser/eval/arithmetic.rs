@@ -304,3 +304,66 @@ pub fn min(
         Comparable::Float(result),
     )))
 }
+
+pub fn round(
+    _: &FunctionMap,
+    tail: &mut Vec<EvaluatedExpr>,
+    _: &sync::Arc<GlobalVariables>,
+    _: SampleAndWavematrixSet,
+    _: OutputMode,
+) -> Option<EvaluatedExpr> {
+    let mut tail_drain = tail.drain(..);
+    tail_drain.next(); // don't need the function name
+
+    match tail_drain.next() {
+        Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f)))) => Some(
+            EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f.round()))),
+        ),
+        Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Double(d)))) => Some(
+            EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Double(d.round()))),
+        ),
+        _ => None,
+    }
+}
+
+pub fn floor(
+    _: &FunctionMap,
+    tail: &mut Vec<EvaluatedExpr>,
+    _: &sync::Arc<GlobalVariables>,
+    _: SampleAndWavematrixSet,
+    _: OutputMode,
+) -> Option<EvaluatedExpr> {
+    let mut tail_drain = tail.drain(..);
+    tail_drain.next(); // don't need the function name
+
+    match tail_drain.next() {
+        Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f)))) => Some(
+            EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f.round()))),
+        ),
+        Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Double(d)))) => Some(
+            EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Double(d.round()))),
+        ),
+        _ => None,
+    }
+}
+
+pub fn ceil(
+    _: &FunctionMap,
+    tail: &mut Vec<EvaluatedExpr>,
+    _: &sync::Arc<GlobalVariables>,
+    _: SampleAndWavematrixSet,
+    _: OutputMode,
+) -> Option<EvaluatedExpr> {
+    let mut tail_drain = tail.drain(..);
+    tail_drain.next(); // don't need the function name
+
+    match tail_drain.next() {
+        Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f)))) => Some(
+            EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f.round()))),
+        ),
+        Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Double(d)))) => Some(
+            EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Double(d.round()))),
+        ),
+        _ => None,
+    }
+}
