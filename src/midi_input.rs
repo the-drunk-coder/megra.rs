@@ -3,7 +3,7 @@ use midir::{Ignore, MidiInput};
 use std::collections::HashMap;
 
 use crate::builtin_types::Comparable;
-use crate::parser::{eval_expression, EvaluatedExpr, LocalVariables};
+use crate::parser::{eval_expression, EvaluatedExpr};
 use crate::{interpreter, Session};
 
 pub fn list_midi_input_ports() {
@@ -62,11 +62,6 @@ pub fn open_midi_input_port<const BUFSIZE: usize, const NCHAN: usize>(
                         // }
                     }
 
-                    let mut local_vars = LocalVariables {
-                        pos_args: local_args,
-                        rest: Vec::new(),
-                    };
-
                     // THIRD
                     if let Some(fun_tail) = fun_expr
                         .iter()
@@ -75,7 +70,7 @@ pub fn open_midi_input_port<const BUFSIZE: usize, const NCHAN: usize>(
                                 expr,
                                 &session.functions,
                                 &session.globals,
-                                &mut local_vars,
+                                None,
                                 session.sample_set.clone(),
                                 session.output_mode,
                             )

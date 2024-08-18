@@ -232,7 +232,7 @@ pub fn eval_cyc_from_str(
                                             &expr,
                                             functions,
                                             globals,
-                                            &mut LocalVariables::new(),
+                                            None,
                                             sample_set.clone(),
                                             out_mode,
                                         )
@@ -305,7 +305,7 @@ pub fn eval_cyc_from_str(
                                         &expr,
                                         functions,
                                         globals,
-                                        &mut LocalVariables::new(),
+                                        None,
                                         sample_set.clone(),
                                         out_mode,
                                     )

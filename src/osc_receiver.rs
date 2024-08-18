@@ -6,7 +6,7 @@ use std::str::FromStr;
 
 use crate::builtin_types::{Comparable, TypedEntity};
 use crate::interpreter;
-use crate::parser::{eval_expression, EvaluatedExpr, LocalVariables};
+use crate::parser::{eval_expression, EvaluatedExpr};
 
 use crate::session::Session;
 
@@ -83,11 +83,6 @@ impl OscReceiver {
                                     );
                                 }
 
-                                let mut local_vars = LocalVariables {
-                                    pos_args: local_args,
-                                    rest: Vec::new(),
-                                };
-
                                 // THIRD
                                 if let Some(fun_tail) = fun_expr
                                     .iter()
@@ -96,7 +91,7 @@ impl OscReceiver {
                                             expr,
                                             &session.functions,
                                             &session.globals,
-                                            &mut local_vars,
+                                            None,
                                             session.sample_set.clone(),
                                             session.output_mode,
                                         )

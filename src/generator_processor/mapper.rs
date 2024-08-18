@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{cell::RefCell, sync::Arc};
 
 use crate::{
     parser::{eval_usr_fun_evaluated_tail, EvaluatedExpr, FunctionMap, LocalVariables},
@@ -25,6 +25,7 @@ impl GeneratorProcessor for MapperProcessor {
     ) {
         if functions.usr_lib.contains_key(&self.fun) {
             let (fun_arg_names, fun_expr) = functions.usr_lib.get(&self.fun).unwrap().clone();
+            //println!("EVAL MAPPER FUN {}", self.fun);
             let processed_events = eval_usr_fun_evaluated_tail(
                 fun_arg_names,
                 fun_expr,
@@ -34,7 +35,7 @@ impl GeneratorProcessor for MapperProcessor {
                     .collect(),
                 functions,
                 globals,
-                &mut LocalVariables::new(),
+                std::rc::Rc::new(RefCell::new(LocalVariables::new())),
                 sample_set,
                 out_mode,
             );
