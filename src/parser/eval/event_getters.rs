@@ -33,33 +33,21 @@ pub fn event_tag(
 
     match tail_drain.next() {
         // only numeric values so far ...
-        Some(EvaluatedExpr::Typed(TypedEntity::StaticEvent(InterpretableEvent::Sound(ev)))) => {
-            if let Some(t) = ev.tags.into_iter().nth(tag_num) {
-                Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
-                    Comparable::String(t),
-                )))
-            } else {
-                None
-            }
-        }
-        Some(EvaluatedExpr::Typed(TypedEntity::SoundEvent(ev))) => {
-            if let Some(t) = ev.tags.into_iter().nth(tag_num) {
-                Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
-                    Comparable::String(t),
-                )))
-            } else {
-                None
-            }
-        }
-        Some(EvaluatedExpr::Typed(TypedEntity::ControlEvent(ev))) => {
-            if let Some(t) = ev.tags.into_iter().nth(tag_num) {
-                Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
-                    Comparable::String(t),
-                )))
-            } else {
-                None
-            }
-        }
+        Some(EvaluatedExpr::Typed(TypedEntity::StaticEvent(InterpretableEvent::Sound(ev)))) => ev
+            .tags
+            .into_iter()
+            .nth(tag_num)
+            .map(|t| EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::String(t)))),
+        Some(EvaluatedExpr::Typed(TypedEntity::SoundEvent(ev))) => ev
+            .tags
+            .into_iter()
+            .nth(tag_num)
+            .map(|t| EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::String(t)))),
+        Some(EvaluatedExpr::Typed(TypedEntity::ControlEvent(ev))) => ev
+            .tags
+            .into_iter()
+            .nth(tag_num)
+            .map(|t| EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::String(t)))),
         _ => None,
     }
 }
