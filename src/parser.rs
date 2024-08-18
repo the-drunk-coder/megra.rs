@@ -428,6 +428,51 @@ pub fn eval_usr_fun(
     fun_tail.pop()
 }
 
+/// replace expr by the content of certain evaluated expr ... that way,
+/// functions become more like macros (i.e. when defining a function within a function)
+/// this might explode at any given moment ...
+fn replace_arg(expr: &mut Expr, loc: std::rc::Rc<RefCell<LocalVariables>>) {
+    match expr {
+        Expr::Constant(Atom::Identifier(i)) => {
+            if let Some(var) = loc.borrow().pos_args.get(i) {
+                match var {
+                    EvaluatedExpr::Keyword(k) => *expr = Expr::Constant(Atom::Keyword(k.clone())),
+
+                    EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f))) => {
+                        *expr = Expr::Constant(Atom::Float(*f))
+                    }
+                    EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Double(f))) => {
+                        *expr = Expr::Constant(Atom::Float(*f as f32))
+                    }
+                    EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Int32(f))) => {
+                        *expr = Expr::Constant(Atom::Float(*f as f32))
+                    }
+                    EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Int64(f))) => {
+                        *expr = Expr::Constant(Atom::Float(*f as f32))
+                    }
+                    EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::String(s))) => {
+                        *expr = Expr::Constant(Atom::String(s.clone()))
+                    }
+                    EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(s))) => {
+                        *expr = Expr::Constant(Atom::Symbol(s.clone()))
+                    }
+                    EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Boolean(b))) => {
+                        *expr = Expr::Constant(Atom::Boolean(*b))
+                    }
+
+                    _ => {}
+                }
+            }
+        }
+        Expr::Application(_, tail) => {
+            for texpr in tail.iter_mut() {
+                replace_arg(texpr, loc.clone());
+            }
+        }
+        _ => {}
+    }
+}
+
 #[allow(clippy::too_many_arguments)]
 pub fn eval_usr_fun_evaluated_tail(
     fun_arg_names: Vec<String>,
@@ -616,7 +661,7 @@ pub fn eval_expression(
                     )
                 } else if functions.usr_lib.contains_key(&f) {
                     let (fun_arg_names, fun_expr) = functions.usr_lib.get(&f).unwrap().clone();
-
+                    //println!("{f}, {fun_arg_names:?}, {locals:?}");
                     eval_usr_fun(
                         fun_arg_names,
                         fun_expr,
@@ -646,7 +691,7 @@ pub fn eval_expression(
                     &tail[0],
                     functions,
                     globals,
-                    None,
+                    locals.clone(),
                     sample_set.clone(),
                     out_mode,
                 ) {
@@ -688,6 +733,14 @@ pub fn eval_expression(
 
                     if rem_args {
                         tail_clone.remove(0);
+                    }
+
+                    // if the function is defined by another function, repelace some argruments
+                    // (yes, the line between functions and macros in megra is very, very vague ...)
+                    if let Some(loc) = locals.clone() {
+                        for expr in tail_clone.iter_mut() {
+                            replace_arg(expr, loc.clone());
+                        }
                     }
 
                     Some(EvaluatedExpr::FunctionDefinition(
