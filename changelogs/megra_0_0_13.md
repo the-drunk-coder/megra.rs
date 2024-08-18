@@ -22,4 +22,5 @@
 * New (non-lazy) arithmetic functions: `round`, `floor` and `ceil`
 * `midi-mul`, `midi-add`, `midi-sub`, `midi-div`, to work with midi notes
 * `to-string` to turn numbers and some other stuff into strings
-
+* Language: line between function and macro is now very blurred, i.e. you can do `(fun (name) (fun (concat "to-" name) () (send-to name)))`, 
+  where in the child function definition `name` will be replaced ... this may explode at any given moment !!
