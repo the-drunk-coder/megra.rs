@@ -353,6 +353,7 @@ impl LocalVariables {
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn eval_usr_fun(
     fun_arg_names: Vec<String>,
     fun_expr: Vec<Expr>,
@@ -427,6 +428,7 @@ pub fn eval_usr_fun(
     fun_tail.pop()
 }
 
+#[allow(clippy::too_many_arguments)]
 pub fn eval_usr_fun_evaluated_tail(
     fun_arg_names: Vec<String>,
     fun_expr: Vec<Expr>,
