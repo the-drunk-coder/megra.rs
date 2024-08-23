@@ -93,7 +93,12 @@ impl VisualizerClient {
             content: all_msgs,
         }))
         .unwrap();
-        self.socket.send_to(&msg_buf_render, self.to_addr).unwrap();
+        match self.socket.send_to(&msg_buf_render, self.to_addr) {
+            Ok(_) => {}
+            Err(e) => {
+                println!("error sending visualizer message {e:?}");
+            }
+        }
     }
 
     pub fn update_active_node(&self, g: &Generator) {
