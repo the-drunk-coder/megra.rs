@@ -41,18 +41,21 @@ impl VisualizerClient {
         };
 
         let gen_name = tags_to_string(&g.id_tags);
-        // switch view
-        let mut all_msgs: Vec<OscPacket> = Vec::new();
 
         // switch view
-        all_msgs.push(OscPacket::Message(OscMessage {
+        self.send(vec![OscPacket::Message(OscMessage {
             addr: "/graph/add".to_string(),
             args: vec![OscType::String(gen_name.clone())],
-        }));
+        })]);
+
+        let mut node_num = 0;
+        let mut edge_num = 0;
 
         // nodes
+        let mut node_msg: Vec<OscPacket> = Vec::new();
         for (key, label) in g.root_generator.generator.labels.iter() {
-            all_msgs.push(OscPacket::Message(OscMessage {
+            node_num += 1;
+            node_msg.push(OscPacket::Message(OscMessage {
                 addr: "/node/add".to_string(),
                 args: vec![
                     // needs full tag id
@@ -61,11 +64,22 @@ impl VisualizerClient {
                     OscType::String(label.iter().collect()),
                 ],
             }));
+            // batch-send to avoid messages that are too large,
+            // while also keeping message count low enough for
+            // the websocket connection to clog up
+            if node_num % 150 == 0 {
+                self.send(node_msg.clone());
+                node_msg.clear();
+            }
         }
+        self.send(node_msg);
+
         // edges
+        let mut edge_msg: Vec<OscPacket> = Vec::new();
         for (src, children) in g.root_generator.generator.children.iter() {
             for ch in children.iter() {
-                all_msgs.push(OscPacket::Message(OscMessage {
+                edge_num += 1;
+                edge_msg.push(OscPacket::Message(OscMessage {
                     addr: "/edge/add".to_string(),
                     args: vec![
                         OscType::String(gen_name.clone()),
@@ -76,21 +90,36 @@ impl VisualizerClient {
                     ],
                 }));
             }
+            // batch-send to avoid messages that are too large,
+            // while also keeping message count low enough for
+            // the websocket connection to clog up
+            if edge_num % 80 == 0 {
+                self.send(edge_msg.clone());
+                edge_msg.clear();
+            }
         }
+        // last edges
+        self.send(edge_msg);
 
         // send render command ...
-        all_msgs.push(OscPacket::Message(OscMessage {
+        //println!("num nodes sent {node_num}");
+        //println!("num edges sent {edge_num}");
+        //println!("send render");
+
+        self.send(vec![OscPacket::Message(OscMessage {
             addr: "/render".to_string(),
             args: vec![
                 OscType::String(gen_name),
                 OscType::String("cose".to_string()), // layout type
             ],
-        }));
+        })]);
+    }
 
+    fn send(&self, msgs: Vec<OscPacket>) {
         // send render command ...
         let msg_buf_render = encode(&OscPacket::Bundle(OscBundle {
             timetag: OscTime::try_from(SystemTime::now()).unwrap(),
-            content: all_msgs,
+            content: msgs,
         }))
         .unwrap();
         match self.socket.send_to(&msg_buf_render, self.to_addr) {
