@@ -24,3 +24,5 @@
 * `to-string` to turn numbers and some other stuff into strings
 * Language: line between function and macro is now very blurred, i.e. you can do `(fun (name) (fun (concat "to-" name) () (send-to name)))`, 
   where in the child function definition `name` will be replaced ... this may explode at any given moment !!
+* Bugfix (Visualizer): a failed visualizer message doesn't crash scheduling thread anymore
+* Improvement (Visualizer): sending visualizer messages in multiple batches for bigger generators
