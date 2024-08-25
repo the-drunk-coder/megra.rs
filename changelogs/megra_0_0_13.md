@@ -26,3 +26,4 @@
   where in the child function definition `name` will be replaced ... this may explode at any given moment !!
 * Bugfix (Visualizer): a failed visualizer message doesn't crash scheduling thread anymore
 * Improvement (Visualizer): sending visualizer messages in multiple batches for bigger generators
+* Bugfix: `rep` not chrashing when generator contains childless states
