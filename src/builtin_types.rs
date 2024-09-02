@@ -124,6 +124,7 @@ pub enum Command {
     LoadSampleSets(String, bool),                  // top level sets set path
     StepPart(String),                              // step through specified path
     FreezeBuffer(usize, usize),                    // freeze live buffer
+    FreezeAddBuffer(usize, usize),                 // add-freeze live buffer
     ExportDotStatic(String, Generator),            // filename, generator
     ExportDotRunning((String, BTreeSet<String>)),  // filename, generator id
     Once(Vec<StaticEvent>, Vec<ControlEvent>),     // execute event(s) once

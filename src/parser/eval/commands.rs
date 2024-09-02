@@ -204,6 +204,50 @@ pub fn freeze_buffer(
     )))
 }
 
+pub fn freeze_add_buffer(
+    _: &FunctionMap,
+    tail: &mut Vec<EvaluatedExpr>,
+    _: &sync::Arc<GlobalVariables>,
+    _: SampleAndWavematrixSet,
+    _: OutputMode,
+) -> Option<EvaluatedExpr> {
+    let mut tail_drain = tail.drain(..).skip(1);
+
+    // on the user side,
+    // both input- and freeze buffers are counted
+    // starting at 1
+    let mut inbuf: usize = 0;
+    let mut freezbuf: usize = 0;
+
+    while let Some(c) = tail_drain.next() {
+        match c {
+            EvaluatedExpr::Keyword(k) => {
+                if k.as_str() == "in" {
+                    // default is zero ...
+                    if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(
+                        n,
+                    )))) = tail_drain.next()
+                    {
+                        if n as usize > 0 {
+                            inbuf = n as usize - 1;
+                        }
+                    }
+                }
+            }
+            EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f))) => {
+                if f as usize > 0 {
+                    freezbuf = f as usize - 1;
+                }
+            }
+            _ => {}
+        }
+    }
+
+    Some(EvaluatedExpr::Command(Command::FreezeAddBuffer(
+        freezbuf, inbuf,
+    )))
+}
+
 pub fn load_sample(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,

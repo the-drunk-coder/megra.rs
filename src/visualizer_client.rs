@@ -48,7 +48,7 @@ impl VisualizerClient {
             args: vec![OscType::String(gen_name.clone())],
         })]);
 
-	// counters for batch sending ...
+        // counters for batch sending ...
         let mut node_num = 0;
         let mut edge_num = 0;
 
@@ -66,10 +66,10 @@ impl VisualizerClient {
                 ],
             }));
 
-	    // batch-send to avoid messages that are too large,
+            // batch-send to avoid messages that are too large,
             // while also keeping message count low enough for
             // the websocket connection (on the visualizer side)
-	    // to not clog up ... values are empirical
+            // to not clog up ... values are empirical
             if node_num % 150 == 0 {
                 self.send(node_msg.clone());
                 node_msg.clear();
@@ -94,10 +94,10 @@ impl VisualizerClient {
                 }));
             }
 
-	    // batch-send to avoid messages that are too large,
+            // batch-send to avoid messages that are too large,
             // while also keeping message count low enough for
             // the websocket connection (on the visualizer side)
-	    // to not clog up ... values are empirical
+            // to not clog up ... values are empirical
             if edge_num % 80 == 0 {
                 self.send(edge_msg.clone());
                 edge_msg.clear();

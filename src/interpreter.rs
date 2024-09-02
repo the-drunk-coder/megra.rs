@@ -140,7 +140,11 @@ pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
         }
         Command::FreezeBuffer(freezbuf, inbuf) => {
             commands::freeze_buffer(&session.ruffbox, freezbuf, inbuf);
-            println!("freeze buffer");
+            println!("freeze buffer {inbuf} --> {freezbuf}");
+        }
+        Command::FreezeAddBuffer(freezbuf, inbuf) => {
+            commands::freeze_add_buffer(&session.ruffbox, freezbuf, inbuf);
+            println!("freeze-add buffer {inbuf} --> {freezbuf} ");
         }
         Command::Tmod(p) => {
             commands::set_global_tmod(&session.globals, p);
