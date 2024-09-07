@@ -29,9 +29,9 @@ claxon = "0.4.3"
 getopts = "0.2"
 rand = "0.8"
 rust-music-theory = "0.2"
-egui = { version="0.26", features = ["persistence"] }
-eframe = { version="0.26", features = ["persistence"] }
-epaint = "0.26"
+egui = { version="0.28", features = ["persistence"] }
+eframe = { version="0.28", features = ["persistence"] }
+epaint = "0.28"
 serde = { version = "1", features = ["derive", "rc"], optional = true }
 dashmap = "5.2"
 chrono = "0.4"

@@ -1,9 +1,8 @@
 use chrono::*;
-use egui::ScrollArea;
+use egui::{Margin, ScrollArea};
 use parking_lot::Mutex;
 use std::{fs, path, sync::*};
 
-use egui::style::Margin;
 use egui::FontId;
 use epaint::text::{FontData, FontDefinitions, FontFamily};
 // custom text edit window
@@ -210,12 +209,9 @@ impl eframe::App for MegraEditor {
             let mut sketch_number = SketchNumber::Num(self.sketch_number);
 
             ui.horizontal(|ui| {
-                ui.add(
-                    egui::Label::new(
-                        egui::RichText::new("Mégra Editor").font(FontId::monospace(self.font_size)),
-                    )
-                    .wrap(false),
-                );
+                ui.add(egui::Label::new(
+                    egui::RichText::new("Mégra Editor").font(FontId::monospace(self.font_size)),
+                ));
 
                 let id = ui.make_persistent_id("file_chooser_box");
                 egui::ComboBox::from_id_source(id)

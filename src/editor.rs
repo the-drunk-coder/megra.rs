@@ -68,7 +68,7 @@ pub fn run_editor<const BUFSIZE: usize, const NCHAN: usize>(
             inner_app.set_font(ifont);
             inner_app.set_callback(callback_ref);
 
-            Box::new(inner_app)
+            Ok(Box::new(inner_app))
         }),
     )
 }

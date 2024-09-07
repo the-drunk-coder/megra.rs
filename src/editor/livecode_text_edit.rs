@@ -42,6 +42,19 @@ pub struct LivecodeTextEditState {
     #[cfg_attr(feature = "serde", serde(skip))]
     pub has_ime: bool,
 
+    // If IME candidate window is shown on this text edit.
+    #[cfg_attr(feature = "serde", serde(skip))]
+    pub(crate) ime_enabled: bool,
+
+    // cursor range for IME candidate.
+    #[cfg_attr(feature = "serde", serde(skip))]
+    pub(crate) ime_cursor_range: CursorRange,
+
+    /// When did the user last press a key?
+    /// Used to pause the cursor animation when typing.
+    #[cfg_attr(feature = "serde", serde(skip))]
+    pub(crate) last_edit_time: f64,
+
     #[serde(skip)]
     pub karl_yerkes_mode: bool,
 }
@@ -216,7 +229,7 @@ impl<'t> LivecodeTextEdit<'t> {
     pub fn show(self, ui: &mut Ui) -> LivecodeTextEditOutput {
         let margin = Vec2::new(0.0, 0.0);
         let max_rect = ui.available_rect_before_wrap().shrink2(margin);
-        let mut content_ui = ui.child_ui(max_rect, *ui.layout());
+        let mut content_ui = ui.child_ui(max_rect, *ui.layout(), None);
         let mut output = self.show_content(&mut content_ui);
         let id = output.response.id;
         let frame_rect = output.response.rect.expand2(margin);
@@ -328,7 +341,7 @@ impl<'t> LivecodeTextEdit<'t> {
 
             let cursor_at_pointer = galley.cursor_from_pos(pointer_pos - response.rect.min);
 
-            if ui.visuals().text_cursor_preview
+            if ui.visuals().text_cursor.preview
                 && response.hovered()
                 && ui.input(|i| i.pointer.is_moving())
             {
@@ -503,15 +516,15 @@ impl<'t> LivecodeTextEdit<'t> {
         state.clone().store(ui.ctx(), id);
 
         if response.changed() {
-            response.widget_info(|| WidgetInfo::text_edit(prev_text.as_str(), text.as_str()));
+            response.widget_info(|| WidgetInfo::text_edit(true, prev_text.as_str(), text.as_str()));
         } else if selection_changed {
             let cursor_range = cursor_range.unwrap();
             let char_range =
                 cursor_range.primary.ccursor.index..=cursor_range.secondary.ccursor.index;
-            let info = WidgetInfo::text_selection_changed(char_range, text.as_str());
+            let info = WidgetInfo::text_selection_changed(true, char_range, text.as_str());
             response.output_event(OutputEvent::TextSelectionChanged(info));
         } else {
-            response.widget_info(|| WidgetInfo::text_edit(prev_text.as_str(), text.as_str()));
+            response.widget_info(|| WidgetInfo::text_edit(true, prev_text.as_str(), text.as_str()));
         }
 
         LivecodeTextEditOutput { response }
@@ -843,38 +856,51 @@ fn livecode_events(
                 ..
             } => on_key_press(&mut cursor_range, text, galley, *key, modifiers, state),
 
-            Event::CompositionStart => {
-                state.has_ime = true;
-                None
-            }
-
-            Event::CompositionUpdate(text_mark) => {
-                if !text_mark.is_empty() && text_mark != "\n" && text_mark != "\r" && state.has_ime
-                {
-                    let mut ccursor = delete_selected(text, &cursor_range);
-                    let start_cursor = ccursor;
-                    insert_text(&mut ccursor, text, text_mark);
-                    Some(CCursorRange::two(start_cursor, ccursor))
-                } else {
+            Event::Ime(ime_event) => match ime_event {
+                ImeEvent::Enabled => {
+                    state.ime_enabled = true;
+                    state.ime_cursor_range = cursor_range;
                     None
                 }
-            }
+                ImeEvent::Preedit(text_mark) => {
+                    if text_mark == "\n" || text_mark == "\r" {
+                        None
+                    } else {
+                        // Empty prediction can be produced when user press backspace
+                        // or escape during IME, so we clear current text.
+                        let mut ccursor = text.delete_selected(&cursor_range);
+                        let start_cursor = ccursor;
+                        if !text_mark.is_empty() {
+                            text.insert_text_at(&mut ccursor, text_mark, usize::MAX);
+                        }
+                        state.ime_cursor_range = cursor_range;
+                        Some(CCursorRange::two(start_cursor, ccursor))
+                    }
+                }
+                ImeEvent::Commit(prediction) => {
+                    if prediction == "\n" || prediction == "\r" {
+                        None
+                    } else {
+                        state.ime_enabled = false;
 
-            Event::CompositionEnd(prediction) => {
-                if !prediction.is_empty()
-                    && prediction != "\n"
-                    && prediction != "\r"
-                    && state.has_ime
-                {
-                    state.has_ime = false;
-                    let mut ccursor = delete_selected(text, &cursor_range);
-                    insert_text(&mut ccursor, text, prediction);
-                    Some(CCursorRange::one(ccursor))
-                } else {
+                        if !prediction.is_empty()
+                            && cursor_range.secondary.ccursor.index
+                                == state.ime_cursor_range.secondary.ccursor.index
+                        {
+                            let mut ccursor = text.delete_selected(&cursor_range);
+                            text.insert_text_at(&mut ccursor, prediction, usize::MAX);
+                            Some(CCursorRange::one(ccursor))
+                        } else {
+                            let ccursor = cursor_range.primary.ccursor;
+                            Some(CCursorRange::one(ccursor))
+                        }
+                    }
+                }
+                ImeEvent::Disabled => {
+                    state.ime_enabled = false;
                     None
                 }
-            }
-
+            },
             _ => None,
         };
 
@@ -975,7 +1001,7 @@ fn paint_cursor_end(
 
     painter.line_segment(
         [top, bottom],
-        (ui.visuals().text_cursor.width, stroke.color),
+        (ui.visuals().text_cursor.stroke.width, stroke.color),
     );
 
     if false {
