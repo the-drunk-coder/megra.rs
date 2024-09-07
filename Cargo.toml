@@ -54,3 +54,8 @@ low_latency = [] # blocksize 128 instead of 512
 
 [package.metadata.appimage]
 auto_link = true
+auto_link_exclude_list = [
+    "libc.so*",
+    "libdl.so*",
+    "libpthread.so*",
+]
