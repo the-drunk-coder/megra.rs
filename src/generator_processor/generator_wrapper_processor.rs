@@ -57,8 +57,10 @@ impl GeneratorProcessor for GeneratorWrapperProcessor {
         }
     }
 
-    fn get_state(&self) -> GeneratorProcessorState {
-        GeneratorProcessorState::WrappedGenerator(self.wrapped_generator.clone())
+    fn get_state(&self) -> Option<GeneratorProcessorState> {
+        Some(GeneratorProcessorState::WrappedGenerator(
+            self.wrapped_generator.clone(),
+        ))
     }
 
     // another pure event-stream processor

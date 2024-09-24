@@ -17,7 +17,6 @@ use crate::{
 pub enum GeneratorProcessorState {
     Count(usize),
     WrappedGenerator(Generator),
-    None,
 }
 
 /// the generator processor only needs to implement
@@ -75,9 +74,9 @@ pub trait GeneratorProcessor: GeneratorProcessorClone {
 
     /// implement this if the processor has a state, such as a step
     /// counter
-    fn get_state(&self) -> GeneratorProcessorState {
+    fn get_state(&self) -> Option<GeneratorProcessorState> {
         // processors are stateless by default
-        GeneratorProcessorState::None
+        None
     }
 
     /// if the processor holds something that can be visualized

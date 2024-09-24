@@ -39,8 +39,8 @@ impl GeneratorProcessor for EveryProcessor {
         }
     }
 
-    fn get_state(&self) -> GeneratorProcessorState {
-        GeneratorProcessorState::Count(self.step_count)
+    fn get_state(&self) -> Option<GeneratorProcessorState> {
+        Some(GeneratorProcessorState::Count(self.step_count))
     }
 
     // this one

@@ -90,10 +90,14 @@ impl Generator {
                     .iter()
                     .position(|oh| oh.get_id() == Some(id.to_string()))
                 {
-                    gp.set_state(other.processors[id_idx].get_state())
+                    if let Some(state) = other.processors[id_idx].get_state() {
+                        gp.set_state(state)
+                    }
                 }
             } else if let Some(g) = other.processors.get(idx) {
-                gp.set_state(g.get_state());
+                if let Some(state) = g.get_state() {
+                    gp.set_state(state);
+                }
             }
         }
     }
