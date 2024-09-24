@@ -1,6 +1,6 @@
 [package]
 name = "megra_rs"
-version = "0.0.13"
+version = "0.0.14"
 authors = ["nik <nik@parkellipsen.de>"]
 edition = "2021"
 license = "GPL-3.0+"
