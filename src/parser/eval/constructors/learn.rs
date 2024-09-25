@@ -42,6 +42,7 @@ pub fn learn(
     let mut tie = true;
     let mut epsilon = 0.01;
     let mut pfa_size = 30;
+    let mut time_shift = 0;
 
     // flag to see whether we allow long names in sample
     let mut longnames = false;
@@ -263,6 +264,15 @@ pub fn learn(
                         pfa_size = n as usize;
                     }
                 }
+                "shift" => {
+                    if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(
+                        n,
+                    )))) = tail_drain.next()
+                    {
+                        time_shift = n as i32;
+                        tail_drain.next();
+                    }
+                }
                 "autosilence" => {
                     if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
                         Comparable::Boolean(b),
@@ -372,6 +382,7 @@ pub fn learn(
         },
         processors: Vec::new(),
         time_mods: Vec::new(),
+        time_shift,
         keep_root,
     })))
 }

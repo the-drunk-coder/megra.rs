@@ -47,6 +47,7 @@ pub fn flower(
     let pistil_label: char = 'a'; // label chars
     let mut last_char: char = 'a'; // label chars
     let mut petal_labels = Vec::new();
+    let mut time_shift = 0;
 
     let mut dur: DynVal = if let TypedEntity::ConfigParameter(ConfigParameter::Numeric(d)) = globals
         .entry(VariableId::DefaultDuration)
@@ -142,6 +143,15 @@ pub fn flower(
                     )))) = tail_drain.next()
                     {
                         num_layers = n as usize;
+                    }
+                }
+                "shift" => {
+                    if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(
+                        n,
+                    )))) = tail_drain.next()
+                    {
+                        time_shift = n as i32;
+                        tail_drain.next();
                     }
                 }
                 "pistil" => {
@@ -381,6 +391,7 @@ pub fn flower(
         },
         processors: Vec::new(),
         time_mods: Vec::new(),
+        time_shift,
         keep_root,
     })))
 }

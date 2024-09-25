@@ -366,6 +366,7 @@ pub fn define_standard_library() -> FunctionMap {
     
     // generator modifiers
     standard_library.std_lib.insert("haste".to_string(), eval::generator_modifier::eval_haste);
+    standard_library.std_lib.insert("shift".to_string(), eval::generator_modifier::eval_shift);
     standard_library.std_lib.insert("relax".to_string(), eval::generator_modifier::eval_relax);
     standard_library.std_lib.insert("grow".to_string(), eval::generator_modifier::eval_grow);
     standard_library.std_lib.insert("grown".to_string(), eval::generator_modifier::eval_grown);

@@ -67,6 +67,7 @@ pub fn cyc(
     // collect final events in their position in the cycle
     let mut ev_vecs = Vec::new();
     let mut keep_root = false;
+    let mut time_shift = 0;
 
     while let Some(c) = tail_drain.next() {
         if collect_template {
@@ -145,6 +146,15 @@ pub fn cyc(
                     )))) = tail_drain.peek()
                     {
                         max_repetitions = *n;
+                        tail_drain.next();
+                    }
+                }
+                "shift" => {
+                    if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(
+                        n,
+                    )))) = tail_drain.peek()
+                    {
+                        time_shift = *n as i32;
                         tail_drain.next();
                     }
                 }
@@ -401,6 +411,7 @@ pub fn cyc(
         },
         processors: Vec::new(),
         time_mods: Vec::new(),
+        time_shift,
         keep_root,
     })))
 }

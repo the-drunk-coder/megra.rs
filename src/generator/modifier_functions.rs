@@ -194,6 +194,17 @@ pub fn rnd(
     }
 }
 
+pub fn shift(
+    gen: &mut Generator,
+    pos_args: &[ConfigParameter],
+    _: &HashMap<String, ConfigParameter>,
+    _globals: &std::sync::Arc<GlobalVariables>,
+) {
+    if let Some(ConfigParameter::Numeric(f)) = pos_args.first() {
+        gen.time_shift = *f as i32;
+    }
+}
+
 pub fn keep(
     gen: &mut Generator,
     _: &[ConfigParameter],

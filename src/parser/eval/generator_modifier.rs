@@ -188,6 +188,16 @@ pub fn eval_reverse(
     eval_generator_modifier(reverse, tail, globals)
 }
 
+pub fn eval_shift(
+    _: &FunctionMap,
+    tail: &mut Vec<EvaluatedExpr>,
+    globals: &sync::Arc<GlobalVariables>,
+    _: SampleAndWavematrixSet,
+    _: OutputMode,
+) -> Option<EvaluatedExpr> {
+    eval_generator_modifier(shift, tail, globals)
+}
+
 fn eval_generator_modifier(
     fun: GenModFun,
     tail: &mut Vec<EvaluatedExpr>,

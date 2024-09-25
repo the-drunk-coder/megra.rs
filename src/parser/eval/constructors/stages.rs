@@ -53,6 +53,7 @@ pub fn stages(
     let mut pnext: f32 = 0.0;
     let mut pprev: f32 = 0.0;
     let mut cyclical = false;
+    let mut time_shift = 0;
 
     while let Some(c) = tail_drain.next() {
         match c {
@@ -74,6 +75,15 @@ pub fn stages(
                     }
                     _ => {}
                 },
+                "shift" => {
+                    if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(
+                        n,
+                    )))) = tail_drain.next()
+                    {
+                        time_shift = n as i32;
+                        tail_drain.next();
+                    }
+                }
                 "pnext" => {
                     if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(
                         n,
@@ -292,6 +302,7 @@ pub fn stages(
         },
         processors: Vec::new(),
         time_mods: Vec::new(),
+        time_shift,
         keep_root,
     })))
 }

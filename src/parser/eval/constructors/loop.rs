@@ -72,6 +72,8 @@ pub fn a_loop(
     let mut dur_vec: Vec<DynVal> = Vec::new();
     let mut keep_root = false;
 
+    let mut time_shift = 0;
+
     while let Some(c) = tail_drain.next() {
         if collect_template {
             match c {
@@ -149,6 +151,15 @@ pub fn a_loop(
                     )))) = tail_drain.peek()
                     {
                         max_repetitions = *n;
+                        tail_drain.next();
+                    }
+                }
+                "shift" => {
+                    if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(
+                        n,
+                    )))) = tail_drain.peek()
+                    {
+                        time_shift = *n as i32;
                         tail_drain.next();
                     }
                 }
@@ -404,6 +415,7 @@ pub fn a_loop(
         },
         processors: Vec::new(),
         time_mods: Vec::new(),
+        time_shift,
         keep_root,
     })))
 }

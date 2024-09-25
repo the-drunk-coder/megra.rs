@@ -51,6 +51,9 @@ pub struct Generator {
     pub processors: Vec<Box<dyn GeneratorProcessor + Send + Sync>>,
     // time mods manipulate the evaluation timing ...
     pub time_mods: Vec<TimeMod>,
+
+    pub time_shift: i32,
+
     // the keep_root flag determines whether we replace the root at
     // subsequent evaluations ...
     pub keep_root: bool,

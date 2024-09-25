@@ -44,6 +44,7 @@ pub fn fully(
     let mut final_mapping = BTreeMap::new();
     let mut last_char: char = 'a'; // label chars
     let mut labels = Vec::new();
+    let mut time_shift = 0;
 
     let mut dur: DynVal = if let TypedEntity::ConfigParameter(ConfigParameter::Numeric(d)) = globals
         .entry(VariableId::DefaultDuration)
@@ -126,6 +127,14 @@ pub fn fully(
                 //    collect_labeled = true;
                 //    continue;
                 //}
+                "shift" => {
+                    if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(
+                        n,
+                    )))) = tail_drain.next()
+                    {
+                        time_shift = n as i32;
+                    }
+                }
                 "keep" => {
                     if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
                         Comparable::Boolean(b),
@@ -187,6 +196,7 @@ pub fn fully(
         },
         processors: Vec::new(),
         time_mods: Vec::new(),
+        time_shift,
         keep_root,
     })))
 }

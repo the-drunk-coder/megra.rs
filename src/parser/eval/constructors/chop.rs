@@ -60,6 +60,7 @@ pub fn chop(
     let mut max_repetitions: f32 = 0.0;
     let mut keep_root = false;
     let mut events = Vec::new();
+    let mut time_shift = 0;
 
     while let Some(c) = tail_drain.next() {
         match c {
@@ -98,6 +99,15 @@ pub fn chop(
                     )))) = tail_drain.next()
                     {
                         max_repetitions = n;
+                    }
+                }
+                "shift" => {
+                    if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(
+                        n,
+                    )))) = tail_drain.next()
+                    {
+                        time_shift = n as i32;
+                        tail_drain.next();
                     }
                 }
                 "keep" => {
@@ -260,6 +270,7 @@ pub fn chop(
         },
         processors: Vec::new(),
         time_mods: Vec::new(),
+        time_shift,
         keep_root,
     })))
 }

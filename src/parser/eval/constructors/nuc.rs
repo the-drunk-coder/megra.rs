@@ -35,6 +35,7 @@ pub fn nuc(
     let mut event_mapping = BTreeMap::<char, Vec<SourceEvent>>::new();
     let mut duration_mapping = HashMap::<(char, char), Event>::new();
     let mut rules = Vec::new();
+    let mut time_shift = 0;
 
     let mut dur: DynVal = if let TypedEntity::ConfigParameter(ConfigParameter::Numeric(d)) = globals
         .entry(VariableId::DefaultDuration)
@@ -73,6 +74,15 @@ pub fn nuc(
                     ))) = tail_drain.next()
                     {
                         keep_root = b;
+                    }
+                }
+                "shift" => {
+                    if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(
+                        n,
+                    )))) = tail_drain.next()
+                    {
+                        time_shift = n as i32;
+                        tail_drain.next();
                     }
                 }
                 _ => println!("{k}"),
@@ -136,6 +146,7 @@ pub fn nuc(
         },
         processors: Vec::new(),
         time_mods: Vec::new(),
+        time_shift,
         keep_root,
     })))
 }

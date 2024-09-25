@@ -45,6 +45,7 @@ pub fn friendship(
     let center_label: char = '1'; // label chars
     let mut last_char: char = '1'; // label chars
     let mut friends_labels = Vec::new();
+    let mut time_shift = 0;
 
     let mut dur: DynVal = if let TypedEntity::ConfigParameter(ConfigParameter::Numeric(d)) = globals
         .entry(VariableId::DefaultDuration)
@@ -148,6 +149,15 @@ pub fn friendship(
                     )))) = tail_drain.next()
                     {
                         randomize_chance = n;
+                    }
+                }
+                "shift" => {
+                    if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(
+                        n,
+                    )))) = tail_drain.next()
+                    {
+                        time_shift = n as i32;
+                        tail_drain.next();
                     }
                 }
                 "max-rep" => {
@@ -372,6 +382,7 @@ pub fn friendship(
         },
         processors: Vec::new(),
         time_mods: Vec::new(),
+        time_shift,
         keep_root,
     })))
 }

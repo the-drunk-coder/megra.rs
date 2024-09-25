@@ -128,6 +128,7 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
         // HERE IT IS ... LOCK, LOCK, LOCK
         let mut gen = data.generator.lock();
 
+        // update visualizations
         if session
             .osc_client
             .vis_connected
@@ -471,30 +472,33 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                 // external sync has precedence
                 for nc in newcomers.drain(..) {
                     let gen = gen_map.remove(&nc).unwrap();
+                    let gen_shift = gen.time_shift;
                     Session::start_generator_push_sync(
                         gen,
                         session,
                         &ext_sync,
-                        ctx.shift as f64 * 0.001,
+                        (ctx.shift + gen_shift) as f64 * 0.001,
                     );
                 }
             } else if let Some(int_sync) = internal_sync.clone() {
                 for nc in newcomers.drain(..) {
                     let gen = gen_map.remove(&nc).unwrap();
+                    let gen_shift = gen.time_shift;
                     Session::start_generator_push_sync(
                         gen,
                         session,
                         &int_sync,
-                        ctx.shift as f64 * 0.001,
+                        (ctx.shift + gen_shift) as f64 * 0.001,
                     );
                 }
             } else {
                 for nc in newcomers.drain(..) {
                     let gen = gen_map.remove(&nc).unwrap();
+                    let gen_shift = gen.time_shift;
                     Session::start_generator_no_sync(
                         gen,
                         session,
-                        ctx.shift as f64 * 0.001,
+                        (ctx.shift + gen_shift) as f64 * 0.001,
                         &ctx.block_tags,
                         &ctx.solo_tags,
                     );
@@ -506,11 +510,12 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
             if let Some(ext_sync) = external_sync.clone() {
                 for rem in remainders.drain(..) {
                     let gen = gen_map.remove(&rem).unwrap();
+                    let gen_shift = gen.time_shift;
                     Session::resume_generator_sync(
                         gen,
                         session,
                         &ext_sync,
-                        ctx.shift as f64 * 0.001,
+                        (ctx.shift + gen_shift) as f64 * 0.001,
                         &ctx.block_tags,
                         &ctx.solo_tags,
                     );
@@ -520,31 +525,34 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                     for rem in remainders.drain(..) {
                         if rem != int_sync {
                             let gen = gen_map.remove(&rem).unwrap();
+                            let gen_shift = gen.time_shift;
                             Session::resume_generator_sync(
                                 gen,
                                 session,
                                 &int_sync,
-                                ctx.shift as f64 * 0.001,
+                                (ctx.shift + gen_shift) as f64 * 0.001,
                                 &ctx.block_tags,
                                 &ctx.solo_tags,
                             );
                         }
                     }
                     let gen = gen_map.remove(&int_sync).unwrap();
+                    let gen_shift = gen.time_shift;
                     Session::resume_generator(
                         gen,
                         session,
-                        ctx.shift as f64 * 0.001,
+                        (ctx.shift + gen_shift) as f64 * 0.001,
                         &ctx.block_tags,
                         &ctx.solo_tags,
                     );
                 } else {
                     for rem in remainders.drain(..) {
                         let gen = gen_map.remove(&rem).unwrap();
+                        let gen_shift = gen.time_shift;
                         Session::resume_generator(
                             gen,
                             session,
-                            ctx.shift as f64 * 0.001,
+                            (ctx.shift + gen_shift) as f64 * 0.001,
                             &ctx.block_tags,
                             &ctx.solo_tags,
                         );
@@ -553,10 +561,11 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
             } else {
                 for rem in remainders.drain(..) {
                     let gen = gen_map.remove(&rem).unwrap();
+                    let gen_shift = gen.time_shift;
                     Session::resume_generator(
                         gen,
                         session,
-                        ctx.shift as f64 * 0.001,
+                        (ctx.shift + gen_shift) as f64 * 0.001,
                         &ctx.block_tags,
                         &ctx.solo_tags,
                     );
@@ -573,30 +582,33 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Session<BUFSIZE, NCHAN> {
                 if let Some(ext_sync) = external_sync {
                     // external sync has precedence
                     for (_, gen) in gen_map.drain() {
+                        let gen_shift = gen.time_shift;
                         Session::start_generator_push_sync(
                             gen,
                             session,
                             &ext_sync,
-                            ctx.shift as f64 * 0.001,
+                            (ctx.shift + gen_shift) as f64 * 0.001,
                         );
                     }
                 } else if let Some(int_sync) = internal_sync {
                     // this is very unlikely to happen, but just in case ...
                     for (_, gen) in gen_map.drain() {
+                        let gen_shift = gen.time_shift;
                         Session::start_generator_push_sync(
                             gen,
                             session,
                             &int_sync,
-                            ctx.shift as f64 * 0.001,
+                            (ctx.shift + gen_shift) as f64 * 0.001,
                         );
                     }
                 } else {
                     // common case ...
                     for (_, gen) in gen_map.drain() {
+                        let gen_shift = gen.time_shift;
                         Session::start_generator_no_sync(
                             gen,
                             session,
-                            ctx.shift as f64 * 0.001,
+                            (ctx.shift + gen_shift) as f64 * 0.001,
                             &ctx.block_tags,
                             &ctx.solo_tags,
                         );

@@ -196,11 +196,12 @@ impl<const BUFSIZE: usize, const NCHAN: usize> Scheduler<BUFSIZE, NCHAN> {
                             if sync {
                                 let mut syncs = sched_data.synced_generators.lock();
                                 for (g, s) in syncs.drain(..) {
+				    let gen_shift = g.time_shift;
                                     Session::start_generator_data_sync(
                                         g,
 					&session,
                                         &sched_data,
-                                        s,
+                                        s + (gen_shift as f64 * 0.001),
 					&sched_data.block_tags,
 					&sched_data.solo_tags,
                                     );

@@ -108,6 +108,7 @@ pub fn infer(
 
     let mut collect_events = false;
     let mut collect_rules = false;
+    let mut time_shift = 0;
 
     let mut dur: DynVal = if let TypedEntity::ConfigParameter(ConfigParameter::Numeric(d)) = globals
         .entry(VariableId::DefaultDuration)
@@ -189,6 +190,15 @@ pub fn infer(
                     }
                     _ => {}
                 },
+                "shift" => {
+                    if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(
+                        n,
+                    )))) = tail_drain.next()
+                    {
+                        time_shift = n as i32;
+                        tail_drain.next();
+                    }
+                }
                 "keep" => {
                     if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
                         Comparable::Boolean(b),
@@ -229,6 +239,7 @@ pub fn infer(
         },
         processors: Vec::new(),
         time_mods: Vec::new(),
+        time_shift,
         keep_root,
     })))
 }

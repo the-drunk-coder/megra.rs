@@ -199,6 +199,7 @@ pub fn facts(
         },
         processors: Vec::new(),
         time_mods: Vec::new(),
+        time_shift: 0,
         keep_root,
     })))
 }
