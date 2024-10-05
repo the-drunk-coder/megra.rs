@@ -1,5 +1,7 @@
 use std::sync;
 
+use anyhow::{anyhow, bail, Result};
+
 use crate::builtin_types::*;
 
 use crate::parser::{EvaluatedExpr, FunctionMap};
@@ -11,7 +13,7 @@ pub fn vec(
     _: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     let tail_drain = tail.drain(..).skip(1);
 
     let mut pvec = Vec::new();
@@ -22,7 +24,7 @@ pub fn vec(
         }
     }
 
-    Some(EvaluatedExpr::Typed(TypedEntity::Vec(pvec)))
+    Ok(EvaluatedExpr::Typed(TypedEntity::Vec(pvec)))
 }
 
 pub fn push(
@@ -31,7 +33,7 @@ pub fn push(
     _: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     let mut tail_drain = tail.drain(1..);
 
     let place = match tail_drain.next() {
@@ -40,13 +42,13 @@ pub fn push(
             VariableId::Symbol(s)
         }
         _ => {
-            return None;
+            bail!("vec - invalid vector identifier")
         }
     };
 
     if let Some(EvaluatedExpr::Typed(t)) = tail_drain.next() {
-        Some(EvaluatedExpr::Command(Command::Push(place, t)))
+        Ok(EvaluatedExpr::Command(Command::Push(place, t)))
     } else {
-        None
+        Err(anyhow!("vec - can't push to {place:?}"))
     }
 }

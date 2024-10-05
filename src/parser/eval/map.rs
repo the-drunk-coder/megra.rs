@@ -1,6 +1,8 @@
 use std::collections::HashMap;
 use std::sync;
 
+use anyhow::{anyhow, bail, Result};
+
 use crate::builtin_types::*;
 
 use crate::parser::{EvaluatedExpr, FunctionMap};
@@ -12,7 +14,7 @@ pub fn map(
     _: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     let tail_drain = tail.drain(..).skip(1);
 
     let mut pmap = HashMap::new();
@@ -31,7 +33,7 @@ pub fn map(
         }
     }
 
-    Some(EvaluatedExpr::Typed(TypedEntity::Map(pmap)))
+    Ok(EvaluatedExpr::Typed(TypedEntity::Map(pmap)))
 }
 
 pub fn insert(
@@ -40,7 +42,7 @@ pub fn insert(
     _: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     let mut tail_drain = tail.drain(1..);
 
     let place = match tail_drain.next() {
@@ -49,7 +51,7 @@ pub fn insert(
             VariableId::Symbol(s)
         }
         _ => {
-            return None;
+            bail!("insert - invalid map identifier")
         }
     };
 
@@ -62,13 +64,13 @@ pub fn insert(
             VariableId::Symbol(s)
         }
         _ => {
-            return None;
+            bail!("insert - invalid key")
         }
     };
 
     if let Some(EvaluatedExpr::Typed(t)) = tail_drain.next() {
-        Some(EvaluatedExpr::Command(Command::Insert(place, key, t)))
+        Ok(EvaluatedExpr::Command(Command::Insert(place, key, t)))
     } else {
-        None
+        Err(anyhow!("insert - can't insert {key:?} into {place:?}"))
     }
 }

@@ -1,3 +1,5 @@
+use anyhow::{anyhow, Result};
+
 use crate::builtin_types::*;
 use crate::parser::{EvaluatedExpr, FunctionMap};
 use crate::{OutputMode, SampleAndWavematrixSet};
@@ -10,7 +12,7 @@ pub fn megra_match(
     _: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..);
     // ignore function name
     tail_drain.next();
@@ -23,8 +25,8 @@ pub fn megra_match(
                 matchees.push((n, x));
             }
         }
-        Some(EvaluatedExpr::Match(Box::new(to_be_matched), matchees))
+        Ok(EvaluatedExpr::Match(Box::new(to_be_matched), matchees))
     } else {
-        None
+        Err(anyhow!("match - body empty"))
     }
 }

@@ -1,3 +1,5 @@
+use anyhow::Result;
+
 use crate::builtin_types::TypedEntity;
 use crate::event::*;
 use crate::parser::{EvaluatedExpr, FunctionMap};
@@ -12,7 +14,7 @@ pub fn control(
     _: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     let mut sync_contexts = Vec::new();
     let mut commands = Vec::new();
 
@@ -28,7 +30,7 @@ pub fn control(
         }
     }
 
-    Some(EvaluatedExpr::Typed(TypedEntity::ControlEvent(
+    Ok(EvaluatedExpr::Typed(TypedEntity::ControlEvent(
         ControlEvent {
             tags: BTreeSet::new(),
             ctx: if sync_contexts.is_empty() {

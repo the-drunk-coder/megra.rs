@@ -1,3 +1,5 @@
+use anyhow::Result;
+
 use crate::builtin_types::*;
 use crate::parser::{EvaluatedExpr, FunctionMap};
 use crate::{OutputMode, SampleAndWavematrixSet};
@@ -10,12 +12,12 @@ pub fn progn(
     _: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..);
     // ignore function name
     tail_drain.next();
 
     let exprs: Vec<EvaluatedExpr> = tail_drain.collect();
 
-    Some(EvaluatedExpr::Progn(exprs))
+    Ok(EvaluatedExpr::Progn(exprs))
 }

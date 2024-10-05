@@ -1,5 +1,7 @@
 use std::sync;
 
+use anyhow::Result;
+
 use crate::builtin_types::*;
 
 use crate::parser::{EvaluatedExpr, FunctionMap};
@@ -11,7 +13,7 @@ pub fn mat(
     _: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     let tail_drain = tail.drain(..).skip(1);
 
     let mut pmat = Vec::new();
@@ -39,5 +41,5 @@ pub fn mat(
         pmat.push(row.clone());
     }
 
-    Some(EvaluatedExpr::Typed(TypedEntity::Matrix(pmat)))
+    Ok(EvaluatedExpr::Typed(TypedEntity::Matrix(pmat)))
 }

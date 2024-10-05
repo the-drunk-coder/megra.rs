@@ -52,7 +52,7 @@ pub fn define_standard_library() -> FunctionMap {
     standard_library.std_lib.insert("print".to_string(), eval::commands::print);
     standard_library.std_lib.insert("load-file".to_string(), eval::commands::load_file);
 
-    /*
+    
     // progn and other constructs
     standard_library.std_lib.insert("progn".to_string(), eval::progn::progn);
     standard_library.std_lib.insert("match".to_string(), eval::megra_match::megra_match);
@@ -68,7 +68,7 @@ pub fn define_standard_library() -> FunctionMap {
     
     // matrix is barely usable at this point ...
     standard_library.std_lib.insert("mat".to_string(), eval::matrix::mat);
-    */
+    
     // sound events (sample events are added as needed)
     standard_library.std_lib.insert("risset".to_string(), eval::events::sound::sound);
     standard_library.std_lib.insert("saw".to_string(), eval::events::sound::sound);
