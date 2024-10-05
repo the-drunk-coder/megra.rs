@@ -43,7 +43,9 @@ pub fn define_standard_library() -> FunctionMap {
     standard_library.std_lib.insert("reverb".to_string(), eval::commands::reverb);
     standard_library.std_lib.insert("delay".to_string(), eval::commands::delay);
     standard_library.std_lib.insert("export-dot".to_string(), eval::commands::export_dot);
+    */
     standard_library.std_lib.insert("once".to_string(), eval::commands::once);
+    /*
     standard_library.std_lib.insert("step-part".to_string(), eval::commands::step_part);
     standard_library.std_lib.insert("clear".to_string(), eval::commands::clear);
     standard_library.std_lib.insert("connect-visualizer".to_string(), eval::commands::connect_visualizer);

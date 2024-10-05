@@ -5,6 +5,7 @@ use crate::parameter::*;
 
 use std::collections::BTreeSet;
 
+use anyhow::Result;
 use ruffbox_synth::building_blocks::SynthParameterLabel;
 
 use crate::parser::{EvaluatedExpr, FunctionMap};
@@ -686,7 +687,7 @@ pub fn once(
     globals: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     let tail_drain = tail.drain(..).skip(1);
     let mut sound_events = Vec::new();
     let mut control_events = Vec::new();
@@ -701,7 +702,7 @@ pub fn once(
         }
     }
 
-    Some(EvaluatedExpr::Command(Command::Once(
+    Ok(EvaluatedExpr::Command(Command::Once(
         sound_events,
         control_events,
     )))
