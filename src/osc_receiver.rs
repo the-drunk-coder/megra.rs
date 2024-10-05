@@ -1,3 +1,4 @@
+use anyhow::Result;
 use rosc::{OscPacket, OscType};
 
 use std::collections::HashMap;
@@ -84,7 +85,7 @@ impl OscReceiver {
                                 }
 
                                 // THIRD
-                                if let Some(fun_tail) = fun_expr
+                                if let Ok(fun_tail) = fun_expr
                                     .iter()
                                     .map(|expr| {
                                         eval_expression(
@@ -96,7 +97,7 @@ impl OscReceiver {
                                             session.output_mode,
                                         )
                                     })
-                                    .collect::<Option<Vec<EvaluatedExpr>>>()
+                                    .collect::<Result<Vec<EvaluatedExpr>>>()
                                 {
                                     // return last form result, cl-style
                                     for eval_expr in fun_tail {

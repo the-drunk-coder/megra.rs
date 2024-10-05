@@ -40,7 +40,7 @@ impl GeneratorProcessor for MapperProcessor {
                 out_mode,
             );
             events.clear();
-            if let Some(pe) = processed_events {
+            if let Ok(pe) = processed_events {
                 match pe {
                     crate::parser::EvaluatedExpr::Typed(TypedEntity::SoundEvent(mut ev)) => {
                         events.push(crate::event::InterpretableEvent::Sound(

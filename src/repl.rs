@@ -41,7 +41,7 @@ pub fn start_repl<const BUFSIZE: usize, const NCHAN: usize>(
                         // if the error is that a closing paren is missing,
                         // assume we're waiting for more lines.
                         // once a complete input is found,
-                        if e.contains("closing paren") {
+                        if e.to_string().contains("closing paren") {
                             let mut line_buffer: String = "".to_string();
                             line_buffer.push_str(line.as_str());
                             loop {

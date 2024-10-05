@@ -315,9 +315,9 @@ pub fn parse_expr(i: &str) -> IResult<&str, Expr, VerboseError<&str>> {
 
 // evaluate as argument identifiers, or better, constants only, no applications
 // or definitions
-pub fn eval_as_arg(e: &Expr) -> Option<EvaluatedExpr> {
+pub fn eval_as_arg(e: &Expr) -> Result<EvaluatedExpr> {
     match e {
-        Expr::Constant(c) => Some(match c {
+        Expr::Constant(c) => Ok(match c {
             Atom::Float(f) => EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(*f))),
             Atom::Symbol(s) => {
                 EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(s.to_string())))
@@ -333,9 +333,9 @@ pub fn eval_as_arg(e: &Expr) -> Option<EvaluatedExpr> {
                 // eval local vars at eval time ???
                 EvaluatedExpr::Identifier(f.to_string())
             }
-            _ => return None,
+            _ => bail!("constant not an argument"),
         }),
-        _ => None,
+        _ => Err(anyhow!("can't eval as argument")),
     }
 }
 
@@ -545,7 +545,7 @@ pub fn eval_expression(
 ) -> Result<EvaluatedExpr> {
     //println!("EVAL {locals:#?}");
     match e {
-        Expr::Constant(c) => Some(match c {
+        Expr::Constant(c) => Ok(match c {
             Atom::Float(f) => EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(*f))),
             Atom::Symbol(s) => {
                 EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(s.to_string())))
@@ -702,14 +702,10 @@ pub fn eval_expression(
                     sample_set.clone(),
                     out_mode,
                 ) {
-                    Ok(EvaluatedExpr::Identifier(i)) => Ok(i),
-                    Ok(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::String(s)))) => {
-                        Ok(s)
-                    }
+                    Ok(EvaluatedExpr::Identifier(i)) => i,
+                    Ok(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::String(s)))) => s,
                     _ => bail!("invalid function definition"),
                 };
-
-                let i = id?;
 
                 // i hate this clone ...
                 let mut tail_clone = tail.clone();
@@ -722,14 +718,14 @@ pub fn eval_expression(
 
                 // evaluate positional arguments ...
                 if let Some(Expr::Application(head, fun_tail)) = tail_clone.first() {
-                    if let Some(EvaluatedExpr::Identifier(f)) = eval_as_arg(head) {
+                    if let Ok(EvaluatedExpr::Identifier(f)) = eval_as_arg(head) {
                         positional_args.push(f);
                     }
                     // reduce tail args ...
                     let reduced_tail = fun_tail
                         .iter()
                         .map(eval_as_arg)
-                        .collect::<Option<Vec<EvaluatedExpr>>>()?;
+                        .collect::<Result<Vec<EvaluatedExpr>>>()?;
 
                     for eexpr in reduced_tail {
                         if let EvaluatedExpr::Identifier(f) = eexpr {
@@ -752,7 +748,7 @@ pub fn eval_expression(
                 }
 
                 Ok(EvaluatedExpr::FunctionDefinition(
-                    i,
+                    id,
                     positional_args,
                     tail_clone,
                 ))

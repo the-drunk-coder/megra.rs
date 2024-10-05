@@ -1,3 +1,4 @@
+use anyhow::Result;
 use midir::{Ignore, MidiInput};
 
 use std::collections::HashMap;
@@ -63,7 +64,7 @@ pub fn open_midi_input_port<const BUFSIZE: usize, const NCHAN: usize>(
                     }
 
                     // THIRD
-                    if let Some(fun_tail) = fun_expr
+                    if let Ok(fun_tail) = fun_expr
                         .iter()
                         .map(|expr| {
                             eval_expression(
@@ -75,7 +76,7 @@ pub fn open_midi_input_port<const BUFSIZE: usize, const NCHAN: usize>(
                                 session.output_mode,
                             )
                         })
-                        .collect::<Option<Vec<EvaluatedExpr>>>()
+                        .collect::<Result<Vec<EvaluatedExpr>>>()
                     {
                         // return last form result, cl-style
                         for eval_expr in fun_tail {
