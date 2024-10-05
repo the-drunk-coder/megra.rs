@@ -7,6 +7,8 @@ use crate::parameter::*;
 use crate::parser::eval::resolver::resolve_globals;
 use crate::sample_set::SampleAndWavematrixSet;
 use crate::session::OutputMode;
+use anyhow::bail;
+use anyhow::Result;
 use ruffbox_synth::building_blocks::SynthParameterLabel;
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::sync;
@@ -20,7 +22,7 @@ pub fn a_loop(
     globals: &sync::Arc<GlobalVariables>,
     sample_set: SampleAndWavematrixSet,
     out_mode: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     // eval-time resolve
     // ignore function name
     resolve_globals(&mut tail[1..], globals);
@@ -32,7 +34,7 @@ pub fn a_loop(
     {
         n.clone()
     } else {
-        "".to_string()
+        bail!("loop - missing name");
     };
 
     tail_drain.next();
@@ -47,7 +49,7 @@ pub fn a_loop(
     {
         DynVal::with_value(*d)
     } else {
-        unreachable!()
+        bail!("loop - global default duration not present");
     };
 
     // chances for modifiers ...
@@ -244,7 +246,7 @@ pub fn a_loop(
                     globals,
                 );
                 if parsed_cycle.is_empty() {
-                    println!("couldn't parse cycle");
+                    bail!("couldn't parse loop notation");
                 }
                 for mut cyc_evs in parsed_cycle.drain(..) {
                     match cyc_evs.as_slice() {
@@ -399,7 +401,7 @@ pub fn a_loop(
     let mut id_tags = BTreeSet::new();
     id_tags.insert(name.clone());
 
-    Some(EvaluatedExpr::Typed(TypedEntity::Generator(Generator {
+    Ok(EvaluatedExpr::Typed(TypedEntity::Generator(Generator {
         id_tags,
         root_generator: MarkovSequenceGenerator {
             name,

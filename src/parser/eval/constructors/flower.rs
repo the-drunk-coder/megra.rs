@@ -5,6 +5,8 @@ use crate::markov_sequence_generator::MarkovSequenceGenerator;
 use crate::parameter::*;
 use crate::parser::eval::resolver::resolve_globals;
 
+use anyhow::bail;
+use anyhow::Result;
 use ruffbox_synth::building_blocks::SynthParameterLabel;
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::sync;
@@ -19,7 +21,7 @@ pub fn flower(
     globals: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     // eval-time resolve
     // ignore function name
     resolve_globals(&mut tail[1..], globals);
@@ -31,7 +33,7 @@ pub fn flower(
     {
         n
     } else {
-        "".to_string()
+        bail!("flower - missing name");
     };
 
     let mut keep_root = false;
@@ -58,7 +60,7 @@ pub fn flower(
     {
         DynVal::with_value(*d)
     } else {
-        unreachable!()
+        bail!("flower - global default duration not present");
     };
 
     let mut num_layers = 1;
@@ -375,7 +377,7 @@ pub fn flower(
     let mut id_tags = BTreeSet::new();
     id_tags.insert(name.clone());
 
-    Some(EvaluatedExpr::Typed(TypedEntity::Generator(Generator {
+    Ok(EvaluatedExpr::Typed(TypedEntity::Generator(Generator {
         id_tags,
         root_generator: MarkovSequenceGenerator {
             name,

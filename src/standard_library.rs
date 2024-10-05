@@ -12,12 +12,17 @@ pub fn define_standard_library() -> FunctionMap {
     // constructors
     standard_library.std_lib.insert("nuc".to_string(), eval::constructors::nuc::nuc);
     standard_library.std_lib.insert("fully".to_string(), eval::constructors::fully::fully);
-    /*
     standard_library.std_lib.insert("friendship".to_string(), eval::constructors::friendship::friendship);
     standard_library.std_lib.insert("lin".to_string(), eval::constructors::linear::linear);
     standard_library.std_lib.insert("linear".to_string(), eval::constructors::linear::linear);
     standard_library.std_lib.insert("loop".to_string(), eval::constructors::r#loop::a_loop);
     standard_library.std_lib.insert("chop".to_string(), eval::constructors::chop::chop);
+    /*
+
+    
+    
+    
+    
     standard_library.std_lib.insert("infer".to_string(), eval::constructors::infer::infer);
     standard_library.std_lib.insert("rule".to_string(), eval::constructors::infer::rule);
     standard_library.std_lib.insert("learn".to_string(), eval::constructors::learn::learn);

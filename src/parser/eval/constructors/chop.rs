@@ -7,6 +7,8 @@ use crate::parser::eval::resolver::resolve_globals;
 use crate::parser::{EvaluatedExpr, FunctionMap};
 use crate::{OutputMode, SampleAndWavematrixSet};
 
+use anyhow::bail;
+use anyhow::Result;
 use ruffbox_synth::building_blocks::SynthParameterLabel;
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::sync;
@@ -18,7 +20,7 @@ pub fn chop(
     globals: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     // eval-time resolve
     // ignore function name
     resolve_globals(&mut tail[1..], globals);
@@ -30,7 +32,7 @@ pub fn chop(
     {
         n
     } else {
-        "".to_string()
+        bail!("chop - missing name");
     };
 
     // name is the first symbol
@@ -52,7 +54,7 @@ pub fn chop(
     {
         DynVal::with_value(*d)
     } else {
-        unreachable!()
+        bail!("chop - global default duration not present");
     };
 
     let mut repetition_chance: f32 = 0.0;
@@ -254,7 +256,7 @@ pub fn chop(
     let mut id_tags = BTreeSet::new();
     id_tags.insert(name.clone());
 
-    Some(EvaluatedExpr::Typed(TypedEntity::Generator(Generator {
+    Ok(EvaluatedExpr::Typed(TypedEntity::Generator(Generator {
         id_tags,
         root_generator: MarkovSequenceGenerator {
             name,

@@ -5,6 +5,8 @@ use crate::markov_sequence_generator::{MarkovSequenceGenerator, Rule};
 use crate::parameter::*;
 use crate::parser::eval::resolver::resolve_globals;
 
+use anyhow::bail;
+use anyhow::Result;
 use ruffbox_synth::building_blocks::SynthParameterLabel;
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::sync;
@@ -19,7 +21,7 @@ pub fn rule(
     globals: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     // eval-time resolve
     // ignore function name
     resolve_globals(&mut tail[1..], globals);
@@ -31,7 +33,7 @@ pub fn rule(
         {
             s.chars().collect()
         } else {
-            return None;
+            bail!("rule - missing source");
         };
 
     let sym_vec: Vec<char> =
@@ -40,7 +42,7 @@ pub fn rule(
         {
             s.chars().collect()
         } else {
-            return None;
+            bail!("rule - missing symbol");
         };
 
     let def_dur: f32 = if let TypedEntity::ConfigParameter(ConfigParameter::Numeric(d)) = globals
@@ -52,7 +54,7 @@ pub fn rule(
     {
         *d
     } else {
-        unreachable!()
+        bail!("rule - missing global default duration");
     };
 
     let probability =
@@ -73,7 +75,7 @@ pub fn rule(
             def_dur as u64
         };
 
-    Some(EvaluatedExpr::Typed(TypedEntity::Rule(Rule {
+    Ok(EvaluatedExpr::Typed(TypedEntity::Rule(Rule {
         source: source_vec,
         symbol: sym_vec[0],
         probability,
@@ -87,7 +89,7 @@ pub fn infer(
     globals: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     // eval-time resolve
     // ignore function name
     resolve_globals(&mut tail[1..], globals);
@@ -99,7 +101,7 @@ pub fn infer(
     {
         n
     } else {
-        "".to_string()
+        bail!("infer - missing name");
     };
 
     let mut event_mapping = BTreeMap::<char, Vec<SourceEvent>>::new();
@@ -119,7 +121,7 @@ pub fn infer(
     {
         DynVal::with_value(*d)
     } else {
-        unreachable!()
+        bail!("infer - global default duration not present");
     };
 
     let mut ev_vec = Vec::new();
@@ -223,7 +225,7 @@ pub fn infer(
     let mut id_tags = BTreeSet::new();
     id_tags.insert(name.clone());
 
-    Some(EvaluatedExpr::Typed(TypedEntity::Generator(Generator {
+    Ok(EvaluatedExpr::Typed(TypedEntity::Generator(Generator {
         id_tags,
         root_generator: MarkovSequenceGenerator {
             name,

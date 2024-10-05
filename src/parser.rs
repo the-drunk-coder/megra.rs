@@ -654,7 +654,7 @@ pub fn eval_expression(
                                 )))
                             } else {
                                 // otherwise jump out if expression can't be evaluated
-                                bail!("can't eval, neither match nor {e}")
+                                bail!("evaluation error\n,- expr isn't match\n- error: {e}")
                             }
                         }
                     }

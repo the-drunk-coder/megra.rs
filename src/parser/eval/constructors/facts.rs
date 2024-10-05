@@ -1,6 +1,7 @@
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::sync;
 
+use anyhow::{bail, Result};
 use ruffbox_synth::building_blocks::SynthParameterLabel;
 use vom_rs::pfa::{Pfa, Rule};
 
@@ -20,7 +21,7 @@ pub fn facts(
     globals: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     // eval-time resolve
     // ignore function name
     resolve_globals(&mut tail[1..], globals);
@@ -32,7 +33,7 @@ pub fn facts(
     {
         n
     } else {
-        return None;
+        bail!("facts - missing name");
     };
 
     // the param to be factorized
@@ -41,7 +42,7 @@ pub fn facts(
     {
         n
     } else {
-        return None;
+        bail!("facts - missing param");
     };
 
     let dur: DynVal = if let TypedEntity::ConfigParameter(ConfigParameter::Numeric(d)) = globals
@@ -53,7 +54,7 @@ pub fn facts(
     {
         DynVal::with_value(*d)
     } else {
-        unreachable!()
+        bail!("facts - global default duration not present");
     };
 
     let mut ev_vecs = Vec::new();
@@ -108,7 +109,7 @@ pub fn facts(
     }
 
     if ev_vecs.is_empty() {
-        return None;
+        bail!("facts - missing factor arguments");
     }
 
     /////////////////////////////////
@@ -183,7 +184,7 @@ pub fn facts(
     let mut id_tags = BTreeSet::new();
     id_tags.insert(name.clone());
 
-    Some(EvaluatedExpr::Typed(TypedEntity::Generator(Generator {
+    Ok(EvaluatedExpr::Typed(TypedEntity::Generator(Generator {
         id_tags,
         root_generator: MarkovSequenceGenerator {
             name,

@@ -5,6 +5,8 @@ use crate::markov_sequence_generator::MarkovSequenceGenerator;
 use crate::parameter::*;
 use crate::parser::eval::resolver::resolve_globals;
 
+use anyhow::bail;
+use anyhow::Result;
 use ruffbox_synth::building_blocks::SynthParameterLabel;
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::sync;
@@ -19,7 +21,7 @@ pub fn linear(
     globals: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     // eval-time resolve
     // ignore function name in this case
     resolve_globals(&mut tail[1..], globals);
@@ -31,7 +33,7 @@ pub fn linear(
     {
         n
     } else {
-        "".to_string()
+        bail!("lin - missing name");
     };
 
     // collect final events and durations in their position in the list
@@ -47,7 +49,7 @@ pub fn linear(
     {
         DynVal::with_value(*d)
     } else {
-        unreachable!()
+        bail!("lin - global default duration not present");
     };
 
     for c in tail_drain {
@@ -109,7 +111,7 @@ pub fn linear(
     let mut id_tags = BTreeSet::new();
     id_tags.insert(name.clone());
 
-    Some(EvaluatedExpr::Typed(TypedEntity::Generator(Generator {
+    Ok(EvaluatedExpr::Typed(TypedEntity::Generator(Generator {
         id_tags,
         root_generator: MarkovSequenceGenerator {
             name,
