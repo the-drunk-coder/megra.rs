@@ -7,6 +7,7 @@ use crate::parser::{EvaluatedExpr, FunctionMap};
 use crate::sample_set::SampleLookup;
 use crate::{GlobalVariables, OutputMode, SampleAndWavematrixSet, VariableId};
 
+use anyhow::{bail, Result};
 use ruffbox_synth::building_blocks::bitcrusher::BitcrusherMode;
 use ruffbox_synth::building_blocks::{
     EnvelopeSegmentType, FilterType, OscillatorType, SynthParameterLabel,
@@ -380,15 +381,14 @@ pub fn sound(
     _: &sync::Arc<GlobalVariables>,
     sample_set: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..).peekable();
 
     // get the function name ...
     let fname = if let Some(EvaluatedExpr::Identifier(f)) = tail_drain.next() {
         f
     } else {
-        // nothing to do ...
-        return None;
+        bail!("sound event - event type invalid");
     };
 
     // here's where the sound events are taken apart ...
@@ -574,7 +574,7 @@ pub fn sound(
 
                 ev // return event
             } else {
-                return None;
+                bail!("sound event - no sample set with name {fname} available");
             }
         }
     };
@@ -600,7 +600,7 @@ pub fn sound(
                         .insert(map_parameter(&k), ParameterValue::Matrix(wavematrix));
                     tail_drain.next();
                 } else {
-                    println!("couldn't find wavematrix {s}")
+                    bail!("sound event - couldn't find wavematrix {s}");
                 }
             } else {
                 ev.params
@@ -612,7 +612,7 @@ pub fn sound(
         }
     }
 
-    Some(EvaluatedExpr::Typed(TypedEntity::SoundEvent(ev)))
+    Ok(EvaluatedExpr::Typed(TypedEntity::SoundEvent(ev)))
 }
 
 #[cfg(test)]

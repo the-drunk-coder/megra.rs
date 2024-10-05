@@ -1,3 +1,5 @@
+use anyhow::{bail, Result};
+
 use crate::builtin_types::*;
 use crate::generator::Generator;
 use crate::parser::eval::resolver::resolve_globals;
@@ -14,7 +16,7 @@ pub fn sync_context(
     globals: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     // eval-time resolve
     // ignore function name
     resolve_globals(&mut tail[1..], globals);
@@ -26,7 +28,7 @@ pub fn sync_context(
     {
         s
     } else {
-        "".to_string()
+        bail!("sx - missing name");
     };
 
     let active =
@@ -35,11 +37,11 @@ pub fn sync_context(
         {
             b
         } else {
-            false
+            bail!("sx - missing active flag");
         };
 
     if !active {
-        return Some(EvaluatedExpr::SyncContext(SyncContext {
+        return Ok(EvaluatedExpr::SyncContext(SyncContext {
             name,
             generators: Vec::new(),
             sync_to: None,
@@ -129,7 +131,7 @@ pub fn sync_context(
         }
     }
 
-    Some(EvaluatedExpr::SyncContext(SyncContext {
+    Ok(EvaluatedExpr::SyncContext(SyncContext {
         name,
         generators: gens,
         sync_to,
@@ -160,7 +162,7 @@ mod tests {
             .std_lib
             .insert("nuc".to_string(), eval::constructors::nuc::nuc);
         functions.std_lib.insert("bd".to_string(), |_, _, _, _, _| {
-            Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+            Ok(EvaluatedExpr::Typed(TypedEntity::Comparable(
                 Comparable::String("bd".to_string()),
             )))
         });

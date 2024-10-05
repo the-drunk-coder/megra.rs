@@ -4,6 +4,8 @@ use crate::generator::Generator;
 use crate::markov_sequence_generator::MarkovSequenceGenerator;
 use crate::parameter::*;
 use crate::parser::eval::resolver::resolve_globals;
+use anyhow::bail;
+use anyhow::Result;
 use ruffbox_synth::building_blocks::SynthParameterLabel;
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::sync;
@@ -18,7 +20,7 @@ pub fn fully(
     globals: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     // eval-time resolve
     // ignore function name
     resolve_globals(&mut tail[1..], globals);
@@ -30,7 +32,7 @@ pub fn fully(
     {
         n
     } else {
-        "".to_string()
+        bail!("fully - name not specified");
     };
 
     //let mut collect_labeled = false;
@@ -55,7 +57,7 @@ pub fn fully(
     {
         DynVal::with_value(*d)
     } else {
-        unreachable!()
+        bail!("fully - global default duration not available");
     };
 
     while let Some(c) = tail_drain.next() {
@@ -180,7 +182,7 @@ pub fn fully(
     let mut id_tags = BTreeSet::new();
     id_tags.insert(name.clone());
 
-    Some(EvaluatedExpr::Typed(TypedEntity::Generator(Generator {
+    Ok(EvaluatedExpr::Typed(TypedEntity::Generator(Generator {
         id_tags,
         root_generator: MarkovSequenceGenerator {
             name,

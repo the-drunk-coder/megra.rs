@@ -5,6 +5,7 @@ use crate::markov_sequence_generator::MarkovSequenceGenerator;
 use crate::parameter::*;
 use crate::parser::eval::resolver::resolve_globals;
 
+use anyhow::{bail, Result};
 use ruffbox_synth::building_blocks::SynthParameterLabel;
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::sync;
@@ -19,7 +20,7 @@ pub fn nuc(
     globals: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     resolve_globals(&mut tail[1..], globals);
     let mut tail_drain = tail.drain(1..);
 
@@ -29,7 +30,7 @@ pub fn nuc(
     {
         n
     } else {
-        "".to_string()
+        bail!("nuc - missing name");
     };
 
     let mut event_mapping = BTreeMap::<char, Vec<SourceEvent>>::new();
@@ -46,7 +47,7 @@ pub fn nuc(
     {
         DynVal::with_value(*d)
     } else {
-        unreachable!()
+        bail!("nuc - global default duration not present");
     };
 
     let mut ev_vec = Vec::new();
@@ -130,7 +131,7 @@ pub fn nuc(
     let mut id_tags = BTreeSet::new();
     id_tags.insert(name.clone());
 
-    Some(EvaluatedExpr::Typed(TypedEntity::Generator(Generator {
+    Ok(EvaluatedExpr::Typed(TypedEntity::Generator(Generator {
         id_tags,
         root_generator: MarkovSequenceGenerator {
             name,
@@ -167,7 +168,7 @@ mod tests {
             .std_lib
             .insert("nuc".to_string(), eval::constructors::nuc::nuc);
         functions.std_lib.insert("bd".to_string(), |_, _, _, _, _| {
-            Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+            Ok(EvaluatedExpr::Typed(TypedEntity::Comparable(
                 Comparable::String("bd".to_string()),
             )))
         });

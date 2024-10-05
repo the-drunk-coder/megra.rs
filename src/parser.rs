@@ -1,3 +1,4 @@
+use anyhow::{anyhow, bail, Result};
 use dashmap::DashMap;
 use nom::{
     branch::alt,
@@ -121,7 +122,7 @@ pub struct FunctionMap {
             &sync::Arc<GlobalVariables>,
             SampleAndWavematrixSet,
             OutputMode,
-        ) -> Option<EvaluatedExpr>,
+        ) -> anyhow::Result<EvaluatedExpr>,
     >,
 }
 
@@ -363,69 +364,67 @@ pub fn eval_usr_fun(
     locals: std::rc::Rc<RefCell<LocalVariables>>,
     sample_set: SampleAndWavematrixSet,
     out_mode: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     if fun_arg_names.len() > tail.len() {
         // not enough arguments ... no general currying currently :(
-        return None;
+        bail!(
+            "usr fun - needs {} arguments, only {} provided",
+            fun_arg_names.len(),
+            tail.len()
+        );
     }
 
     // FIRST, eval local args,
     // manual zip
 
     for (i, expr) in tail[..fun_arg_names.len()].iter().enumerate() {
-        if let Some(res) = eval_expression(
+        let res = eval_expression(
             expr,
             functions,
             globals,
             Some(std::rc::Rc::clone(&locals)),
             sample_set.clone(),
             out_mode,
-        ) {
-            locals
-                .borrow_mut()
-                .pos_args
-                .insert(fun_arg_names[i].clone(), res);
-        }
+        )?;
+        locals
+            .borrow_mut()
+            .pos_args
+            .insert(fun_arg_names[i].clone(), res);
     }
 
     for expr in tail[fun_arg_names.len()..].iter() {
-        if let Some(res) = eval_expression(
+        let res = eval_expression(
             expr,
             functions,
             globals,
             Some(locals.clone()),
             sample_set.clone(),
             out_mode,
-        ) {
-            locals.borrow_mut().rest.push(res);
-        }
+        )?;
+        locals.borrow_mut().rest.push(res);
     }
 
     // THIRD
     let mut fun_tail: Vec<EvaluatedExpr> = Vec::new();
     for expr in fun_expr.iter() {
-        if let Some(e) = eval_expression(
+        let e = eval_expression(
             expr,
             functions,
             globals,
             Some(std::rc::Rc::clone(&locals)),
             sample_set.clone(),
             out_mode,
-        ) {
-            // the list field exists only to be flattened
-            if let EvaluatedExpr::EvaluatedExprList(mut l) = e {
-                fun_tail.append(&mut l);
-            } else {
-                fun_tail.push(e);
-            }
+        )?;
+        // the list field exists only to be flattened
+        if let EvaluatedExpr::EvaluatedExprList(mut l) = e {
+            fun_tail.append(&mut l);
         } else {
-            // jump out if expression can't be evaluated
-            return None;
+            fun_tail.push(e);
         }
     }
 
     // return last form result, cl-style
-    fun_tail.pop()
+    fun_tail.pop().ok_or(anyhow!("usr fun result empty"))
 }
 
 /// replace expr by the content of certain evaluated expr ... that way,
@@ -483,10 +482,14 @@ pub fn eval_usr_fun_evaluated_tail(
     locals: std::rc::Rc<RefCell<LocalVariables>>,
     sample_set: SampleAndWavematrixSet,
     out_mode: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     if fun_arg_names.len() > tail.len() {
         // not enough arguments ... no general currying currently :(
-        return None;
+        bail!(
+            "usr fun - needs {} arguments, only {} provided",
+            fun_arg_names.len(),
+            tail.len()
+        );
     }
 
     // FIRST, eval local args,
@@ -508,28 +511,24 @@ pub fn eval_usr_fun_evaluated_tail(
     let mut fun_tail: Vec<EvaluatedExpr> = Vec::new();
     for expr in fun_expr.iter() {
         //println!("EVAL FROM MAPPER {fun_expr:#?} {locals:#?}");
-        if let Some(e) = eval_expression(
+        let e = eval_expression(
             expr,
             functions,
             globals,
             Some(std::rc::Rc::clone(&locals)),
             sample_set.clone(),
             out_mode,
-        ) {
-            // the list field exists only to be flattened
-            if let EvaluatedExpr::EvaluatedExprList(mut l) = e {
-                fun_tail.append(&mut l);
-            } else {
-                fun_tail.push(e);
-            }
+        )?;
+        // the list field exists only to be flattened
+        if let EvaluatedExpr::EvaluatedExprList(mut l) = e {
+            fun_tail.append(&mut l);
         } else {
-            // jump out if expression can't be evaluated
-            return None;
+            fun_tail.push(e);
         }
     }
 
     // return last form result, cl-style
-    fun_tail.pop()
+    fun_tail.pop().ok_or(anyhow!("usr fun result empty"))
 }
 
 /// This one reduces the abstract syntax tree ...
@@ -543,7 +542,7 @@ pub fn eval_expression(
     locals: Option<std::rc::Rc<RefCell<LocalVariables>>>,
     sample_set: SampleAndWavematrixSet,
     out_mode: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     //println!("EVAL {locals:#?}");
     match e {
         Expr::Constant(c) => Some(match c {
@@ -610,79 +609,87 @@ pub fn eval_expression(
             // in some context it might be nice to have the head procedurally generated as well,
             // but it'd cause a whole lotta trouble right now and I have no desire currently to use it ...
             // there's more explicit ways to do the whole thing ...
-            if let Some(EvaluatedExpr::Identifier(f)) = eval_expression(
+            let EvaluatedExpr::Identifier(f) = eval_expression(
                 head,
                 functions,
                 globals,
                 locals.clone(), // clones reference
                 sample_set.clone(),
                 out_mode,
-            ) {
-                // check if we have this function ...
-                if functions.std_lib.contains_key(&f) {
-                    let mut reduced_tail: Vec<EvaluatedExpr> = Vec::new();
-                    for expr in tail {
-                        if let Some(e) = eval_expression(
-                            expr,
-                            functions,
-                            globals,
-                            locals.clone(), // clones reference
-                            sample_set.clone(),
-                            out_mode,
-                        ) {
+            )?
+            else {
+                bail!("eval - head isn't an identifier")
+            };
+
+            // check if we have this function ...
+            if functions.std_lib.contains_key(&f) {
+                let mut reduced_tail: Vec<EvaluatedExpr> = Vec::new();
+                for expr in tail {
+                    let eexpr = eval_expression(
+                        expr,
+                        functions,
+                        globals,
+                        locals.clone(), // clones reference
+                        sample_set.clone(),
+                        out_mode,
+                    );
+
+                    match eexpr {
+                        Ok(e) => {
                             // the list field exists only to be flattened
                             if let EvaluatedExpr::EvaluatedExprList(mut l) = e {
                                 reduced_tail.append(&mut l);
                             } else {
                                 reduced_tail.push(e);
                             }
-                        } else if f == "match" {
-                            // stupid temporary hack to make the match statement work in cases
-                            // when an arm can't be evaluated, in which case it just evaluates to false.
-                            // I'm pretty sure there's a much better, less sloppy solution to this, but
-                            // I can't pinpoint it right now ...
-                            reduced_tail.push(EvaluatedExpr::Typed(TypedEntity::Comparable(
-                                Comparable::Boolean(false),
-                            )))
-                        } else {
-                            // otherwise jump out if expression can't be evaluated
-                            return None;
+                        }
+                        std::result::Result::Err(e) => {
+                            if f == "match" {
+                                // stupid temporary hack to make the match statement work in cases
+                                // when an arm can't be evaluated, in which case it just evaluates to false.
+                                // I'm pretty sure there's a much better, less sloppy solution to this, but
+                                // I can't pinpoint it right now ...
+                                reduced_tail.push(EvaluatedExpr::Typed(TypedEntity::Comparable(
+                                    Comparable::Boolean(false),
+                                )))
+                            } else {
+                                // otherwise jump out if expression can't be evaluated
+                                bail!("can't eval, neither match nor {e}")
+                            }
                         }
                     }
-
-                    // push function name
-                    reduced_tail.insert(0, EvaluatedExpr::Identifier(f.clone()));
-                    functions.std_lib.get(&f).unwrap()(
-                        functions,
-                        &mut reduced_tail,
-                        globals,
-                        sample_set,
-                        out_mode,
-                    )
-                } else if functions.usr_lib.contains_key(&f) {
-                    let (fun_arg_names, fun_expr) = functions.usr_lib.get(&f).unwrap().clone();
-                    //println!("{f}, {fun_arg_names:?}, {locals:?}");
-                    eval_usr_fun(
-                        fun_arg_names,
-                        fun_expr,
-                        tail,
-                        functions,
-                        globals,
-                        // pass on local variables if they already exist,
-                        // otherwise create new container
-                        if let Some(loc) = locals {
-                            loc
-                        } else {
-                            std::rc::Rc::new(RefCell::new(LocalVariables::new()))
-                        },
-                        sample_set,
-                        out_mode,
-                    )
-                } else {
-                    None
                 }
+
+                // push function name
+                reduced_tail.insert(0, EvaluatedExpr::Identifier(f.clone()));
+                functions.std_lib.get(&f).unwrap()(
+                    functions,
+                    &mut reduced_tail,
+                    globals,
+                    sample_set,
+                    out_mode,
+                )
+            } else if functions.usr_lib.contains_key(&f) {
+                let (fun_arg_names, fun_expr) = functions.usr_lib.get(&f).unwrap().clone();
+                //println!("{f}, {fun_arg_names:?}, {locals:?}");
+                eval_usr_fun(
+                    fun_arg_names,
+                    fun_expr,
+                    tail,
+                    functions,
+                    globals,
+                    // pass on local variables if they already exist,
+                    // otherwise create new container
+                    if let Some(loc) = locals {
+                        loc
+                    } else {
+                        std::rc::Rc::new(RefCell::new(LocalVariables::new()))
+                    },
+                    sample_set,
+                    out_mode,
+                )
             } else {
-                None
+                bail!("unknown function {f}");
             }
         }
         Expr::Definition(head, tail) => match **head {
@@ -695,62 +702,60 @@ pub fn eval_expression(
                     sample_set.clone(),
                     out_mode,
                 ) {
-                    Some(EvaluatedExpr::Identifier(i)) => Some(i),
-                    Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::String(s)))) => {
-                        Some(s)
+                    Ok(EvaluatedExpr::Identifier(i)) => Ok(i),
+                    Ok(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::String(s)))) => {
+                        Ok(s)
                     }
-                    _ => None,
+                    _ => bail!("invalid function definition"),
                 };
 
-                if let Some(i) = id {
-                    // i hate this clone ...
-                    let mut tail_clone = tail.clone();
+                let i = id?;
 
-                    // remove function name
-                    tail_clone.remove(0);
+                // i hate this clone ...
+                let mut tail_clone = tail.clone();
 
-                    let mut positional_args = Vec::new();
-                    let mut rem_args = false;
+                // remove function name
+                tail_clone.remove(0);
 
-                    // evaluate positional arguments ...
-                    if let Some(Expr::Application(head, fun_tail)) = tail_clone.first() {
-                        if let Some(EvaluatedExpr::Identifier(f)) = eval_as_arg(head) {
+                let mut positional_args = Vec::new();
+                let mut rem_args = false;
+
+                // evaluate positional arguments ...
+                if let Some(Expr::Application(head, fun_tail)) = tail_clone.first() {
+                    if let Some(EvaluatedExpr::Identifier(f)) = eval_as_arg(head) {
+                        positional_args.push(f);
+                    }
+                    // reduce tail args ...
+                    let reduced_tail = fun_tail
+                        .iter()
+                        .map(eval_as_arg)
+                        .collect::<Option<Vec<EvaluatedExpr>>>()?;
+
+                    for eexpr in reduced_tail {
+                        if let EvaluatedExpr::Identifier(f) = eexpr {
                             positional_args.push(f);
                         }
-                        // reduce tail args ...
-                        let reduced_tail = fun_tail
-                            .iter()
-                            .map(eval_as_arg)
-                            .collect::<Option<Vec<EvaluatedExpr>>>()?;
-
-                        for eexpr in reduced_tail {
-                            if let EvaluatedExpr::Identifier(f) = eexpr {
-                                positional_args.push(f);
-                            }
-                        }
-                        rem_args = true;
                     }
-
-                    if rem_args {
-                        tail_clone.remove(0);
-                    }
-
-                    // if the function is defined by another function, repelace some argruments
-                    // (yes, the line between functions and macros in megra is very, very vague ...)
-                    if let Some(loc) = locals.clone() {
-                        for expr in tail_clone.iter_mut() {
-                            replace_arg(expr, loc.clone());
-                        }
-                    }
-
-                    Some(EvaluatedExpr::FunctionDefinition(
-                        i,
-                        positional_args,
-                        tail_clone,
-                    ))
-                } else {
-                    None
+                    rem_args = true;
                 }
+
+                if rem_args {
+                    tail_clone.remove(0);
+                }
+
+                // if the function is defined by another function, repelace some argruments
+                // (yes, the line between functions and macros in megra is very, very vague ...)
+                if let Some(loc) = locals.clone() {
+                    for expr in tail_clone.iter_mut() {
+                        replace_arg(expr, loc.clone());
+                    }
+                }
+
+                Ok(EvaluatedExpr::FunctionDefinition(
+                    i,
+                    positional_args,
+                    tail_clone,
+                ))
             }
             Expr::VariableDefinition => {
                 let id = match eval_expression(
@@ -761,53 +766,49 @@ pub fn eval_expression(
                     sample_set.clone(),
                     out_mode,
                 ) {
-                    Some(EvaluatedExpr::Identifier(i)) => VariableId::Custom(i),
-                    Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(s)))) => {
+                    Ok(EvaluatedExpr::Identifier(i)) => VariableId::Custom(i),
+                    Ok(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(s)))) => {
                         // check whether it's a reserved symbol
                         if crate::parser::eval::events::sound::map_symbolic_param_value(&s)
                             .is_some()
                             || crate::music_theory::from_string(&s).is_some()
                         {
-                            return None;
+                            bail!("can't redefine {s}");
                         }
                         VariableId::Symbol(s)
                     }
                     _ => {
-                        return None;
+                        bail!("invalid variable definition");
                     }
                 };
 
                 let mut reduced_tail: Vec<EvaluatedExpr> = Vec::new();
                 for expr in tail {
-                    if let Some(e) = eval_expression(
+                    let e = eval_expression(
                         expr,
                         functions,
                         globals,
                         locals.clone(),
                         sample_set.clone(),
                         out_mode,
-                    ) {
-                        // the list field exists only to be flattened
-                        if let EvaluatedExpr::EvaluatedExprList(mut l) = e {
-                            reduced_tail.append(&mut l);
-                        } else {
-                            reduced_tail.push(e);
-                        }
+                    )?;
+                    // the list field exists only to be flattened
+                    if let EvaluatedExpr::EvaluatedExprList(mut l) = e {
+                        reduced_tail.append(&mut l);
                     } else {
-                        // jump out if expression can't be evaluated
-                        return None;
+                        reduced_tail.push(e);
                     }
                 }
 
                 if let Some(EvaluatedExpr::Typed(te)) = reduced_tail.pop() {
-                    Some(EvaluatedExpr::VariableDefinition(id, te))
+                    Ok(EvaluatedExpr::VariableDefinition(id, te))
                 } else {
-                    None
+                    Err(anyhow!("invalid variable definition"))
                 }
             }
-            _ => None,
+            _ => Err(anyhow!("invalid variable definition")),
         },
-        _ => None,
+        _ => Err(anyhow!("general evaluation error")),
     }
 }
 pub fn eval_from_str(
@@ -816,16 +817,13 @@ pub fn eval_from_str(
     globals: &sync::Arc<GlobalVariables>,
     sample_set: SampleAndWavematrixSet,
     out_mode: OutputMode,
-) -> Result<EvaluatedExpr, String> {
+) -> Result<EvaluatedExpr> {
     // preprocessing - remove all comments ...
     let re = Regex::new(r";[^\n]+\n").unwrap();
     let src_nocomment = re.replace_all(src, "\n");
     parse_expr(&src_nocomment)
-        .map_err(|e: nom::Err<VerboseError<&str>>| format!("{e:#?}"))
-        .and_then(|(_, exp)| {
-            eval_expression(&exp, functions, globals, None, sample_set, out_mode)
-                .ok_or_else(|| "eval failed".to_string())
-        })
+        .map_err(|e: nom::Err<VerboseError<&str>>| anyhow!("parser error - {e:#?}"))
+        .and_then(|(_, exp)| eval_expression(&exp, functions, globals, None, sample_set, out_mode))
 }
 
 #[cfg(test)]
@@ -904,7 +902,7 @@ mod tests {
                     panic!();
                 }
 
-                Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+                Ok(EvaluatedExpr::Typed(TypedEntity::Comparable(
                     Comparable::Boolean(true),
                 )))
             });
@@ -927,7 +925,7 @@ mod tests {
                     panic!();
                 }
 
-                Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+                Ok(EvaluatedExpr::Typed(TypedEntity::Comparable(
                     Comparable::Boolean(true),
                 )))
             });
