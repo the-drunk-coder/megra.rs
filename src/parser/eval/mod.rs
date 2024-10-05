@@ -16,7 +16,6 @@ pub mod midi;
 pub mod midi_helpers;
 pub mod multiplyer;
 pub mod osc;
-pub mod print;
 pub mod progn;
 pub mod resolver;
 pub mod session;

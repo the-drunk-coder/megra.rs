@@ -17,12 +17,6 @@ pub fn define_standard_library() -> FunctionMap {
     standard_library.std_lib.insert("linear".to_string(), eval::constructors::linear::linear);
     standard_library.std_lib.insert("loop".to_string(), eval::constructors::r#loop::a_loop);
     standard_library.std_lib.insert("chop".to_string(), eval::constructors::chop::chop);
-    /*
-
-    
-    
-    
-    
     standard_library.std_lib.insert("infer".to_string(), eval::constructors::infer::infer);
     standard_library.std_lib.insert("rule".to_string(), eval::constructors::infer::rule);
     standard_library.std_lib.insert("learn".to_string(), eval::constructors::learn::learn);
@@ -31,7 +25,7 @@ pub fn define_standard_library() -> FunctionMap {
     standard_library.std_lib.insert("stages".to_string(), eval::constructors::stages::stages);
     standard_library.std_lib.insert("facts".to_string(), eval::constructors::facts::facts);
     standard_library.std_lib.insert("vals".to_string(), eval::constructors::vals::vals);
-
+                        
     // commands
     standard_library.std_lib.insert("freeze".to_string(), eval::commands::freeze_buffer);
     standard_library.std_lib.insert("freeze-add".to_string(), eval::commands::freeze_add_buffer);
@@ -48,18 +42,17 @@ pub fn define_standard_library() -> FunctionMap {
     standard_library.std_lib.insert("reverb".to_string(), eval::commands::reverb);
     standard_library.std_lib.insert("delay".to_string(), eval::commands::delay);
     standard_library.std_lib.insert("export-dot".to_string(), eval::commands::export_dot);
-    */
     standard_library.std_lib.insert("once".to_string(), eval::commands::once);
-    /*
     standard_library.std_lib.insert("step-part".to_string(), eval::commands::step_part);
     standard_library.std_lib.insert("clear".to_string(), eval::commands::clear);
     standard_library.std_lib.insert("connect-visualizer".to_string(), eval::commands::connect_visualizer);
     standard_library.std_lib.insert("rec".to_string(), eval::commands::start_recording);
     standard_library.std_lib.insert("stop-rec".to_string(), eval::commands::stop_recording);
     standard_library.std_lib.insert("import-sample-set".to_string(), eval::commands::import_sample_set);
-    standard_library.std_lib.insert("print".to_string(), eval::print::print);
+    standard_library.std_lib.insert("print".to_string(), eval::commands::print);
     standard_library.std_lib.insert("load-file".to_string(), eval::commands::load_file);
 
+    /*
     // progn and other constructs
     standard_library.std_lib.insert("progn".to_string(), eval::progn::progn);
     standard_library.std_lib.insert("match".to_string(), eval::megra_match::megra_match);

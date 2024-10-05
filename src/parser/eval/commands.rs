@@ -5,6 +5,8 @@ use crate::parameter::*;
 
 use std::collections::BTreeSet;
 
+use anyhow::anyhow;
+use anyhow::bail;
 use anyhow::Result;
 use ruffbox_synth::building_blocks::SynthParameterLabel;
 
@@ -13,13 +15,15 @@ use crate::{OutputMode, SampleAndWavematrixSet};
 
 use std::sync;
 
+use super::resolver::resolve_globals;
+
 pub fn import_sample_set(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
     _: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..).skip(1).peekable();
 
     let mut url: Option<String> = None;
@@ -70,7 +74,7 @@ pub fn import_sample_set(
 
     // url has priority in case someone provided both ..
     if let Some(url_string) = url {
-        Some(EvaluatedExpr::Command(Command::ImportSampleSet(
+        Ok(EvaluatedExpr::Command(Command::ImportSampleSet(
             SampleResource::Url(url_string, checksum),
         )))
     } else {
@@ -80,6 +84,7 @@ pub fn import_sample_set(
                 checksum,
             )))
         })
+        .ok_or(anyhow!("import-sample-set - missing or invalid file name"))
     }
 }
 
@@ -90,7 +95,7 @@ pub fn load_sample_as_wavematrix(
     _: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..).skip(1);
 
     let mut key: Option<String> = None;
@@ -149,7 +154,7 @@ pub fn load_sample_as_wavematrix(
         }
     }
     if key.is_some() && path.is_some() && matrix_size.is_some() {
-        Some(EvaluatedExpr::Command(Command::LoadSampleAsWavematrix(
+        Ok(EvaluatedExpr::Command(Command::LoadSampleAsWavematrix(
             key.unwrap(),
             path.unwrap(),
             method.unwrap(),
@@ -157,7 +162,7 @@ pub fn load_sample_as_wavematrix(
             start.unwrap(),
         )))
     } else {
-        None
+        Err(anyhow!("can't load sample {key:?} {path:?} as wavematrix"))
     }
 }
 
@@ -167,7 +172,7 @@ pub fn freeze_buffer(
     _: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..).skip(1);
 
     // on the user side,
@@ -200,7 +205,7 @@ pub fn freeze_buffer(
         }
     }
 
-    Some(EvaluatedExpr::Command(Command::FreezeBuffer(
+    Ok(EvaluatedExpr::Command(Command::FreezeBuffer(
         freezbuf, inbuf,
     )))
 }
@@ -211,7 +216,7 @@ pub fn freeze_add_buffer(
     _: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..).skip(1);
 
     // on the user side,
@@ -244,7 +249,7 @@ pub fn freeze_add_buffer(
         }
     }
 
-    Some(EvaluatedExpr::Command(Command::FreezeAddBuffer(
+    Ok(EvaluatedExpr::Command(Command::FreezeAddBuffer(
         freezbuf, inbuf,
     )))
 }
@@ -255,7 +260,7 @@ pub fn load_sample(
     _: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..).skip(1);
 
     let mut collect_keywords = false;
@@ -310,7 +315,7 @@ pub fn load_sample(
         }
     }
 
-    Some(EvaluatedExpr::Command(Command::LoadSample(
+    Ok(EvaluatedExpr::Command(Command::LoadSample(
         set,
         keywords,
         path,
@@ -324,14 +329,14 @@ pub fn load_sample_sets(
     _: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..).skip(1);
     let path = if let EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::String(n))) =
         tail_drain.next().unwrap()
     {
         n
     } else {
-        "".to_string()
+        bail!("load-sample-sets - path missing");
     };
 
     let mut downmix_stereo = false;
@@ -345,7 +350,7 @@ pub fn load_sample_sets(
         }
     }
 
-    Some(EvaluatedExpr::Command(Command::LoadSampleSets(
+    Ok(EvaluatedExpr::Command(Command::LoadSampleSets(
         path,
         downmix_stereo,
     )))
@@ -357,14 +362,14 @@ pub fn load_sample_set(
     _: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..).skip(1);
     let path = if let EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::String(n))) =
         tail_drain.next().unwrap()
     {
         n
     } else {
-        "".to_string()
+        bail!("load-sample-set - path missing");
     };
 
     let mut downmix_stereo = false;
@@ -378,7 +383,7 @@ pub fn load_sample_set(
         }
     }
 
-    Some(EvaluatedExpr::Command(Command::LoadSampleSet(
+    Ok(EvaluatedExpr::Command(Command::LoadSampleSet(
         path,
         downmix_stereo,
     )))
@@ -390,9 +395,9 @@ pub fn tmod(
     _: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..).skip(1);
-    Some(EvaluatedExpr::Command(Command::Tmod(
+    Ok(EvaluatedExpr::Command(Command::Tmod(
         match tail_drain.next() {
             Some(EvaluatedExpr::Typed(TypedEntity::Parameter(p))) => p,
             Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f)))) => {
@@ -409,9 +414,9 @@ pub fn latency(
     _: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..).skip(1);
-    Some(EvaluatedExpr::Command(Command::Latency(
+    Ok(EvaluatedExpr::Command(Command::Latency(
         match tail_drain.next() {
             Some(EvaluatedExpr::Typed(TypedEntity::Parameter(p))) => p,
             Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f)))) => {
@@ -428,9 +433,9 @@ pub fn bpm(
     _: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..).skip(1);
-    Some(EvaluatedExpr::Command(Command::Bpm(
+    Ok(EvaluatedExpr::Command(Command::Bpm(
         match tail_drain.next() {
             Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f)))) => {
                 60000.0 / f
@@ -446,9 +451,9 @@ pub fn default_duration(
     _: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..).skip(1);
-    Some(EvaluatedExpr::Command(Command::DefaultDuration(
+    Ok(EvaluatedExpr::Command(Command::DefaultDuration(
         match tail_drain.next() {
             Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f)))) => f,
             _ => 200.0,
@@ -462,9 +467,9 @@ pub fn globres(
     _: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..).skip(1);
-    Some(EvaluatedExpr::Command(Command::GlobRes(
+    Ok(EvaluatedExpr::Command(Command::GlobRes(
         match tail_drain.next() {
             Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f)))) => f,
             _ => 400000.0,
@@ -478,7 +483,7 @@ pub fn reverb(
     _: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..).skip(1);
     let mut param_map = HashMap::new();
 
@@ -525,7 +530,7 @@ pub fn reverb(
         }
     }
 
-    Some(EvaluatedExpr::Command(Command::GlobalRuffboxParams(
+    Ok(EvaluatedExpr::Command(Command::GlobalRuffboxParams(
         param_map,
     )))
 }
@@ -536,7 +541,7 @@ pub fn delay(
     _: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..).skip(1);
     let mut param_map = HashMap::new();
 
@@ -630,7 +635,7 @@ pub fn delay(
         }
     }
 
-    Some(EvaluatedExpr::Command(Command::GlobalRuffboxParams(
+    Ok(EvaluatedExpr::Command(Command::GlobalRuffboxParams(
         param_map,
     )))
 }
@@ -641,7 +646,7 @@ pub fn export_dot(
     _: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..).skip(1);
 
     // filename
@@ -651,11 +656,11 @@ pub fn export_dot(
         {
             s
         } else {
-            return None;
+            bail!("export-dot - missing filename");
         };
 
     match tail_drain.next() {
-        Some(EvaluatedExpr::Typed(TypedEntity::Generator(g))) => Some(EvaluatedExpr::Command(
+        Some(EvaluatedExpr::Typed(TypedEntity::Generator(g))) => Ok(EvaluatedExpr::Command(
             Command::ExportDotStatic(filename, g),
         )),
         Some(EvaluatedExpr::Keyword(k)) => {
@@ -670,14 +675,14 @@ pub fn export_dot(
                         id_tags.insert(si);
                     }
                     // collect next symbols
-                    Some(EvaluatedExpr::Command(Command::ExportDotRunning((
+                    Ok(EvaluatedExpr::Command(Command::ExportDotRunning((
                         filename, id_tags,
                     ))))
                 }
-                _ => None,
+                _ => Err(anyhow!("export-dot - keyword arg {k} invalid")),
             }
         }
-        _ => None,
+        _ => Err(anyhow!("export-dot - invalid argument")),
     }
 }
 
@@ -714,14 +719,14 @@ pub fn step_part(
     _: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..).skip(1);
     match tail_drain.next() {
         Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(s)))) => {
-            Some(EvaluatedExpr::Command(Command::StepPart(s)))
+            Ok(EvaluatedExpr::Command(Command::StepPart(s)))
         }
-        Some(EvaluatedExpr::Identifier(s)) => Some(EvaluatedExpr::Command(Command::StepPart(s))),
-        _ => None,
+        Some(EvaluatedExpr::Identifier(s)) => Ok(EvaluatedExpr::Command(Command::StepPart(s))),
+        _ => Err(anyhow!("step-part - no part to step ...")),
     }
 }
 
@@ -731,8 +736,8 @@ pub fn clear(
     _: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
-    Some(EvaluatedExpr::Command(Command::Clear))
+) -> Result<EvaluatedExpr> {
+    Ok(EvaluatedExpr::Command(Command::Clear))
 }
 
 pub fn connect_visualizer(
@@ -741,7 +746,7 @@ pub fn connect_visualizer(
     _: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     let tail_drain = tail.drain(..).skip(1);
 
     let mut exclusion_list: BTreeSet<String> = BTreeSet::new();
@@ -761,7 +766,7 @@ pub fn connect_visualizer(
         }
     }
 
-    Some(EvaluatedExpr::Command(Command::ConnectVisualizer(
+    Ok(EvaluatedExpr::Command(Command::ConnectVisualizer(
         exclusion_list,
     )))
 }
@@ -772,7 +777,7 @@ pub fn start_recording(
     _: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..).skip(1);
     let prefix = if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::String(s)))) =
         tail_drain.next()
@@ -796,7 +801,7 @@ pub fn start_recording(
         }
     }
 
-    Some(EvaluatedExpr::Command(Command::StartRecording(
+    Ok(EvaluatedExpr::Command(Command::StartRecording(
         prefix, rec_input,
     )))
 }
@@ -807,8 +812,8 @@ pub fn stop_recording(
     _: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
-    Some(EvaluatedExpr::Command(Command::StopRecording))
+) -> Result<EvaluatedExpr> {
+    Ok(EvaluatedExpr::Command(Command::StopRecording))
 }
 
 pub fn load_file(
@@ -817,13 +822,31 @@ pub fn load_file(
     _: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..).skip(1);
     if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::String(s)))) =
         tail_drain.next()
     {
-        Some(EvaluatedExpr::Command(Command::LoadFile(s)))
+        Ok(EvaluatedExpr::Command(Command::LoadFile(s)))
     } else {
-        None
+        bail!("load-file - missing or invalid filename")
+    }
+}
+
+pub fn print(
+    _: &FunctionMap,
+    tail: &mut Vec<EvaluatedExpr>,
+    globals: &sync::Arc<GlobalVariables>,
+    _: SampleAndWavematrixSet,
+    _: OutputMode,
+) -> Result<EvaluatedExpr> {
+    // ignore function name
+    resolve_globals(&mut tail[1..], globals);
+    let mut tail_drain = tail.drain(1..);
+
+    if let Some(EvaluatedExpr::Typed(t)) = tail_drain.next() {
+        Ok(EvaluatedExpr::Command(Command::Print(t)))
+    } else {
+        bail!("print - missing or invalid entity")
     }
 }
