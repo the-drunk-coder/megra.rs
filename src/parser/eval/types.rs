@@ -1,5 +1,7 @@
 use std::sync;
 
+use anyhow::{anyhow, Result};
+
 use crate::{
     builtin_types::{Comparable, GlobalVariables, TypedEntity},
     parser::{EvaluatedExpr, FunctionMap},
@@ -13,18 +15,18 @@ pub fn int(
     _: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..);
     tail_drain.next(); // don't need the function name
 
     if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f)))) =
         tail_drain.next()
     {
-        Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+        Ok(EvaluatedExpr::Typed(TypedEntity::Comparable(
             Comparable::Int32(f as i32),
         )))
     } else {
-        None
+        Err(anyhow!("can't cast to integer"))
     }
 }
 
@@ -34,18 +36,18 @@ pub fn long(
     _: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..);
     tail_drain.next(); // don't need the function name
 
     if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f)))) =
         tail_drain.next()
     {
-        Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+        Ok(EvaluatedExpr::Typed(TypedEntity::Comparable(
             Comparable::Int64(f as i64),
         )))
     } else {
-        None
+        Err(anyhow!("can't cast to long"))
     }
 }
 
@@ -55,18 +57,18 @@ pub fn double(
     _: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..);
     tail_drain.next(); // don't need the function name
 
     if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f)))) =
         tail_drain.next()
     {
-        Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+        Ok(EvaluatedExpr::Typed(TypedEntity::Comparable(
             Comparable::Double(f as f64),
         )))
     } else {
-        None
+        Err(anyhow!("can't cast to double"))
     }
 }
 
@@ -76,36 +78,36 @@ pub fn to_string(
     _: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..);
     tail_drain.next(); // don't need the function name
 
     match tail_drain.next() {
-        Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f)))) => Some(
+        Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f)))) => Ok(
             EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::String(format!("{f}")))),
         ),
-        Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Double(f)))) => Some(
+        Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Double(f)))) => Ok(
             EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::String(format!("{f}")))),
         ),
-        Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Boolean(f)))) => Some(
+        Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Boolean(f)))) => Ok(
             EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::String(format!("{f}")))),
         ),
-        Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Character(f)))) => Some(
+        Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Character(f)))) => Ok(
             EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::String(format!("{f}")))),
         ),
-        Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Int32(f)))) => Some(
+        Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Int32(f)))) => Ok(
             EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::String(format!("{f}")))),
         ),
-        Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Int64(f)))) => Some(
+        Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Int64(f)))) => Ok(
             EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::String(format!("{f}")))),
         ),
-        Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(f)))) => Some(
+        Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(f)))) => Ok(
             EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::String(f))),
         ),
-        Some(EvaluatedExpr::Keyword(f)) => Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+        Some(EvaluatedExpr::Keyword(f)) => Ok(EvaluatedExpr::Typed(TypedEntity::Comparable(
             Comparable::String(f),
         ))),
-        _ => None,
+        _ => Err(anyhow!("can't cast to string")),
     }
 }
 
@@ -115,20 +117,20 @@ pub fn pair(
     _: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..);
     tail_drain.next(); // don't need the function name
 
     if let Some(EvaluatedExpr::Typed(t1)) = tail_drain.next() {
         if let Some(EvaluatedExpr::Typed(t2)) = tail_drain.next() {
-            Some(EvaluatedExpr::Typed(TypedEntity::Pair(
+            Ok(EvaluatedExpr::Typed(TypedEntity::Pair(
                 Box::new(t1),
                 Box::new(t2),
             )))
         } else {
-            None
+            Err(anyhow!("can't cast to pair"))
         }
     } else {
-        None
+        Err(anyhow!("can't cast to pair"))
     }
 }

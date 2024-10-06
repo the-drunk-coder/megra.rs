@@ -1,3 +1,5 @@
+use anyhow::Result;
+
 use crate::parameter::{
     modifier::bounce_modifier::BounceModifier, modifier::brownian_modifier::BrownianModifier,
     modifier::envelope_modifier::EnvelopeModifier, modifier::randrange_modifier::RandRangeModifier,
@@ -76,7 +78,7 @@ pub fn bounce(
     _: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..);
     tail_drain.next();
 
@@ -88,7 +90,7 @@ pub fn bounce(
 
     //println!("{:?} {:?} {:?}", min, max, steps);
 
-    Some(EvaluatedExpr::Typed(TypedEntity::Parameter(DynVal {
+    Ok(EvaluatedExpr::Typed(TypedEntity::Parameter(DynVal {
         val: 0.0,
         static_val: 0.0,
         modifier: Some(Box::new(BounceModifier {
@@ -106,7 +108,7 @@ pub fn brownian(
     _: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..);
     tail_drain.next();
 
@@ -123,7 +125,7 @@ pub fn brownian(
     let step_size = find_keyword_param(&keyword_params, "step", 0.1);
     let wrap = find_keyword_bool(&keyword_params, "wrap", true);
 
-    Some(EvaluatedExpr::Typed(TypedEntity::Parameter(DynVal {
+    Ok(EvaluatedExpr::Typed(TypedEntity::Parameter(DynVal {
         val: 0.0,
         static_val: 0.0,
         modifier: Some(Box::new(BrownianModifier {
@@ -142,7 +144,7 @@ pub fn env(
     _: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..);
     tail_drain.next();
 
@@ -203,7 +205,7 @@ pub fn env(
         }
     }
 
-    Some(EvaluatedExpr::Typed(TypedEntity::Parameter(DynVal {
+    Ok(EvaluatedExpr::Typed(TypedEntity::Parameter(DynVal {
         val: 0.0,
         static_val: 0.0,
         modifier: Some(Box::new(EnvelopeModifier::from_data(
@@ -218,7 +220,7 @@ pub fn fade(
     _: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..);
     tail_drain.next();
 
@@ -234,7 +236,7 @@ pub fn fade(
     let keyword_params = get_keyword_params(&mut tail_drain);
     steps.push(find_keyword_param(&keyword_params, "steps", 128.0));
 
-    Some(EvaluatedExpr::Typed(TypedEntity::Parameter(DynVal {
+    Ok(EvaluatedExpr::Typed(TypedEntity::Parameter(DynVal {
         val: 0.0,
         static_val: 0.0,
         modifier: Some(Box::new(EnvelopeModifier::from_data(
@@ -249,14 +251,14 @@ pub fn randrange(
     _: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..);
     tail_drain.next();
 
     let min = get_next_param(&mut tail_drain, 0.0);
     let max = get_next_param(&mut tail_drain, 0.0);
 
-    Some(EvaluatedExpr::Typed(TypedEntity::Parameter(DynVal {
+    Ok(EvaluatedExpr::Typed(TypedEntity::Parameter(DynVal {
         val: 0.0,
         static_val: 0.0,
         modifier: Some(Box::new(RandRangeModifier::from_data(min, max))),

@@ -1,3 +1,5 @@
+use anyhow::{bail, Result};
+
 use crate::builtin_types::*;
 use crate::generator_processor::GeneratorWrapperProcessor;
 
@@ -38,10 +40,10 @@ pub fn compose(
     globals: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     resolve_globals(&mut tail[1..], globals);
     let last = tail.pop();
-    Some(match last {
+    Ok(match last {
         Some(EvaluatedExpr::Typed(TypedEntity::Generator(mut g))) => {
             let mut proc_or_mods = collect_compose(tail);
             let mut procs = Vec::new();
@@ -82,6 +84,6 @@ pub fn compose(
                 collect_compose(tail),
             ))
         }
-        _ => return None,
+        _ => bail!("can't compose this ..."),
     })
 }

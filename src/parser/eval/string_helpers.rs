@@ -1,3 +1,5 @@
+use anyhow::{bail, Result};
+
 use crate::builtin_types::{Comparable, TypedEntity};
 use crate::parser::{EvaluatedExpr, FunctionMap};
 use crate::{GlobalVariables, OutputMode, SampleAndWavematrixSet};
@@ -10,7 +12,7 @@ pub fn concat(
     _: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..);
     tail_drain.next(); // don't need the function name
 
@@ -25,7 +27,7 @@ pub fn concat(
         }
         Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::String(s)))) => s,
         _ => {
-            return None; /* first part needs to be symbol or string */
+            bail!("concat - fist argument needs to be symbol or string")
         }
     };
 
@@ -61,11 +63,11 @@ pub fn concat(
     }
 
     if sym {
-        Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+        Ok(EvaluatedExpr::Typed(TypedEntity::Comparable(
             Comparable::Symbol(accum),
         )))
     } else {
-        Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+        Ok(EvaluatedExpr::Typed(TypedEntity::Comparable(
             Comparable::String(accum),
         )))
     }

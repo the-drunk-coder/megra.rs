@@ -3,6 +3,7 @@ use crate::parameter::{DynVal, ParameterValue};
 use crate::parser::{EvaluatedExpr, FunctionMap};
 use crate::{GlobalVariables, OutputMode, SampleAndWavematrixSet};
 
+use anyhow::Result;
 use ruffbox_synth::building_blocks::EnvelopeSegmentType;
 use ruffbox_synth::building_blocks::ValOp;
 use std::sync;
@@ -13,7 +14,7 @@ pub fn lin_ramp_modulator(
     _: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..).skip(1);
 
     let mut from = DynVal::with_value(0.01);
@@ -71,7 +72,7 @@ pub fn lin_ramp_modulator(
         }
     }
 
-    Some(EvaluatedExpr::Typed(TypedEntity::ParameterValue(
+    Ok(EvaluatedExpr::Typed(TypedEntity::ParameterValue(
         ParameterValue::LinRamp(from, to, time, op),
     )))
 }
@@ -82,7 +83,7 @@ pub fn log_ramp_modulator(
     _: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..).skip(1);
 
     let mut from = DynVal::with_value(0.01);
@@ -139,7 +140,7 @@ pub fn log_ramp_modulator(
             _ => {}
         }
     }
-    Some(EvaluatedExpr::Typed(TypedEntity::ParameterValue(
+    Ok(EvaluatedExpr::Typed(TypedEntity::ParameterValue(
         ParameterValue::LogRamp(from, to, time, op),
     )))
 }
@@ -150,7 +151,7 @@ pub fn exp_ramp_modulator(
     _: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..).skip(1);
 
     let mut from = DynVal::with_value(0.01);
@@ -207,7 +208,7 @@ pub fn exp_ramp_modulator(
             _ => {}
         }
     }
-    Some(EvaluatedExpr::Typed(TypedEntity::ParameterValue(
+    Ok(EvaluatedExpr::Typed(TypedEntity::ParameterValue(
         ParameterValue::ExpRamp(from, to, time, op),
     )))
 }
@@ -218,7 +219,7 @@ pub fn multi_point_envelope_modulator(
     _: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..).skip(1);
 
     let mut levels = Vec::new();
@@ -306,7 +307,7 @@ pub fn multi_point_envelope_modulator(
         }
     }
 
-    Some(EvaluatedExpr::Typed(TypedEntity::ParameterValue(
+    Ok(EvaluatedExpr::Typed(TypedEntity::ParameterValue(
         ParameterValue::MultiPointEnvelope(levels, times, types, loop_env, op),
     )))
 }
@@ -317,7 +318,7 @@ pub fn lfo_modulator(
     _: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..).skip(1);
 
     let mut init = DynVal::with_value(1.0);
@@ -442,7 +443,7 @@ pub fn lfo_modulator(
         }
     }
 
-    Some(EvaluatedExpr::Typed(TypedEntity::ParameterValue(
+    Ok(EvaluatedExpr::Typed(TypedEntity::ParameterValue(
         ParameterValue::Lfo(init, Box::new(freq), eff_phase, Box::new(amp), add, op),
     )))
 }
@@ -453,7 +454,7 @@ pub fn lfsaw_modulator(
     _: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..).skip(1);
 
     let mut init = DynVal::with_value(1.0);
@@ -581,7 +582,7 @@ pub fn lfsaw_modulator(
         }
     }
 
-    Some(EvaluatedExpr::Typed(TypedEntity::ParameterValue(
+    Ok(EvaluatedExpr::Typed(TypedEntity::ParameterValue(
         ParameterValue::LFSaw(init, Box::new(freq), eff_phase, Box::new(amp), add, op),
     )))
 }
@@ -592,7 +593,7 @@ pub fn lfrsaw_modulator(
     _: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..).skip(1);
 
     let mut init = DynVal::with_value(1.0);
@@ -717,7 +718,7 @@ pub fn lfrsaw_modulator(
         }
     }
 
-    Some(EvaluatedExpr::Typed(TypedEntity::ParameterValue(
+    Ok(EvaluatedExpr::Typed(TypedEntity::ParameterValue(
         ParameterValue::LFRSaw(init, Box::new(freq), eff_phase, Box::new(amp), add, op),
     )))
 }
@@ -728,7 +729,7 @@ pub fn lftri_modulator(
     _: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..).skip(1);
 
     let mut init = DynVal::with_value(1.0);
@@ -856,7 +857,7 @@ pub fn lftri_modulator(
         }
     }
 
-    Some(EvaluatedExpr::Typed(TypedEntity::ParameterValue(
+    Ok(EvaluatedExpr::Typed(TypedEntity::ParameterValue(
         ParameterValue::LFTri(init, Box::new(freq), eff_phase, Box::new(amp), add, op),
     )))
 }
@@ -867,7 +868,7 @@ pub fn lfsquare_modulator(
     _: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..).skip(1);
 
     let mut init = DynVal::with_value(1.0);
@@ -979,7 +980,7 @@ pub fn lfsquare_modulator(
         }
     }
 
-    Some(EvaluatedExpr::Typed(TypedEntity::ParameterValue(
+    Ok(EvaluatedExpr::Typed(TypedEntity::ParameterValue(
         ParameterValue::LFSquare(init, Box::new(freq), pw, Box::new(amp), add, op),
     )))
 }

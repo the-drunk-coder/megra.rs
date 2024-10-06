@@ -6,6 +6,7 @@ use crate::parser::{EvaluatedExpr, FunctionMap};
 use crate::sample_set::SampleLookup;
 use crate::{GlobalVariables, OutputMode, SampleAndWavematrixSet};
 
+use anyhow::{anyhow, bail, Result};
 use ruffbox_synth::building_blocks::SynthParameterLabel;
 use std::collections::HashSet;
 use std::sync;
@@ -16,7 +17,7 @@ pub fn sample_keys(
     _: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..);
 
     // get function name, check which parameter we're dealing with
@@ -37,7 +38,7 @@ pub fn sample_keys(
             EventOperation::Replace
         }
     } else {
-        return None;
+        bail!("sample keys - invalid identifier")
     };
 
     let mut keyword_set = HashSet::new();
@@ -53,7 +54,7 @@ pub fn sample_keys(
     // an "empty" lookup to be merged later down the line ...
     ev.sample_lookup = Some(SampleLookup::Key("".to_string(), keyword_set));
 
-    Some(EvaluatedExpr::Typed(TypedEntity::SoundEvent(ev)))
+    Ok(EvaluatedExpr::Typed(TypedEntity::SoundEvent(ev)))
 }
 
 pub fn sample_number(
@@ -62,7 +63,7 @@ pub fn sample_number(
     _: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..);
 
     // get function name, check which parameter we're dealing with
@@ -85,7 +86,7 @@ pub fn sample_number(
             EventOperation::Replace
         }
     } else {
-        return None;
+        bail!("sample number - invalid identifier")
     };
 
     let snum = if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f)))) =
@@ -93,7 +94,7 @@ pub fn sample_number(
     {
         f as usize
     } else {
-        return None;
+        bail!("sample number - invalid number")
     };
 
     let mut ev = Event::with_name_and_operation("snum".to_string(), op);
@@ -101,7 +102,7 @@ pub fn sample_number(
     // an "empty" lookup to be merged later down the line ...
     ev.sample_lookup = Some(SampleLookup::N("".to_string(), snum));
 
-    Some(EvaluatedExpr::Typed(TypedEntity::SoundEvent(ev)))
+    Ok(EvaluatedExpr::Typed(TypedEntity::SoundEvent(ev)))
 }
 
 pub fn random_sample(
@@ -110,13 +111,13 @@ pub fn random_sample(
     _: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     let mut ev = Event::with_name_and_operation("randsam".to_string(), EventOperation::Replace);
 
     // an "empty" lookup to be merged later down the line ...
     ev.sample_lookup = Some(SampleLookup::Random("".to_string()));
 
-    Some(EvaluatedExpr::Typed(TypedEntity::SoundEvent(ev)))
+    Ok(EvaluatedExpr::Typed(TypedEntity::SoundEvent(ev)))
 }
 
 #[allow(clippy::excessive_precision)]
@@ -126,7 +127,7 @@ pub fn transpose(
     _: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..).skip(1);
 
     if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(n)))) =
@@ -152,9 +153,9 @@ pub fn transpose(
             SynthParameterLabel::PitchFrequency.into(),
             ParameterValue::Scalar(DynVal::with_value(factor)),
         );
-        Some(EvaluatedExpr::Typed(TypedEntity::SoundEvent(ev)))
+        Ok(EvaluatedExpr::Typed(TypedEntity::SoundEvent(ev)))
     } else {
-        None
+        Err(anyhow!("can't transpose this, only numeric arguments"))
     }
 }
 
@@ -164,7 +165,7 @@ pub fn parameter(
     _: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..);
 
     // get function name, check which parameter we're dealing with
@@ -202,12 +203,14 @@ pub fn parameter(
                             || param_key.label == SynthParameterLabel::HighpassCutoffFrequency
                             || param_key.label == SynthParameterLabel::PeakFrequency =>
                     {
-                        music_theory::from_string(&s).map(|note| {
-                            ParameterValue::Scalar(DynVal::with_value(music_theory::to_freq(
-                                note,
-                                music_theory::Tuning::EqualTemperament,
-                            )))
-                        })
+                        music_theory::from_string(&s)
+                            .map(|note| {
+                                ParameterValue::Scalar(DynVal::with_value(music_theory::to_freq(
+                                    note,
+                                    music_theory::Tuning::EqualTemperament,
+                                )))
+                            })
+                            .ok()
                     }
                     EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(s))) => {
                         // jump out if the user entered garbage ...
@@ -244,14 +247,14 @@ pub fn parameter(
                 }
 
                 //println!("{:?}", ev);
-                Some(EvaluatedExpr::Typed(TypedEntity::SoundEvent(ev)))
+                Ok(EvaluatedExpr::Typed(TypedEntity::SoundEvent(ev)))
             } else {
-                None
+                Err(anyhow!("invalid parameter function"))
             }
         } else {
-            None
+            Err(anyhow!("invalid parameter function"))
         }
     } else {
-        None
+        Err(anyhow!("invalid parameter function"))
     }
 }

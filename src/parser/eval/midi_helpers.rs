@@ -1,3 +1,5 @@
+use anyhow::{anyhow, bail, Result};
+
 use crate::builtin_types::{Comparable, TypedEntity};
 use crate::music_theory::{from_string, to_freq};
 use crate::parser::{EvaluatedExpr, FunctionMap};
@@ -11,7 +13,7 @@ pub fn mtof(
     _: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..);
     tail_drain.next(); // don't need the function name
 
@@ -21,14 +23,14 @@ pub fn mtof(
         if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(base)))) =
             tail_drain.next()
         {
-            Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+            Ok(EvaluatedExpr::Typed(TypedEntity::Comparable(
                 Comparable::Float(base * f32::powf(2.0, (note - 69.0) / 12.0)),
             )))
         } else {
-            None
+            Err(anyhow!("mtof - both arguments need to be numbers"))
         }
     } else {
-        None
+        Err(anyhow!("mtof - both arguments need to be numbers"))
     }
 }
 
@@ -39,7 +41,7 @@ pub fn mtosym(
     _: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..);
     tail_drain.next(); // don't need the function name
 
@@ -60,7 +62,7 @@ pub fn mtosym(
             10 => "as",
             11 => "b",
             _ => {
-                unreachable!()
+                bail!("mtosym - complete failure")
             }
         };
 
@@ -68,11 +70,13 @@ pub fn mtosym(
 
         let pstring = format!("{}{}", pclass, oct);
 
-        Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+        Ok(EvaluatedExpr::Typed(TypedEntity::Comparable(
             Comparable::Symbol(pstring),
         )))
     } else {
-        None
+        Err(anyhow!(
+            "mtosym - only midi numbers can be converted to note symbol"
+        ))
     }
 }
 
@@ -83,7 +87,7 @@ pub fn mtovex(
     _: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..);
     tail_drain.next(); // don't need the function name
 
@@ -112,11 +116,13 @@ pub fn mtovex(
 
         let pstring = format!("{}/{}", pclass, oct);
 
-        Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+        Ok(EvaluatedExpr::Typed(TypedEntity::Comparable(
             Comparable::Symbol(pstring),
         )))
     } else {
-        None
+        Err(anyhow!(
+            "mtovex - only midi numbers can be converted to vexflow symbol"
+        ))
     }
 }
 
@@ -126,7 +132,7 @@ pub fn veltodyn(
     _: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..);
     tail_drain.next(); // don't need the function name
 
@@ -145,11 +151,13 @@ pub fn veltodyn(
             "ff"
         };
 
-        Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+        Ok(EvaluatedExpr::Typed(TypedEntity::Comparable(
             Comparable::Symbol(dynsym.to_string()),
         )))
     } else {
-        None
+        Err(anyhow!(
+            "veltodyn - only numbers can be converted to dynamic symbol"
+        ))
     }
 }
 
@@ -159,14 +167,19 @@ pub fn symtofreq(
     _: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
-    let note_str = tail.drain(1..).next()?;
+) -> Result<EvaluatedExpr> {
+    let note_str = tail
+        .drain(1..)
+        .next()
+        .ok_or(anyhow!("symtofreq - empty arg"))?;
     if let EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(s))) = note_str {
         let note = from_string(&s)?;
-        Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+        Ok(EvaluatedExpr::Typed(TypedEntity::Comparable(
             Comparable::Float(to_freq(note, crate::music_theory::Tuning::EqualTemperament)),
         )))
     } else {
-        None
+        Err(anyhow!(
+            "symtofreq - only symbols can be converted to strings"
+        ))
     }
 }

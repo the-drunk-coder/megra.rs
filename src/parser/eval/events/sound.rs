@@ -155,15 +155,15 @@ fn get_pitch_param(
     let par = match tail_drain.peek() {
         Some(EvaluatedExpr::Typed(TypedEntity::ParameterValue(m))) => {
             advance = true;
-            Some(m.clone())
+            Ok(m.clone())
         }
         Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(n)))) => {
             advance = true;
-            Some(ParameterValue::Scalar(DynVal::with_value(*n)))
+            Ok(ParameterValue::Scalar(DynVal::with_value(*n)))
         }
         Some(EvaluatedExpr::Typed(TypedEntity::Parameter(pl))) => {
             advance = true;
-            Some(ParameterValue::Scalar(pl.clone()))
+            Ok(ParameterValue::Scalar(pl.clone()))
         }
         Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(s)))) => {
             advance = true;
@@ -176,17 +176,17 @@ fn get_pitch_param(
         }
         Some(EvaluatedExpr::Identifier(i)) => {
             advance = true;
-            Some(ParameterValue::Placeholder(VariableId::Custom(
+            Ok(ParameterValue::Placeholder(VariableId::Custom(
                 i.to_string(),
             )))
         }
         Some(EvaluatedExpr::Typed(TypedEntity::LazyArithmetic(l))) => {
             advance = true;
-            Some(ParameterValue::Lazy(l.clone()))
+            Ok(ParameterValue::Lazy(l.clone()))
         }
-        _ => Some(ParameterValue::Scalar(DynVal::with_value(100.0))),
+        _ => Ok(ParameterValue::Scalar(DynVal::with_value(100.0))),
     };
-    if let Some(p) = par {
+    if let Ok(p) = par {
         ev.params
             .insert(SynthParameterLabel::PitchFrequency.into(), p);
     }

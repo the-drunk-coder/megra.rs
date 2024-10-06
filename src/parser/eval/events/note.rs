@@ -1,5 +1,6 @@
 use std::sync;
 
+use anyhow::{bail, Result};
 use ruffbox_synth::building_blocks::SynthParameterLabel;
 
 use crate::{
@@ -17,7 +18,7 @@ pub fn event_note(
     globals: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     resolve_globals(&mut tail[1..], globals);
     let mut tail_drain = tail.drain(1..);
 
@@ -37,7 +38,7 @@ pub fn event_note(
             );
         }
         _ => {
-            return None;
+            bail!("note - first arg bust be string or number")
         }
     }
 
@@ -55,9 +56,9 @@ pub fn event_note(
             );
         }
         _ => {
-            return None;
+            bail!("note - second arg bust be string or number")
         }
     }
 
-    Some(EvaluatedExpr::Typed(TypedEntity::SoundEvent(ev)))
+    Ok(EvaluatedExpr::Typed(TypedEntity::SoundEvent(ev)))
 }

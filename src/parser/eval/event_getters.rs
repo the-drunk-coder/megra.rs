@@ -1,5 +1,6 @@
 use std::sync;
 
+use anyhow::{anyhow, bail, Result};
 use ruffbox_synth::building_blocks::SynthParameterValue;
 
 use crate::{
@@ -19,7 +20,7 @@ pub fn event_tag(
     globals: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     resolve_globals(&mut tail[1..], globals);
     let mut tail_drain = tail.drain(1..);
 
@@ -28,7 +29,7 @@ pub fn event_tag(
     {
         f as usize
     } else {
-        return None;
+        bail!("event-tag - no tag number specified")
     };
 
     match tail_drain.next() {
@@ -37,18 +38,21 @@ pub fn event_tag(
             .tags
             .into_iter()
             .nth(tag_num)
-            .map(|t| EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::String(t)))),
+            .map(|t| EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::String(t))))
+            .ok_or(anyhow!("event-tag - can't get event tag")),
         Some(EvaluatedExpr::Typed(TypedEntity::SoundEvent(ev))) => ev
             .tags
             .into_iter()
             .nth(tag_num)
-            .map(|t| EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::String(t)))),
+            .map(|t| EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::String(t))))
+            .ok_or(anyhow!("event-tag - can't get event tag")),
         Some(EvaluatedExpr::Typed(TypedEntity::ControlEvent(ev))) => ev
             .tags
             .into_iter()
             .nth(tag_num)
-            .map(|t| EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::String(t)))),
-        _ => None,
+            .map(|t| EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::String(t))))
+            .ok_or(anyhow!("event-tag - can't get event tag")),
+        _ => Err(anyhow!("event-tag - can't get event tag")),
     }
 }
 
@@ -58,7 +62,7 @@ pub fn event_param(
     globals: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     resolve_globals(&mut tail[1..], globals);
     let mut tail_drain = tail.drain(1..);
 
@@ -72,7 +76,7 @@ pub fn event_param(
         }
         Some(EvaluatedExpr::Identifier(i)) => map_parameter(&i),
         _ => {
-            return None;
+            bail!("event-param - can't extract event param")
         }
     };
 
@@ -80,40 +84,40 @@ pub fn event_param(
         // only numeric values so far ...
         Some(EvaluatedExpr::Typed(TypedEntity::StaticEvent(InterpretableEvent::Sound(ev)))) => {
             match ev.params.get(&par_addr) {
-                Some(SynthParameterValue::ScalarF32(n)) => Some(EvaluatedExpr::Typed(
+                Some(SynthParameterValue::ScalarF32(n)) => Ok(EvaluatedExpr::Typed(
                     TypedEntity::Comparable(Comparable::Float(*n)),
                 )),
-                Some(SynthParameterValue::ScalarU32(n)) => Some(EvaluatedExpr::Typed(
+                Some(SynthParameterValue::ScalarU32(n)) => Ok(EvaluatedExpr::Typed(
                     TypedEntity::Comparable(Comparable::Int32(*n as i32)),
                 )),
-                Some(SynthParameterValue::ScalarUsize(n)) => Some(EvaluatedExpr::Typed(
+                Some(SynthParameterValue::ScalarUsize(n)) => Ok(EvaluatedExpr::Typed(
                     TypedEntity::Comparable(Comparable::Int64(*n as i64)),
                 )),
-                Some(SynthParameterValue::Symbolic(s)) => Some(EvaluatedExpr::Typed(
+                Some(SynthParameterValue::Symbolic(s)) => Ok(EvaluatedExpr::Typed(
                     TypedEntity::Comparable(Comparable::String(s.clone())),
                 )),
-                _ => None,
+                _ => Err(anyhow!("can't extract event param")),
             }
         }
         Some(EvaluatedExpr::Typed(TypedEntity::SoundEvent(mut ev))) => {
             let stat_ev = ev.get_static(globals);
             match stat_ev.params.get(&par_addr) {
-                Some(SynthParameterValue::ScalarF32(n)) => Some(EvaluatedExpr::Typed(
+                Some(SynthParameterValue::ScalarF32(n)) => Ok(EvaluatedExpr::Typed(
                     TypedEntity::Comparable(Comparable::Float(*n)),
                 )),
-                Some(SynthParameterValue::ScalarU32(n)) => Some(EvaluatedExpr::Typed(
+                Some(SynthParameterValue::ScalarU32(n)) => Ok(EvaluatedExpr::Typed(
                     TypedEntity::Comparable(Comparable::Int32(*n as i32)),
                 )),
-                Some(SynthParameterValue::ScalarUsize(n)) => Some(EvaluatedExpr::Typed(
+                Some(SynthParameterValue::ScalarUsize(n)) => Ok(EvaluatedExpr::Typed(
                     TypedEntity::Comparable(Comparable::Int64(*n as i64)),
                 )),
-                Some(SynthParameterValue::Symbolic(s)) => Some(EvaluatedExpr::Typed(
+                Some(SynthParameterValue::Symbolic(s)) => Ok(EvaluatedExpr::Typed(
                     TypedEntity::Comparable(Comparable::String(s.clone())),
                 )),
-                _ => None,
+                _ => Err(anyhow!("can't extract event param")),
             }
         }
-        _ => None,
+        _ => Err(anyhow!("can't extract event param")),
     }
 }
 
@@ -123,23 +127,21 @@ pub fn event_name(
     globals: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     resolve_globals(&mut tail[1..], globals);
     let mut tail_drain = tail.drain(1..);
 
     match tail_drain.next() {
         // only numeric values so far ...
-        Some(EvaluatedExpr::Typed(TypedEntity::StaticEvent(InterpretableEvent::Sound(ev)))) => {
-            Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
-                Comparable::String(ev.name),
-            )))
-        }
-        Some(EvaluatedExpr::Typed(TypedEntity::SoundEvent(ev))) => Some(EvaluatedExpr::Typed(
+        Some(EvaluatedExpr::Typed(TypedEntity::StaticEvent(InterpretableEvent::Sound(ev)))) => Ok(
+            EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::String(ev.name))),
+        ),
+        Some(EvaluatedExpr::Typed(TypedEntity::SoundEvent(ev))) => Ok(EvaluatedExpr::Typed(
             TypedEntity::Comparable(Comparable::String(ev.name)),
         )),
-        Some(EvaluatedExpr::Typed(TypedEntity::ControlEvent(_))) => Some(EvaluatedExpr::Typed(
+        Some(EvaluatedExpr::Typed(TypedEntity::ControlEvent(_))) => Ok(EvaluatedExpr::Typed(
             TypedEntity::Comparable(Comparable::String("ctrl".to_string())),
         )),
-        _ => None,
+        _ => Err(anyhow!("event-name - can't extract name")),
     }
 }

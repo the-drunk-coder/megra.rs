@@ -6,6 +6,8 @@ mod lifemodel;
 mod mapper;
 mod pear;
 
+use anyhow::{bail, Result};
+
 use crate::builtin_types::*;
 use crate::generator_processor::GeneratorProcessor;
 use std::sync;
@@ -23,7 +25,7 @@ pub fn eval_pear(
     globals: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     resolve_globals(&mut tail[1..], globals);
     eval_generator_processor(pear::collect_pear, tail)
 }
@@ -34,7 +36,7 @@ pub fn eval_inhibit(
     globals: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     resolve_globals(&mut tail[1..], globals);
     eval_generator_processor(inhibit::collect_inhibit, tail)
 }
@@ -45,7 +47,7 @@ pub fn eval_exhibit(
     globals: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     resolve_globals(&mut tail[1..], globals);
     eval_generator_processor(exhibit::collect_exhibit, tail)
 }
@@ -56,7 +58,7 @@ pub fn eval_apple(
     globals: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     resolve_globals(&mut tail[1..], globals);
     eval_generator_processor(apple::collect_apple, tail)
 }
@@ -67,7 +69,7 @@ pub fn eval_every(
     globals: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     resolve_globals(&mut tail[1..], globals);
     eval_generator_processor(every::collect_every, tail)
 }
@@ -78,7 +80,7 @@ pub fn eval_mapper(
     globals: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     resolve_globals(&mut tail[1..], globals);
     eval_generator_processor(mapper::collect_mapper, tail)
 }
@@ -89,7 +91,7 @@ pub fn eval_lifemodel(
     globals: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     resolve_globals(&mut tail[1..], globals);
     eval_generator_processor(lifemodel::collect_lifemodel, tail)
 }
@@ -98,9 +100,9 @@ pub fn eval_lifemodel(
 fn eval_generator_processor(
     collector: Collector,
     tail: &mut Vec<EvaluatedExpr>,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     let last = tail.pop();
-    Some(match last {
+    Ok(match last {
         Some(EvaluatedExpr::Typed(TypedEntity::Generator(mut g))) => {
             let gp = collector(tail);
             g.processors.push(gp);
@@ -156,6 +158,6 @@ fn eval_generator_processor(
                 GeneratorProcessorOrModifier::GeneratorProcessor(collector(tail)),
             ))
         }
-        None => return None,
+        None => bail!("can't evaluate generator processor"),
     })
 }

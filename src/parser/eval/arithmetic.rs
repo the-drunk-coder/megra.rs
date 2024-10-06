@@ -1,3 +1,5 @@
+use anyhow::{anyhow, Result};
+
 use crate::builtin_types::{Comparable, LazyArithmetic, LazyVal, TypedEntity};
 use crate::parser::{EvaluatedExpr, FunctionMap};
 use crate::{GlobalVariables, OutputMode, SampleAndWavematrixSet};
@@ -38,9 +40,9 @@ pub fn add(
     _: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     if needs_resolve(&tail[1..]) {
-        return Some(EvaluatedExpr::Typed(TypedEntity::LazyArithmetic(
+        return Ok(EvaluatedExpr::Typed(TypedEntity::LazyArithmetic(
             LazyArithmetic::Add(collect_lazy_vals(tail)),
         )));
     }
@@ -54,7 +56,7 @@ pub fn add(
             result += f;
         }
     }
-    Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+    Ok(EvaluatedExpr::Typed(TypedEntity::Comparable(
         Comparable::Float(result),
     )))
 }
@@ -65,9 +67,9 @@ pub fn sub(
     _: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     if needs_resolve(&tail[1..]) {
-        return Some(EvaluatedExpr::Typed(TypedEntity::LazyArithmetic(
+        return Ok(EvaluatedExpr::Typed(TypedEntity::LazyArithmetic(
             LazyArithmetic::Sub(collect_lazy_vals(tail)),
         )));
     }
@@ -90,7 +92,7 @@ pub fn sub(
         }
     }
 
-    Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+    Ok(EvaluatedExpr::Typed(TypedEntity::Comparable(
         Comparable::Float(result),
     )))
 }
@@ -101,9 +103,9 @@ pub fn mul(
     _: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     if needs_resolve(&tail[1..]) {
-        return Some(EvaluatedExpr::Typed(TypedEntity::LazyArithmetic(
+        return Ok(EvaluatedExpr::Typed(TypedEntity::LazyArithmetic(
             LazyArithmetic::Mul(collect_lazy_vals(tail)),
         )));
     }
@@ -126,7 +128,7 @@ pub fn mul(
         }
     }
 
-    Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+    Ok(EvaluatedExpr::Typed(TypedEntity::Comparable(
         Comparable::Float(result),
     )))
 }
@@ -137,9 +139,9 @@ pub fn div(
     _: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     if needs_resolve(&tail[1..]) {
-        return Some(EvaluatedExpr::Typed(TypedEntity::LazyArithmetic(
+        return Ok(EvaluatedExpr::Typed(TypedEntity::LazyArithmetic(
             LazyArithmetic::Div(collect_lazy_vals(tail)),
         )));
     }
@@ -162,7 +164,7 @@ pub fn div(
         }
     }
 
-    Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+    Ok(EvaluatedExpr::Typed(TypedEntity::Comparable(
         Comparable::Float(result),
     )))
 }
@@ -173,9 +175,9 @@ pub fn modulo(
     _: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     if needs_resolve(&tail[1..]) {
-        return Some(EvaluatedExpr::Typed(TypedEntity::LazyArithmetic(
+        return Ok(EvaluatedExpr::Typed(TypedEntity::LazyArithmetic(
             LazyArithmetic::Modulo(collect_lazy_vals(tail)),
         )));
     }
@@ -189,14 +191,14 @@ pub fn modulo(
         if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(b)))) =
             tail_drain.next()
         {
-            Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+            Ok(EvaluatedExpr::Typed(TypedEntity::Comparable(
                 Comparable::Float(a % b),
             )))
         } else {
-            None
+            Err(anyhow!("modulo - invalid arguments"))
         }
     } else {
-        None
+        Err(anyhow!("modulo - invalid arguments"))
     }
 }
 
@@ -206,9 +208,9 @@ pub fn pow(
     _: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     if needs_resolve(&tail[1..]) {
-        return Some(EvaluatedExpr::Typed(TypedEntity::LazyArithmetic(
+        return Ok(EvaluatedExpr::Typed(TypedEntity::LazyArithmetic(
             LazyArithmetic::Pow(collect_lazy_vals(tail)),
         )));
     }
@@ -222,14 +224,14 @@ pub fn pow(
         if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(b)))) =
             tail_drain.next()
         {
-            Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+            Ok(EvaluatedExpr::Typed(TypedEntity::Comparable(
                 Comparable::Float(a.powf(b)),
             )))
         } else {
-            None
+            Err(anyhow!("pow - invalid arguments"))
         }
     } else {
-        None
+        Err(anyhow!("pow - invalid arguments"))
     }
 }
 
@@ -239,9 +241,9 @@ pub fn max(
     _: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     if needs_resolve(&tail[1..]) {
-        return Some(EvaluatedExpr::Typed(TypedEntity::LazyArithmetic(
+        return Ok(EvaluatedExpr::Typed(TypedEntity::LazyArithmetic(
             LazyArithmetic::Mul(collect_lazy_vals(tail)),
         )));
     }
@@ -264,7 +266,7 @@ pub fn max(
         }
     }
 
-    Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+    Ok(EvaluatedExpr::Typed(TypedEntity::Comparable(
         Comparable::Float(result),
     )))
 }
@@ -275,9 +277,9 @@ pub fn min(
     _: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     if needs_resolve(&tail[1..]) {
-        return Some(EvaluatedExpr::Typed(TypedEntity::LazyArithmetic(
+        return Ok(EvaluatedExpr::Typed(TypedEntity::LazyArithmetic(
             LazyArithmetic::Mul(collect_lazy_vals(tail)),
         )));
     }
@@ -300,7 +302,7 @@ pub fn min(
         }
     }
 
-    Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+    Ok(EvaluatedExpr::Typed(TypedEntity::Comparable(
         Comparable::Float(result),
     )))
 }
@@ -311,18 +313,18 @@ pub fn round(
     _: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..);
     tail_drain.next(); // don't need the function name
 
     match tail_drain.next() {
-        Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f)))) => Some(
+        Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f)))) => Ok(
             EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f.round()))),
         ),
-        Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Double(d)))) => Some(
+        Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Double(d)))) => Ok(
             EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Double(d.round()))),
         ),
-        _ => None,
+        _ => Err(anyhow!("round needs float or double")),
     }
 }
 
@@ -332,18 +334,18 @@ pub fn floor(
     _: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..);
     tail_drain.next(); // don't need the function name
 
     match tail_drain.next() {
-        Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f)))) => Some(
+        Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f)))) => Ok(
             EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f.round()))),
         ),
-        Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Double(d)))) => Some(
+        Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Double(d)))) => Ok(
             EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Double(d.round()))),
         ),
-        _ => None,
+        _ => Err(anyhow!("floor needs float or double")),
     }
 }
 
@@ -353,17 +355,17 @@ pub fn ceil(
     _: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..);
     tail_drain.next(); // don't need the function name
 
     match tail_drain.next() {
-        Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f)))) => Some(
+        Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f)))) => Ok(
             EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f.round()))),
         ),
-        Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Double(d)))) => Some(
+        Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Double(d)))) => Ok(
             EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Double(d.round()))),
         ),
-        _ => None,
+        _ => Err(anyhow!("ceil needs float or double")),
     }
 }

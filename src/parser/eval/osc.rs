@@ -1,3 +1,5 @@
+use anyhow::{bail, Result};
+
 use crate::builtin_types::*;
 use crate::parser::{EvaluatedExpr, FunctionMap};
 use crate::{OutputMode, SampleAndWavematrixSet};
@@ -10,7 +12,7 @@ pub fn osc_define_sender(
     _: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..);
     tail_drain.next();
     let sender_name =
@@ -19,7 +21,7 @@ pub fn osc_define_sender(
         {
             s
         } else {
-            return None;
+            bail!("osc client def - need to specify client name (string)")
         };
     let host_name =
         if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::String(s)))) =
@@ -27,10 +29,10 @@ pub fn osc_define_sender(
         {
             s
         } else {
-            return None;
+            bail!("osc client def - need to specify client host (string)")
         };
 
-    Some(EvaluatedExpr::Command(Command::OscDefineClient(
+    Ok(EvaluatedExpr::Command(Command::OscDefineClient(
         sender_name,
         host_name,
     )))
@@ -42,7 +44,7 @@ pub fn osc_send(
     _: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..);
     tail_drain.next();
 
@@ -52,14 +54,14 @@ pub fn osc_send(
         {
             s
         } else {
-            return None;
+            bail!("osc - need to specify client name (string)")
         };
     let addr = if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::String(s)))) =
         tail_drain.next()
     {
         s
     } else {
-        return None;
+        bail!("osc - need to specify client address (string)")
     };
 
     let mut args = Vec::new();
@@ -87,7 +89,7 @@ pub fn osc_send(
         }
     }
 
-    Some(EvaluatedExpr::Command(Command::OscSendMessage(
+    Ok(EvaluatedExpr::Command(Command::OscSendMessage(
         sender_name,
         addr,
         args,
@@ -100,7 +102,7 @@ pub fn osc_start_receiver(
     _: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..);
     tail_drain.next();
 
@@ -110,8 +112,8 @@ pub fn osc_start_receiver(
         {
             s
         } else {
-            return None;
+            bail!("osc receiver - invalid host name (needs to be string)")
         };
 
-    Some(EvaluatedExpr::Command(Command::OscStartReceiver(host_name)))
+    Ok(EvaluatedExpr::Command(Command::OscStartReceiver(host_name)))
 }

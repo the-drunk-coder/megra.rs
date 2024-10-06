@@ -92,7 +92,7 @@ pub fn define_standard_library() -> FunctionMap {
     standard_library.std_lib.insert("mosc".to_string(), eval::events::sound::sound);
     standard_library.std_lib.insert("blit".to_string(), eval::events::sound::sound);
 
-    /*
+    
     // note event
     standard_library.std_lib.insert("note".to_string(), eval::events::note::event_note);
 
@@ -435,7 +435,7 @@ pub fn define_standard_library() -> FunctionMap {
     standard_library.std_lib.insert("ev-param".to_string(), eval::event_getters::event_param);
     standard_library.std_lib.insert("ev-tag".to_string(), eval::event_getters::event_tag);
     standard_library.std_lib.insert("ev-name".to_string(), eval::event_getters::event_name);
-    */
+    
 
     standard_library
 }

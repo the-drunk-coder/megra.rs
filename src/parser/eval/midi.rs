@@ -1,5 +1,7 @@
 use std::sync;
 
+use anyhow::{anyhow, Result};
+
 use crate::{
     builtin_types::{Comparable, GlobalVariables, TypedEntity},
     parser::{EvaluatedExpr, FunctionMap},
@@ -13,8 +15,8 @@ pub fn eval_list_midi_ports(
     _: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
-    Some(EvaluatedExpr::Command(
+) -> Result<EvaluatedExpr> {
+    Ok(EvaluatedExpr::Command(
         crate::builtin_types::Command::MidiListPorts,
     ))
 }
@@ -25,16 +27,16 @@ pub fn open_midi_port(
     _: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     let mut tail_drain = tail.drain(1..);
 
     if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(port)))) =
         tail_drain.next()
     {
-        Some(EvaluatedExpr::Command(
+        Ok(EvaluatedExpr::Command(
             crate::builtin_types::Command::MidiStartReceiver(port as usize),
         ))
     } else {
-        None
+        Err(anyhow!("can't open midi port - invalid port"))
     }
 }

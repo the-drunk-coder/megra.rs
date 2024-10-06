@@ -1,10 +1,11 @@
+use anyhow::{anyhow, Result};
 use rust_music_theory::note::{Note, PitchClass};
 
 pub enum Tuning {
     EqualTemperament,
 }
 
-pub fn from_string(string: &str) -> Option<Note> {
+pub fn from_string(string: &str) -> Result<Note> {
     let mut pitch = "".to_string();
     let mut oct = "".to_string();
     for c in string.chars() {
@@ -15,10 +16,14 @@ pub fn from_string(string: &str) -> Option<Note> {
         }
     }
 
-    let n = PitchClass::from_str(&pitch)?;
-    let o = oct.parse::<u8>().ok()?;
+    let n =
+        PitchClass::from_str(&pitch).ok_or(anyhow!("can't convert {pitch:?} to pitch class"))?;
+    let o = oct
+        .parse::<u8>()
+        .ok()
+        .ok_or(anyhow!("can't convert {oct:?} to octave"))?;
 
-    Some(Note::new(n, o))
+    Ok(Note::new(n, o))
 }
 
 pub fn from_note_nr(nr: u8) -> Note {

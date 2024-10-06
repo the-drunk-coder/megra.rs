@@ -1,5 +1,7 @@
 use std::sync;
 
+use anyhow::Result;
+
 use crate::{
     builtin_types::{Comparable, Comparator, GlobalVariables, TypedEntity},
     parser::{EvaluatedExpr, FunctionMap},
@@ -13,7 +15,7 @@ pub fn greater_equal(
     _: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..);
     tail_drain.next(); // don't need the function name
 
@@ -22,14 +24,14 @@ pub fn greater_equal(
 
     if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(aa))) = a {
         if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(bb))) = b {
-            Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+            Ok(EvaluatedExpr::Typed(TypedEntity::Comparable(
                 Comparable::Boolean(aa >= bb),
             )))
         } else {
-            Some(EvaluatedExpr::Comparator(Comparator::GreaterEqual(aa)))
+            Ok(EvaluatedExpr::Comparator(Comparator::GreaterEqual(aa)))
         }
     } else {
-        Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+        Ok(EvaluatedExpr::Typed(TypedEntity::Comparable(
             Comparable::Boolean(false),
         )))
     }
@@ -41,7 +43,7 @@ pub fn greater(
     _: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..);
     tail_drain.next(); // don't need the function name
 
@@ -50,14 +52,14 @@ pub fn greater(
 
     if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(aa))) = a {
         if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(bb))) = b {
-            Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+            Ok(EvaluatedExpr::Typed(TypedEntity::Comparable(
                 Comparable::Boolean(aa > bb),
             )))
         } else {
-            Some(EvaluatedExpr::Comparator(Comparator::Greater(aa)))
+            Ok(EvaluatedExpr::Comparator(Comparator::Greater(aa)))
         }
     } else {
-        Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+        Ok(EvaluatedExpr::Typed(TypedEntity::Comparable(
             Comparable::Boolean(false),
         )))
     }
@@ -69,7 +71,7 @@ pub fn equal(
     _: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..);
     tail_drain.next(); // don't need the function name
 
@@ -78,14 +80,14 @@ pub fn equal(
 
     if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(aa))) = a {
         if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(bb))) = b {
-            Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+            Ok(EvaluatedExpr::Typed(TypedEntity::Comparable(
                 Comparable::Boolean(aa == bb),
             )))
         } else {
-            Some(EvaluatedExpr::Comparator(Comparator::Equal(aa)))
+            Ok(EvaluatedExpr::Comparator(Comparator::Equal(aa)))
         }
     } else {
-        Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+        Ok(EvaluatedExpr::Typed(TypedEntity::Comparable(
             Comparable::Boolean(false),
         )))
     }
@@ -97,7 +99,7 @@ pub fn lesser_equal(
     _: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..);
     tail_drain.next(); // don't need the function name
 
@@ -106,14 +108,14 @@ pub fn lesser_equal(
 
     if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(aa))) = a {
         if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(bb))) = b {
-            Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+            Ok(EvaluatedExpr::Typed(TypedEntity::Comparable(
                 Comparable::Boolean(aa <= bb),
             )))
         } else {
-            Some(EvaluatedExpr::Comparator(Comparator::LesserEqual(aa)))
+            Ok(EvaluatedExpr::Comparator(Comparator::LesserEqual(aa)))
         }
     } else {
-        Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+        Ok(EvaluatedExpr::Typed(TypedEntity::Comparable(
             Comparable::Boolean(false),
         )))
     }
@@ -125,7 +127,7 @@ pub fn lesser(
     _: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..);
     tail_drain.next(); // don't need the function name
 
@@ -134,14 +136,14 @@ pub fn lesser(
 
     if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(aa))) = a {
         if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(bb))) = b {
-            Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+            Ok(EvaluatedExpr::Typed(TypedEntity::Comparable(
                 Comparable::Boolean(aa < bb),
             )))
         } else {
-            Some(EvaluatedExpr::Comparator(Comparator::Lesser(aa)))
+            Ok(EvaluatedExpr::Comparator(Comparator::Lesser(aa)))
         }
     } else {
-        Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+        Ok(EvaluatedExpr::Typed(TypedEntity::Comparable(
             Comparable::Boolean(false),
         )))
     }
@@ -153,7 +155,7 @@ pub fn is_type(
     _: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     let mut tail_drain = tail.drain(..);
     tail_drain.next(); // don't need the function name
 
@@ -162,7 +164,7 @@ pub fn is_type(
 
     if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(type_sym)))) = a {
         if let Some(EvaluatedExpr::Typed(bb)) = b {
-            Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+            Ok(EvaluatedExpr::Typed(TypedEntity::Comparable(
                 Comparable::Boolean(match type_sym.as_str() {
                     "num" => {
                         matches!(bb, TypedEntity::Comparable(Comparable::Double(_)))
@@ -178,7 +180,7 @@ pub fn is_type(
                 }),
             )))
         } else {
-            Some(EvaluatedExpr::Comparator(match type_sym.as_str() {
+            Ok(EvaluatedExpr::Comparator(match type_sym.as_str() {
                 "num" => Comparator::IsNumerical,
                 "str" => Comparator::IsString,
                 "vec" => Comparator::IsVec,
@@ -188,7 +190,7 @@ pub fn is_type(
             }))
         }
     } else {
-        Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+        Ok(EvaluatedExpr::Typed(TypedEntity::Comparable(
             Comparable::Boolean(false),
         )))
     }

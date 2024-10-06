@@ -1,3 +1,4 @@
+use anyhow::{bail, Result};
 use ruffbox_synth::building_blocks::SynthParameterLabel;
 use std::collections::{BTreeSet, HashMap};
 use std::sync;
@@ -87,7 +88,7 @@ pub fn eval_multiplyer(
     tail: &mut Vec<EvaluatedExpr>,
     out_mode: OutputMode,
     globals: &std::sync::Arc<GlobalVariables>,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     let last = tail.pop(); // generator or generator list ...
 
     let mut gen_proc_list_list = Vec::new();
@@ -111,12 +112,12 @@ pub fn eval_multiplyer(
                 )]);
             }
             _ => {
-                println!("can't multiply {c:?} {last:?}");
+                bail!("can't multiply {c:?} {last:?}");
             }
         }
     }
 
-    Some(match last {
+    Ok(match last {
         Some(EvaluatedExpr::Typed(TypedEntity::Generator(g))) => {
             let mut gens = Vec::new();
             let mut idx: usize = 0;
@@ -202,7 +203,7 @@ pub fn eval_multiplyer(
             }
             EvaluatedExpr::Typed(TypedEntity::GeneratorList(gens))
         }
-        _ => return None,
+        _ => bail!("can't multiply"),
     })
 }
 
@@ -212,7 +213,7 @@ pub fn eval_xspread(
     globals: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     out_mode: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     resolve_globals(&mut tail[1..], globals);
     eval_multiplyer(spread_gens, tail, out_mode, globals)
 }
@@ -223,7 +224,7 @@ pub fn eval_xdup(
     globals: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     out_mode: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     resolve_globals(&mut tail[1..], globals);
     eval_multiplyer(|_, _| {}, tail, out_mode, globals)
 }

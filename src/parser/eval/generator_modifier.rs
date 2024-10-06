@@ -1,3 +1,5 @@
+use anyhow::Result;
+
 use crate::builtin_types::*;
 use crate::generator::*;
 use std::collections::HashMap;
@@ -44,7 +46,7 @@ pub fn eval_haste(
     globals: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     eval_generator_modifier(haste, tail, globals)
 }
 
@@ -54,7 +56,7 @@ pub fn eval_keep(
     globals: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     eval_generator_modifier(keep, tail, globals)
 }
 
@@ -64,7 +66,7 @@ pub fn eval_relax(
     globals: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     eval_generator_modifier(relax, tail, globals)
 }
 
@@ -74,7 +76,7 @@ pub fn eval_blur(
     globals: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     eval_generator_modifier(blur, tail, globals)
 }
 
@@ -84,7 +86,7 @@ pub fn eval_sharpen(
     globals: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     eval_generator_modifier(sharpen, tail, globals)
 }
 
@@ -94,7 +96,7 @@ pub fn eval_solidify(
     globals: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     eval_generator_modifier(solidify, tail, globals)
 }
 
@@ -104,7 +106,7 @@ pub fn eval_rep(
     globals: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     eval_generator_modifier(rep, tail, globals)
 }
 
@@ -114,7 +116,7 @@ pub fn eval_shake(
     globals: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     eval_generator_modifier(shake, tail, globals)
 }
 
@@ -124,7 +126,7 @@ pub fn eval_skip(
     globals: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     eval_generator_modifier(skip, tail, globals)
 }
 
@@ -134,7 +136,7 @@ pub fn eval_rewind(
     globals: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     eval_generator_modifier(rewind, tail, globals)
 }
 
@@ -144,7 +146,7 @@ pub fn eval_rnd(
     globals: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     eval_generator_modifier(rnd, tail, globals)
 }
 
@@ -154,7 +156,7 @@ pub fn eval_grow(
     globals: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     eval_generator_modifier(grow, tail, globals)
 }
 
@@ -164,7 +166,7 @@ pub fn eval_grown(
     globals: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     eval_generator_modifier(grown, tail, globals)
 }
 
@@ -174,7 +176,7 @@ pub fn eval_shrink(
     globals: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     eval_generator_modifier(shrink, tail, globals)
 }
 
@@ -184,7 +186,7 @@ pub fn eval_reverse(
     globals: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     eval_generator_modifier(reverse, tail, globals)
 }
 
@@ -194,7 +196,7 @@ pub fn eval_shift(
     globals: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     eval_generator_modifier(shift, tail, globals)
 }
 
@@ -202,9 +204,9 @@ fn eval_generator_modifier(
     fun: GenModFun,
     tail: &mut Vec<EvaluatedExpr>,
     globals: &std::sync::Arc<GlobalVariables>,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     let last = tail.pop();
-    Some(match last {
+    Ok(match last {
         Some(EvaluatedExpr::Typed(TypedEntity::Generator(mut g))) => {
             let mut tail_drain = tail.drain(..);
             tail_drain.next();

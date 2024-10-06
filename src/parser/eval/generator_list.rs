@@ -1,3 +1,5 @@
+use anyhow::{bail, Result};
+
 use crate::builtin_types::*;
 use std::sync;
 
@@ -12,7 +14,7 @@ pub fn generator_list(
     _: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     let mut gen_list = Vec::new();
 
     let mut tail_drain = tail.drain(..);
@@ -27,12 +29,12 @@ pub fn generator_list(
                 gen_list.append(&mut gl);
             }
             _ => {
-                println!("u can't list this ...");
+                bail!("u can't list this ...");
             }
         }
     }
 
-    Some(EvaluatedExpr::Typed(TypedEntity::GeneratorList(gen_list)))
+    Ok(EvaluatedExpr::Typed(TypedEntity::GeneratorList(gen_list)))
 }
 
 pub fn spread_list(
@@ -41,7 +43,7 @@ pub fn spread_list(
     _: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     out_mode: OutputMode,
-) -> Option<EvaluatedExpr> {
+) -> Result<EvaluatedExpr> {
     let mut gen_list = Vec::new();
 
     let mut tail_drain = tail.drain(..);
@@ -56,12 +58,12 @@ pub fn spread_list(
                 gen_list.append(&mut gl);
             }
             _ => {
-                println!("u can't list this ...");
+                bail!("u can't spread this ...");
             }
         }
     }
 
     spread_gens(&mut gen_list, &out_mode);
 
-    Some(EvaluatedExpr::Typed(TypedEntity::GeneratorList(gen_list)))
+    Ok(EvaluatedExpr::Typed(TypedEntity::GeneratorList(gen_list)))
 }
