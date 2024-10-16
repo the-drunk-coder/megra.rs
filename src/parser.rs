@@ -68,7 +68,6 @@ pub enum EvaluatedExpr {
     Command(Command),
     SyncContext(SyncContext),
     Progn(Vec<EvaluatedExpr>),
-    Match(Box<EvaluatedExpr>, Vec<(EvaluatedExpr, EvaluatedExpr)>),
     // I don't really have an idea how to make functions,
     // so for now I'll just store the non-evaluated Exprs
     // and reduce them once the user calls the function ...
@@ -93,7 +92,6 @@ impl fmt::Debug for EvaluatedExpr {
             EvaluatedExpr::Keyword(k) => write!(f, "EvaluatedExpr::Keyword({k})"),
             EvaluatedExpr::SyncContext(_) => write!(f, "EvaluatedExpr::SyncContext(_)"),
             EvaluatedExpr::Progn(_) => write!(f, "EvaluatedExpr::Progn"),
-            EvaluatedExpr::Match(_, _) => write!(f, "EvaluatedExpr::Match"),
             EvaluatedExpr::FunctionDefinition(_, _, _) => {
                 write!(f, "EvaluatedExpr::FunctionDefinition")
             }
