@@ -834,6 +834,16 @@ pub fn once<const BUFSIZE: usize, const NCHAN: usize>(
         // if this is a sampler event and contains a sample lookup,
         // resolve it NOW ... at the very end, finally ...
         let mut bufnum: usize = 0;
+
+        if s.name == "frozensampler" {
+            if let Some(SynthParameterValue::ScalarUsize(b)) = s
+                .params
+                .get(&SynthParameterLabel::SampleBufferNumber.into())
+            {
+                bufnum = *b;
+            }
+        }
+
         if let Some(lookup) = s.sample_lookup.as_ref() {
             if let Some((res_bufnum, duration)) = session.sample_set.resolve_lookup(lookup) {
                 bufnum = res_bufnum;
