@@ -31,6 +31,8 @@ fn collect_compose(tail: &mut Vec<EvaluatedExpr>) -> Vec<GeneratorProcessorOrMod
             _ => {}
         }
     }
+    // logical order from bottom to top
+    gen_procs.reverse();
     gen_procs
 }
 
