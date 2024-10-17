@@ -12,6 +12,11 @@ use super::GeneratorProcessor;
 #[derive(Clone)]
 pub struct MapperProcessor {
     pub fun: String,
+    // if false, it's an actual "mapper",
+    // if true, the incoming events are kept (i.e. if the mapping)
+    // function doesn't return anything and is just there for
+    // side effects ...
+    pub keep: bool,
 }
 
 impl GeneratorProcessor for MapperProcessor {
@@ -30,8 +35,8 @@ impl GeneratorProcessor for MapperProcessor {
                 fun_arg_names,
                 fun_expr,
                 events
-                    .drain(..)
-                    .map(|ev| EvaluatedExpr::Typed(TypedEntity::StaticEvent(ev)))
+                    .iter()
+                    .map(|ev| EvaluatedExpr::Typed(TypedEntity::StaticEvent(ev.clone())))
                     .collect(),
                 functions,
                 globals,
@@ -39,7 +44,11 @@ impl GeneratorProcessor for MapperProcessor {
                 sample_set,
                 out_mode,
             );
-            events.clear();
+
+            if !self.keep {
+                events.clear();
+            }
+
             if let Ok(pe) = processed_events {
                 match pe {
                     crate::parser::EvaluatedExpr::Typed(TypedEntity::SoundEvent(mut ev)) => {
