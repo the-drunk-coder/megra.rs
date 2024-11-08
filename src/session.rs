@@ -191,7 +191,9 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
         match ev {
             InterpretableEvent::Sound(s) => {
                 // no need to allocate a string everytime here, should be changed
-                if s.name == "silence" {
+                // notes are currently not interpreted (there's no midi out currently),
+                // they are only here for mappers
+                if s.name == "silence" || s.name == "note" {
                     // start the generators ready to be synced ...
                     if session.sync_mode == SyncMode::OnlyOnSilence {
                         //println!("sync silence");
