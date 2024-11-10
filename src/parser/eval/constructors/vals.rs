@@ -108,6 +108,9 @@ pub fn vals(
                     ev_vecs.push(vec![SourceEvent::Sound(ev)]);
                     continue;
                 } else if param == "art" || param == "articulation" {
+		    // currently handled explicitly here, even though that's
+		    // a bit clunky ... a more "generic" way to do this would be
+		    // nice
                     let mut ev = Event::with_name_and_operation(
                         "articulation".to_string(),
                         EventOperation::Replace,
