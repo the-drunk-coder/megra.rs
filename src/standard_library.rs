@@ -126,6 +126,9 @@ pub fn define_standard_library() -> FunctionMap {
     standard_library.std_lib.insert("midi-sub".to_string(), eval::events::parameters::parameter);
     standard_library.std_lib.insert("midi-div".to_string(), eval::events::parameters::parameter);
 
+    standard_library.std_lib.insert("art".to_string(), eval::events::parameters::parameter);
+    standard_library.std_lib.insert("articulation".to_string(), eval::events::parameters::parameter);
+    
     standard_library.std_lib.insert("freq".to_string(), eval::events::parameters::parameter);
     standard_library.std_lib.insert("freq-add".to_string(), eval::events::parameters::parameter);
     standard_library.std_lib.insert("freq-mul".to_string(), eval::events::parameters::parameter);

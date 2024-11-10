@@ -107,6 +107,15 @@ pub fn vals(
                     ));
                     ev_vecs.push(vec![SourceEvent::Sound(ev)]);
                     continue;
+                } else if param == "art" || param == "articulation" {
+                    let mut ev = Event::with_name_and_operation(
+                        "articulation".to_string(),
+                        EventOperation::Replace,
+                    );
+                    ev.params
+                        .insert(map_parameter(&param), ParameterValue::Symbolic(s));
+                    ev_vecs.push(vec![SourceEvent::Sound(ev)]);
+                    continue;
                 }
             }
             EvaluatedExpr::Typed(TypedEntity::Parameter(p)) => {

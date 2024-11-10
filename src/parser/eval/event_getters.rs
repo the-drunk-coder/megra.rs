@@ -81,7 +81,6 @@ pub fn event_param(
     };
 
     match tail_drain.next() {
-        // only numeric values so far ...
         Some(EvaluatedExpr::Typed(TypedEntity::StaticEvent(InterpretableEvent::Sound(ev)))) => {
             match ev.params.get(&par_addr) {
                 Some(SynthParameterValue::ScalarF32(n)) => Ok(EvaluatedExpr::Typed(

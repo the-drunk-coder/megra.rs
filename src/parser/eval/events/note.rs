@@ -60,5 +60,20 @@ pub fn event_note(
         }
     }
 
+    // third argument is optional
+    if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::String(s)))) =
+        tail_drain.next()
+    {
+        ev.params.insert(
+            SynthParameterLabel::NoteArticulation.into(),
+            crate::parameter::ParameterValue::Symbolic(s),
+        );
+    } else {
+        ev.params.insert(
+            SynthParameterLabel::NoteArticulation.into(),
+            crate::parameter::ParameterValue::Symbolic("none".to_string()),
+        );
+    }
+
     Ok(EvaluatedExpr::Typed(TypedEntity::SoundEvent(ev)))
 }

@@ -212,6 +212,11 @@ pub fn parameter(
                             })
                             .ok()
                     }
+                    EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(s)))
+                        if param_key.label == SynthParameterLabel::NoteArticulation =>
+                    {
+                        Some(ParameterValue::Symbolic(s))
+                    }
                     EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(s))) => {
                         // jump out if the user entered garbage ...
                         crate::parser::eval::events::sound::map_symbolic_param_value(&s)
