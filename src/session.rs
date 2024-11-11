@@ -191,6 +191,7 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
         match ev {
             InterpretableEvent::Sound(s) => {
                 // no need to allocate a string everytime here, should be changed
+
                 // notes are currently not interpreted (there's no midi out currently),
                 // they are only here for mappers
                 if s.name == "silence" || s.name == "note" {

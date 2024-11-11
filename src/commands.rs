@@ -827,7 +827,9 @@ pub fn once<const BUFSIZE: usize, const NCHAN: usize>(
     }
 
     for s in sound_events.iter_mut() {
-        if s.name == "silence" {
+        // notes are currently not interpreted (there's no midi out currently),
+        // they are only here for mappers
+        if s.name == "silence" || s.name == "note" {
             continue;
         }
 
