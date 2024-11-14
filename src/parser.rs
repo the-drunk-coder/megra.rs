@@ -52,6 +52,7 @@ pub enum Atom {
 pub enum Expr {
     FunctionDefinition,
     VariableDefinition,
+    PersistantStateDefinition,
     Constant(Atom),
     Application(Box<Expr>, Vec<Expr>),
     Definition(Box<Expr>, Vec<Expr>),
@@ -74,7 +75,7 @@ pub enum EvaluatedExpr {
     // that might make them macros rather than functions?
     // Not sure ...
     FunctionDefinition(String, Vec<String>, Vec<Expr>),
-    VariableDefinition(VariableId, TypedEntity),
+    VariableDefinition(VariableId, TypedEntity, bool),
     // everything else is a typed entity
     Typed(TypedEntity),
     // only for collecting arguments
@@ -95,7 +96,7 @@ impl fmt::Debug for EvaluatedExpr {
             EvaluatedExpr::FunctionDefinition(_, _, _) => {
                 write!(f, "EvaluatedExpr::FunctionDefinition")
             }
-            EvaluatedExpr::VariableDefinition(_, _) => {
+            EvaluatedExpr::VariableDefinition(_, _, _) => {
                 write!(f, "EvaluatedExpr::VariableDefinition")
             }
             EvaluatedExpr::EvaluatedExprList(_) => {
@@ -137,6 +138,7 @@ impl FunctionMap {
 fn valid_string_char(chr: char) -> bool {
     chr == '~'
         || chr == '.'
+        || chr == ','
         || chr == '\''
         || chr == '_'
         || chr == '/'
@@ -146,6 +148,7 @@ fn valid_string_char(chr: char) -> bool {
         || chr == '['
         || chr == ']'
         || chr == '#'
+        || chr == '&'
         || is_alphanumeric(chr as u8)
         || is_space(chr as u8)
         || is_newline(chr as u8)
@@ -196,7 +199,8 @@ fn parse_definition(i: &str) -> IResult<&str, Expr, VerboseError<&str>> {
         map(tag("fun"), |_| Expr::FunctionDefinition),
         map(tag("callback"), |_| Expr::FunctionDefinition),
         map(tag("let"), |_| Expr::VariableDefinition),
-        map(tag("defpart"), |_| Expr::VariableDefinition),
+        map(tag("defpart"), |_| Expr::PersistantStateDefinition),
+        map(tag("keep-state"), |_| Expr::PersistantStateDefinition),
     ))(i)
 }
 
@@ -298,6 +302,7 @@ fn parse_application(i: &str) -> IResult<&str, Expr, VerboseError<&str>> {
         |(head, tail)| match head {
             Expr::FunctionDefinition => Expr::Definition(Box::new(head), tail),
             Expr::VariableDefinition => Expr::Definition(Box::new(head), tail),
+            Expr::PersistantStateDefinition => Expr::Definition(Box::new(head), tail),
             _ => Expr::Application(Box::new(head), tail),
         },
     );
@@ -795,7 +800,57 @@ pub fn eval_expression(
                 }
 
                 if let Some(EvaluatedExpr::Typed(te)) = reduced_tail.pop() {
-                    Ok(EvaluatedExpr::VariableDefinition(id, te))
+                    Ok(EvaluatedExpr::VariableDefinition(id, te, false))
+                } else {
+                    Err(anyhow!("invalid variable definition"))
+                }
+            }
+            Expr::PersistantStateDefinition => {
+                let id = match eval_expression(
+                    &tail[0],
+                    functions,
+                    globals,
+                    None,
+                    sample_set.clone(),
+                    out_mode,
+                ) {
+                    Ok(EvaluatedExpr::Identifier(i)) => VariableId::Custom(i),
+                    Ok(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(s)))) => {
+                        // check whether it's a reserved symbol
+                        if crate::parser::eval::events::sound::map_symbolic_param_value(&s)
+                            .is_some()
+                            || crate::music_theory::from_string(&s).is_ok()
+                        {
+                            bail!("can't redefine {s}");
+                        }
+                        VariableId::Symbol(s)
+                    }
+                    _ => {
+                        bail!("invalid variable definition");
+                    }
+                };
+
+                let mut reduced_tail: Vec<EvaluatedExpr> = Vec::new();
+                for expr in tail {
+                    let e = eval_expression(
+                        expr,
+                        functions,
+                        globals,
+                        locals.clone(),
+                        sample_set.clone(),
+                        out_mode,
+                    )?;
+                    // the list field exists only to be flattened
+                    if let EvaluatedExpr::EvaluatedExprList(mut l) = e {
+                        reduced_tail.append(&mut l);
+                    } else {
+                        reduced_tail.push(e);
+                    }
+                }
+                println!("PERSTAGA");
+
+                if let Some(EvaluatedExpr::Typed(te)) = reduced_tail.pop() {
+                    Ok(EvaluatedExpr::VariableDefinition(id, te, true))
                 } else {
                     Err(anyhow!("invalid variable definition"))
                 }

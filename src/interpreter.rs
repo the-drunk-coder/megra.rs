@@ -312,9 +312,72 @@ pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
             println!("a function definition: {name} positional args: {pos_args:?}");
             session.functions.usr_lib.insert(name, (pos_args, body));
         }
-        EvaluatedExpr::VariableDefinition(name, var) => {
-            println!("a variable definition {name:#?}");
-            session.globals.insert(name, var);
+        EvaluatedExpr::VariableDefinition(name, var, keep_state) => {
+            println!("a variable definition {name:#?} keep state {keep_state}");
+            // if we keep the state, we check whether we have something under that name
+            // (currently a generator or generator list) ... otherwise we overwrite it
+            if keep_state {
+                match session.globals.remove(&name) {
+                    Some((_, TypedEntity::Generator(old))) => match var {
+                        TypedEntity::Generator(mut new) => {
+                            if old.id_tags == new.id_tags {
+                                new.transfer_state(&old);
+                            }
+                            println!("kept state for {name:?}");
+                            session.globals.insert(name, TypedEntity::Generator(new));
+                        }
+                        TypedEntity::GeneratorList(mut new) => {
+                            for gi in new.iter_mut() {
+                                if gi.id_tags == old.id_tags {
+                                    gi.transfer_state(&old);
+                                }
+                            }
+                            session
+                                .globals
+                                .insert(name, TypedEntity::GeneratorList(new));
+                        }
+                        _ => {
+                            println!("state incompatible, overwriting");
+                            session.globals.insert(name, var);
+                        }
+                    },
+                    // n-to-n comparison, under the assumption of small lists
+                    Some((_, TypedEntity::GeneratorList(old))) => match var {
+                        TypedEntity::GeneratorList(mut new) => {
+                            for go in old {
+                                for gi in new.iter_mut() {
+                                    if go.id_tags == gi.id_tags {
+                                        gi.transfer_state(&go);
+                                    }
+                                }
+                            }
+                            println!("kept state for {name:?}");
+                            session
+                                .globals
+                                .insert(name, TypedEntity::GeneratorList(new));
+                        }
+                        TypedEntity::Generator(mut new) => {
+                            for go in old {
+                                if go.id_tags == new.id_tags {
+                                    new.transfer_state(&go);
+                                }
+                            }
+                            println!("kept state for {name:?}");
+                            session.globals.insert(name, TypedEntity::Generator(new));
+                        }
+                        _ => {
+                            println!("state incompatible, overwriting");
+                            session.globals.insert(name, var);
+                        }
+                    },
+                    _ => {
+                        println!("state incompatible, overwriting");
+                        session.globals.insert(name, var);
+                    }
+                }
+            } else {
+                session.globals.insert(name, var);
+            }
         }
         EvaluatedExpr::Progn(exprs) => {
             for expr in exprs {

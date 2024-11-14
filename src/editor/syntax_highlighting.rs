@@ -190,6 +190,7 @@ fn is_command(word: &str) -> bool {
             | "default-duration"
             | "bpm"
             | "defpart"
+            | "keep-state"
             | "clear"
             | "rec"
             | "stop-rec"
