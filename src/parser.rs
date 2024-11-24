@@ -1,5 +1,6 @@
 use anyhow::{anyhow, bail, Result};
 use dashmap::DashMap;
+use eval::resolver::resolve_globals;
 use nom::{
     branch::alt,
     bytes::complete::{tag, take_while, take_while1},
@@ -379,9 +380,8 @@ pub fn eval_usr_fun(
 
     // FIRST, eval local args,
     // manual zip
-
     for (i, expr) in tail[..fun_arg_names.len()].iter().enumerate() {
-        let res = eval_expression(
+        let mut res = eval_expression(
             expr,
             functions,
             globals,
@@ -389,6 +389,14 @@ pub fn eval_usr_fun(
             sample_set.clone(),
             out_mode,
         )?;
+
+        // resolve globals in function args
+        if let EvaluatedExpr::Identifier(ref i) = res {
+            if let Some(var) = globals.get(&VariableId::Custom(i.clone())) {
+                res = EvaluatedExpr::Typed(var.value().clone());
+            }
+        }
+
         locals
             .borrow_mut()
             .pos_args
