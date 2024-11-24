@@ -7,3 +7,4 @@
 * DSP: glitch-free (or at least less glitchy) live-looping
 * Scoreviz Interface: articulations for Notes
 * Language: `keep-state` and `defpart` now define a variable that can contain stateful generators
+* Language: evaluate global variables in calls to user-defined functions
