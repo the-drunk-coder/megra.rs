@@ -38,7 +38,6 @@ pub fn linear(
 
     // collect final events and durations in their position in the list
     let mut ev_vecs = Vec::new();
-    let mut dur_vec: Vec<DynVal> = Vec::new();
 
     let dur: DynVal = if let TypedEntity::ConfigParameter(ConfigParameter::Numeric(d)) = globals
         .entry(VariableId::DefaultDuration)
@@ -55,17 +54,15 @@ pub fn linear(
     for c in tail_drain {
         match c {
             EvaluatedExpr::Typed(TypedEntity::SoundEvent(e)) => {
-                ev_vecs.push(vec![SourceEvent::Sound(e)]);
-                dur_vec.push(dur.clone());
+                ev_vecs.push((vec![SourceEvent::Sound(e)], dur.clone()));
                 continue;
             }
             EvaluatedExpr::Typed(TypedEntity::ControlEvent(e)) => {
-                ev_vecs.push(vec![SourceEvent::Control(e)]);
-                dur_vec.push(dur.clone());
+                ev_vecs.push((vec![SourceEvent::Control(e)], dur.clone()));
                 continue;
             }
             EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f))) => {
-                *dur_vec.last_mut().unwrap() = DynVal::with_value(f);
+                ev_vecs.last_mut().unwrap().1 = DynVal::with_value(f);
             }
             _ => println! {"ignored"},
         }
@@ -74,31 +71,29 @@ pub fn linear(
     // generated ids
     let mut last_char: char = '1';
 
-    let mut event_mapping = BTreeMap::<char, Vec<SourceEvent>>::new();
-    let mut duration_mapping = HashMap::<(char, char), Event>::new();
+    let mut event_mapping = BTreeMap::<char, (Vec<SourceEvent>, Event)>::new();
 
     // collect cycle rules
     let mut rules = Vec::new();
     let len = ev_vecs.len() - 1;
 
-    for (count, ev) in ev_vecs.drain(..).enumerate() {
-        event_mapping.insert(last_char, ev);
+    for (count, (ev, dur)) in ev_vecs.drain(..).enumerate() {
         if count < len {
             let next_char: char = std::char::from_u32(last_char as u32 + 1).unwrap();
 
             let mut dur_ev = Event::with_name("transition".to_string());
             dur_ev.params.insert(
                 SynthParameterLabel::Duration.into(),
-                ParameterValue::Scalar(dur_vec[count].clone()),
+                ParameterValue::Scalar(dur),
             );
+
+            event_mapping.insert(last_char, (ev, dur_ev));
 
             rules.push(Rule {
                 source: vec![last_char],
                 symbol: next_char,
                 probability: 1.0,
             });
-
-            duration_mapping.insert((last_char, next_char), dur_ev);
 
             last_char = next_char;
         }
@@ -117,7 +112,6 @@ pub fn linear(
             name,
             generator: pfa,
             event_mapping,
-            duration_mapping,
             label_mapping: None,
             modified: true,
             symbol_ages: HashMap::new(),

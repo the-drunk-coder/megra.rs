@@ -104,8 +104,8 @@ pub fn infer(
         bail!("infer - missing name");
     };
 
-    let mut event_mapping = BTreeMap::<char, Vec<SourceEvent>>::new();
-    let mut duration_mapping = HashMap::<(char, char), Event>::new();
+    let mut event_mapping = BTreeMap::<char, (Vec<SourceEvent>, Event)>::new();
+
     let mut rules = Vec::new();
 
     let mut collect_events = false;
@@ -124,6 +124,12 @@ pub fn infer(
         bail!("infer - global default duration not present");
     };
 
+    let mut dur_ev = Event::with_name("transition".to_string());
+    dur_ev.params.insert(
+        SynthParameterLabel::Duration.into(),
+        ParameterValue::Scalar(dur.clone()),
+    );
+
     let mut ev_vec = Vec::new();
     let mut cur_key: String = "".to_string();
     let mut keep_root = false;
@@ -134,7 +140,10 @@ pub fn infer(
                 EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(ref s))) => {
                     if !cur_key.is_empty() && !ev_vec.is_empty() {
                         //println!("found event {}", cur_key);
-                        event_mapping.insert(cur_key.chars().next().unwrap(), ev_vec.clone());
+                        event_mapping.insert(
+                            cur_key.chars().next().unwrap(),
+                            (ev_vec.clone(), dur_ev.clone()),
+                        );
                         ev_vec.clear();
                     }
                     cur_key = s.clone();
@@ -151,7 +160,10 @@ pub fn infer(
                 _ => {
                     if !cur_key.is_empty() && !ev_vec.is_empty() {
                         //println!("found event {}", cur_key);
-                        event_mapping.insert(cur_key.chars().next().unwrap(), ev_vec.clone());
+                        event_mapping.insert(
+                            cur_key.chars().next().unwrap(),
+                            (ev_vec.clone(), dur_ev.clone()),
+                        );
                     }
                     collect_events = false;
                 }
@@ -160,12 +172,6 @@ pub fn infer(
 
         if collect_rules {
             if let EvaluatedExpr::Typed(TypedEntity::Rule(s)) = c {
-                let mut dur_ev = Event::with_name("transition".to_string());
-                dur_ev.params.insert(
-                    SynthParameterLabel::Duration.into(),
-                    ParameterValue::Scalar(DynVal::with_value(s.duration as f32)),
-                );
-                duration_mapping.insert((*s.source.last().unwrap(), s.symbol), dur_ev);
                 rules.push(s.to_pfa_rule());
                 continue;
             } else {
@@ -232,7 +238,6 @@ pub fn infer(
             generator: pfa, // will be empty if we intend on keeping the root generator
             event_mapping,
             label_mapping: None,
-            duration_mapping,
             modified: true,
             symbol_ages: HashMap::new(),
             default_duration: dur.static_val as u64,

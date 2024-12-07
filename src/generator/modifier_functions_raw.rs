@@ -76,7 +76,7 @@ pub fn grow_raw(
         let added_sym = result.added_symbol.unwrap();
         //println!("GROW {}\n{}", m, result);
 
-        if let Some(old_evs) = gen.event_mapping.get(&template_sym) {
+        if let Some((old_evs, old_dur)) = gen.event_mapping.get(&template_sym) {
             let mut new_evs = old_evs.clone();
             for ev in new_evs.iter_mut() {
                 match ev {
@@ -85,67 +85,71 @@ pub fn grow_raw(
                 }
             }
 
-            gen.event_mapping.insert(added_sym, new_evs);
+            gen.event_mapping
+                .insert(added_sym, (new_evs, old_dur.clone()));
             gen.symbol_ages.insert(added_sym, 0);
-            // is this ok or should it rather follow the actually added transitions ??
-            let mut dur_mapping_to_add = HashMap::new();
-            for sym in gen.generator.alphabet.iter() {
-                if let Some(dur) = gen.duration_mapping.get(&(*sym, template_sym)) {
-                    if !durations.is_empty() {
-                        let mut dur_ev = Event::with_name("transition".to_string());
-                        let dur_val = durations.choose(&mut rand::thread_rng()).unwrap().clone();
-                        //println!("add from stash {} {} {}", sym, added_sym, dur_val.static_val);
-                        dur_ev.params.insert(
-                            SynthParameterLabel::Duration.into(),
-                            ParameterValue::Scalar(dur_val),
-                        );
-                        dur_mapping_to_add.insert((*sym, added_sym), dur_ev);
-                    } else {
-                        //println!("add from prev {} {}", sym, added_sym);
-                        dur_mapping_to_add.insert((*sym, added_sym), dur.clone());
-                    }
-                }
-
-                if let Some(dur) = gen.duration_mapping.get(&(template_sym, *sym)) {
-                    if !durations.is_empty() {
-                        let mut dur_ev = Event::with_name("transition".to_string());
-                        let dur_val = durations.choose(&mut rand::thread_rng()).unwrap().clone();
-                        //println!("add from stash {} {} {}", added_sym, sym, dur_val.static_val);
-                        dur_ev.params.insert(
-                            SynthParameterLabel::Duration.into(),
-                            ParameterValue::Scalar(dur_val),
-                        );
-                        dur_mapping_to_add.insert((added_sym, *sym), dur_ev);
-                    } else {
-                        //println!("add from prev {} {}", added_sym, sym);
-                        dur_mapping_to_add.insert((added_sym, *sym), dur.clone());
-                    }
-                }
-            }
-
-            // add from the durations stash for newly added information ...
-            if !durations.is_empty() {
-                for t in result.added_transitions.iter() {
-                    if let Some(src) = t.source.last() {
-                        if let Some(dest) = t.destination.last() {
+            /*
+                // is this ok or should it rather follow the actually added transitions ??
+                let mut dur_mapping_to_add = HashMap::new();
+                for sym in gen.generator.alphabet.iter() {
+                    if let Some(dur) = gen.duration_mapping.get(&(*sym, template_sym)) {
+                        if !durations.is_empty() {
                             let mut dur_ev = Event::with_name("transition".to_string());
-                            let dur_val =
-                                durations.choose(&mut rand::thread_rng()).unwrap().clone();
-                            //println!("add from stash {} {} {}", src, dest, dur_val.static_val);
+                            let dur_val = durations.choose(&mut rand::thread_rng()).unwrap().clone();
+                            //println!("add from stash {} {} {}", sym, added_sym, dur_val.static_val);
                             dur_ev.params.insert(
                                 SynthParameterLabel::Duration.into(),
                                 ParameterValue::Scalar(dur_val),
                             );
-                            dur_mapping_to_add.insert((*src, *dest), dur_ev);
+                            dur_mapping_to_add.insert((*sym, added_sym), dur_ev);
+                        } else {
+                            //println!("add from prev {} {}", sym, added_sym);
+                            dur_mapping_to_add.insert((*sym, added_sym), dur.clone());
+                        }
+                    }
+
+                    if let Some(dur) = gen.duration_mapping.get(&(template_sym, *sym)) {
+                        if !durations.is_empty() {
+                            let mut dur_ev = Event::with_name("transition".to_string());
+                            let dur_val = durations.choose(&mut rand::thread_rng()).unwrap().clone();
+                            //println!("add from stash {} {} {}", added_sym, sym, dur_val.static_val);
+                            dur_ev.params.insert(
+                                SynthParameterLabel::Duration.into(),
+                                ParameterValue::Scalar(dur_val),
+                            );
+                            dur_mapping_to_add.insert((added_sym, *sym), dur_ev);
+                        } else {
+                            //println!("add from prev {} {}", added_sym, sym);
+                            dur_mapping_to_add.insert((added_sym, *sym), dur.clone());
                         }
                     }
                 }
+
+                // add from the durations stash for newly added information ...
+                if !durations.is_empty() {
+                    for t in result.added_transitions.iter() {
+                        if let Some(src) = t.source.last() {
+                            if let Some(dest) = t.destination.last() {
+                                let mut dur_ev = Event::with_name("transition".to_string());
+                                let dur_val =
+                                    durations.choose(&mut rand::thread_rng()).unwrap().clone();
+                                //println!("add from stash {} {} {}", src, dest, dur_val.static_val);
+                                dur_ev.params.insert(
+                                    SynthParameterLabel::Duration.into(),
+                                    ParameterValue::Scalar(dur_val),
+                                );
+                                dur_mapping_to_add.insert((*src, *dest), dur_ev);
+                            }
+                        }
             }
 
-            for (k, v) in dur_mapping_to_add.drain() {
-                //println!("add dur map {:?} {}", k, v.params[&SynthParameterLabel::Duration].static_val);
-                gen.duration_mapping.insert(k, v);
-            }
+                }
+            */
+
+            //for (k, v) in dur_mapping_to_add.drain() {
+            //println!("add dur map {:?} {}", k, v.params[&SynthParameterLabel::Duration].static_val);
+            //    gen.duration_mapping.insert(k, v);
+            //}
         }
         gen.set_modified();
     } else {
@@ -180,7 +184,7 @@ pub fn shake_raw(
     factor: f32,
 ) {
     gen.generator.blur(factor);
-    for (_, evs) in gen.event_mapping.iter_mut() {
+    for (_, (evs, _)) in gen.event_mapping.iter_mut() {
         for ev in evs {
             if let SourceEvent::Sound(e) = ev {
                 e.shake(factor, keep)

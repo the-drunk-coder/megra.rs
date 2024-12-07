@@ -43,7 +43,7 @@ pub fn fully(
 
     let mut keep_root = false;
 
-    let mut final_mapping = BTreeMap::new();
+    let mut event_mapping = BTreeMap::new();
     let mut last_char: char = 'a'; // label chars
     let mut labels = Vec::new();
     let mut time_shift = 0;
@@ -99,21 +99,21 @@ pub fn fully(
                 if collected_mapping.contains_key(&label) {
                     final_vec.append(&mut collected_mapping.get(&label).unwrap().clone());
                 }
-                final_mapping.insert(label, final_vec);
+                event_mapping.insert(label, final_vec);
             }*/
             EvaluatedExpr::Typed(TypedEntity::SoundEvent(e)) => {
                 let next_char: char = std::char::from_u32(last_char as u32 + 1).unwrap();
                 last_char = next_char;
                 labels.push(next_char);
                 let final_vec = vec![SourceEvent::Sound(e)];
-                final_mapping.insert(next_char, final_vec);
+                event_mapping.insert(next_char, (final_vec, Event::transition(dur.clone())));
             }
             EvaluatedExpr::Typed(TypedEntity::ControlEvent(e)) => {
                 let next_char: char = std::char::from_u32(last_char as u32 + 1).unwrap();
                 last_char = next_char;
                 labels.push(next_char);
                 let final_vec = vec![SourceEvent::Control(e)];
-                final_mapping.insert(next_char, final_vec);
+                event_mapping.insert(next_char, (final_vec, Event::transition(dur.clone())));
             }
             EvaluatedExpr::Keyword(k) => match k.as_str() {
                 "dur" => match tail_drain.next() {
@@ -151,8 +151,6 @@ pub fn fully(
         }
     }
 
-    let mut duration_mapping = HashMap::new();
-
     let pfa = if !keep_root {
         let prob = 1.0 / (labels.len() - 1) as f32;
         // rules to collect ...
@@ -164,13 +162,6 @@ pub fn fully(
                     symbol: *label_b,
                     probability: prob,
                 });
-
-                let mut dur_ev = Event::with_name("transition".to_string());
-                dur_ev.params.insert(
-                    SynthParameterLabel::Duration.into(),
-                    ParameterValue::Scalar(dur.clone()),
-                );
-                duration_mapping.insert((*label_a, *label_b), dur_ev);
             }
         }
 
@@ -187,9 +178,8 @@ pub fn fully(
         root_generator: MarkovSequenceGenerator {
             name,
             generator: pfa,
-            event_mapping: final_mapping,
+            event_mapping,
             label_mapping: None,
-            duration_mapping,
             modified: true,
             symbol_ages: HashMap::new(),
             default_duration: dur.static_val as u64,

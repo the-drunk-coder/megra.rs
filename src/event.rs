@@ -7,7 +7,7 @@ use std::collections::{BTreeSet, HashMap, HashSet};
 use std::fmt::*;
 
 use crate::builtin_types::Command;
-use crate::parameter::{resolve_parameter, shake_parameter, ParameterValue};
+use crate::parameter::{resolve_parameter, shake_parameter, DynVal, ParameterValue};
 use crate::sample_set::SampleLookup;
 use crate::session::SyncContext;
 use crate::synth_parameter_value_arithmetic::*;
@@ -356,6 +356,23 @@ impl Event {
             op,
             sample_lookup: None,
         }
+    }
+
+    pub fn transition(dur: DynVal) -> Self {
+        let mut tags = BTreeSet::new();
+        tags.insert("transition".to_string()); // add to tags, for subsequent filters ...
+        let mut ev = Event {
+            name: "transition".to_string(),
+            params: HashMap::new(),
+            tags,
+            op: EventOperation::Replace,
+            sample_lookup: None,
+        };
+        ev.params.insert(
+            SynthParameterLabel::Duration.into(),
+            ParameterValue::Scalar(dur.clone()),
+        );
+        ev
     }
 
     pub fn with_name(name: String) -> Self {

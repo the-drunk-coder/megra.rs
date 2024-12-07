@@ -65,13 +65,12 @@ pub fn a_loop(
 
     // collect mapped events, i.e. :events 'a (saw 200) ...
     let mut collected_evs = Vec::new();
-    let mut collected_mapping = HashMap::<String, Vec<SourceEvent>>::new();
+    let mut collected_mapping = HashMap::<String, (Vec<SourceEvent>, Event)>::new();
     let mut cur_key: String = "".to_string();
 
     // collect final events in their position in the cycle
     let mut ev_vecs = Vec::new();
-    // transition durations ...
-    let mut dur_vec: Vec<DynVal> = Vec::new();
+
     let mut keep_root = false;
 
     let mut time_shift = 0;
@@ -94,7 +93,10 @@ pub fn a_loop(
                 EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(ref s))) => {
                     if !cur_key.is_empty() && !collected_evs.is_empty() {
                         //println!("found event {}", cur_key);
-                        collected_mapping.insert(cur_key.clone(), collected_evs.clone());
+                        collected_mapping.insert(
+                            cur_key.clone(),
+                            (collected_evs.clone(), Event::transition(dur.clone())),
+                        );
                         collected_evs.clear();
                     }
                     cur_key = s.clone();
@@ -111,7 +113,10 @@ pub fn a_loop(
                 _ => {
                     if !cur_key.is_empty() && !collected_evs.is_empty() {
                         //println!("found event {}", cur_key);
-                        collected_mapping.insert(cur_key.clone(), collected_evs.clone());
+                        collected_mapping.insert(
+                            cur_key.clone(),
+                            (collected_evs.clone(), Event::transition(dur.clone())),
+                        );
                     }
                     collect_events = false;
                 }
@@ -185,33 +190,28 @@ pub fn a_loop(
                 _ => println!("{k}"),
             },
             EvaluatedExpr::Typed(TypedEntity::SoundEvent(e)) => {
-                ev_vecs.push(vec![SourceEvent::Sound(e)]);
-                // one duration for every event
-                dur_vec.push(dur.clone());
+                ev_vecs.push((vec![SourceEvent::Sound(e)], dur.clone()));
             }
             EvaluatedExpr::Typed(TypedEntity::ControlEvent(e)) => {
-                ev_vecs.push(vec![SourceEvent::Control(e)]);
-                // one duration for every event
-                dur_vec.push(dur.clone());
+                ev_vecs.push((vec![SourceEvent::Control(e)], dur.clone()));
             }
             EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f))) => {
-                if !dur_vec.is_empty() {
-                    *dur_vec.last_mut().unwrap() = DynVal::with_value(f);
-                } else {
-                    dur_vec.push(DynVal::with_value(f));
+                if !ev_vecs.is_empty() {
+                    ev_vecs.last_mut().unwrap().1 = DynVal::with_value(f);
                 }
+                //else {
+                //    dur_vec.push(DynVal::with_value(f));
+                //}
             }
-            // resolve to levels of vecs (for now ...)
+            // resolve two levels of vecs (for now ...)
             EvaluatedExpr::Typed(TypedEntity::Vec(v)) => {
                 for x in v {
                     match *x {
                         TypedEntity::SoundEvent(e) => {
-                            ev_vecs.push(vec![SourceEvent::Sound(e)]);
-                            dur_vec.push(dur.clone());
+                            ev_vecs.push((vec![SourceEvent::Sound(e)], dur.clone()));
                         }
                         TypedEntity::ControlEvent(e) => {
-                            ev_vecs.push(vec![SourceEvent::Control(e)]);
-                            dur_vec.push(dur.clone());
+                            ev_vecs.push((vec![SourceEvent::Control(e)], dur.clone()));
                         }
                         TypedEntity::Vec(mut v2) => {
                             v2.retain(|x| {
@@ -228,8 +228,7 @@ pub fn a_loop(
                                     _ => {}
                                 }
                             }
-                            ev_vecs.push(chord);
-                            dur_vec.push(dur.clone());
+                            ev_vecs.push((chord, dur.clone()));
                         }
                         _ => {}
                     }
@@ -253,11 +252,10 @@ pub fn a_loop(
                         [cyc_parser::CycleResult::Duration(dur)] => {
                             // the loop, on the other hand, has variable
                             // durations between events ...
-                            *dur_vec.last_mut().unwrap() = DynVal::with_value(*dur);
+                            ev_vecs.last_mut().unwrap().1 = DynVal::with_value(*dur);
                         }
                         _ => {
                             let mut pos_vec = Vec::new();
-                            dur_vec.push(dur.clone());
 
                             for ev in cyc_evs.drain(..) {
                                 match ev {
@@ -271,7 +269,7 @@ pub fn a_loop(
                                 }
                             }
 
-                            ev_vecs.push(pos_vec);
+                            ev_vecs.push((pos_vec, dur.clone()));
                         }
                     }
                 }
@@ -280,8 +278,7 @@ pub fn a_loop(
         }
     }
 
-    let mut event_mapping = BTreeMap::<char, Vec<SourceEvent>>::new();
-    let mut duration_mapping = HashMap::<(char, char), Event>::new();
+    let mut event_mapping = BTreeMap::<char, (Vec<SourceEvent>, Event)>::new();
 
     // re-generate pfa if necessary, now that we have collected all the info ...
     let pfa = if !keep_root {
@@ -294,10 +291,16 @@ pub fn a_loop(
 
         let mut count = 0;
         let num_events = ev_vecs.len();
-        for ev in ev_vecs.drain(..) {
+        for (ev, dur) in ev_vecs.drain(..) {
             let next_char: char = std::char::from_u32(last_char as u32 + 1).unwrap();
 
-            event_mapping.insert(last_char, ev);
+            let mut dur_ev = Event::with_name("transition".to_string());
+            dur_ev.params.insert(
+                SynthParameterLabel::Duration.into(),
+                ParameterValue::Scalar(dur),
+            );
+
+            event_mapping.insert(last_char, (ev, dur_ev));
 
             if count < num_events {
                 if repetition_chance > 0.0 {
@@ -360,28 +363,11 @@ pub fn a_loop(
                 }
 
                 if count < num_events - 1 {
-                    let mut dur_ev = Event::with_name("transition".to_string());
-                    dur_ev.params.insert(
-                        SynthParameterLabel::Duration.into(),
-                        ParameterValue::Scalar(dur_vec[count].clone()),
-                    );
-                    duration_mapping.insert((last_char, next_char), dur_ev);
                     last_char = next_char;
                 }
             }
 
             count += 1;
-        }
-
-        // if our cycle isn't empty ...
-        if count != 0 {
-            // create duration event (otherwise not needed ...)
-            let mut dur_ev = Event::with_name("transition".to_string());
-            dur_ev.params.insert(
-                SynthParameterLabel::Duration.into(),
-                ParameterValue::Scalar(dur_vec.last().unwrap().clone()),
-            );
-            duration_mapping.insert((last_char, first_char), dur_ev);
         }
 
         let mut tmp = Pfa::<char>::infer_from_rules(&mut rules, true);
@@ -408,7 +394,6 @@ pub fn a_loop(
             generator: pfa,
             event_mapping,
             label_mapping: None,
-            duration_mapping,
             modified: true,
             symbol_ages: HashMap::new(),
             default_duration: dur.static_val as u64,

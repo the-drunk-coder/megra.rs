@@ -126,8 +126,7 @@ pub fn chop(
         }
     }
 
-    let mut event_mapping = BTreeMap::<char, Vec<SourceEvent>>::new();
-    let mut duration_mapping = HashMap::<(char, char), Event>::new();
+    let mut event_mapping = BTreeMap::<char, (Vec<SourceEvent>, Event)>::new();
 
     let pfa = if !keep_root {
         let mut chopped_events = Vec::new();
@@ -170,14 +169,7 @@ pub fn chop(
         for ev in chopped_events.drain(..) {
             let next_char: char = std::char::from_u32(last_char as u32 + 1).unwrap();
 
-            event_mapping.insert(last_char, ev);
-
-            let mut dur_ev = Event::with_name("transition".to_string());
-            dur_ev.params.insert(
-                SynthParameterLabel::Duration.into(),
-                ParameterValue::Scalar(dur.clone()),
-            );
-            duration_mapping.insert((last_char, next_char), dur_ev);
+            event_mapping.insert(last_char, (ev, Event::transition(dur.clone())));
 
             if count < num_events - 1 {
                 if repetition_chance > 0.0 {
@@ -225,14 +217,6 @@ pub fn chop(
 
         // if our cycle isn't empty ...
         if count != 0 {
-            // close the cycle
-            let mut dur_ev = Event::with_name("transition".to_string());
-            dur_ev.params.insert(
-                SynthParameterLabel::Duration.into(),
-                ParameterValue::Scalar(dur.clone()),
-            );
-            duration_mapping.insert((last_char, first_char), dur_ev);
-
             rules.push(Rule {
                 source: vec![last_char],
                 symbol: first_char,
@@ -263,7 +247,6 @@ pub fn chop(
             generator: pfa,
             event_mapping,
             label_mapping: None,
-            duration_mapping,
             modified: true,
             symbol_ages: HashMap::new(),
             default_duration: dur.static_val as u64,

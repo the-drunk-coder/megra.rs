@@ -7,6 +7,7 @@ use crate::parser::eval::resolver::resolve_globals;
 
 use anyhow::bail;
 use anyhow::Result;
+use ruffbox_synth::building_blocks::SynthParameterLabel;
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::sync;
 use vom_rs::pfa::Pfa;
@@ -317,12 +318,18 @@ pub fn learn(
     // assemble the sample ...
     let mut s_v: std::vec::Vec<char> = Vec::new();
 
+    let mut dur_ev = Event::with_name("transition".to_string());
+    dur_ev.params.insert(
+        SynthParameterLabel::Duration.into(),
+        ParameterValue::Scalar(dur.clone()),
+    );
+
     let label_mapping = if longnames {
         let mut label_mapping = BTreeMap::new();
         let mut reverse_label_mapping = BTreeMap::new();
         let mut next_char: char = '1';
         for (k, v) in event_mapping.into_iter() {
-            char_event_mapping.insert(next_char, v);
+            char_event_mapping.insert(next_char, (v, dur_ev.clone()));
             label_mapping.insert(next_char, k.clone());
             reverse_label_mapping.insert(k, next_char);
             next_char = std::char::from_u32(next_char as u32 + 1).unwrap();
@@ -338,7 +345,7 @@ pub fn learn(
         for (k, v) in event_mapping.into_iter() {
             // assume the label is not empty ...
             if let Some(c) = k.chars().next() {
-                char_event_mapping.insert(c, v);
+                char_event_mapping.insert(c, (v, dur_ev.clone()));
             }
         }
 
@@ -375,7 +382,6 @@ pub fn learn(
             generator: pfa,
             event_mapping: char_event_mapping,
             label_mapping,
-            duration_mapping: HashMap::new(), // unsolved ...
             modified: true,
             symbol_ages: HashMap::new(),
             default_duration: dur.static_val as u64,

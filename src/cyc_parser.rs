@@ -17,6 +17,8 @@ use nom::{
     sequence::{delimited, preceded, separated_pair},
     IResult,
 };
+use ruffbox_synth::building_blocks::SynthParameterLabel;
+use ruffbox_synth::building_blocks::SynthParameterValue;
 
 pub enum CycleParameter {
     Number(f32),
@@ -172,7 +174,7 @@ pub fn eval_cyc_from_str(
     sample_set: SampleAndWavematrixSet,
     out_mode: OutputMode,
     template_events: &[String],
-    event_mappings: &HashMap<String, Vec<SourceEvent>>,
+    event_mappings: &HashMap<String, (Vec<SourceEvent>, Event)>,
     globals: &sync::Arc<GlobalVariables>,
 ) -> Vec<Vec<CycleResult>> {
     let items = parse_cyc(src.trim()).map_err(|e: nom::Err<VerboseError<&str>>| {
@@ -252,15 +254,33 @@ pub fn eval_cyc_from_str(
                             template_params.push(CycleItem::Parameter(CycleParameter::Number(f)));
                         }
                         CycleItem::Parameter(CycleParameter::Symbol(s)) => {
-                            if let Some(evs) = event_mappings.get(&s) {
+                            if let Some((evs, dur)) = event_mappings.get(&s) {
                                 // mappings have precedence ...
                                 for ev in evs {
                                     match ev {
                                         SourceEvent::Sound(s) => {
-                                            cycle_position.push(CycleResult::SoundEvent(s.clone()))
+                                            cycle_position.push(CycleResult::SoundEvent(s.clone()));
+                                            if let Some(SynthParameterValue::ScalarF32(d)) = dur
+                                                .clone()
+                                                .get_static(globals)
+                                                .params
+                                                .get(&SynthParameterLabel::Duration.into())
+                                            {
+                                                cycle_position.push(CycleResult::Duration(*d))
+                                            }
                                         }
-                                        SourceEvent::Control(c) => cycle_position
-                                            .push(CycleResult::ControlEvent(c.clone())),
+                                        SourceEvent::Control(c) => {
+                                            cycle_position
+                                                .push(CycleResult::ControlEvent(c.clone()));
+                                            if let Some(SynthParameterValue::ScalarF32(d)) = dur
+                                                .clone()
+                                                .get_static(globals)
+                                                .params
+                                                .get(&SynthParameterLabel::Duration.into())
+                                            {
+                                                cycle_position.push(CycleResult::Duration(*d))
+                                            }
+                                        }
                                     }
                                 }
                             } else {

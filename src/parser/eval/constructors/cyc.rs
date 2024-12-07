@@ -63,7 +63,7 @@ pub fn cyc(
 
     // collect mapped events, i.e. :events 'a (saw 200) ...
     let mut collected_evs = Vec::new();
-    let mut collected_mapping = HashMap::<String, Vec<SourceEvent>>::new();
+    let mut collected_mapping = HashMap::<String, (Vec<SourceEvent>, Event)>::new();
     let mut cur_key: String = "".to_string();
 
     // collect final events in their position in the cycle
@@ -89,7 +89,10 @@ pub fn cyc(
                 EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(ref s))) => {
                     if !cur_key.is_empty() && !collected_evs.is_empty() {
                         //println!("found event {}", cur_key);
-                        collected_mapping.insert(cur_key.clone(), collected_evs.clone());
+                        collected_mapping.insert(
+                            cur_key.clone(),
+                            (collected_evs.clone(), Event::transition(dur.clone())),
+                        );
                         collected_evs.clear();
                     }
                     cur_key = s.clone();
@@ -106,7 +109,10 @@ pub fn cyc(
                 _ => {
                     if !cur_key.is_empty() && !collected_evs.is_empty() {
                         //println!("found event {}", cur_key);
-                        collected_mapping.insert(cur_key.clone(), collected_evs.clone());
+                        collected_mapping.insert(
+                            cur_key.clone(),
+                            (collected_evs.clone(), Event::transition(dur.clone())),
+                        );
                     }
                     collect_events = false;
                 }
@@ -259,8 +265,7 @@ pub fn cyc(
         }
     }
 
-    let mut event_mapping = BTreeMap::<char, Vec<SourceEvent>>::new();
-    let mut duration_mapping = HashMap::<(char, char), Event>::new();
+    let mut event_mapping = BTreeMap::<char, (Vec<SourceEvent>, Event)>::new();
 
     let num_events = ev_vecs.len();
     // re-generate pfa if necessary, now that we have collected all the info ...
@@ -277,7 +282,13 @@ pub fn cyc(
         for ev in ev_vecs.drain(..) {
             let next_char: char = std::char::from_u32(last_char as u32 + 1).unwrap();
 
-            event_mapping.insert(last_char, ev);
+            event_mapping.insert(
+                last_char,
+                (
+                    ev,
+                    Event::transition(DynVal::with_value(dur.static_val / num_events as f32)),
+                ),
+            );
 
             if count < num_events {
                 if repetition_chance > 0.0 {
@@ -288,20 +299,6 @@ pub fn cyc(
                         symbol: last_char,
                         probability: repetition_chance / 100.0,
                     });
-
-                    // keep the rhythmicity for repetitions
-                    // if there's no repetitions, this is dormant
-                    // if repetitions are added later on this will
-                    // keep the behaviour consistent
-                    // i.e (rep 80 2 (cyc ...)) vs (cyc 'foo :rep 80 :max-rep 2 ...)
-                    let mut dur_ev = Event::with_name("transition".to_string());
-                    dur_ev.params.insert(
-                        SynthParameterLabel::Duration.into(),
-                        ParameterValue::Scalar(DynVal::with_value(
-                            dur.static_val / num_events as f32,
-                        )),
-                    );
-                    duration_mapping.insert((last_char, last_char), dur_ev);
 
                     // next rule
                     if count == num_events - 1 {
@@ -354,30 +351,11 @@ pub fn cyc(
                 }
 
                 if count < num_events - 1 {
-                    let mut dur_ev = Event::with_name("transition".to_string());
-                    dur_ev.params.insert(
-                        SynthParameterLabel::Duration.into(),
-                        ParameterValue::Scalar(DynVal::with_value(
-                            dur.static_val / num_events as f32,
-                        )),
-                    );
-                    duration_mapping.insert((last_char, next_char), dur_ev);
                     last_char = next_char;
                 }
             }
 
             count += 1;
-        }
-
-        // if our cycle isn't empty ...
-        if count != 0 {
-            // create duration event (otherwise not needed ...)
-            let mut dur_ev = Event::with_name("transition".to_string());
-            dur_ev.params.insert(
-                SynthParameterLabel::Duration.into(),
-                ParameterValue::Scalar(DynVal::with_value(dur.static_val / num_events as f32)),
-            );
-            duration_mapping.insert((last_char, first_char), dur_ev);
         }
 
         let mut tmp = Pfa::<char>::infer_from_rules(&mut rules, true);
@@ -404,7 +382,6 @@ pub fn cyc(
             generator: pfa,
             event_mapping,
             label_mapping: None,
-            duration_mapping,
             modified: true,
             symbol_ages: HashMap::new(),
             default_duration: (dur.static_val / num_events as f32) as u64,

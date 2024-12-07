@@ -43,7 +43,7 @@ pub fn friendship(
     let mut collected_mapping = HashMap::<char, Vec<SourceEvent>>::new();
     let mut cur_key: String = "".to_string();
 
-    let mut final_mapping = BTreeMap::new();
+    let mut event_mapping = BTreeMap::new();
     let center_label: char = '1'; // label chars
     let mut last_char: char = '1'; // label chars
     let mut friends_labels = Vec::new();
@@ -118,7 +118,7 @@ pub fn friendship(
                 _ => {}
             }
 
-            final_mapping.insert(next_char, final_vec);
+            event_mapping.insert(next_char, (final_vec, Event::transition(dur.clone())));
             continue;
         }
 
@@ -197,7 +197,8 @@ pub fn friendship(
                             _ => {}
                         }
 
-                        final_mapping.insert(center_label, final_vec);
+                        event_mapping
+                            .insert(center_label, (final_vec, Event::transition(dur.clone())));
                     }
                     continue;
                 }
@@ -218,8 +219,6 @@ pub fn friendship(
         }
     }
 
-    let mut duration_mapping = HashMap::new();
-
     let pfa = if !keep_root {
         // first of all check if we have enough friends events
         let needed_friends = friends_labels.len() % 2;
@@ -229,8 +228,8 @@ pub fn friendship(
                 let next_char: char = std::char::from_u32(last_char as u32 + 1).unwrap();
                 last_char = next_char;
                 friends_labels.push(next_char);
-                let repetition = final_mapping.get(&last_found).unwrap().clone();
-                final_mapping.insert(next_char, repetition);
+                let repetition = event_mapping.get(&last_found).unwrap().clone();
+                event_mapping.insert(next_char, repetition);
             }
         }
 
@@ -244,11 +243,6 @@ pub fn friendship(
 
         // rules to collect ...
         let mut rules = Vec::new();
-        let mut dur_ev = Event::with_name("transition".to_string());
-        dur_ev.params.insert(
-            SynthParameterLabel::Duration.into(),
-            ParameterValue::Scalar(dur.clone()),
-        );
 
         let mut friends_iter = friends_labels.iter();
 
@@ -341,12 +335,6 @@ pub fn friendship(
                             });
                         }
                     }
-
-                    //println!("push rule {} -> {}", label_b, center_label);
-
-                    duration_mapping.insert((center_label, *label_a), dur_ev.clone());
-                    duration_mapping.insert((*label_a, *label_b), dur_ev.clone());
-                    duration_mapping.insert((*label_b, center_label), dur_ev.clone());
                 }
             }
         }
@@ -373,9 +361,8 @@ pub fn friendship(
         root_generator: MarkovSequenceGenerator {
             name,
             generator: pfa,
-            event_mapping: final_mapping,
+            event_mapping,
             label_mapping: None,
-            duration_mapping,
             modified: true,
             symbol_ages: HashMap::new(),
             default_duration: dur.static_val as u64,

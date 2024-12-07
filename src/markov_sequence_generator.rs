@@ -26,10 +26,11 @@ impl Rule {
 pub struct MarkovSequenceGenerator {
     pub name: String,
     pub generator: pfa::Pfa<char>,
-    pub event_mapping: BTreeMap<char, Vec<SourceEvent>>,
+    // sound event, duration
+    pub event_mapping: BTreeMap<char, (Vec<SourceEvent>, Event)>,
     // map the internal chars to more human-readable labels ...
     pub label_mapping: Option<BTreeMap<char, String>>,
-    pub duration_mapping: HashMap<(char, char), Event>,
+
     pub modified: bool,
     pub symbol_ages: HashMap<char, u64>,
     pub default_duration: u64,
@@ -56,7 +57,7 @@ impl MarkovSequenceGenerator {
             // increment symbol age ...
             *self.symbol_ages.entry(*last_symbol).or_insert(0) += 1;
             // get static events ...
-            if let Some(events) = self.event_mapping.get_mut(last_symbol) {
+            if let Some((events, _)) = self.event_mapping.get_mut(last_symbol) {
                 for e in events.iter_mut() {
                     interpretable_events.push(match e {
                         SourceEvent::Sound(e) => InterpretableEvent::Sound(e.get_static(globals)),
@@ -93,10 +94,7 @@ impl MarkovSequenceGenerator {
         if let Some(trans) = &self.last_transition {
             self.last_symbol = Some(trans.last_symbol);
             //println!("last sym: {}", trans.last_symbol);
-            if let Some(dur) = self
-                .duration_mapping
-                .get_mut(&(trans.last_symbol, trans.next_symbol))
-            {
+            if let Some((_, dur)) = self.event_mapping.get_mut(&trans.last_symbol) {
                 dur.get_static(globals)
             } else {
                 let mut t = Event::with_name("transition".to_string()).get_static(globals);

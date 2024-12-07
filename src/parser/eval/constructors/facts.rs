@@ -116,8 +116,12 @@ pub fn facts(
     // assemble rules and mappings //
     /////////////////////////////////
 
-    let mut event_mapping = BTreeMap::<char, Vec<SourceEvent>>::new();
-    let mut duration_mapping = HashMap::new();
+    let mut event_mapping = BTreeMap::<char, (Vec<SourceEvent>, Event)>::new();
+    let mut dur_ev = Event::with_name("transition".to_string());
+    dur_ev.params.insert(
+        SynthParameterLabel::Duration.into(),
+        ParameterValue::Scalar(dur.clone()),
+    );
 
     let pfa = if !keep_root {
         // generated ids
@@ -129,7 +133,7 @@ pub fn facts(
         let len = ev_vecs.len() - 1;
 
         for (count, ev) in ev_vecs.drain(..).enumerate() {
-            event_mapping.insert(last_char, ev);
+            event_mapping.insert(last_char, (ev, dur_ev.clone()));
 
             if count < len {
                 let next_char: char = std::char::from_u32(last_char as u32 + 1).unwrap();
@@ -146,17 +150,9 @@ pub fn facts(
                     probability: 1.0,
                 });
 
-                duration_mapping.insert((last_char, next_char), dur_ev);
-
                 last_char = next_char;
             }
         }
-
-        let mut dur_ev = Event::with_name("transition".to_string());
-        dur_ev.params.insert(
-            SynthParameterLabel::Duration.into(),
-            ParameterValue::Scalar(dur.clone()),
-        );
 
         // close the loop
         rules.push(Rule {
@@ -164,8 +160,6 @@ pub fn facts(
             symbol: first_char,
             probability: 1.0,
         });
-
-        duration_mapping.insert((last_char, first_char), dur_ev);
 
         let mut tmp = Pfa::<char>::infer_from_rules(&mut rules, true);
 
@@ -190,7 +184,6 @@ pub fn facts(
             name,
             generator: pfa,
             event_mapping,
-            duration_mapping,
             label_mapping: None,
             modified: true,
             symbol_ages: HashMap::new(),

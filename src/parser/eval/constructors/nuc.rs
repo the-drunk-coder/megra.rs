@@ -33,8 +33,8 @@ pub fn nuc(
         bail!("nuc - missing name");
     };
 
-    let mut event_mapping = BTreeMap::<char, Vec<SourceEvent>>::new();
-    let mut duration_mapping = HashMap::<(char, char), Event>::new();
+    let mut event_mapping = BTreeMap::<char, (Vec<SourceEvent>, Event)>::new();
+
     let mut rules = Vec::new();
     let mut time_shift = 0;
 
@@ -108,14 +108,14 @@ pub fn nuc(
 
     // only re-generate if necessary ...
     let pfa = if !keep_root {
-        event_mapping.insert('a', ev_vec);
-
         let mut dur_ev = Event::with_name("transition".to_string());
         dur_ev.params.insert(
             SynthParameterLabel::Duration.into(),
             ParameterValue::Scalar(dur.clone()),
         );
-        duration_mapping.insert(('a', 'a'), dur_ev);
+
+        event_mapping.insert('a', (ev_vec, dur_ev));
+
         // one rule to rule them all
         rules.push(Rule {
             source: vec!['a'],
@@ -138,7 +138,6 @@ pub fn nuc(
             generator: pfa,
             label_mapping: None,
             event_mapping,
-            duration_mapping,
             modified: true,
             symbol_ages: HashMap::new(),
             default_duration: dur.static_val as u64,

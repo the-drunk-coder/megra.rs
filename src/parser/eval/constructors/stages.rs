@@ -135,25 +135,26 @@ pub fn stages(
     // assemble rules and mappings //
     /////////////////////////////////
 
-    let mut event_mapping = BTreeMap::<char, Vec<SourceEvent>>::new();
-    let mut duration_mapping = HashMap::new();
+    let mut event_mapping = BTreeMap::<char, (Vec<SourceEvent>, Event)>::new();
 
     let pfa = if !keep_root {
         let mut last_char: char = '1'; // label chars
         let mut labels = Vec::new();
+
+        let mut dur_ev = Event::with_name("transition".to_string());
+        dur_ev.params.insert(
+            SynthParameterLabel::Duration.into(),
+            ParameterValue::Scalar(dur.clone()),
+        );
+
         for ev in collected_evs.drain(..) {
-            event_mapping.insert(last_char, vec![ev]);
+            event_mapping.insert(last_char, (vec![ev], dur_ev.clone()));
             labels.push(vec![last_char]);
             last_char = std::char::from_u32(last_char as u32 + 1).unwrap();
         }
 
         // rules to collect ...
         let mut rules = Vec::new();
-        let mut dur_ev = Event::with_name("transition".to_string());
-        dur_ev.params.insert(
-            SynthParameterLabel::Duration.into(),
-            ParameterValue::Scalar(dur.clone()),
-        );
 
         if labels.len() == 1 {
             rules.push(Rule {
@@ -161,7 +162,6 @@ pub fn stages(
                 symbol: labels[0][0],
                 probability: 1.0,
             });
-            duration_mapping.insert((labels[0][0], labels[0][0]), dur_ev.clone());
         } else if labels.len() == 2 {
             rules.push(Rule {
                 source: labels[0].clone(),
@@ -183,10 +183,6 @@ pub fn stages(
                 symbol: labels[0][0],
                 probability: pnext,
             });
-            duration_mapping.insert((labels[0][0], labels[0][0]), dur_ev.clone());
-            duration_mapping.insert((labels[0][0], labels[1][0]), dur_ev.clone());
-            duration_mapping.insert((labels[1][0], labels[0][0]), dur_ev.clone());
-            duration_mapping.insert((labels[1][0], labels[1][0]), dur_ev.clone());
         } else {
             for (i, _) in labels.iter().enumerate() {
                 if i == 0 {
@@ -212,13 +208,7 @@ pub fn stages(
                             symbol: labels.last().unwrap()[0], // if labels are empty this shouldn't be reached
                             probability: pnext,
                         });
-
-                        duration_mapping
-                            .insert((labels[i][0], labels.last().unwrap()[0]), dur_ev.clone());
                     }
-
-                    duration_mapping.insert((labels[i][0], labels[i][0]), dur_ev.clone());
-                    duration_mapping.insert((labels[i][0], labels[i + 1][0]), dur_ev.clone());
                 } else if i == labels.len() - 1 {
                     rules.push(Rule {
                         source: labels[i].clone(),
@@ -242,12 +232,7 @@ pub fn stages(
                             symbol: labels.first().unwrap()[0], // if labels are empty this shouldn't be reached
                             probability: pnext,
                         });
-                        duration_mapping
-                            .insert((labels[i][0], labels.first().unwrap()[0]), dur_ev.clone());
                     }
-
-                    duration_mapping.insert((labels[i][0], labels[i][0]), dur_ev.clone());
-                    duration_mapping.insert((labels[i][0], labels[i - 1][0]), dur_ev.clone());
                 } else {
                     rules.push(Rule {
                         source: labels[i].clone(),
@@ -264,9 +249,6 @@ pub fn stages(
                         symbol: labels[i - 1][0],
                         probability: pprev,
                     });
-                    duration_mapping.insert((labels[i][0], labels[i][0]), dur_ev.clone());
-                    duration_mapping.insert((labels[i][0], labels[i + 1][0]), dur_ev.clone());
-                    duration_mapping.insert((labels[i][0], labels[i - 1][0]), dur_ev.clone());
                 }
             }
         }
@@ -294,7 +276,6 @@ pub fn stages(
             name,
             generator: pfa,
             event_mapping,
-            duration_mapping,
             label_mapping: None,
             modified: true,
             symbol_ages: HashMap::new(),

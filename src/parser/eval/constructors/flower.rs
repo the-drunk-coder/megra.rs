@@ -45,7 +45,7 @@ pub fn flower(
     let mut collected_mapping = HashMap::<char, Vec<SourceEvent>>::new();
     let mut cur_key: String = "".to_string();
 
-    let mut final_mapping = BTreeMap::new();
+    let mut event_mapping = BTreeMap::new();
     let pistil_label: char = 'a'; // label chars
     let mut last_char: char = 'a'; // label chars
     let mut petal_labels = Vec::new();
@@ -120,7 +120,7 @@ pub fn flower(
                 _ => {}
             }
 
-            final_mapping.insert(next_char, final_vec);
+            event_mapping.insert(next_char, (final_vec, Event::transition(dur.clone())));
             continue;
         }
 
@@ -180,7 +180,8 @@ pub fn flower(
                             _ => {}
                         }
 
-                        final_mapping.insert(pistil_label, final_vec);
+                        event_mapping
+                            .insert(pistil_label, (final_vec, Event::transition(dur.clone())));
                     }
                     continue;
                 }
@@ -234,8 +235,8 @@ pub fn flower(
                 let next_char: char = std::char::from_u32(last_char as u32 + 1).unwrap();
                 last_char = next_char;
                 petal_labels.push(next_char);
-                let repetition = final_mapping.get(&last_found).unwrap().clone();
-                final_mapping.insert(next_char, repetition);
+                let repetition = event_mapping.get(&last_found).unwrap().clone();
+                event_mapping.insert(next_char, repetition);
             }
         }
 
@@ -382,8 +383,7 @@ pub fn flower(
         root_generator: MarkovSequenceGenerator {
             name,
             generator: pfa,
-            event_mapping: final_mapping,
-            duration_mapping,
+            event_mapping,
             label_mapping: None,
             modified: true,
             symbol_ages: HashMap::new(),
