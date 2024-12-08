@@ -1,4 +1,5 @@
 use crate::event::{Event, InterpretableEvent, SourceEvent, StaticEvent};
+use crate::parameter::DynVal;
 use crate::GlobalVariables;
 use ruffbox_synth::building_blocks::{SynthParameterLabel, SynthParameterValue};
 use std::collections::{BTreeMap, HashMap};
@@ -22,19 +23,48 @@ impl Rule {
     }
 }
 
+/*
+
+about the time model:
+
+An "event" is a sound- or control event AND the duration to the following
+event.
+
+then there's "override" durations, i.e. if you want to specify a separate duration
+after a certain number of repetitions to the next symbol
+
+*/
+
 #[derive(Clone)]
 pub struct MarkovSequenceGenerator {
+    // the name of this generator
     pub name: String,
+
+    // the inner probabilistic finite automaton
     pub generator: pfa::Pfa<char>,
-    // sound event, duration
+
+    // an event, in this context, is a sound or control event and the duration
+    // to the next event ...
     pub event_mapping: BTreeMap<char, (Vec<SourceEvent>, Event)>,
+
     // map the internal chars to more human-readable labels ...
     pub label_mapping: Option<BTreeMap<char, String>>,
 
+    // whether this generator has been modified
     pub modified: bool,
+
+    // number of evaluations for each symbol, mostly important
+    // for the lifemodeling algorithm
     pub symbol_ages: HashMap<char, u64>,
+
+    // the duration to be used when no other duration
+    // specified
     pub default_duration: u64,
+
+    // the last transition
     pub last_transition: Option<pfa::PfaQueryResult<char>>,
+
+    // the last emitted symbol
     pub last_symbol: Option<char>,
 }
 
@@ -53,9 +83,9 @@ impl MarkovSequenceGenerator {
         let mut interpretable_events = Vec::new();
 
         if let Some(last_symbol) = &self.last_symbol {
-            //println!("cur sym EFFECTIVE: {}", last_symbol);
             // increment symbol age ...
             *self.symbol_ages.entry(*last_symbol).or_insert(0) += 1;
+
             // get static events ...
             if let Some((events, _)) = self.event_mapping.get_mut(last_symbol) {
                 for e in events.iter_mut() {
@@ -97,22 +127,13 @@ impl MarkovSequenceGenerator {
             if let Some((_, dur)) = self.event_mapping.get_mut(&trans.last_symbol) {
                 dur.get_static(globals)
             } else {
-                let mut t = Event::with_name("transition".to_string()).get_static(globals);
-                t.params.insert(
-                    SynthParameterLabel::Duration.into(),
-                    SynthParameterValue::ScalarF32(self.default_duration as f32),
-                );
-                t
+                Event::transition(DynVal::with_value(self.default_duration as f32))
+                    .get_static(globals)
             }
         } else {
             self.last_symbol = tmp_next;
             // these double else blocks doing the same thing sometimes make rust ugly
-            let mut t = Event::with_name("transition".to_string()).get_static(globals);
-            t.params.insert(
-                SynthParameterLabel::Duration.into(),
-                SynthParameterValue::ScalarF32(self.default_duration as f32),
-            );
-            t
+            Event::transition(DynVal::with_value(self.default_duration as f32)).get_static(globals)
         }
     }
 
