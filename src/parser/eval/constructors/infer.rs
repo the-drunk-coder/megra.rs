@@ -7,6 +7,7 @@ use crate::parser::eval::resolver::resolve_globals;
 
 use anyhow::bail;
 use anyhow::Result;
+use chrono::Duration;
 use ruffbox_synth::building_blocks::SynthParameterLabel;
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::sync;
@@ -105,6 +106,7 @@ pub fn infer(
     };
 
     let mut event_mapping = BTreeMap::<char, (Vec<SourceEvent>, Event)>::new();
+    let mut override_durations = BTreeMap::new();
 
     let mut rules = Vec::new();
 
@@ -172,6 +174,10 @@ pub fn infer(
 
         if collect_rules {
             if let EvaluatedExpr::Typed(TypedEntity::Rule(s)) = c {
+                override_durations.insert(
+                    (s.source.clone(), s.symbol),
+                    Event::transition(DynVal::with_value(s.duration as f32)),
+                );
                 rules.push(s.to_pfa_rule());
                 continue;
             } else {
@@ -231,12 +237,15 @@ pub fn infer(
     let mut id_tags = BTreeSet::new();
     id_tags.insert(name.clone());
 
+    println!("{override_durations:#?}");
+
     Ok(EvaluatedExpr::Typed(TypedEntity::Generator(Generator {
         id_tags,
         root_generator: MarkovSequenceGenerator {
             name,
             generator: pfa, // will be empty if we intend on keeping the root generator
             event_mapping,
+            override_durations: Some(override_durations),
             label_mapping: None,
             modified: true,
             symbol_ages: HashMap::new(),

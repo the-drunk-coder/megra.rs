@@ -382,6 +382,7 @@ pub fn cyc(
             generator: pfa,
             event_mapping,
             label_mapping: None,
+            override_durations: None,
             modified: true,
             symbol_ages: HashMap::new(),
             default_duration: (dur.static_val / num_events as f32) as u64,

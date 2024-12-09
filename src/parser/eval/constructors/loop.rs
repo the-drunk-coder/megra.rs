@@ -394,6 +394,7 @@ pub fn a_loop(
             generator: pfa,
             event_mapping,
             label_mapping: None,
+            override_durations: None,
             modified: true,
             symbol_ages: HashMap::new(),
             default_duration: dur.static_val as u64,

@@ -137,6 +137,7 @@ pub fn nuc(
             name,
             generator: pfa,
             label_mapping: None,
+            override_durations: None,
             event_mapping,
             modified: true,
             symbol_ages: HashMap::new(),

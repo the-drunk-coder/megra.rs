@@ -382,6 +382,7 @@ pub fn learn(
             generator: pfa,
             event_mapping: char_event_mapping,
             label_mapping,
+            override_durations: None,
             modified: true,
             symbol_ages: HashMap::new(),
             default_duration: dur.static_val as u64,

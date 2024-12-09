@@ -213,6 +213,7 @@ pub fn vals(
             generator: pfa,
             label_mapping: None,
             event_mapping,
+            override_durations: None,
             modified: true,
             symbol_ages: HashMap::new(),
             default_duration: dur.static_val as u64,

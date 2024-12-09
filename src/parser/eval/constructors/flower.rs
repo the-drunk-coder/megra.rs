@@ -384,6 +384,7 @@ pub fn flower(
             name,
             generator: pfa,
             event_mapping,
+            override_durations: None,
             label_mapping: None,
             modified: true,
             symbol_ages: HashMap::new(),

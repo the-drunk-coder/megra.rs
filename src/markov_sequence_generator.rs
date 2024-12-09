@@ -3,7 +3,7 @@ use crate::parameter::DynVal;
 use crate::GlobalVariables;
 use ruffbox_synth::building_blocks::{SynthParameterLabel, SynthParameterValue};
 use std::collections::{BTreeMap, HashMap};
-use vom_rs::pfa;
+use vom_rs::pfa::{self, Label};
 
 #[derive(Clone, Debug)]
 pub struct Rule {
@@ -33,6 +33,14 @@ event.
 then there's "override" durations, i.e. if you want to specify a separate duration
 after a certain number of repetitions to the next symbol
 
+i.e. assuming the duration after event 'a is 200 ms, but after a few repetitions
+you want it to be 400 ms to state 'b,
+
+then the pseudo-rules would be
+
+a    --- 200ms ---> x
+aaaa --- 400ms ---> b
+
 */
 
 #[derive(Clone)]
@@ -46,6 +54,10 @@ pub struct MarkovSequenceGenerator {
     // an event, in this context, is a sound or control event and the duration
     // to the next event ...
     pub event_mapping: BTreeMap<char, (Vec<SourceEvent>, Event)>,
+
+    // override durations for certain states ...
+    // optional because few generators use it ...
+    pub override_durations: Option<BTreeMap<(Label<char>, char), Event>>,
 
     // map the internal chars to more human-readable labels ...
     pub label_mapping: Option<BTreeMap<char, String>>,
@@ -111,28 +123,34 @@ impl MarkovSequenceGenerator {
     }
 
     pub fn current_transition(&mut self, globals: &std::sync::Arc<GlobalVariables>) -> StaticEvent {
-        // keep in case there's no next transition because
-        // the generator has reached it's end ...
-        let tmp_next = if self.last_transition.is_some() {
-            Some(self.last_transition.as_ref().unwrap().next_symbol)
-        } else {
-            None
-        };
         // advance pfa ...
         self.last_transition = self.generator.next_transition();
-        //println!("cur trans");
+
+        let mut dur_ev = None;
+
         if let Some(trans) = &self.last_transition {
             self.last_symbol = Some(trans.last_symbol);
-            //println!("last sym: {}", trans.last_symbol);
-            if let Some((_, dur)) = self.event_mapping.get_mut(&trans.last_symbol) {
-                dur.get_static(globals)
-            } else {
-                Event::transition(DynVal::with_value(self.default_duration as f32))
-                    .get_static(globals)
+            println!(
+                "LAST state {:#?} sym {:#?} CUR STATE {:#?} NEXT {:?}",
+                trans.last_state, self.last_symbol, trans.current_state, trans.next_symbol
+            );
+            // if there is an override duration for a certain state/symbol combo, use that one ...
+            if let Some(overrides) = self.override_durations.as_mut() {
+                if let Some(ev) = overrides.get_mut(&(trans.last_state.clone(), trans.next_symbol))
+                {
+                    dur_ev = Some(ev.get_static(globals));
+                    println!("FOUND OVERRIDE {dur_ev:#?}");
+                }
+            } else if let Some((_, dur)) = self.event_mapping.get_mut(&trans.last_symbol) {
+                // otherwise, use the duration associated with the event ...
+                dur_ev = Some(dur.get_static(globals))
             }
+        }
+
+        // if nothing could be found at all, use the default ...
+        if let Some(ev) = dur_ev {
+            ev
         } else {
-            self.last_symbol = tmp_next;
-            // these double else blocks doing the same thing sometimes make rust ugly
             Event::transition(DynVal::with_value(self.default_duration as f32)).get_static(globals)
         }
     }
