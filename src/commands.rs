@@ -602,12 +602,14 @@ pub fn step_part<const BUFSIZE: usize, const NCHAN: usize>(
                     session.sample_set.clone(),
                     session.output_mode,
                 );
+
                 let mut current_events = gen.current_events(
                     &session.globals,
                     &session.functions,
                     session.sample_set.clone(),
                     session.output_mode,
                 );
+
                 for ev in current_events.drain(..) {
                     match ev {
                         InterpretableEvent::Control(c) => control_events.push(c),
@@ -616,12 +618,6 @@ pub fn step_part<const BUFSIZE: usize, const NCHAN: usize>(
                 }
             }
         } else if let TypedEntity::Generator(ref mut gen) = thing.value_mut() {
-            gen.current_transition(
-                &session.globals,
-                &session.functions,
-                session.sample_set.clone(),
-                session.output_mode,
-            );
             if session
                 .osc_client
                 .vis_connected
@@ -640,6 +636,13 @@ pub fn step_part<const BUFSIZE: usize, const NCHAN: usize>(
                     }
                 }
             };
+            gen.current_transition(
+                &session.globals,
+                &session.functions,
+                session.sample_set.clone(),
+                session.output_mode,
+            );
+
             let mut current_events = gen.current_events(
                 &session.globals,
                 &session.functions,
