@@ -1,3 +1,4 @@
+use crate::duration_tree::{find_longest_suffix_duration_with_symbol, DurationTreeNode};
 use crate::event::{Event, InterpretableEvent, SourceEvent, StaticEvent};
 use crate::parameter::DynVal;
 use crate::GlobalVariables;
@@ -57,7 +58,7 @@ pub struct MarkovSequenceGenerator {
 
     // override durations for certain states ...
     // optional because few generators use it ...
-    pub override_durations: Option<BTreeMap<(Label<char>, char), Event>>,
+    pub override_durations: Option<DurationTreeNode<char, u64>>,
 
     // map the internal chars to more human-readable labels ...
     pub label_mapping: Option<BTreeMap<char, String>>,
@@ -136,9 +137,13 @@ impl MarkovSequenceGenerator {
             );
             // if there is an override duration for a certain state/symbol combo, use that one ...
             if let Some(overrides) = self.override_durations.as_mut() {
-                if let Some(ev) = overrides.get_mut(&(trans.last_state.clone(), trans.next_symbol))
-                {
-                    dur_ev = Some(ev.get_static(globals));
+                if let Some(ev) = find_longest_suffix_duration_with_symbol(
+                    overrides,
+                    &trans.last_state,
+                    &trans.last_symbol,
+                ) {
+                    dur_ev =
+                        Some(Event::transition(DynVal::with_value(ev as f32)).get_static(globals));
                     println!("FOUND OVERRIDE {dur_ev:#?}");
                 }
             } else if let Some((_, dur)) = self.event_mapping.get_mut(&trans.last_symbol) {

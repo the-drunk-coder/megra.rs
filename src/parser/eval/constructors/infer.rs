@@ -1,4 +1,5 @@
 use crate::builtin_types::*;
+use crate::duration_tree::{add_leaf, DurationTreeNode};
 use crate::event::*;
 use crate::generator::Generator;
 use crate::markov_sequence_generator::{MarkovSequenceGenerator, Rule};
@@ -7,7 +8,6 @@ use crate::parser::eval::resolver::resolve_globals;
 
 use anyhow::bail;
 use anyhow::Result;
-use chrono::Duration;
 use ruffbox_synth::building_blocks::SynthParameterLabel;
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::sync;
@@ -106,7 +106,7 @@ pub fn infer(
     };
 
     let mut event_mapping = BTreeMap::<char, (Vec<SourceEvent>, Event)>::new();
-    let mut override_durations = BTreeMap::new();
+    let mut override_durations = DurationTreeNode::new(&vec![], None);
 
     let mut rules = Vec::new();
 
@@ -174,10 +174,11 @@ pub fn infer(
 
         if collect_rules {
             if let EvaluatedExpr::Typed(TypedEntity::Rule(s)) = c {
-                override_durations.insert(
-                    (s.source.clone(), s.symbol),
-                    Event::transition(DynVal::with_value(s.duration as f32)),
-                );
+                let mut label = s.source.clone();
+                label.push(s.symbol);
+
+                add_leaf(&mut override_durations, &label, Some(s.duration));
+
                 rules.push(s.to_pfa_rule());
                 continue;
             } else {
@@ -236,8 +237,6 @@ pub fn infer(
 
     let mut id_tags = BTreeSet::new();
     id_tags.insert(name.clone());
-
-    println!("{override_durations:#?}");
 
     Ok(EvaluatedExpr::Typed(TypedEntity::Generator(Generator {
         id_tags,

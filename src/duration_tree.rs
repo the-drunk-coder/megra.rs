@@ -5,6 +5,7 @@ use std::{collections::HashMap, fmt::Debug, hash::Hash};
  * when inferring from rules ...
  **/
 
+#[derive(Clone)]
 pub struct DurationTreeNode<T: Eq + Hash + Copy + Debug, E: Clone> {
     pub label: Vec<T>,
     pub children: HashMap<T, DurationTreeNode<T, E>>,
@@ -12,7 +13,7 @@ pub struct DurationTreeNode<T: Eq + Hash + Copy + Debug, E: Clone> {
 }
 
 impl<T: Eq + Hash + Copy + Debug, E: Clone> DurationTreeNode<T, E> {
-    fn new(label: &[T], duration: Option<E>) -> Self {
+    pub fn new(label: &[T], duration: Option<E>) -> Self {
         DurationTreeNode {
             label: label.to_vec(),
             children: HashMap::new(),
@@ -20,7 +21,7 @@ impl<T: Eq + Hash + Copy + Debug, E: Clone> DurationTreeNode<T, E> {
         }
     }
 
-    fn get_or_insert_child(
+    pub fn get_or_insert_child(
         &mut self,
         key: T,
         label: &[T],
