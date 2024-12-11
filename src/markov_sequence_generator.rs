@@ -124,6 +124,14 @@ impl MarkovSequenceGenerator {
     }
 
     pub fn current_transition(&mut self, globals: &std::sync::Arc<GlobalVariables>) -> StaticEvent {
+        // keep in case there's no next transition because
+        // the generator has reached it's end ...
+        let tmp_next = if self.last_transition.is_some() {
+            Some(self.last_transition.as_ref().unwrap().next_symbol)
+        } else {
+            None
+        };
+
         // advance pfa ...
         self.last_transition = self.generator.next_transition();
 
@@ -131,25 +139,23 @@ impl MarkovSequenceGenerator {
 
         if let Some(trans) = &self.last_transition {
             self.last_symbol = Some(trans.last_symbol);
-            println!(
-                "LAST state {:#?} sym {:#?} CUR STATE {:#?} NEXT {:?}",
-                trans.last_state, self.last_symbol, trans.current_state, trans.next_symbol
-            );
+
             // if there is an override duration for a certain state/symbol combo, use that one ...
             if let Some(overrides) = self.override_durations.as_mut() {
                 if let Some(ev) = find_longest_suffix_duration_with_symbol(
                     overrides,
                     &trans.last_state,
-                    &trans.last_symbol,
+                    &trans.next_symbol,
                 ) {
                     dur_ev =
                         Some(Event::transition(DynVal::with_value(ev as f32)).get_static(globals));
-                    println!("FOUND OVERRIDE {dur_ev:#?}");
                 }
             } else if let Some((_, dur)) = self.event_mapping.get_mut(&trans.last_symbol) {
                 // otherwise, use the duration associated with the event ...
                 dur_ev = Some(dur.get_static(globals))
             }
+        } else {
+            self.last_symbol = tmp_next
         }
 
         // if nothing could be found at all, use the default ...
