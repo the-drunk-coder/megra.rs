@@ -11,3 +11,5 @@
 * Internals: better duration handling for `infer` (duration suffix trees)
 * Internals: slightly different event/duration mapping (a symbol now refers to event+duration)
 * Visualizer: correct off-by-one-state error
+* Language: several ways to use different durations in `learn`
+* Bugfix: local variables are again resolved for midi and osc
