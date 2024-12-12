@@ -49,6 +49,9 @@ pub fn concat(
                 Comparable::Int64(i) => {
                     accum.push_str(&i.to_string());
                 }
+                Comparable::UInt128(i) => {
+                    accum.push_str(&i.to_string());
+                }
                 Comparable::String(s) => {
                     accum.push_str(&s);
                 }

@@ -285,7 +285,19 @@ pub fn interpret<const BUFSIZE: usize, const NCHAN: usize>(
             interpret_command(c, &session, base_dir);
         }
         EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f))) => {
-            println!("a number: {f}")
+            println!("an f32 number: {f}")
+        }
+        EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Double(f))) => {
+            println!("an f64 number: {f}")
+        }
+        EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::UInt128(f))) => {
+            println!("a u128 number: {f}")
+        }
+        EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Int32(f))) => {
+            println!("a i32 number: {f}")
+        }
+        EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Int64(f))) => {
+            println!("a i64 number: {f}")
         }
         EvaluatedExpr::Typed(TypedEntity::LazyArithmetic(l)) => {
             println!("a lazy arithmetic {l:?}")

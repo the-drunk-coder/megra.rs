@@ -25,6 +25,7 @@ pub enum Comparable {
     Double(f64),
     Int32(i32),
     Int64(i64),
+    UInt128(u128),
     String(String),
     Symbol(String),
     Character(char),

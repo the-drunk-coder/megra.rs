@@ -428,6 +428,7 @@ pub fn define_standard_library() -> FunctionMap {
         
     // types for osc and other stuff
     standard_library.std_lib.insert("f64".to_string(), eval::types::double);
+    standard_library.std_lib.insert("f32".to_string(), eval::types::float);
     standard_library.std_lib.insert("i32".to_string(), eval::types::int);
     standard_library.std_lib.insert("i64".to_string(), eval::types::long);
     standard_library.std_lib.insert("pair".to_string(), eval::types::pair);
@@ -437,6 +438,9 @@ pub fn define_standard_library() -> FunctionMap {
     standard_library.std_lib.insert("ev-param".to_string(), eval::event_getters::event_param);
     standard_library.std_lib.insert("ev-tag".to_string(), eval::event_getters::event_tag);
     standard_library.std_lib.insert("ev-name".to_string(), eval::event_getters::event_name);
+
+    // misc
+    standard_library.std_lib.insert("now".to_string(), eval::now::now);
 
     standard_library
 }

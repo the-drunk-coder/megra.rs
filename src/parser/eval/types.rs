@@ -72,6 +72,40 @@ pub fn double(
     }
 }
 
+pub fn float(
+    _: &FunctionMap,
+    tail: &mut Vec<EvaluatedExpr>,
+    _: &sync::Arc<GlobalVariables>,
+    _: SampleAndWavematrixSet,
+    _: OutputMode,
+) -> Result<EvaluatedExpr> {
+    let mut tail_drain = tail.drain(..);
+    tail_drain.next(); // don't need the function name
+
+    if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(x))) = tail_drain.next() {
+        match x {
+            Comparable::Float(y) => Ok(EvaluatedExpr::Typed(TypedEntity::Comparable(
+                Comparable::Float(y as f32),
+            ))),
+            Comparable::Double(y) => Ok(EvaluatedExpr::Typed(TypedEntity::Comparable(
+                Comparable::Float(y as f32),
+            ))),
+            Comparable::Int32(y) => Ok(EvaluatedExpr::Typed(TypedEntity::Comparable(
+                Comparable::Float(y as f32),
+            ))),
+            Comparable::Int64(y) => Ok(EvaluatedExpr::Typed(TypedEntity::Comparable(
+                Comparable::Float(y as f32),
+            ))),
+            Comparable::UInt128(y) => Ok(EvaluatedExpr::Typed(TypedEntity::Comparable(
+                Comparable::Float(y as f32),
+            ))),
+            _ => Err(anyhow!("can't cast to float")),
+        }
+    } else {
+        Err(anyhow!("can't cast to float"))
+    }
+}
+
 pub fn to_string(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,

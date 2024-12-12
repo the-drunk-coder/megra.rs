@@ -6,7 +6,7 @@ use crate::{GlobalVariables, OutputMode, SampleAndWavematrixSet};
 
 use std::sync;
 
-use super::resolver::needs_resolve;
+use super::resolver::{needs_resolve, resolve_globals};
 
 // some simple arithmetic functions, to bring megra a bit closer to
 // a regular lisp ...
@@ -37,64 +37,307 @@ fn collect_lazy_vals(tail: &mut Vec<EvaluatedExpr>) -> Vec<LazyVal> {
 pub fn add(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
-    _: &sync::Arc<GlobalVariables>,
+    globals: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
 ) -> Result<EvaluatedExpr> {
+    resolve_globals(tail, globals);
+
     if needs_resolve(&tail[1..]) {
         return Ok(EvaluatedExpr::Typed(TypedEntity::LazyArithmetic(
             LazyArithmetic::Add(collect_lazy_vals(tail)),
         )));
     }
+    // don't need function name
+    let mut tail_drain = tail.drain(..).skip(1);
 
-    let mut tail_drain = tail.drain(..);
-    tail_drain.next(); // don't need the function name
-
-    let mut result = 0.0;
-    for n in tail_drain {
-        if let EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f))) = n {
-            result += f;
+    if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(x))) = tail_drain.next() {
+        match x {
+            Comparable::Float(mut x1) => {
+                for n in tail_drain {
+                    match n {
+                        EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(y))) => {
+                            x1 += y;
+                        }
+                        EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Double(y))) => {
+                            x1 += y as f32;
+                        }
+                        EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Int32(y))) => {
+                            x1 += y as f32;
+                        }
+                        EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Int64(y))) => {
+                            x1 += y as f32;
+                        }
+                        EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::UInt128(y))) => {
+                            x1 += y as f32;
+                        }
+                        _ => {}
+                    }
+                }
+                Ok(EvaluatedExpr::Typed(TypedEntity::Comparable(
+                    Comparable::Float(x1),
+                )))
+            }
+            Comparable::Double(mut x1) => {
+                for n in tail_drain {
+                    match n {
+                        EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(y))) => {
+                            x1 += y as f64;
+                        }
+                        EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Double(y))) => {
+                            x1 += y as f64;
+                        }
+                        EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Int32(y))) => {
+                            x1 += y as f64;
+                        }
+                        EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Int64(y))) => {
+                            x1 += y as f64;
+                        }
+                        EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::UInt128(y))) => {
+                            x1 += y as f64;
+                        }
+                        _ => {}
+                    }
+                }
+                Ok(EvaluatedExpr::Typed(TypedEntity::Comparable(
+                    Comparable::Double(x1),
+                )))
+            }
+            Comparable::Int32(mut x1) => {
+                for n in tail_drain {
+                    match n {
+                        EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(y))) => {
+                            x1 += y as i32;
+                        }
+                        EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Double(y))) => {
+                            x1 += y as i32;
+                        }
+                        EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Int32(y))) => {
+                            x1 += y as i32;
+                        }
+                        EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Int64(y))) => {
+                            x1 += y as i32;
+                        }
+                        EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::UInt128(y))) => {
+                            x1 += y as i32;
+                        }
+                        _ => {}
+                    }
+                }
+                Ok(EvaluatedExpr::Typed(TypedEntity::Comparable(
+                    Comparable::Int32(x1),
+                )))
+            }
+            Comparable::Int64(mut x1) => {
+                for n in tail_drain {
+                    match n {
+                        EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(y))) => {
+                            x1 += y as i64;
+                        }
+                        EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Double(y))) => {
+                            x1 += y as i64;
+                        }
+                        EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Int32(y))) => {
+                            x1 += y as i64;
+                        }
+                        EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Int64(y))) => {
+                            x1 += y as i64;
+                        }
+                        EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::UInt128(y))) => {
+                            x1 += y as i64;
+                        }
+                        _ => {}
+                    }
+                }
+                Ok(EvaluatedExpr::Typed(TypedEntity::Comparable(
+                    Comparable::Int64(x1),
+                )))
+            }
+            Comparable::UInt128(mut x1) => {
+                for n in tail_drain {
+                    match n {
+                        EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(y))) => {
+                            x1 += y as u128;
+                        }
+                        EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Double(y))) => {
+                            x1 += y as u128;
+                        }
+                        EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Int32(y))) => {
+                            x1 += y as u128;
+                        }
+                        EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Int64(y))) => {
+                            x1 += y as u128;
+                        }
+                        EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::UInt128(y))) => {
+                            x1 += y as u128;
+                        }
+                        _ => {}
+                    }
+                }
+                Ok(EvaluatedExpr::Typed(TypedEntity::Comparable(
+                    Comparable::UInt128(x1),
+                )))
+            }
+            _ => {
+                anyhow::bail!("can't add non-numeric types")
+            }
         }
+    } else {
+        anyhow::bail!("can't add non-numeric types")
     }
-    Ok(EvaluatedExpr::Typed(TypedEntity::Comparable(
-        Comparable::Float(result),
-    )))
 }
 
 pub fn sub(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
-    _: &sync::Arc<GlobalVariables>,
+    globals: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
 ) -> Result<EvaluatedExpr> {
+    resolve_globals(tail, globals);
     if needs_resolve(&tail[1..]) {
         return Ok(EvaluatedExpr::Typed(TypedEntity::LazyArithmetic(
             LazyArithmetic::Sub(collect_lazy_vals(tail)),
         )));
     }
 
-    let mut tail_drain = tail.drain(..);
-    tail_drain.next(); // don't need the function name
+    // don't need function name
+    let mut tail_drain = tail.drain(..).skip(1);
 
-    let mut result =
-        if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f)))) =
-            tail_drain.next()
-        {
-            f
-        } else {
-            0.0
-        };
-
-    for n in tail_drain {
-        if let EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f))) = n {
-            result -= f;
+    if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(x))) = tail_drain.next() {
+        match x {
+            Comparable::Float(mut x1) => {
+                for n in tail_drain {
+                    match n {
+                        EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(y))) => {
+                            x1 -= y;
+                        }
+                        EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Double(y))) => {
+                            x1 -= y as f32;
+                        }
+                        EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Int32(y))) => {
+                            x1 -= y as f32;
+                        }
+                        EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Int64(y))) => {
+                            x1 -= y as f32;
+                        }
+                        EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::UInt128(y))) => {
+                            x1 -= y as f32;
+                        }
+                        _ => {}
+                    }
+                }
+                Ok(EvaluatedExpr::Typed(TypedEntity::Comparable(
+                    Comparable::Float(x1),
+                )))
+            }
+            Comparable::Double(mut x1) => {
+                for n in tail_drain {
+                    match n {
+                        EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(y))) => {
+                            x1 -= y as f64;
+                        }
+                        EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Double(y))) => {
+                            x1 -= y as f64;
+                        }
+                        EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Int32(y))) => {
+                            x1 -= y as f64;
+                        }
+                        EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Int64(y))) => {
+                            x1 -= y as f64;
+                        }
+                        EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::UInt128(y))) => {
+                            x1 -= y as f64;
+                        }
+                        _ => {}
+                    }
+                }
+                Ok(EvaluatedExpr::Typed(TypedEntity::Comparable(
+                    Comparable::Double(x1),
+                )))
+            }
+            Comparable::Int32(mut x1) => {
+                for n in tail_drain {
+                    match n {
+                        EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(y))) => {
+                            x1 -= y as i32;
+                        }
+                        EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Double(y))) => {
+                            x1 -= y as i32;
+                        }
+                        EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Int32(y))) => {
+                            x1 -= y as i32;
+                        }
+                        EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Int64(y))) => {
+                            x1 -= y as i32;
+                        }
+                        EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::UInt128(y))) => {
+                            x1 -= y as i32;
+                        }
+                        _ => {}
+                    }
+                }
+                Ok(EvaluatedExpr::Typed(TypedEntity::Comparable(
+                    Comparable::Int32(x1),
+                )))
+            }
+            Comparable::Int64(mut x1) => {
+                for n in tail_drain {
+                    match n {
+                        EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(y))) => {
+                            x1 -= y as i64;
+                        }
+                        EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Double(y))) => {
+                            x1 -= y as i64;
+                        }
+                        EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Int32(y))) => {
+                            x1 -= y as i64;
+                        }
+                        EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Int64(y))) => {
+                            x1 -= y as i64;
+                        }
+                        EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::UInt128(y))) => {
+                            x1 -= y as i64;
+                        }
+                        _ => {}
+                    }
+                }
+                Ok(EvaluatedExpr::Typed(TypedEntity::Comparable(
+                    Comparable::Int64(x1),
+                )))
+            }
+            Comparable::UInt128(mut x1) => {
+                for n in tail_drain {
+                    match n {
+                        EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(y))) => {
+                            x1 -= y as u128;
+                        }
+                        EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Double(y))) => {
+                            x1 -= y as u128;
+                        }
+                        EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Int32(y))) => {
+                            x1 -= y as u128;
+                        }
+                        EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Int64(y))) => {
+                            x1 -= y as u128;
+                        }
+                        EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::UInt128(y))) => {
+                            x1 -= y as u128;
+                        }
+                        _ => {}
+                    }
+                }
+                Ok(EvaluatedExpr::Typed(TypedEntity::Comparable(
+                    Comparable::UInt128(x1),
+                )))
+            }
+            _ => {
+                anyhow::bail!("can't add non-numeric types")
+            }
         }
+    } else {
+        anyhow::bail!("can't add non-numeric types")
     }
-
-    Ok(EvaluatedExpr::Typed(TypedEntity::Comparable(
-        Comparable::Float(result),
-    )))
 }
 
 pub fn mul(
