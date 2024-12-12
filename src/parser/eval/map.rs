@@ -74,3 +74,52 @@ pub fn insert(
         Err(anyhow!("insert - can't insert {key:?} into {place:?}"))
     }
 }
+
+pub fn get(
+    _: &FunctionMap,
+    tail: &mut Vec<EvaluatedExpr>,
+    globals: &sync::Arc<GlobalVariables>,
+    _: SampleAndWavematrixSet,
+    _: OutputMode,
+) -> Result<EvaluatedExpr> {
+    let mut tail_drain = tail.drain(1..);
+
+    let place = match tail_drain.next() {
+        Some(EvaluatedExpr::Identifier(i)) => VariableId::Custom(i),
+        Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(s)))) => {
+            VariableId::Symbol(s)
+        }
+        _ => {
+            bail!("map get - invalid map identifier")
+        }
+    };
+
+    if let Some(map) = globals.get(&place) {
+        match map.value() {
+            TypedEntity::Map(hash_map) => {
+                let key = match tail_drain.next() {
+                    Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::String(s)))) => {
+                        VariableId::Custom(s)
+                    }
+                    Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(s)))) => {
+                        VariableId::Symbol(s)
+                    }
+                    _ => {
+                        bail!("map get - invalid key")
+                    }
+                };
+                if let Some(res) = hash_map.get(&key) {
+                    Ok(EvaluatedExpr::Typed(res.clone()))
+                } else {
+                    bail!("map get - can't find entry")
+                }
+            }
+
+            _ => {
+                bail!("map get - place is not a map")
+            }
+        }
+    } else {
+        bail!("map get - invalid key")
+    }
+}

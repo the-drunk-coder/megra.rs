@@ -214,6 +214,8 @@ fn is_command(word: &str) -> bool {
             | "print"
             | "concat"
             | "insert"
+            | "get"
+            | "now"
             | "push"
             | "i64"
             | "i32"
