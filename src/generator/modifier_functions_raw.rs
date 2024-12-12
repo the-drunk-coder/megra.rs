@@ -3,14 +3,14 @@ use crate::{
     event::{Event, EventOperation, SourceEvent},
     generator::TimeMod,
     markov_sequence_generator::MarkovSequenceGenerator,
-    parameter::{DynVal, ParameterValue},
+    parameter::DynVal,
     pfa_growth::*,
     pfa_reverse::*,
     GlobalVariables,
 };
 use rand::seq::SliceRandom;
 use ruffbox_synth::building_blocks::SynthParameterLabel;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 
 pub fn haste_raw(time_mods: &mut Vec<TimeMod>, v: f32, n: usize) {
     for _ in 0..n {

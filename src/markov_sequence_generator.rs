@@ -2,9 +2,8 @@ use crate::duration_tree::{find_longest_suffix_duration_with_symbol, DurationTre
 use crate::event::{Event, InterpretableEvent, SourceEvent, StaticEvent};
 use crate::parameter::DynVal;
 use crate::GlobalVariables;
-use ruffbox_synth::building_blocks::{SynthParameterLabel, SynthParameterValue};
 use std::collections::{BTreeMap, HashMap};
-use vom_rs::pfa::{self, Label};
+use vom_rs::pfa::{self};
 
 #[derive(Clone, Debug)]
 pub struct Rule {

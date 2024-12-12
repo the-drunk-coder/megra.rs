@@ -1,6 +1,5 @@
 use anyhow::{anyhow, bail, Result};
 use dashmap::DashMap;
-use eval::resolver::resolve_globals;
 use nom::{
     branch::alt,
     bytes::complete::{tag, take_while, take_while1},

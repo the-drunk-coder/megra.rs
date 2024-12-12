@@ -9,7 +9,6 @@ use crate::sample_set::SampleAndWavematrixSet;
 use crate::session::OutputMode;
 use anyhow::bail;
 use anyhow::Result;
-use ruffbox_synth::building_blocks::SynthParameterLabel;
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::sync;
 use vom_rs::pfa::{Pfa, Rule};

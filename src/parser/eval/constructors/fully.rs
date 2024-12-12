@@ -6,7 +6,6 @@ use crate::parameter::*;
 use crate::parser::eval::resolver::resolve_globals;
 use anyhow::bail;
 use anyhow::Result;
-use ruffbox_synth::building_blocks::SynthParameterLabel;
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::sync;
 use vom_rs::pfa::{Pfa, Rule};
