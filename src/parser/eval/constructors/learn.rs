@@ -38,7 +38,7 @@ pub fn learn(
 
     let mut keep_root = false;
     let mut sample: Vec<String> = Vec::new();
-    let mut event_mapping = BTreeMap::<String, Vec<SourceEvent>>::new();
+    let mut event_mapping = BTreeMap::<String, (Vec<SourceEvent>, Event)>::new();
 
     let mut collect_events = false;
     let mut bound = 3;
@@ -67,6 +67,8 @@ pub fn learn(
 
     let mut autosilence = true;
 
+    let mut last_dur = None;
+
     while let Some(c) = tail_drain.next() {
         if collect_events {
             match c {
@@ -77,7 +79,18 @@ pub fn learn(
                             longnames = true;
                         }
 
-                        event_mapping.insert(cur_key, ev_vec.clone());
+                        event_mapping.insert(
+                            cur_key,
+                            (
+                                ev_vec.clone(),
+                                Event::transition(if let Some(d) = last_dur.clone() {
+                                    d
+                                } else {
+                                    dur.clone()
+                                }),
+                            ),
+                        );
+                        last_dur = None;
                         ev_vec.clear();
                     }
                     cur_key = s.clone();
@@ -87,32 +100,79 @@ pub fn learn(
                     for x in v.clone() {
                         if let TypedEntity::Pair(key, events) = *x {
                             if let TypedEntity::Comparable(Comparable::Symbol(key_sym)) = *key {
-                                let mut unpack_evs = Vec::new();
+                                let mut unpacked_evs = Vec::new();
+                                let mut found_dur = None;
 
                                 match *events {
+                                    // single events
                                     TypedEntity::SoundEvent(ev) => {
-                                        unpack_evs.push(SourceEvent::Sound(ev));
+                                        unpacked_evs.push(SourceEvent::Sound(ev));
                                     }
                                     TypedEntity::ControlEvent(ev) => {
-                                        unpack_evs.push(SourceEvent::Control(ev));
+                                        unpacked_evs.push(SourceEvent::Control(ev));
                                     }
+                                    // chords
                                     TypedEntity::Vec(pot_ev_vec) => {
                                         for pot_ev in pot_ev_vec {
                                             match *pot_ev {
                                                 TypedEntity::SoundEvent(ev) => {
-                                                    unpack_evs.push(SourceEvent::Sound(ev));
+                                                    unpacked_evs.push(SourceEvent::Sound(ev));
                                                 }
                                                 TypedEntity::ControlEvent(ev) => {
-                                                    unpack_evs.push(SourceEvent::Control(ev));
+                                                    unpacked_evs.push(SourceEvent::Control(ev));
                                                 }
                                                 _ => {}
                                             }
                                         }
                                     }
+                                    // events plus duration
+                                    TypedEntity::Pair(pot_ev_vec, pot_dur) => {
+                                        // again, either single events or chords
+                                        match *pot_ev_vec {
+                                            TypedEntity::SoundEvent(ev) => {
+                                                unpacked_evs.push(SourceEvent::Sound(ev));
+                                            }
+                                            TypedEntity::ControlEvent(ev) => {
+                                                unpacked_evs.push(SourceEvent::Control(ev));
+                                            }
+                                            TypedEntity::Vec(inner_ev_vec) => {
+                                                for pot_ev in inner_ev_vec {
+                                                    match *pot_ev {
+                                                        TypedEntity::SoundEvent(ev) => {
+                                                            unpacked_evs
+                                                                .push(SourceEvent::Sound(ev));
+                                                        }
+                                                        TypedEntity::ControlEvent(ev) => {
+                                                            unpacked_evs
+                                                                .push(SourceEvent::Control(ev));
+                                                        }
+                                                        _ => {}
+                                                    }
+                                                }
+                                            }
+                                            _ => {}
+                                        }
+                                        match *pot_dur {
+                                            TypedEntity::Comparable(Comparable::Float(f)) => {
+                                                found_dur = Some(f);
+                                            }
+                                            _ => {}
+                                        }
+                                    }
                                     _ => {}
                                 }
-                                if !unpack_evs.is_empty() {
-                                    event_mapping.insert(key_sym, unpack_evs);
+                                if !unpacked_evs.is_empty() {
+                                    event_mapping.insert(
+                                        key_sym,
+                                        (
+                                            unpacked_evs,
+                                            Event::transition(if let Some(d) = found_dur {
+                                                DynVal::with_value(d)
+                                            } else {
+                                                dur.clone()
+                                            }),
+                                        ),
+                                    );
                                 }
                             }
                         }
@@ -128,31 +188,77 @@ pub fn learn(
                                 continue;
                             }
                         };
-                        let mut ev_vec = Vec::new();
-                        match v {
+
+                        let mut unpacked_evs = Vec::new();
+                        let mut found_dur = None;
+
+                        match v.clone() {
                             TypedEntity::Vec(v) => {
                                 for elem in v {
                                     match *elem.clone() {
                                         TypedEntity::SoundEvent(s) => {
-                                            ev_vec.push(SourceEvent::Sound(s.clone()))
+                                            unpacked_evs.push(SourceEvent::Sound(s.clone()))
                                         }
                                         TypedEntity::ControlEvent(c) => {
-                                            ev_vec.push(SourceEvent::Control(c.clone()))
+                                            unpacked_evs.push(SourceEvent::Control(c.clone()))
                                         }
                                         _ => {}
                                     }
                                 }
                             }
+                            // events plus duration
+                            TypedEntity::Pair(pot_ev_vec, pot_dur) => {
+                                // again, either single events or chords
+                                match *pot_ev_vec {
+                                    TypedEntity::SoundEvent(ev) => {
+                                        unpacked_evs.push(SourceEvent::Sound(ev));
+                                    }
+                                    TypedEntity::ControlEvent(ev) => {
+                                        unpacked_evs.push(SourceEvent::Control(ev));
+                                    }
+                                    TypedEntity::Vec(inner_ev_vec) => {
+                                        for pot_ev in inner_ev_vec {
+                                            match *pot_ev {
+                                                TypedEntity::SoundEvent(ev) => {
+                                                    unpacked_evs.push(SourceEvent::Sound(ev));
+                                                }
+                                                TypedEntity::ControlEvent(ev) => {
+                                                    unpacked_evs.push(SourceEvent::Control(ev));
+                                                }
+                                                _ => {}
+                                            }
+                                        }
+                                    }
+                                    _ => {}
+                                }
+                                match *pot_dur {
+                                    TypedEntity::Comparable(Comparable::Float(f)) => {
+                                        found_dur = Some(f);
+                                    }
+                                    _ => {}
+                                }
+                            }
                             TypedEntity::SoundEvent(s) => {
-                                ev_vec.push(SourceEvent::Sound(s.clone()))
+                                unpacked_evs.push(SourceEvent::Sound(s.clone()))
                             }
                             TypedEntity::ControlEvent(c) => {
-                                ev_vec.push(SourceEvent::Control(c.clone()))
+                                unpacked_evs.push(SourceEvent::Control(c.clone()))
                             }
                             _ => {}
                         }
-                        event_mapping.insert(key, ev_vec);
+                        event_mapping.insert(
+                            key,
+                            (
+                                unpacked_evs,
+                                Event::transition(if let Some(d) = found_dur {
+                                    DynVal::with_value(d)
+                                } else {
+                                    dur.clone()
+                                }),
+                            ),
+                        );
                     }
+                    continue;
                 }
                 EvaluatedExpr::Typed(TypedEntity::SoundEvent(e)) => {
                     ev_vec.push(SourceEvent::Sound(e));
@@ -162,10 +268,30 @@ pub fn learn(
                     ev_vec.push(SourceEvent::Control(e));
                     continue;
                 }
+                // last duration wins
+                EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f))) => {
+                    last_dur = Some(DynVal::with_value(f));
+                    continue;
+                }
+                EvaluatedExpr::Typed(TypedEntity::Parameter(d)) => {
+                    last_dur = Some(d.clone());
+                    continue;
+                }
                 _ => {
                     if !cur_key.is_empty() && !ev_vec.is_empty() {
                         //println!("found event {}", cur_key);
-                        event_mapping.insert(cur_key.clone(), ev_vec.clone());
+                        event_mapping.insert(
+                            cur_key.clone(),
+                            (
+                                ev_vec.clone(),
+                                Event::transition(if let Some(d) = last_dur.clone() {
+                                    d
+                                } else {
+                                    dur.clone()
+                                }),
+                            ),
+                        );
+                        last_dur = None
                     }
                     collect_events = false;
                     // move on below
@@ -305,7 +431,10 @@ pub fn learn(
     if autosilence {
         event_mapping.insert(
             "~".to_string(),
-            vec![SourceEvent::Sound(Event::with_name("silence".to_string()))],
+            (
+                vec![SourceEvent::Sound(Event::with_name("silence".to_string()))],
+                Event::transition(dur.clone()),
+            ),
         );
     }
 
@@ -329,7 +458,7 @@ pub fn learn(
         let mut reverse_label_mapping = BTreeMap::new();
         let mut next_char: char = '1';
         for (k, v) in event_mapping.into_iter() {
-            char_event_mapping.insert(next_char, (v, dur_ev.clone()));
+            char_event_mapping.insert(next_char, v);
             label_mapping.insert(next_char, k.clone());
             reverse_label_mapping.insert(k, next_char);
             next_char = std::char::from_u32(next_char as u32 + 1).unwrap();
@@ -345,7 +474,7 @@ pub fn learn(
         for (k, v) in event_mapping.into_iter() {
             // assume the label is not empty ...
             if let Some(c) = k.chars().next() {
-                char_event_mapping.insert(c, (v, dur_ev.clone()));
+                char_event_mapping.insert(c, v);
             }
         }
 

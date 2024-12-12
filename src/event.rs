@@ -70,7 +70,7 @@ impl fmt::Debug for ControlEvent {
 }
 
 /// This is the "latent" event, where the parameters haven't been evaluated yet.
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub enum SourceEvent {
     Sound(Event),
     Control(ControlEvent),
