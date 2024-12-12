@@ -1,10 +1,12 @@
 use anyhow::Result;
 use midir::{Ignore, MidiInput};
 
+use std::cell::RefCell;
 use std::collections::HashMap;
+use std::rc::Rc;
 
 use crate::builtin_types::Comparable;
-use crate::parser::{eval_expression, EvaluatedExpr};
+use crate::parser::{eval_expression, EvaluatedExpr, LocalVariables};
 use crate::{interpreter, Session};
 
 pub fn list_midi_input_ports() {
@@ -62,6 +64,10 @@ pub fn open_midi_input_port<const BUFSIZE: usize, const NCHAN: usize>(
                         //  println!("no midi arg available for pos arg {val}");
                         // }
                     }
+                    let locals = Rc::new(RefCell::new(LocalVariables {
+                        pos_args: local_args,
+                        rest: vec![],
+                    }));
 
                     // THIRD
                     if let Ok(fun_tail) = fun_expr
@@ -71,7 +77,7 @@ pub fn open_midi_input_port<const BUFSIZE: usize, const NCHAN: usize>(
                                 expr,
                                 &session.functions,
                                 &session.globals,
-                                None,
+                                Some(Rc::clone(&locals)),
                                 session.sample_set.clone(),
                                 session.output_mode,
                             )

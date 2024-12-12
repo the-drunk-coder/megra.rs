@@ -1,13 +1,15 @@
 use anyhow::Result;
 use rosc::{OscPacket, OscType};
 
+use std::cell::RefCell;
 use std::collections::HashMap;
 use std::net::{SocketAddrV4, UdpSocket};
+use std::rc::Rc;
 use std::str::FromStr;
 
 use crate::builtin_types::{Comparable, TypedEntity};
 use crate::interpreter;
-use crate::parser::{eval_expression, EvaluatedExpr};
+use crate::parser::{eval_expression, EvaluatedExpr, LocalVariables};
 
 use crate::session::Session;
 
@@ -84,6 +86,11 @@ impl OscReceiver {
                                     );
                                 }
 
+                                let locals = Rc::new(RefCell::new(LocalVariables {
+                                    pos_args: local_args,
+                                    rest: vec![],
+                                }));
+
                                 // THIRD
                                 if let Ok(fun_tail) = fun_expr
                                     .iter()
@@ -92,7 +99,7 @@ impl OscReceiver {
                                             expr,
                                             &session.functions,
                                             &session.globals,
-                                            None,
+                                            Some(Rc::clone(&locals)),
                                             session.sample_set.clone(),
                                             session.output_mode,
                                         )
