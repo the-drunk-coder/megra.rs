@@ -1,0 +1,110 @@
+;; Created Sunday, 2024-06-02, 10:06:52 ... good luck!
+
+;; scoreviz interface
+
+;; connect
+(osc-sender 'scoreviz "127.0.0.1:57123")
+  
+(fun send-whole (voice note)
+  (ctrl (osc-send 'scoreviz "/voice/note/add" voice note 'w)))
+  
+(fun send-note (voice note len articulation)
+  (ctrl (osc-send 'scoreviz "/voice/note/add" voice note len articulation)))
+  
+(fun set-dyn (voice dyn)
+  (ctrl (osc-send 'scoreviz "/voice/dyn" voice dyn)))
+  
+(fun set-clef (voice clef)
+  (ctrl (osc-send 'scoreviz "/voice/clef" voice clef)))
+  
+(fun set-timesignature (voice upper lower)
+  (ctrl (osc-send 'scoreviz "/voice/timesignature" voice upper lower)))
+  
+(fun set-pad (voice pad)
+  (ctrl (osc-send 'scoreviz "/voice/pad" voice pad)))
+  
+(fun set-pos (voice x y)
+  (ctrl (osc-send 'scoreviz "/voice/pos" voice x y)))
+  
+(fun set-bgcolor (voice bgcol)
+  (ctrl (osc-send 'scoreviz "/voice/bgcolor" voice bgcol)))
+  
+(fun set-label (voice label)
+  (ctrl (osc-send 'scoreviz "/voice/label" voice label)))
+  
+(fun mark-current (voice val) 
+  (ctrl (osc-send 'scoreviz "/voice/markcurrent" voice val)))
+  
+(fun num-notes (voice val) 
+  (ctrl (osc-send 'scoreviz "/voice/numnotes" voice val)))
+  
+(fun textbox (id content x y)
+  (ctrl (osc-send 'scoreviz "/textfield/put" id content x y)))
+  
+;; shorthand for textbox
+(fun tb (id content x y)
+  (ctrl (osc-send 'scoreviz "/textfield/put" id content x y)))
+
+(fun img (id ref x y)
+  (ctrl (osc-send 'scoreviz "/image/put" id ref x y)))
+
+;;define a player, will create the `to-<name>` function that 
+;;can be used with `mapper`
+(fun player (name clef)
+  (progn 
+    (osc-send 'scoreviz "/voice/clef" name clef)
+    (fun (concat "to-" name) (event)
+      (match (ev-param :note event)
+    ;; string notes currently only used for rests in this system
+    (istype 'str) (send-note 
+      name 
+      "b/4"
+      (concat (to-string (round (ev-param :dur event))) "r")
+      "none")
+    (istype 'num) (send-note 
+      name 
+      (mtovex (round (ev-param :note event))) 
+      (to-string (round (ev-param :dur event)))
+      (ev-param :articulation event))      
+    ))))	
+  
+
+;; note shorthands
+(fun c (oct dur)
+  (note (mul oct 12) dur))
+
+(fun cs (oct dur)
+  (note (add 1 (mul oct 12)) dur))
+
+(fun d (oct dur)
+  (note (add 2 (mul oct 12)) dur))
+
+(fun ds (oct dur)
+  (note (add 3 (mul oct 12)) dur))
+
+(fun e (oct dur)
+  (note (add 4 (mul oct 12)) dur))
+
+(fun f (oct dur)
+  (note (add 5 (mul oct 12)) dur))
+
+(fun fs (oct dur)
+  (note (add 6 (mul oct 12)) dur))
+
+(fun g (oct dur)
+  (note (add 7 (mul oct 12)) dur))
+
+(fun gs (oct dur)
+  (note (add 8 (mul oct 12)) dur))
+
+(fun a (oct dur)
+  (note (add 9 (mul oct 12)) dur))
+
+(fun as (oct dur)
+  (note (add 10 (mul oct 12)) dur))
+
+(fun b (oct dur)
+  (note (add 11 (mul oct 12)) dur))
+
+(fun r (dur) 
+  (note "rest" dur))
