@@ -357,6 +357,8 @@ pub fn define_standard_library() -> FunctionMap {
     standard_library.std_lib.insert("life".to_string(), eval::generator_processor::eval_lifemodel);
     standard_library.std_lib.insert("inhibit".to_string(), eval::generator_processor::eval_inhibit);
     standard_library.std_lib.insert("exhibit".to_string(), eval::generator_processor::eval_exhibit);
+    standard_library.std_lib.insert("inh".to_string(), eval::generator_processor::eval_inhibit);
+    standard_library.std_lib.insert("exh".to_string(), eval::generator_processor::eval_exhibit);
 
     // composition
     standard_library.std_lib.insert("cmp".to_string(), eval::compose::compose);

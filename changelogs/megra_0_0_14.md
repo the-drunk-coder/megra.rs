@@ -17,3 +17,4 @@
 * Language: new numeric type u128
 * Language: `now` statement to get time since unix epoch in milliseconds, as u128
 * Language: `get` for maps
+* Language: make `inh`/`inhibit` and `exh`/`exhibit` the minimalist modifiers they once were
