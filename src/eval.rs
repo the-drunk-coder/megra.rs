@@ -1,17 +1,6 @@
 use anyhow::{anyhow, bail, Result};
 use dashmap::DashMap;
-use nom::{
-    branch::alt,
-    bytes::complete::{tag, take_while, take_while1},
-    character::complete::{char, multispace0, multispace1},
-    character::{is_alphanumeric, is_newline, is_space},
-    combinator::{cut, map, map_res, recognize},
-    error::{context, ErrorKind, VerboseError, VerboseErrorKind},
-    multi::many0,
-    number::complete::float,
-    sequence::{delimited, preceded, tuple},
-    Err, IResult, Parser,
-};
+use nom::error::VerboseError;
 
 use regex::Regex;
 use std::{cell::RefCell, collections::HashMap};

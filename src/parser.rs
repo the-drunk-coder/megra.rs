@@ -1,5 +1,3 @@
-use anyhow::{anyhow, bail, Result};
-use dashmap::DashMap;
 use nom::{
     branch::alt,
     bytes::complete::{tag, take_while, take_while1},
@@ -12,16 +10,6 @@ use nom::{
     sequence::{delimited, preceded, tuple},
     Err, IResult, Parser,
 };
-
-use regex::Regex;
-use std::{cell::RefCell, collections::HashMap};
-use std::{fmt, sync};
-
-use crate::{
-    builtin_types::{Comparable, Comparator, VariableId},
-    session::SyncContext,
-};
-use crate::{Command, GlobalVariables, OutputMode, SampleAndWavematrixSet, TypedEntity};
 
 use crate::ast_types::*;
 
