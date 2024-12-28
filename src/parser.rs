@@ -23,8 +23,6 @@ use crate::{
 };
 use crate::{Command, GlobalVariables, OutputMode, SampleAndWavematrixSet, TypedEntity};
 
-pub mod eval;
-
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum ArgumentCollector {
     All, // collects all arguments to be passed on ...

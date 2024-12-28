@@ -22,6 +22,7 @@ pub mod music_theory;
 pub mod osc_client;
 pub mod parameter;
 pub mod parser;
+pub mod eval;
 pub mod pfa_growth;
 pub mod pfa_reverse;
 pub mod real_time_streaming;
