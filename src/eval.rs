@@ -681,3 +681,128 @@ pub fn parse_and_eval_from_str(
         .map_err(|e: nom::Err<VerboseError<&str>>| anyhow!("parser error - {e:#?}"))
         .and_then(|(_, exp)| eval_expression(&exp, functions, globals, None, sample_set, out_mode))
 }
+
+#[cfg(test)]
+mod tests {
+    // Note this useful idiom: importing names from outer (for mod tests) scope.
+    use super::*;
+
+    #[test]
+    fn test_parse_eval() {
+        let snippet = "(text 'tar :lvl 1.0 :global #t :relate #f :boost (bounce 0 400))";
+
+        let functions = FunctionMap::new();
+        let globals = sync::Arc::new(GlobalVariables::new());
+        let sample_set = SampleAndWavematrixSet::new();
+
+        functions
+            .std_lib
+            .insert("text".to_string(), |_, tail, _, _, _| {
+                // SYMBOLS
+                if let EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(s))) =
+                    &tail[1]
+                {
+                    assert!(s == "tar");
+                } else {
+                    panic!();
+                }
+
+                // KEYWORDS
+                if let EvaluatedExpr::Keyword(k) = &tail[2] {
+                    assert!(k == "lvl");
+                } else {
+                    panic!();
+                }
+
+                if let EvaluatedExpr::Keyword(k) = &tail[4] {
+                    assert!(k == "global");
+                } else {
+                    panic!();
+                }
+
+                if let EvaluatedExpr::Keyword(k) = &tail[6] {
+                    assert!(k == "relate");
+                } else {
+                    panic!();
+                }
+
+                if let EvaluatedExpr::Keyword(k) = &tail[8] {
+                    assert!(k == "boost");
+                } else {
+                    panic!();
+                }
+
+                // BOOLEANS
+                if let EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Boolean(b))) =
+                    &tail[5]
+                {
+                    assert!(b);
+                } else {
+                    panic!();
+                }
+
+                if let EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Boolean(b))) =
+                    &tail[7]
+                {
+                    assert!(!b);
+                } else {
+                    panic!();
+                }
+
+                // FLOA
+                if let EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f))) =
+                    &tail[3]
+                {
+                    assert!(*f == 1.0);
+                } else {
+                    panic!();
+                }
+
+                Ok(EvaluatedExpr::Typed(TypedEntity::Comparable(
+                    Comparable::Boolean(true),
+                )))
+            });
+
+        functions
+            .std_lib
+            .insert("bounce".to_string(), |_, tail, _, _, _| {
+                if let EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f))) =
+                    &tail[1]
+                {
+                    assert!(*f == 0.0);
+                } else {
+                    panic!();
+                }
+                if let EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f))) =
+                    &tail[2]
+                {
+                    assert!(*f == 400.0);
+                } else {
+                    panic!();
+                }
+
+                Ok(EvaluatedExpr::Typed(TypedEntity::Comparable(
+                    Comparable::Boolean(true),
+                )))
+            });
+
+        match parse_and_eval_from_str(
+            snippet,
+            &functions,
+            &globals,
+            sample_set,
+            OutputMode::Stereo,
+        ) {
+            Ok(res) => {
+                assert!(matches!(
+                    res,
+                    EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Boolean(true)))
+                ))
+            }
+            Err(e) => {
+                println!("err {e}");
+                panic!()
+            }
+        }
+    }
+}

@@ -51,7 +51,6 @@ pub fn control(
 mod tests {
     // Note this useful idiom: importing names from outer (for mod tests) scope.
     use super::*;
-    use crate::parser::*;
 
     #[test]
     fn test_eval_ctrl() {
@@ -75,7 +74,7 @@ mod tests {
 
         let globals = sync::Arc::new(GlobalVariables::new());
 
-        match eval_from_str(
+        match crate::eval::parse_and_eval_from_str(
             snippet,
             &functions,
             &globals,
