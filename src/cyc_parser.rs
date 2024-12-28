@@ -547,14 +547,12 @@ mod tests {
         let event_mappings = HashMap::new();
 
         let fmap: FunctionMap = FunctionMap::new();
-        fmap.std_lib.insert(
-            "piano".to_string(),
-            crate::parser::eval::events::sound::sound,
-        );
         fmap.std_lib
-            .insert("saw".to_string(), crate::parser::eval::events::sound::sound);
+            .insert("piano".to_string(), crate::eval::events::sound::sound);
         fmap.std_lib
-            .insert("~".to_string(), crate::parser::eval::events::sound::sound);
+            .insert("saw".to_string(), crate::eval::events::sound::sound);
+        fmap.std_lib
+            .insert("~".to_string(), crate::eval::events::sound::sound);
 
         let o = eval_cyc_from_str(
             "saw /100 saw:400 ~ ~ [saw:100 saw:500] ~ piano:'a3 piano:'a3:lpf=100",

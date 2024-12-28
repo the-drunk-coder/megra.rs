@@ -219,7 +219,7 @@ pub fn parameter(
                     }
                     EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(s))) => {
                         // jump out if the user entered garbage ...
-                        crate::parser::eval::events::sound::map_symbolic_param_value(&s)
+                        crate::eval::events::sound::map_symbolic_param_value(&s)
                     }
                     _ => Some(ParameterValue::Scalar(DynVal::with_value(0.5))), // should be save ...
                 };

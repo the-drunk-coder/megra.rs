@@ -4,9 +4,10 @@ use anyhow::{bail, Result};
 use ruffbox_synth::building_blocks::SynthParameterLabel;
 
 use crate::{
+    eval::resolver::resolve_globals,
     event::Event,
     parameter::DynVal,
-    parser::{eval::resolver::resolve_globals, EvaluatedExpr, FunctionMap},
+    parser::{EvaluatedExpr, FunctionMap},
     sample_set::SampleAndWavematrixSet,
     session::OutputMode,
     Comparable, GlobalVariables, TypedEntity,

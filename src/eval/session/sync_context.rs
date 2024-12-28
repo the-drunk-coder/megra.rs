@@ -1,8 +1,8 @@
 use anyhow::{bail, Result};
 
 use crate::builtin_types::*;
+use crate::eval::resolver::resolve_globals;
 use crate::generator::Generator;
-use crate::parser::eval::resolver::resolve_globals;
 use crate::parser::{EvaluatedExpr, FunctionMap};
 use crate::session::SyncContext;
 use crate::{OutputMode, SampleAndWavematrixSet};

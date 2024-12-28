@@ -1,10 +1,10 @@
 use crate::builtin_types::*;
 use crate::cyc_parser;
+use crate::eval::resolver::resolve_globals;
 use crate::event::*;
 use crate::generator::Generator;
 use crate::markov_sequence_generator::MarkovSequenceGenerator;
 use crate::parameter::*;
-use crate::parser::eval::resolver::resolve_globals;
 use crate::sample_set::SampleAndWavematrixSet;
 use crate::session::OutputMode;
 use anyhow::bail;

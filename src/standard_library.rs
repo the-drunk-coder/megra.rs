@@ -1,5 +1,5 @@
-use crate::parser::{eval, FunctionMap};
-
+use crate::parser::FunctionMap;
+use crate::eval;
 /**
  * This is where all the "frontend" functions (that is, the DSL functions)
  * are defined and bound to their Rust equivalents ...  

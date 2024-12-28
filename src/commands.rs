@@ -25,13 +25,13 @@ use ruffbox_synth::{
 
 use crate::builtin_types::*;
 use crate::commands;
+use crate::eval::{self};
 use crate::event::*;
 use crate::event_helpers::*;
 use crate::generator::*;
 use crate::load_audio_file;
 use crate::osc_sender::OscSender;
 use crate::parameter::*;
-use crate::parser::eval::{self};
 use crate::parser::FunctionMap;
 use crate::real_time_streaming;
 use crate::sample_set::SampleAndWavematrixSet;

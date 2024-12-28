@@ -1,10 +1,10 @@
 use crate::builtin_types::*;
 use crate::duration_tree::{add_leaf, DurationTreeNode};
+use crate::eval::resolver::resolve_globals;
 use crate::event::*;
 use crate::generator::Generator;
 use crate::markov_sequence_generator::{MarkovSequenceGenerator, Rule};
 use crate::parameter::*;
-use crate::parser::eval::resolver::resolve_globals;
 
 use anyhow::bail;
 use anyhow::Result;

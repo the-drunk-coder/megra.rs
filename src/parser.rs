@@ -773,8 +773,7 @@ pub fn eval_expression(
                     Ok(EvaluatedExpr::Identifier(i)) => VariableId::Custom(i),
                     Ok(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(s)))) => {
                         // check whether it's a reserved symbol
-                        if crate::parser::eval::events::sound::map_symbolic_param_value(&s)
-                            .is_some()
+                        if crate::eval::events::sound::map_symbolic_param_value(&s).is_some()
                             || crate::music_theory::from_string(&s).is_ok()
                         {
                             bail!("can't redefine {s}");
@@ -822,8 +821,7 @@ pub fn eval_expression(
                     Ok(EvaluatedExpr::Identifier(i)) => VariableId::Custom(i),
                     Ok(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(s)))) => {
                         // check whether it's a reserved symbol
-                        if crate::parser::eval::events::sound::map_symbolic_param_value(&s)
-                            .is_some()
+                        if crate::eval::events::sound::map_symbolic_param_value(&s).is_some()
                             || crate::music_theory::from_string(&s).is_ok()
                         {
                             bail!("can't redefine {s}");

@@ -10,7 +10,7 @@ use ruffbox_synth::building_blocks::{EnvelopeSegmentInfo, EnvelopeSegmentType, O
 use ruffbox_synth::building_blocks::{FilterType, SynthParameterLabel, SynthParameterValue, ValOp};
 
 use crate::builtin_types::{Comparable, LazyArithmetic};
-use crate::parser::eval::resolver::resolve_lazy;
+use crate::eval::resolver::resolve_lazy;
 use crate::{GlobalVariables, TypedEntity, VariableId};
 
 #[derive(Clone, Debug)]
