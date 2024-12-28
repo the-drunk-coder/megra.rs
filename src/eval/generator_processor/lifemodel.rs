@@ -5,7 +5,7 @@ use crate::event_helpers::*;
 use crate::generator_processor::*;
 use crate::parameter::DynVal;
 
-use crate::parser::EvaluatedExpr;
+use crate::eval::EvaluatedExpr;
 
 pub fn collect_lifemodel(
     tail: &mut Vec<EvaluatedExpr>,

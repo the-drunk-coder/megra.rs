@@ -1,8 +1,8 @@
 use anyhow::Result;
 
 use crate::builtin_types::TypedEntity;
+use crate::eval::{EvaluatedExpr, FunctionMap};
 use crate::event::*;
-use crate::parser::{EvaluatedExpr, FunctionMap};
 use crate::{GlobalVariables, OutputMode, SampleAndWavematrixSet};
 
 use std::collections::BTreeSet;

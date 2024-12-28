@@ -5,7 +5,7 @@ use crate::generator::*;
 use std::collections::HashMap;
 use std::sync;
 
-use crate::parser::{EvaluatedExpr, FunctionMap};
+use crate::eval::{EvaluatedExpr, FunctionMap};
 use crate::{OutputMode, SampleAndWavematrixSet};
 
 /// Helper function to collect arguments

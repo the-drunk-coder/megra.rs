@@ -4,7 +4,7 @@ use crate::builtin_types::{Comparable, TypedEntity};
 use crate::generator_processor::*;
 use crate::parameter::DynVal;
 
-use crate::parser::EvaluatedExpr;
+use crate::eval::EvaluatedExpr;
 
 pub fn collect_pear(tail: &mut Vec<EvaluatedExpr>) -> Box<dyn GeneratorProcessor + Send + Sync> {
     let mut tail_drain = tail.drain(..).skip(1); // skip function name

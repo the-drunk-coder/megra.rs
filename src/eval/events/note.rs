@@ -5,9 +5,9 @@ use ruffbox_synth::building_blocks::SynthParameterLabel;
 
 use crate::{
     eval::resolver::resolve_globals,
+    eval::{EvaluatedExpr, FunctionMap},
     event::Event,
     parameter::DynVal,
-    parser::{EvaluatedExpr, FunctionMap},
     sample_set::SampleAndWavematrixSet,
     session::OutputMode,
     Comparable, GlobalVariables, TypedEntity,

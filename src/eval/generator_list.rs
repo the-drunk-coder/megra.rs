@@ -3,7 +3,7 @@ use anyhow::{bail, Result};
 use crate::builtin_types::*;
 use std::sync;
 
-use crate::parser::{EvaluatedExpr, FunctionMap};
+use crate::eval::{EvaluatedExpr, FunctionMap};
 use crate::{OutputMode, SampleAndWavematrixSet};
 
 use super::multiplyer::spread_gens;

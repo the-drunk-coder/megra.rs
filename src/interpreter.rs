@@ -6,10 +6,10 @@ use std::thread;
 use crate::builtin_types::*;
 
 use crate::commands;
+use crate::eval::EvaluatedExpr;
 use crate::file_interpreter;
 use crate::midi_input;
 use crate::osc_receiver::OscReceiver;
-use crate::parser::EvaluatedExpr;
 
 use crate::session::Session;
 use crate::visualizer_client::VisualizerClient;

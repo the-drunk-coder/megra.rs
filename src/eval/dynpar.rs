@@ -7,7 +7,7 @@ use crate::parameter::{
 };
 
 use crate::builtin_types::{Comparable, TypedEntity};
-use crate::parser::{EvaluatedExpr, FunctionMap};
+use crate::eval::{EvaluatedExpr, FunctionMap};
 use crate::{GlobalVariables, OutputMode, SampleAndWavematrixSet};
 
 use std::collections::HashMap;

@@ -1,4 +1,4 @@
-use crate::parser::FunctionMap;
+use crate::eval::FunctionMap;
 use crate::eval;
 /**
  * This is where all the "frontend" functions (that is, the DSL functions)

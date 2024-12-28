@@ -10,7 +10,6 @@ mod megra_editor;
 use megra_editor::{EditorFont, MegraEditor};
 
 use crate::interpreter;
-use crate::parser;
 
 use crate::session::Session;
 
@@ -27,7 +26,7 @@ pub fn run_editor<const BUFSIZE: usize, const NCHAN: usize>(
 
     let callback_ref: sync::Arc<Mutex<dyn FnMut(&String)>> =
         sync::Arc::new(Mutex::new(move |text: &String| {
-            let pfa_in = parser::eval_from_str(
+            let pfa_in = crate::eval::parse_and_eval_from_str(
                 text,
                 &session.functions,
                 &globals2,

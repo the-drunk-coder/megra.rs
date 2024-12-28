@@ -1,10 +1,6 @@
 use std::{fs, path};
 
-use crate::{
-    interpreter,
-    parser::{self},
-    session::Session,
-};
+use crate::{interpreter, session::Session};
 
 pub fn find_closing_paren(text: &str, mut pos: usize) -> Option<usize> {
     let mut par_lvl = 1;
@@ -84,7 +80,7 @@ pub fn parse_file<const BUFSIZE: usize, const NCHAN: usize>(
 
             for expr in expressions {
                 let res = {
-                    parser::eval_from_str(
+                    crate::eval::parse_and_eval_from_str(
                         &expr,
                         &session.functions,
                         &session.globals,

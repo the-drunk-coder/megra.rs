@@ -1,7 +1,7 @@
 use anyhow::{anyhow, Result};
 
 use crate::builtin_types::{Comparable, LazyArithmetic, LazyVal, TypedEntity};
-use crate::parser::{EvaluatedExpr, FunctionMap};
+use crate::eval::{EvaluatedExpr, FunctionMap};
 use crate::{GlobalVariables, OutputMode, SampleAndWavematrixSet};
 
 use std::sync;

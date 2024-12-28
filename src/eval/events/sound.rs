@@ -1,9 +1,9 @@
 use crate::builtin_types::{Comparable, TypedEntity};
+use crate::eval::{EvaluatedExpr, FunctionMap};
 use crate::event::{Event, EventOperation};
 use crate::event_helpers::map_parameter;
 use crate::music_theory;
 use crate::parameter::{DynVal, ParameterValue};
-use crate::parser::{EvaluatedExpr, FunctionMap};
 use crate::sample_set::SampleLookup;
 use crate::{GlobalVariables, OutputMode, SampleAndWavematrixSet, VariableId};
 

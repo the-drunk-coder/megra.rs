@@ -1,6 +1,5 @@
 use crate::builtin_types::*;
 use crate::cyc_parser;
-use crate::eval::resolver::resolve_globals;
 use crate::event::*;
 use crate::generator::Generator;
 use crate::markov_sequence_generator::MarkovSequenceGenerator;
@@ -13,7 +12,7 @@ use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::sync;
 use vom_rs::pfa::{Pfa, Rule};
 
-use crate::parser::{EvaluatedExpr, FunctionMap};
+use crate::eval::{resolver::resolve_globals, EvaluatedExpr, FunctionMap};
 
 pub fn cyc(
     functions: &FunctionMap,

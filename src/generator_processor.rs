@@ -1,7 +1,7 @@
 use std::collections::{BTreeSet, HashMap};
 use std::sync::*;
 
-use crate::parser::FunctionMap;
+use crate::eval::FunctionMap;
 use crate::sample_set::SampleAndWavematrixSet;
 use crate::session::OutputMode;
 use crate::visualizer_client::VisualizerClient;

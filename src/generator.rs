@@ -1,9 +1,9 @@
 use crate::{
     builtin_types::GlobalVariables,
+    eval::FunctionMap,
     event::{EventOperation, InterpretableEvent, StaticEvent},
     generator_processor::GeneratorProcessor,
     markov_sequence_generator::MarkovSequenceGenerator,
-    parser::FunctionMap,
     sample_set::SampleAndWavematrixSet,
     session::OutputMode,
 };

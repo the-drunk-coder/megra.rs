@@ -1,7 +1,7 @@
 use crate::builtin_types::*;
+use crate::eval::EvaluatedExpr;
 use crate::generator_processor::*;
 use crate::parameter::DynVal;
-use crate::parser::EvaluatedExpr;
 
 pub fn collect_apple(tail: &mut Vec<EvaluatedExpr>) -> Box<dyn GeneratorProcessor + Send + Sync> {
     let mut tail_drain = tail.drain(..);

@@ -8,12 +8,12 @@ use ruffbox_synth::building_blocks::{SynthParameterLabel, SynthParameterValue};
 use ruffbox_synth::ruffbox::RuffboxControls;
 
 use crate::builtin_types::{Command, ConfigParameter, GlobalVariables, VariableId};
+use crate::eval::FunctionMap;
 use crate::event::InterpretableEvent;
 use crate::event_helpers::*;
 use crate::generator::Generator;
 use crate::osc_client::OscClient;
 use crate::parameter::*;
-use crate::parser::FunctionMap;
 use crate::real_time_streaming;
 use crate::scheduler::{Scheduler, SchedulerData};
 use crate::SampleAndWavematrixSet;

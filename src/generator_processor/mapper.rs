@@ -1,7 +1,7 @@
 use std::{cell::RefCell, sync::Arc};
 
 use crate::{
-    parser::{eval_usr_fun_evaluated_tail, EvaluatedExpr, FunctionMap, LocalVariables},
+    eval::{eval_usr_fun_evaluated_tail, EvaluatedExpr, FunctionMap, LocalVariables},
     sample_set::SampleAndWavematrixSet,
     session::OutputMode,
     TypedEntity,
@@ -51,15 +51,15 @@ impl GeneratorProcessor for MapperProcessor {
 
             if let Ok(pe) = processed_events {
                 match pe {
-                    crate::parser::EvaluatedExpr::Typed(TypedEntity::SoundEvent(mut ev)) => {
+                    crate::eval::EvaluatedExpr::Typed(TypedEntity::SoundEvent(mut ev)) => {
                         events.push(crate::event::InterpretableEvent::Sound(
                             ev.get_static(globals),
                         ));
                     }
-                    crate::parser::EvaluatedExpr::Typed(TypedEntity::ControlEvent(ev)) => {
+                    crate::eval::EvaluatedExpr::Typed(TypedEntity::ControlEvent(ev)) => {
                         events.push(crate::event::InterpretableEvent::Control(ev));
                     }
-                    crate::parser::EvaluatedExpr::Typed(TypedEntity::StaticEvent(ev)) => {
+                    crate::eval::EvaluatedExpr::Typed(TypedEntity::StaticEvent(ev)) => {
                         events.push(ev);
                     }
                     _ => {}

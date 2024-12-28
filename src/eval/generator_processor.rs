@@ -12,7 +12,7 @@ use crate::builtin_types::*;
 use crate::generator_processor::GeneratorProcessor;
 use std::sync;
 
-use crate::parser::{EvaluatedExpr, FunctionMap};
+use crate::eval::{EvaluatedExpr, FunctionMap};
 use crate::{OutputMode, SampleAndWavematrixSet};
 
 use super::resolver::resolve_globals;

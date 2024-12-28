@@ -9,7 +9,7 @@ use crate::generator::Generator;
 use crate::generator_processor::{GeneratorWrapperProcessor, PearProcessor};
 use crate::parameter::{DynVal, ParameterValue};
 
-use crate::parser::{EvaluatedExpr, FunctionMap};
+use crate::eval::{EvaluatedExpr, FunctionMap};
 use crate::{OutputMode, SampleAndWavematrixSet};
 
 use super::resolver::resolve_globals;

@@ -5,7 +5,7 @@ use anyhow::{anyhow, bail, Result};
 
 use crate::builtin_types::*;
 
-use crate::parser::{EvaluatedExpr, FunctionMap};
+use crate::eval::{EvaluatedExpr, FunctionMap};
 use crate::{OutputMode, SampleAndWavematrixSet};
 
 pub fn map(

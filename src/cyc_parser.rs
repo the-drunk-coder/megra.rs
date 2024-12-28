@@ -1,4 +1,6 @@
+use crate::ast_types::*;
 use crate::builtin_types::*;
+use crate::eval::{eval_expression, EvaluatedExpr, FunctionMap};
 use crate::event::*;
 use crate::parser::*;
 use crate::sample_set::SampleAndWavematrixSet;

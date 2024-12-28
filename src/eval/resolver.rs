@@ -4,7 +4,7 @@ use crate::{
     builtin_types::{
         Comparable, GlobalVariables, LazyArithmetic, LazyVal, TypedEntity, VariableId,
     },
-    parser::EvaluatedExpr,
+    eval::EvaluatedExpr,
 };
 
 pub fn needs_resolve(tail: &[EvaluatedExpr]) -> bool {

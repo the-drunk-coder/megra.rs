@@ -1,8 +1,8 @@
 use anyhow::{anyhow, bail, Result};
 
 use crate::builtin_types::{Comparable, TypedEntity};
+use crate::eval::{EvaluatedExpr, FunctionMap};
 use crate::music_theory::{from_string, to_freq};
-use crate::parser::{EvaluatedExpr, FunctionMap};
 use crate::{GlobalVariables, OutputMode, SampleAndWavematrixSet};
 
 use std::sync;

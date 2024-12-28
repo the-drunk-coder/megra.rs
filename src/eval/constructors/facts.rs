@@ -7,12 +7,12 @@ use vom_rs::pfa::{Pfa, Rule};
 
 use crate::builtin_types::*;
 use crate::eval::resolver::resolve_globals;
+use crate::eval::{EvaluatedExpr, FunctionMap};
 use crate::event::*;
 use crate::event_helpers::map_parameter;
 use crate::generator::Generator;
 use crate::markov_sequence_generator::MarkovSequenceGenerator;
 use crate::parameter::*;
-use crate::parser::{EvaluatedExpr, FunctionMap};
 use crate::{OutputMode, SampleAndWavematrixSet};
 
 pub fn facts(

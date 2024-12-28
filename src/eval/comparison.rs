@@ -4,7 +4,7 @@ use anyhow::Result;
 
 use crate::{
     builtin_types::{Comparable, Comparator, GlobalVariables, TypedEntity},
-    parser::{EvaluatedExpr, FunctionMap},
+    eval::{EvaluatedExpr, FunctionMap},
     sample_set::SampleAndWavematrixSet,
     session::OutputMode,
 };

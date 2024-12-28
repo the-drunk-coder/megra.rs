@@ -4,6 +4,9 @@
 #![allow(clippy::large_enum_variant)]
 #![allow(clippy::type_complexity)]
 
+// types to represent the AST
+pub mod ast_types;
+// types to represent the evaluated megra language ...
 pub mod builtin_types;
 pub mod commands;
 pub mod cyc_parser;

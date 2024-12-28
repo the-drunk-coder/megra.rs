@@ -4,9 +4,9 @@ use anyhow::{anyhow, bail, Result};
 use ruffbox_synth::building_blocks::SynthParameterValue;
 
 use crate::{
+    eval::{EvaluatedExpr, FunctionMap},
     event::InterpretableEvent,
     event_helpers::map_parameter,
-    parser::{EvaluatedExpr, FunctionMap},
     sample_set::SampleAndWavematrixSet,
     session::OutputMode,
     Comparable, GlobalVariables, TypedEntity,

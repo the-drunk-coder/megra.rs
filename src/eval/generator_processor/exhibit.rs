@@ -3,10 +3,10 @@ use std::collections::HashMap;
 
 use crate::builtin_types::Comparable;
 use crate::builtin_types::TypedEntity;
+use crate::eval::EvaluatedExpr;
 use crate::event::*;
 use crate::generator_processor::*;
 use crate::parameter::{DynVal, ParameterValue};
-use crate::parser::EvaluatedExpr;
 
 // this is basically a shorthand for a pear processor
 pub fn collect_exhibit(tail: &mut Vec<EvaluatedExpr>) -> Box<dyn GeneratorProcessor + Send + Sync> {

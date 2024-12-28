@@ -1,7 +1,7 @@
 use std::{sync::Arc, time::SystemTime};
 
 use crate::{
-    parser::{EvaluatedExpr, FunctionMap},
+    eval::{EvaluatedExpr, FunctionMap},
     sample_set::SampleAndWavematrixSet,
     session::OutputMode,
     Comparable, GlobalVariables, TypedEntity,

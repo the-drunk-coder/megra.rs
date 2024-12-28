@@ -1,6 +1,6 @@
 use crate::builtin_types::{Comparable, TypedEntity};
+use crate::eval::{EvaluatedExpr, FunctionMap};
 use crate::parameter::{DynVal, ParameterValue};
-use crate::parser::{EvaluatedExpr, FunctionMap};
 use crate::{GlobalVariables, OutputMode, SampleAndWavematrixSet};
 
 use anyhow::Result;

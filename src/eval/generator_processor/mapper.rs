@@ -1,5 +1,5 @@
+use crate::eval::EvaluatedExpr;
 use crate::generator_processor::*;
-use crate::parser::EvaluatedExpr;
 
 use super::{Comparable, TypedEntity};
 

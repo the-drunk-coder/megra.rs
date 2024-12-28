@@ -10,7 +10,7 @@ use anyhow::bail;
 use anyhow::Result;
 use ruffbox_synth::building_blocks::SynthParameterLabel;
 
-use crate::parser::{EvaluatedExpr, FunctionMap};
+use crate::eval::{EvaluatedExpr, FunctionMap};
 use crate::{OutputMode, SampleAndWavematrixSet};
 
 use std::sync;
