@@ -850,7 +850,6 @@ pub fn eval_expression(
                         reduced_tail.push(e);
                     }
                 }
-                println!("PERSTAGA");
 
                 if let Some(EvaluatedExpr::Typed(te)) = reduced_tail.pop() {
                     Ok(EvaluatedExpr::VariableDefinition(id, te, true))
