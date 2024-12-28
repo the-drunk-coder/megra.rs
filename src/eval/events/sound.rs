@@ -629,7 +629,7 @@ mod tests {
 
         functions
             .std_lib
-            .insert("risset".to_string(), eval::events::sound::sound);
+            .insert("risset".to_string(), crate::eval::events::sound::sound);
 
         let globals = sync::Arc::new(GlobalVariables::new());
 

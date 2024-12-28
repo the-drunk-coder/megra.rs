@@ -61,16 +61,17 @@ mod tests {
 
         functions
             .std_lib
-            .insert("saw".to_string(), eval::events::sound::sound);
+            .insert("saw".to_string(), crate::eval::events::sound::sound);
         functions
             .std_lib
-            .insert("ctrl".to_string(), eval::events::control::control);
+            .insert("ctrl".to_string(), crate::eval::events::control::control);
+        functions.std_lib.insert(
+            "sx".to_string(),
+            crate::eval::session::sync_context::sync_context,
+        );
         functions
             .std_lib
-            .insert("sx".to_string(), eval::session::sync_context::sync_context);
-        functions
-            .std_lib
-            .insert("nuc".to_string(), eval::constructors::nuc::nuc);
+            .insert("nuc".to_string(), crate::eval::constructors::nuc::nuc);
 
         let globals = sync::Arc::new(GlobalVariables::new());
 

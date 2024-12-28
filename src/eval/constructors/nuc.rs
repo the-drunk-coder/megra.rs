@@ -166,7 +166,7 @@ mod tests {
 
         functions
             .std_lib
-            .insert("nuc".to_string(), eval::constructors::nuc::nuc);
+            .insert("nuc".to_string(), crate::eval::constructors::nuc::nuc);
         functions.std_lib.insert("bd".to_string(), |_, _, _, _, _| {
             Ok(EvaluatedExpr::Typed(TypedEntity::Comparable(
                 Comparable::String("bd".to_string()),

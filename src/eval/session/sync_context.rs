@@ -155,12 +155,13 @@ mod tests {
         let functions = FunctionMap::new();
         let sample_set = SampleAndWavematrixSet::new();
 
+        functions.std_lib.insert(
+            "sx".to_string(),
+            crate::eval::session::sync_context::sync_context,
+        );
         functions
             .std_lib
-            .insert("sx".to_string(), eval::session::sync_context::sync_context);
-        functions
-            .std_lib
-            .insert("nuc".to_string(), eval::constructors::nuc::nuc);
+            .insert("nuc".to_string(), crate::eval::constructors::nuc::nuc);
         functions.std_lib.insert("bd".to_string(), |_, _, _, _, _| {
             Ok(EvaluatedExpr::Typed(TypedEntity::Comparable(
                 Comparable::String("bd".to_string()),
