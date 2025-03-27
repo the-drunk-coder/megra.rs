@@ -461,6 +461,7 @@ pub fn map_parameter(name: &str) -> SynthParameterAddress {
         "bcmode" => SynthParameterLabel::BitcrusherMode,
         "nharm" => SynthParameterLabel::NumHarmonics,
         "art" | "articulation" => SynthParameterLabel::NoteArticulation,
+        "syl" | "syllable" => SynthParameterLabel::NoteSyllable,
         _ => SynthParameterLabel::PitchFrequency,
     };
 

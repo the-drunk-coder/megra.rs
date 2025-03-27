@@ -61,20 +61,59 @@ pub fn event_note(
         }
     }
 
-    // third argument is optional
-    if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::String(s)))) =
-        tail_drain.next()
-    {
-        ev.params.insert(
-            SynthParameterLabel::NoteArticulation.into(),
-            crate::parameter::ParameterValue::Symbolic(s),
-        );
-    } else {
-        ev.params.insert(
-            SynthParameterLabel::NoteArticulation.into(),
-            crate::parameter::ParameterValue::Symbolic("none".to_string()),
-        );
+    let mut art = crate::parameter::ParameterValue::Symbolic("".to_string());
+    let mut syllable = crate::parameter::ParameterValue::Symbolic("none".to_string());
+
+    while let Some(arg) = tail_drain.next() {
+        match arg {
+            EvaluatedExpr::Keyword(k) => match k.as_str() {
+                "art" | "articulation" => match tail_drain.next() {
+                    Some(n) => match n {
+                        EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::String(s))) => {
+                            art = crate::parameter::ParameterValue::Symbolic(s);
+                        }
+                        EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(s))) => {
+                            art = crate::parameter::ParameterValue::Symbolic(s);
+                        }
+                        _ => {
+                            bail!("note - invalid arg type for keyword {k}")
+                        }
+                    },
+                    None => {
+                        bail!("note - arg for keyword {k} missing!")
+                    }
+                },
+                "syl" | "syllable" => match tail_drain.next() {
+                    Some(n) => match n {
+                        EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::String(s))) => {
+                            syllable = crate::parameter::ParameterValue::Symbolic(s);
+                        }
+                        EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(s))) => {
+                            syllable = crate::parameter::ParameterValue::Symbolic(s);
+                        }
+                        _ => {
+                            bail!("note - invalid arg type for keyword {k}")
+                        }
+                    },
+                    None => {
+                        bail!("note - arg for keyword {k} missing!")
+                    }
+                },
+                _ => {
+                    bail!("note - invalid keyword {k}")
+                }
+            },
+            _ => {
+                bail!("note - found something that's not a keyword argument")
+            }
+        }
     }
+
+    ev.params
+        .insert(SynthParameterLabel::NoteArticulation.into(), art);
+
+    ev.params
+        .insert(SynthParameterLabel::NoteSyllable.into(), syllable);
 
     Ok(EvaluatedExpr::Typed(TypedEntity::SoundEvent(ev)))
 }
