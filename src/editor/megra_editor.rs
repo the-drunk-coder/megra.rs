@@ -83,12 +83,16 @@ impl MegraEditor {
         // Two built-in options ...
         fonts.font_data.insert(
             "mononoki".to_owned(),
-            FontData::from_static(include_bytes!("../../fonts/mononoki-Bold.ttf")),
+            Arc::new(FontData::from_static(include_bytes!(
+                "../../fonts/mononoki-Bold.ttf"
+            ))),
         );
 
         fonts.font_data.insert(
             "ComicMono".to_owned(),
-            FontData::from_static(include_bytes!("../../fonts/ComicMono.ttf")),
+            Arc::new(FontData::from_static(include_bytes!(
+                "../../fonts/ComicMono.ttf"
+            ))),
         );
 
         match &ed.font {
@@ -108,9 +112,10 @@ impl MegraEditor {
             }
             Some(EditorFont::Custom(path)) => match fs::read(path) {
                 Ok(font_data) => {
-                    fonts
-                        .font_data
-                        .insert("custom_font".to_owned(), FontData::from_owned(font_data));
+                    fonts.font_data.insert(
+                        "custom_font".to_owned(),
+                        Arc::new(FontData::from_owned(font_data)),
+                    );
                     fonts
                         .families
                         .get_mut(&FontFamily::Monospace)
@@ -202,9 +207,9 @@ impl eframe::App for MegraEditor {
     /// Put your widgets into a `SidePanel`, `TopPanel`, `CentralPanel`, `Window` or `Area`.
     fn update(&mut self, ctx: &egui::Context, _: &mut eframe::Frame) {
         // some frame options ...
-        let mut frame = egui::Frame::none();
+        let mut frame = egui::Frame::NONE;
         frame.fill = egui::Color32::BLACK;
-        frame.inner_margin = Margin::symmetric(3.0, 3.0);
+        frame.inner_margin = Margin::symmetric(3, 3);
         egui::CentralPanel::default().frame(frame).show(ctx, |ui| {
             let mut sketch_number = SketchNumber::Num(self.sketch_number);
 
@@ -214,7 +219,7 @@ impl eframe::App for MegraEditor {
                 ));
 
                 let id = ui.make_persistent_id("file_chooser_box");
-                egui::ComboBox::from_id_source(id)
+                egui::ComboBox::from_id_salt(id)
                     .selected_text(&self.sketch_list[self.sketch_number])
                     .show_ui(ui, |ui| {
                         for i in 0..self.sketch_list.len() {
