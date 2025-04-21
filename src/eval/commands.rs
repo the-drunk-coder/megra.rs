@@ -210,6 +210,80 @@ pub fn freeze_buffer(
     )))
 }
 
+pub fn freeze_after_rec(
+    _: &FunctionMap,
+    tail: &mut Vec<EvaluatedExpr>,
+    _: &sync::Arc<GlobalVariables>,
+    _: SampleAndWavematrixSet,
+    _: OutputMode,
+) -> Result<EvaluatedExpr> {
+    let mut tail_drain = tail.drain(..).skip(1);
+
+    // on the user side,
+    // both input- and freeze buffers are counted
+    // starting at 1
+    let mut inbuf: usize = 0;
+    let mut freezbuf: usize = 0;
+    let mut time: f64 = 1.6; // 1600 ms
+    let mut add = false;
+
+    while let Some(c) = tail_drain.next() {
+        match c {
+            EvaluatedExpr::Keyword(k) => {
+                match k.as_str() {
+                    "ms" => {
+                        // default is zero ...
+                        if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+                            Comparable::Float(n),
+                        ))) = tail_drain.next()
+                        {
+                            time = n as f64 / 1000.0;
+                        }
+                    }
+                    "add" => {
+                        // default is zero ...
+                        if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+                            Comparable::Boolean(b),
+                        ))) = tail_drain.next()
+                        {
+                            add = b;
+                        }
+                    }
+                    "in" => {
+                        // default is zero ...
+                        if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+                            Comparable::Float(n),
+                        ))) = tail_drain.next()
+                        {
+                            if n as usize > 0 {
+                                inbuf = n as usize - 1;
+                            }
+                        }
+                    }
+                    "freeze" => {
+                        // default is zero ...
+                        if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(
+                            Comparable::Float(n),
+                        ))) = tail_drain.next()
+                        {
+                            if n as usize > 0 {
+                                freezbuf = n as usize - 1;
+                            }
+                        }
+                    }
+                    _ => {}
+                }
+            }
+
+            _ => {}
+        }
+    }
+
+    Ok(EvaluatedExpr::Command(Command::FreezeAfterRec(
+        freezbuf, inbuf, time, add,
+    )))
+}
+
 pub fn freeze_add_buffer(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,

@@ -188,6 +188,16 @@ pub fn freeze_add_buffer<const BUFSIZE: usize, const NCHAN: usize>(
     ruffbox.freeze_add_buffer(freezbuf, inbuf);
 }
 
+pub fn freeze_after_rec<const BUFSIZE: usize, const NCHAN: usize>(
+    ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
+    freezbuf: usize,
+    inbuf: usize,
+    time_secs: f64,
+    add: bool,
+) {
+    ruffbox.freeze_after_rec(freezbuf, inbuf, time_secs, add);
+}
+
 pub fn load_sample_as_wavematrix(
     mut sample_set: SampleAndWavematrixSet,
     key: String,

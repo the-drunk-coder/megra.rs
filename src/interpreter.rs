@@ -146,6 +146,12 @@ pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
             commands::freeze_add_buffer(&session.ruffbox, freezbuf, inbuf);
             println!("freeze-add buffer {inbuf} --> {freezbuf} ");
         }
+        Command::FreezeAfterRec(freezbuf, inbuf, time, add) => {
+            commands::freeze_after_rec(&session.ruffbox, freezbuf, inbuf, time, add);
+            println!(
+                "freeze-after-rec (loop) buffer {inbuf} --> {freezbuf}, {time} secs, add ? {add}"
+            );
+        }
         Command::Tmod(p) => {
             commands::set_global_tmod(&session.globals, p);
         }
