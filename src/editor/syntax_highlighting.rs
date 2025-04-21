@@ -230,6 +230,10 @@ fn is_command(word: &str) -> bool {
             | "=="
             | ">"
             | ">="
+            | "freeze"
+            | "freeze-add"
+            | "looprec"
+            | "freeze-after-rec"
     )
 }
 
