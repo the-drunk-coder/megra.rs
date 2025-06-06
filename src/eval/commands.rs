@@ -210,6 +210,82 @@ pub fn freeze_buffer(
     )))
 }
 
+pub fn clear_freeze_buffer(
+    _: &FunctionMap,
+    tail: &mut Vec<EvaluatedExpr>,
+    _: &sync::Arc<GlobalVariables>,
+    _: SampleAndWavematrixSet,
+    _: OutputMode,
+) -> Result<EvaluatedExpr> {
+    let mut tail_drain = tail.drain(..).skip(1);
+
+    // on the user side,
+    // both input- and freeze buffers are counted
+    // starting at 1
+    let mut bufnum: usize = 0;
+
+    if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(n)))) =
+        tail_drain.next()
+    {
+        bufnum = n as usize;
+    }
+
+    Ok(EvaluatedExpr::Command(Command::ClearFreezeBuffer(bufnum)))
+}
+
+pub fn clear_live_buffer(
+    _: &FunctionMap,
+    tail: &mut Vec<EvaluatedExpr>,
+    _: &sync::Arc<GlobalVariables>,
+    _: SampleAndWavematrixSet,
+    _: OutputMode,
+) -> Result<EvaluatedExpr> {
+    let mut tail_drain = tail.drain(..).skip(1);
+
+    // on the user side,
+    // both input- and freeze buffers are counted
+    // starting at 1
+    let mut bufnum: usize = 0;
+
+    if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(n)))) =
+        tail_drain.next()
+    {
+        bufnum = n as usize;
+    }
+
+    Ok(EvaluatedExpr::Command(Command::ClearLiveBuffer(bufnum)))
+}
+
+pub fn clear_all_live_buffers(
+    _: &FunctionMap,
+    _: &mut Vec<EvaluatedExpr>,
+    _: &sync::Arc<GlobalVariables>,
+    _: SampleAndWavematrixSet,
+    _: OutputMode,
+) -> Result<EvaluatedExpr> {
+    Ok(EvaluatedExpr::Command(Command::ClearAllLiveBuffers))
+}
+
+pub fn clear_all_freeze_buffers(
+    _: &FunctionMap,
+    _: &mut Vec<EvaluatedExpr>,
+    _: &sync::Arc<GlobalVariables>,
+    _: SampleAndWavematrixSet,
+    _: OutputMode,
+) -> Result<EvaluatedExpr> {
+    Ok(EvaluatedExpr::Command(Command::ClearAllFreezeBuffers))
+}
+
+pub fn clear_all_buffers(
+    _: &FunctionMap,
+    _: &mut Vec<EvaluatedExpr>,
+    _: &sync::Arc<GlobalVariables>,
+    _: SampleAndWavematrixSet,
+    _: OutputMode,
+) -> Result<EvaluatedExpr> {
+    Ok(EvaluatedExpr::Command(Command::ClearAllBuffers))
+}
+
 pub fn freeze_after_rec(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,

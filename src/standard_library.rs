@@ -31,6 +31,11 @@ pub fn define_standard_library() -> FunctionMap {
     standard_library.std_lib.insert("freeze-add".to_string(), eval::commands::freeze_add_buffer);
     standard_library.std_lib.insert("freeze-after-rec".to_string(), eval::commands::freeze_after_rec);
     standard_library.std_lib.insert("looprec".to_string(), eval::commands::freeze_after_rec);
+    standard_library.std_lib.insert("clearbufs".to_string(), eval::commands::clear_all_buffers);
+    standard_library.std_lib.insert("clearlive".to_string(), eval::commands::clear_live_buffer);
+    standard_library.std_lib.insert("clearfreeze".to_string(), eval::commands::clear_freeze_buffer);
+    standard_library.std_lib.insert("clearalllive".to_string(), eval::commands::clear_all_live_buffers);
+    standard_library.std_lib.insert("clearallfreeze".to_string(), eval::commands::clear_all_freeze_buffers);    
     standard_library.std_lib.insert("load-sample".to_string(), eval::commands::load_sample);
     standard_library.std_lib.insert("load-wavematrix".to_string(), eval::commands::load_sample_as_wavematrix);
     standard_library.std_lib.insert("load-sample-sets".to_string(), eval::commands::load_sample_sets);

@@ -127,6 +127,11 @@ pub enum Command {
     FreezeBuffer(usize, usize),                    // freeze live buffer
     FreezeAddBuffer(usize, usize),                 // add-freeze live buffer
     FreezeAfterRec(usize, usize, f64, bool),       // loop-freeze
+    ClearLiveBuffer(usize),                        // clear live buffer
+    ClearFreezeBuffer(usize),                      // clear freeze buffer
+    ClearAllLiveBuffers,                           // clear all live buffers
+    ClearAllFreezeBuffers,                         // clear all freeze buffers
+    ClearAllBuffers,                               // clear live & freeze buffers
     ExportDotStatic(String, Generator),            // filename, generator
     ExportDotRunning((String, BTreeSet<String>)),  // filename, generator id
     Once(Vec<StaticEvent>, Vec<ControlEvent>),     // execute event(s) once

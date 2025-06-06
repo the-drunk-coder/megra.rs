@@ -232,6 +232,21 @@ pub fn interpret_command<const BUFSIZE: usize, const NCHAN: usize>(
         Command::MidiListPorts => {
             midi_input::list_midi_input_ports();
         }
+        Command::ClearLiveBuffer(bnum) => {
+            commands::clear_live_buffer(&session.ruffbox, bnum);
+        }
+        Command::ClearFreezeBuffer(bnum) => {
+            commands::clear_freeze_buffer(&session.ruffbox, bnum);
+        }
+        Command::ClearAllLiveBuffers => {
+            commands::clear_all_live_buffers(&session.ruffbox);
+        }
+        Command::ClearAllFreezeBuffers => {
+            commands::clear_all_freeze_buffers(&session.ruffbox);
+        }
+        Command::ClearAllBuffers => {
+            commands::clear_all_buffers(&session.ruffbox);
+        }
     };
 }
 

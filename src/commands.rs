@@ -172,6 +172,38 @@ pub fn fetch_sample_set<const BUFSIZE: usize, const NCHAN: usize>(
     }
 }
 
+pub fn clear_freeze_buffer<const BUFSIZE: usize, const NCHAN: usize>(
+    ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
+    freezbuf: usize,
+) {
+    ruffbox.clear_freeze_buffer(freezbuf);
+}
+
+pub fn clear_live_buffer<const BUFSIZE: usize, const NCHAN: usize>(
+    ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
+    livebuf: usize,
+) {
+    ruffbox.clear_live_buffer(livebuf);
+}
+
+pub fn clear_all_freeze_buffers<const BUFSIZE: usize, const NCHAN: usize>(
+    ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
+) {
+    ruffbox.clear_all_freeze_buffers();
+}
+
+pub fn clear_all_live_buffers<const BUFSIZE: usize, const NCHAN: usize>(
+    ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
+) {
+    ruffbox.clear_all_live_buffers();
+}
+
+pub fn clear_all_buffers<const BUFSIZE: usize, const NCHAN: usize>(
+    ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
+) {
+    ruffbox.clear_all_buffers();
+}
+
 pub fn freeze_buffer<const BUFSIZE: usize, const NCHAN: usize>(
     ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
     freezbuf: usize,
