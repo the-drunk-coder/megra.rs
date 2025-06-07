@@ -10,6 +10,9 @@
   
 (fun send-note (voice note len articulation)
   (ctrl (osc-send 'scoreviz "/voice/note/add" voice note len articulation)))
+
+(fun send-text-note (voice note len articulation text)
+  (ctrl (osc-send 'scoreviz "/voice/note/add" voice note len articulation text)))
   
 (fun set-dyn (voice dyn)
   (ctrl (osc-send 'scoreviz "/voice/dyn" voice dyn)))
@@ -39,11 +42,22 @@
   (ctrl (osc-send 'scoreviz "/voice/numnotes" voice val)))
   
 (fun textbox (id content x y)
-  (ctrl (osc-send 'scoreviz "/textfield/put" id content x y)))
+  (ctrl (osc-send 'scoreviz "/textfield/put" id content x y 40 "000" "false" "0")))
   
 ;; shorthand for textbox
 (fun tb (id content x y)
-  (ctrl (osc-send 'scoreviz "/textfield/put" id content x y)))
+  (ctrl (osc-send 'scoreviz "/textfield/put" id content x y 40 "000" "false" "0")))
+
+;; shorthand for textbox with color
+(fun tbcol (id content x y color)
+  (ctrl (osc-send 'scoreviz "/textfield/put" id content x y 40 color "false" "0")))
+
+;; shorthand for textbox with flash
+(fun tbflash (id content x y flashtime)
+  (ctrl (osc-send 'scoreviz "/textfield/put" id content x y 40 "000" "true" flashtime)))
+
+
+
 
 (fun img (id ref x y)
   (ctrl (osc-send 'scoreviz "/image/put" id ref x y)))
@@ -55,19 +69,38 @@
     (osc-send 'scoreviz "/voice/clef" name clef)
     (fun (concat "to-" name) (event)
       (match (ev-param :note event)
-    ;; string notes currently only used for rests in this system
-    (istype 'str) (send-note 
-      name 
-      "b/4"
-      (concat (to-string (round (ev-param :dur event))) "r")
-      "none")
-    (istype 'num) (send-note 
-      name 
-      (mtovex (round (ev-param :note event))) 
-      (to-string (round (ev-param :dur event)))
-      (ev-param :articulation event))      
-    ))))	
+        ;; string notes currently only used for rests in this system
+        (istype 'str) (send-note 
+          name 
+          "b/4"
+          (concat (to-string (round (ev-param :dur event))) "r")
+          "none")
+        (istype 'num) (send-note 
+          name 
+          (mtovex (round (ev-param :note event))) 
+          (to-string (round (ev-param :dur event)))
+          (ev-param :articulation event)) 
+        ))))	
   
+
+(fun singer (name clef)
+  (progn 
+    (osc-send 'scoreviz "/voice/clef" name clef)
+    (fun (concat "to-" name) (event)
+      (match (ev-param :note event)
+        ;; string notes currently only used for rests in this system
+        (istype 'str) (send-note 
+          name 
+          "b/4"
+          (concat (to-string (round (ev-param :dur event))) "r")
+          "none")
+        (istype 'num) (send-text-note 
+          name 
+          (mtovex (round (ev-param :note event))) 
+          (to-string (round (ev-param :dur event)))
+          (ev-param :articulation event)
+          (ev-param :syllable event)) 
+        ))))	
 
 ;; note shorthands
 (fun c (oct dur)
@@ -108,3 +141,61 @@
 
 (fun r (dur) 
   (note "rest" dur))
+
+;; text note shorthands
+(fun ly-c (oct dur syl)
+  (note (mul oct 12) dur :syl syl))
+
+(fun ly-cs (oct dur syl)
+  (note (add 1 (mul oct 12)) dur :syl syl))
+
+(fun ly-d (oct dur syl)
+  (note (add 2 (mul oct 12)) dur :syl syl))
+
+(fun ly-ds (oct dur syl)
+  (note (add 3 (mul oct 12)) dur :syl syl))
+
+(fun ly-e (oct dur syl)
+  (note (add 4 (mul oct 12)) dur :syl syl))
+
+(fun ly-f (oct dur syl)
+  (note (add 5 (mul oct 12)) dur :syl syl))
+
+(fun ly-fs (oct dur syl)
+  (note (add 6 (mul oct 12)) dur :syl syl))
+
+(fun ly-g (oct dur syl)
+  (note (add 7 (mul oct 12)) dur :syl syl))
+
+(fun ly-gs (oct dur syl)
+  (note (add 8 (mul oct 12)) dur :syl syl))
+
+(fun ly-a (oct dur syl)
+  (note (add 9 (mul oct 12)) dur :syl syl))
+
+(fun lya-s (oct dur syl)
+  (note (add 10 (mul oct 12)) dur :syl syl))
+
+(fun ly-b (oct dur syl)
+  (note (add 11 (mul oct 12)) dur :syl syl))
+
+
+(fun with-metro-4 (score)
+  (sx 'treble-cond #t   
+    ;; visual metronome
+    (loop 'metrovis :dur (div 12000 16)
+      (tb "metro" "1" 100 800)
+      (tb "metro" "2" 140 800)
+      (tb "metro" "3" 180 800)
+      (tb "metro" "4" 220 770)
+      )
+    ;; fun
+    (loop 'conductor :dur (div 12000 16)
+      (tb "face" "o_o" 400 800)
+      (tb "face" "o_O" 400 800)
+      (tb "face" "O_O" 400 800)
+      (tb "face" "O_o" 400 800)
+      )
+    score
+    )
+  )
