@@ -18,3 +18,5 @@
 * Language: `now` statement to get time since unix epoch in milliseconds, as u128
 * Language: `get` for maps
 * Language: make `inh`/`inhibit` and `exh`/`exhibit` the minimalist modifiers they once were
+* Language/Sound: a synchronized loop recorder - `looprec` 
+* Language: commands to clear live buffers - `clearbufs`, `clearlive`, `clearfreeze`, `clearalllive`, `clearallfreeze`
