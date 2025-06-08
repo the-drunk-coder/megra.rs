@@ -36,13 +36,13 @@ pub fn facts(
         bail!("facts - missing name");
     };
 
-    // the param to be factorized
-    let param = if let Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(n)))) =
-        tail_drain.next()
-    {
-        n
-    } else {
-        bail!("facts - missing param");
+    // the param to be multiplied with the factors
+    let param = match tail_drain.next() {
+        Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(n)))) => n,
+        Some(EvaluatedExpr::Keyword(n)) => n,
+        _ => {
+            bail!("facts - missing param descriptor");
+        }
     };
 
     let dur: DynVal = if let TypedEntity::ConfigParameter(ConfigParameter::Numeric(d)) = globals
