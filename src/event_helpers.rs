@@ -6,7 +6,7 @@ use ruffbox_synth::building_blocks::{
 use ruffbox_synth::synths::{SynthDescription, SynthType};
 use std::collections::HashMap;
 
-use crate::parameter::ParameterAddress;
+use crate::parameter::{NoteParameterLabel, ParameterAddress};
 
 /// generate the ruffbox synth type from available data ...
 pub fn map_synth_type(
@@ -409,76 +409,80 @@ pub fn map_parameter(name: &str) -> ParameterAddress {
         }
     }
 
-    let label = match id_str.as_str() {
-        "freq" => SynthParameterLabel::PitchFrequency,
-        "osc" => SynthParameterLabel::OscillatorType,
-        "note" => SynthParameterLabel::PitchNote,
-        "midi" => SynthParameterLabel::PitchNote,
-        "atk" => SynthParameterLabel::Attack,
-        "atkt" => SynthParameterLabel::AttackType,
-        "atkp" => SynthParameterLabel::AttackPeakLevel,
-        "dec" => SynthParameterLabel::Decay,
-        "dect" => SynthParameterLabel::DecayType,
-        "rel" => SynthParameterLabel::Release,
-        "relt" => SynthParameterLabel::ReleaseType,
-        "sus" => SynthParameterLabel::Sustain,
-        "env" => SynthParameterLabel::Envelope,
-        "pos" => SynthParameterLabel::ChannelPosition,
-        "lvl" => SynthParameterLabel::EnvelopeLevel,
-        "amp" => SynthParameterLabel::OscillatorAmplitude,
-        "amp1" => SynthParameterLabel::OscillatorAmplitude,
-        "amp2" => SynthParameterLabel::OscillatorAmplitude,
-        "amp3" => SynthParameterLabel::OscillatorAmplitude,
-        "amp4" => SynthParameterLabel::OscillatorAmplitude,
-        "gain" => SynthParameterLabel::OscillatorAmplitude, // a bit of a compromise, for legacy reasons ...
-        "dur" => SynthParameterLabel::Duration,
-        "lpf" => SynthParameterLabel::LowpassCutoffFrequency,
-        "lpd" => SynthParameterLabel::LowpassFilterDistortion,
-        "lpq" => SynthParameterLabel::LowpassQFactor,
-        "lpt" => SynthParameterLabel::LowpassFilterType,
-        "hpf" => SynthParameterLabel::HighpassCutoffFrequency,
-        "hpq" => SynthParameterLabel::HighpassQFactor,
-        "hpt" => SynthParameterLabel::HighpassFilterType,
-        "pff" => SynthParameterLabel::PeakFrequency,
-        "pfbw" => SynthParameterLabel::PeakBandwidth,
-        "pfg" => SynthParameterLabel::PeakGain,
-        "pw" => SynthParameterLabel::Pulsewidth,
-        "rate" => SynthParameterLabel::PlaybackRate,
-        "start" => SynthParameterLabel::PlaybackStart,
-        "loop" => SynthParameterLabel::PlaybackLoop,
-        "bufnum" => SynthParameterLabel::SampleBufferNumber,
-        "rev" => SynthParameterLabel::ReverbMix,
-        "del" => SynthParameterLabel::DelayMix,
-        "azi" => SynthParameterLabel::AmbisonicAzimuth,
-        "ele" => SynthParameterLabel::AmbisonicElevation,
-        "wt" | "wavetable" => SynthParameterLabel::Wavetable,
-        "wm" | "wavematrix" => SynthParameterLabel::Wavematrix,
-        "ti" | "tableindex" => SynthParameterLabel::WavematrixTableIndex,
-        "dist" => SynthParameterLabel::WaveshaperMix,
-        "delfb" => SynthParameterLabel::DelayFeedback,
-        "deldf" => SynthParameterLabel::DelayDampeningFrequency,
-        "delft" => SynthParameterLabel::DelayDampeningFilterType,
-        "ft" => SynthParameterLabel::FilterType,
-        "osct" => SynthParameterLabel::OscillatorType,
-        "bcmix" => SynthParameterLabel::BitcrusherMix,
-        "bcbits" => SynthParameterLabel::BitcrusherBits,
-        "bcdown" => SynthParameterLabel::BitcrusherDownsampling,
-        "bcmode" => SynthParameterLabel::BitcrusherMode,
-        "nharm" => SynthParameterLabel::NumHarmonics,
-        "art" | "articulation" => SynthParameterLabel::NoteArticulation,
-        "syl" | "syllable" => SynthParameterLabel::NoteSyllable,
-        _ => SynthParameterLabel::PitchFrequency,
+    let address = match id_str.as_str() {
+        "freq" => SynthParameterLabel::PitchFrequency.into(),
+        "osc" => SynthParameterLabel::OscillatorType.into(),
+        "note" => NoteParameterLabel::Pitch.into(),
+        "midi" => NoteParameterLabel::Pitch.into(),
+        "atk" => SynthParameterLabel::Attack.into(),
+        "atkt" => SynthParameterLabel::AttackType.into(),
+        "atkp" => SynthParameterLabel::AttackPeakLevel.into(),
+        "dec" => SynthParameterLabel::Decay.into(),
+        "dect" => SynthParameterLabel::DecayType.into(),
+        "rel" => SynthParameterLabel::Release.into(),
+        "relt" => SynthParameterLabel::ReleaseType.into(),
+        "sus" => SynthParameterLabel::Sustain.into(),
+        "env" => SynthParameterLabel::Envelope.into(),
+        "pos" => SynthParameterLabel::ChannelPosition.into(),
+        "lvl" => SynthParameterLabel::EnvelopeLevel.into(),
+        "amp" => SynthParameterLabel::OscillatorAmplitude.into(),
+        "amp1" => SynthParameterLabel::OscillatorAmplitude.into(),
+        "amp2" => SynthParameterLabel::OscillatorAmplitude.into(),
+        "amp3" => SynthParameterLabel::OscillatorAmplitude.into(),
+        "amp4" => SynthParameterLabel::OscillatorAmplitude.into(),
+        "gain" => SynthParameterLabel::OscillatorAmplitude.into(), // a bit of a compromise.into(), for legacy reasons ...
+        "dur" => SynthParameterLabel::Duration.into(),
+        "lpf" => SynthParameterLabel::LowpassCutoffFrequency.into(),
+        "lpd" => SynthParameterLabel::LowpassFilterDistortion.into(),
+        "lpq" => SynthParameterLabel::LowpassQFactor.into(),
+        "lpt" => SynthParameterLabel::LowpassFilterType.into(),
+        "hpf" => SynthParameterLabel::HighpassCutoffFrequency.into(),
+        "hpq" => SynthParameterLabel::HighpassQFactor.into(),
+        "hpt" => SynthParameterLabel::HighpassFilterType.into(),
+        "pff" => SynthParameterLabel::PeakFrequency.into(),
+        "pfbw" => SynthParameterLabel::PeakBandwidth.into(),
+        "pfg" => SynthParameterLabel::PeakGain.into(),
+        "pw" => SynthParameterLabel::Pulsewidth.into(),
+        "rate" => SynthParameterLabel::PlaybackRate.into(),
+        "start" => SynthParameterLabel::PlaybackStart.into(),
+        "loop" => SynthParameterLabel::PlaybackLoop.into(),
+        "bufnum" => SynthParameterLabel::SampleBufferNumber.into(),
+        "rev" => SynthParameterLabel::ReverbMix.into(),
+        "del" => SynthParameterLabel::DelayMix.into(),
+        "azi" => SynthParameterLabel::AmbisonicAzimuth.into(),
+        "ele" => SynthParameterLabel::AmbisonicElevation.into(),
+        "wt" | "wavetable" => SynthParameterLabel::Wavetable.into(),
+        "wm" | "wavematrix" => SynthParameterLabel::Wavematrix.into(),
+        "ti" | "tableindex" => SynthParameterLabel::WavematrixTableIndex.into(),
+        "dist" => SynthParameterLabel::WaveshaperMix.into(),
+        "delfb" => SynthParameterLabel::DelayFeedback.into(),
+        "deldf" => SynthParameterLabel::DelayDampeningFrequency.into(),
+        "delft" => SynthParameterLabel::DelayDampeningFilterType.into(),
+        "ft" => SynthParameterLabel::FilterType.into(),
+        "osct" => SynthParameterLabel::OscillatorType.into(),
+        "bcmix" => SynthParameterLabel::BitcrusherMix.into(),
+        "bcbits" => SynthParameterLabel::BitcrusherBits.into(),
+        "bcdown" => SynthParameterLabel::BitcrusherDownsampling.into(),
+        "bcmode" => SynthParameterLabel::BitcrusherMode.into(),
+        "nharm" => SynthParameterLabel::NumHarmonics.into(),
+        "art" | "articulation" => NoteParameterLabel::Articulation.into(),
+        "syl" | "syllable" => NoteParameterLabel::Syllable.into(),
+        _ => SynthParameterLabel::PitchFrequency.into(),
     };
 
     if let Ok(idx) = idx_str.parse::<usize>() {
         if idx > 0 {
-            // we start counting at one in this case,
-            // zero is the same as no index ...
-            label.with_index(idx - 1).into()
+            if let ParameterAddress::Ruffbox(addr) = address {
+                // we start counting at one in this case,
+                // zero is the same as no index ...
+                addr.label.with_index(idx - 1).into()
+            } else {
+                address
+            }
         } else {
-            label.into()
+            address
         }
     } else {
-        label.into()
+        address
     }
 }

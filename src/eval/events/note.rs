@@ -1,13 +1,14 @@
 use std::sync;
 
 use anyhow::{bail, Result};
+
 use ruffbox_synth::building_blocks::SynthParameterLabel;
 
 use crate::{
     eval::resolver::resolve_globals,
     eval::{EvaluatedExpr, FunctionMap},
     event::Event,
-    parameter::DynVal,
+    parameter::{DynVal, NoteParameterLabel},
     sample_set::SampleAndWavematrixSet,
     session::OutputMode,
     Comparable, GlobalVariables, TypedEntity,
@@ -28,13 +29,13 @@ pub fn event_note(
     match tail_drain.next() {
         Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::String(s)))) => {
             ev.params.insert(
-                SynthParameterLabel::PitchNote.into(),
+                NoteParameterLabel::Pitch.into(),
                 crate::parameter::ParameterValue::Symbolic(s),
             );
         }
         Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f)))) => {
             ev.params.insert(
-                SynthParameterLabel::PitchNote.into(),
+                NoteParameterLabel::Pitch.into(),
                 crate::parameter::ParameterValue::Scalar(DynVal::with_value(f)),
             );
         }
@@ -110,10 +111,10 @@ pub fn event_note(
     }
 
     ev.params
-        .insert(SynthParameterLabel::NoteArticulation.into(), art);
+        .insert(NoteParameterLabel::Articulation.into(), art);
 
     ev.params
-        .insert(SynthParameterLabel::NoteSyllable.into(), syllable);
+        .insert(NoteParameterLabel::Syllable.into(), syllable);
 
     Ok(EvaluatedExpr::Typed(TypedEntity::SoundEvent(ev)))
 }

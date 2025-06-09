@@ -15,12 +15,26 @@ use crate::builtin_types::{Comparable, LazyArithmetic};
 use crate::eval::resolver::resolve_lazy;
 use crate::{GlobalVariables, TypedEntity, VariableId};
 
+#[derive(Clone, Copy, Hash, PartialEq, Eq, Debug)]
+pub enum NoteParameterLabel {
+    Pitch,
+    Syllable,
+    Articulation,
+}
+
 #[derive(Clone, Hash, PartialEq, Eq, Debug)]
 pub enum ParameterAddress {
     // ruffbox address
     Ruffbox(SynthParameterAddress),
+    Note(NoteParameterLabel),
     // custom address
     Custom(String),
+}
+
+impl From<NoteParameterLabel> for ParameterAddress {
+    fn from(label: NoteParameterLabel) -> Self {
+        ParameterAddress::Note(label)
+    }
 }
 
 // apply, label_found
@@ -51,9 +65,27 @@ pub fn address_applicable(ko: &ParameterAddress, ks: &ParameterAddress) -> (bool
             }
             (applicable, label_found)
         }
+
+        (ParameterAddress::Custom(a), ParameterAddress::Custom(b)) => (a == b, a != b),
+
+        (
+            ParameterAddress::Note(note_parameter_label_a),
+            ParameterAddress::Note(note_parameter_label_b),
+        ) => {
+	    println!("check notre appl {:?}", (
+            note_parameter_label_a == note_parameter_label_b,
+            note_parameter_label_a != note_parameter_label_b,
+        ));
+	    (
+            note_parameter_label_a == note_parameter_label_b,
+            note_parameter_label_a != note_parameter_label_b,
+        )},
         (ParameterAddress::Ruffbox(_), ParameterAddress::Custom(_)) => (false, false),
         (ParameterAddress::Custom(_), ParameterAddress::Ruffbox(_)) => (false, false),
-        (ParameterAddress::Custom(a), ParameterAddress::Custom(b)) => (a == b, a != b),
+        (ParameterAddress::Note(_), ParameterAddress::Ruffbox(_)) => (false, false),
+        (ParameterAddress::Ruffbox(_), ParameterAddress::Note(_)) => (false, false),
+        (ParameterAddress::Note(_), ParameterAddress::Custom(_)) => (false, false),
+        (ParameterAddress::Custom(_), ParameterAddress::Note(_)) => (false, false),
     }
 }
 

@@ -2,7 +2,7 @@ use crate::builtin_types::{Comparable, TypedEntity};
 use crate::eval::{EvaluatedExpr, FunctionMap};
 use crate::event::{Event, EventOperation};
 use crate::music_theory;
-use crate::parameter::{DynVal, ParameterAddress, ParameterValue};
+use crate::parameter::{DynVal, NoteParameterLabel, ParameterAddress, ParameterValue};
 use crate::sample_set::SampleLookup;
 use crate::{GlobalVariables, OutputMode, SampleAndWavematrixSet};
 
@@ -185,11 +185,7 @@ pub fn parameter(
                 EventOperation::Replace
             };
 
-            let ParameterAddress::Ruffbox(param_key) =
-                crate::event_helpers::map_parameter(parts[0])
-            else {
-                bail!("custom event arithmetic not supported yet")
-            };
+            let param_key = crate::event_helpers::map_parameter(parts[0]);
 
             if let Some(p) = tail_drain.next() {
                 let mut ev = Event::with_name_and_operation(parts[0].to_string(), op);
@@ -201,31 +197,49 @@ pub fn parameter(
                         Some(ParameterValue::Scalar(pl))
                     }
                     EvaluatedExpr::Typed(TypedEntity::ParameterValue(m)) => Some(m),
-                    EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(s)))
-                        if param_key.label == SynthParameterLabel::PitchFrequency
-                            || param_key.label == SynthParameterLabel::LowpassCutoffFrequency
-                            || param_key.label == SynthParameterLabel::HighpassCutoffFrequency
-                            || param_key.label == SynthParameterLabel::PeakFrequency =>
-                    {
-                        music_theory::from_string(&s)
-                            .map(|note| {
-                                ParameterValue::Scalar(DynVal::with_value(music_theory::to_freq(
-                                    note,
-                                    music_theory::Tuning::EqualTemperament,
-                                )))
-                            })
-                            .ok()
-                    }
-                    EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(s)))
-                        if param_key.label == SynthParameterLabel::NoteArticulation =>
-                    {
-                        Some(ParameterValue::Symbolic(s))
-                    }
                     EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Symbol(s))) => {
-                        // jump out if the user entered garbage ...
-                        crate::eval::events::sound::map_symbolic_param_value(&s)
+                        match param_key {
+                            ParameterAddress::Ruffbox(synth_parameter_address)
+                                if synth_parameter_address.label
+                                    == SynthParameterLabel::PitchFrequency
+                                    || synth_parameter_address.label
+                                        == SynthParameterLabel::LowpassCutoffFrequency
+                                    || synth_parameter_address.label
+                                        == SynthParameterLabel::HighpassCutoffFrequency
+                                    || synth_parameter_address.label
+                                        == SynthParameterLabel::PeakFrequency =>
+                            {
+                                music_theory::from_string(&s)
+                                    .map(|note| {
+                                        ParameterValue::Scalar(DynVal::with_value(
+                                            music_theory::to_freq(
+                                                note,
+                                                music_theory::Tuning::EqualTemperament,
+                                            ),
+                                        ))
+                                    })
+                                    .ok()
+                            }
+                            ParameterAddress::Note(NoteParameterLabel::Pitch) => {
+                                music_theory::from_string(&s)
+                                    .map(|note| {
+                                        ParameterValue::Scalar(DynVal::with_value(
+                                            music_theory::to_freq(
+                                                note,
+                                                music_theory::Tuning::EqualTemperament,
+                                            ),
+                                        ))
+                                    })
+                                    .ok()
+                            }
+                            ParameterAddress::Note(NoteParameterLabel::Articulation) => {
+                                Some(ParameterValue::Symbolic(s))
+                            }
+
+                            _ => crate::eval::events::sound::map_symbolic_param_value(&s),
+                        }
                     }
-                    _ => Some(ParameterValue::Scalar(DynVal::with_value(0.5))), // should be save ...
+                    _ => Some(ParameterValue::Scalar(DynVal::with_value(0.5))), // should be safe ...
                 };
 
                 // see if we have an explicit index for a parameter address
@@ -248,10 +262,14 @@ pub fn parameter(
 
                 if let Some(p) = par {
                     if let Some(i) = idx {
-                        // set the index ...
-                        ev.params.insert(param_key.label.with_index(i).into(), p);
+                        if let ParameterAddress::Ruffbox(raddr) = param_key {
+                            // set the index ...
+                            ev.params.insert(raddr.label.with_index(i).into(), p);
+                        } else {
+                            ev.params.insert(param_key, p);
+                        }
                     } else {
-                        ev.params.insert(param_key.into(), p);
+                        ev.params.insert(param_key, p);
                     }
                 }
 
