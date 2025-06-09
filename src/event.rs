@@ -7,7 +7,7 @@ use std::fmt::*;
 
 use crate::builtin_types::Command;
 use crate::parameter::{
-    address_applicable, resolve_parameter, shake_parameter, DynVal, ParameterAddress,
+    address_applicable, match_label, resolve_parameter, shake_parameter, DynVal, ParameterAddress,
     ParameterValue,
 };
 use crate::sample_set::SampleLookup;
@@ -105,16 +105,20 @@ impl StaticEvent {
         }
 
         // TODO: handle vector values here ...
-
         for (ko, vo) in other.params.iter() {
             let mut label_found = false;
 
             for (ks, vs) in self.params.iter_mut() {
-                let (applicable, lf) = address_applicable(ko, ks);
-                if applicable {
+                if address_applicable(ko, ks) {
                     *vs = calc_spv(vs, vo, other.op);
-                }
-                label_found = lf;
+                    // don't overwrite parameter
+                    label_found = true;
+                } else if match_label(ko, ks) {
+                    // the case when the label matches,
+                    // but the index doesn't ... in that
+                    // case, don't overwrite the parameter below
+                    label_found = true
+                };
             }
 
             // if the label hasn't been found at all,

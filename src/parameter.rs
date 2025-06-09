@@ -38,11 +38,10 @@ impl From<NoteParameterLabel> for ParameterAddress {
 }
 
 // apply, label_found
-pub fn address_applicable(ko: &ParameterAddress, ks: &ParameterAddress) -> (bool, bool) {
+pub fn address_applicable(ko: &ParameterAddress, ks: &ParameterAddress) -> bool {
     match (ko, ks) {
         (ParameterAddress::Ruffbox(ko_address), ParameterAddress::Ruffbox(ks_address)) => {
             let mut applicable = false;
-            let mut label_found = false;
 
             if ko_address.label == ks_address.label {
                 // found label of incoming in current param map
@@ -61,31 +60,29 @@ pub fn address_applicable(ko: &ParameterAddress, ks: &ParameterAddress) -> (bool
                     // same label
                     applicable = true;
                 }
-                label_found = true;
             }
-            (applicable, label_found)
+
+            applicable
         }
 
-        (ParameterAddress::Custom(a), ParameterAddress::Custom(b)) => (a == b, a != b),
-
+        (ParameterAddress::Custom(a), ParameterAddress::Custom(b)) => a == b,
         (
             ParameterAddress::Note(note_parameter_label_a),
             ParameterAddress::Note(note_parameter_label_b),
-        ) => {
-	    println!("check notre appl {:?}", (
-            note_parameter_label_a == note_parameter_label_b,
-            note_parameter_label_a != note_parameter_label_b,
-        ));
-	    (
-            note_parameter_label_a == note_parameter_label_b,
-            note_parameter_label_a != note_parameter_label_b,
-        )},
-        (ParameterAddress::Ruffbox(_), ParameterAddress::Custom(_)) => (false, false),
-        (ParameterAddress::Custom(_), ParameterAddress::Ruffbox(_)) => (false, false),
-        (ParameterAddress::Note(_), ParameterAddress::Ruffbox(_)) => (false, false),
-        (ParameterAddress::Ruffbox(_), ParameterAddress::Note(_)) => (false, false),
-        (ParameterAddress::Note(_), ParameterAddress::Custom(_)) => (false, false),
-        (ParameterAddress::Custom(_), ParameterAddress::Note(_)) => (false, false),
+        ) => note_parameter_label_a == note_parameter_label_b,
+        _ => false,
+    }
+}
+
+// apply, label_found
+pub fn match_label(ko: &ParameterAddress, ks: &ParameterAddress) -> bool {
+    match (ko, ks) {
+        (ParameterAddress::Ruffbox(ko_address), ParameterAddress::Ruffbox(ks_address))
+            if ko_address.label == ks_address.label =>
+        {
+            true
+        }
+        _ => false,
     }
 }
 
