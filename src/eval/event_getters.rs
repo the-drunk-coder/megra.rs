@@ -7,13 +7,12 @@ use crate::{
     eval::{EvaluatedExpr, FunctionMap},
     event::InterpretableEvent,
     event_helpers::map_parameter,
-    parameter::ParameterAddress,
     sample_set::SampleAndWavematrixSet,
     session::OutputMode,
     Comparable, GlobalVariables, TypedEntity,
 };
 
-use super::resolver::{resolve_globals, resolve_lazy};
+use super::resolver::resolve_globals;
 
 pub fn event_tag(
     _: &FunctionMap,

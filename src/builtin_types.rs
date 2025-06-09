@@ -8,8 +8,6 @@ use core::fmt;
 use dashmap::DashMap;
 use std::collections::{BTreeSet, HashMap};
 
-use ruffbox_synth::building_blocks::SynthParameterLabel;
-
 // might be unified with event parameters at some point but
 // i'm not sure how yet ...
 #[derive(Clone, Debug)]
