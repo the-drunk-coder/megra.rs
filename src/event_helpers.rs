@@ -6,10 +6,12 @@ use ruffbox_synth::building_blocks::{
 use ruffbox_synth::synths::{SynthDescription, SynthType};
 use std::collections::HashMap;
 
+use crate::parameter::ParameterAddress;
+
 /// generate the ruffbox synth type from available data ...
 pub fn map_synth_type(
     name: &str,
-    params: &HashMap<SynthParameterAddress, SynthParameterValue>,
+    params: &HashMap<ParameterAddress, SynthParameterValue>,
 ) -> SynthType {
     // check whether we have a specified bitcrusher mode ...
     let bitcrusher_mode = if let Some(SynthParameterValue::BitcrusherMode(m)) =
@@ -24,15 +26,18 @@ pub fn map_synth_type(
     let mut pre_filter_effects: Vec<EffectType> = params
         .iter()
         .filter_map(|(k, _)| {
-            let SynthParameterAddress { label, idx: _ } = k;
-            match label {
-                SynthParameterLabel::BitcrusherBits
-                | SynthParameterLabel::BitcrusherMix
-                | SynthParameterLabel::BitcrusherDownsampling => {
-                    Some(EffectType::Bitcrusher(bitcrusher_mode))
+            if let ParameterAddress::Ruffbox(SynthParameterAddress { label, idx: _ }) = k {
+                match label {
+                    SynthParameterLabel::BitcrusherBits
+                    | SynthParameterLabel::BitcrusherMix
+                    | SynthParameterLabel::BitcrusherDownsampling => {
+                        Some(EffectType::Bitcrusher(bitcrusher_mode))
+                    }
+                    SynthParameterLabel::WaveshaperMix => Some(EffectType::Waveshaper),
+                    _ => None,
                 }
-                SynthParameterLabel::WaveshaperMix => Some(EffectType::Waveshaper),
-                _ => None,
+            } else {
+                None
             }
         })
         .collect();
@@ -120,7 +125,7 @@ pub fn map_synth_type(
                             FilterType::BiquadHpf12dB
                         },
                         if params
-                            .get(&SynthParameterLabel::PeakFrequency.with_index(0))
+                            .get(&SynthParameterLabel::PeakFrequency.with_index(0).into())
                             .is_some()
                         {
                             FilterType::PeakEQ
@@ -128,7 +133,7 @@ pub fn map_synth_type(
                             FilterType::Dummy
                         },
                         if params
-                            .get(&SynthParameterLabel::PeakFrequency.with_index(1))
+                            .get(&SynthParameterLabel::PeakFrequency.with_index(1).into())
                             .is_some()
                         {
                             FilterType::PeakEQ
@@ -158,7 +163,7 @@ pub fn map_synth_type(
                             FilterType::BiquadHpf12dB
                         },
                         if params
-                            .get(&SynthParameterLabel::PeakFrequency.with_index(0))
+                            .get(&SynthParameterLabel::PeakFrequency.with_index(0).into())
                             .is_some()
                         {
                             FilterType::PeakEQ
@@ -166,7 +171,7 @@ pub fn map_synth_type(
                             FilterType::Dummy
                         },
                         if params
-                            .get(&SynthParameterLabel::PeakFrequency.with_index(1))
+                            .get(&SynthParameterLabel::PeakFrequency.with_index(1).into())
                             .is_some()
                         {
                             FilterType::PeakEQ
@@ -197,7 +202,7 @@ pub fn map_synth_type(
                     FilterType::BiquadHpf12dB
                 },
                 if params
-                    .get(&SynthParameterLabel::PeakFrequency.with_index(0))
+                    .get(&SynthParameterLabel::PeakFrequency.with_index(0).into())
                     .is_some()
                 {
                     FilterType::PeakEQ
@@ -205,7 +210,7 @@ pub fn map_synth_type(
                     FilterType::Dummy
                 },
                 if params
-                    .get(&SynthParameterLabel::PeakFrequency.with_index(1))
+                    .get(&SynthParameterLabel::PeakFrequency.with_index(1).into())
                     .is_some()
                 {
                     FilterType::PeakEQ
@@ -234,7 +239,7 @@ pub fn map_synth_type(
                     FilterType::BiquadHpf12dB
                 },
                 if params
-                    .get(&SynthParameterLabel::PeakFrequency.with_index(0))
+                    .get(&SynthParameterLabel::PeakFrequency.with_index(0).into())
                     .is_some()
                 {
                     FilterType::PeakEQ
@@ -242,7 +247,7 @@ pub fn map_synth_type(
                     FilterType::Dummy
                 },
                 if params
-                    .get(&SynthParameterLabel::PeakFrequency.with_index(1))
+                    .get(&SynthParameterLabel::PeakFrequency.with_index(1).into())
                     .is_some()
                 {
                     FilterType::PeakEQ
@@ -304,7 +309,7 @@ pub fn map_synth_type(
         "mosc" => {
             let mut osc_types = Vec::new();
             if let Some(SynthParameterValue::OscillatorType(o)) =
-                params.get(&SynthParameterLabel::OscillatorType.with_index(0))
+                params.get(&SynthParameterLabel::OscillatorType.with_index(0).into())
             {
                 if osc_types.is_empty() {
                     osc_types.push(*o);
@@ -313,7 +318,7 @@ pub fn map_synth_type(
                 }
             }
             if let Some(SynthParameterValue::OscillatorType(o)) =
-                params.get(&SynthParameterLabel::OscillatorType.with_index(1))
+                params.get(&SynthParameterLabel::OscillatorType.with_index(1).into())
             {
                 if osc_types.len() < 2 {
                     for _ in osc_types.len()..2 {
@@ -323,7 +328,7 @@ pub fn map_synth_type(
                 osc_types[1] = *o;
             }
             if let Some(SynthParameterValue::OscillatorType(o)) =
-                params.get(&SynthParameterLabel::OscillatorType.with_index(2))
+                params.get(&SynthParameterLabel::OscillatorType.with_index(2).into())
             {
                 if osc_types.len() < 3 {
                     for _ in osc_types.len()..3 {
@@ -333,7 +338,7 @@ pub fn map_synth_type(
                 osc_types[2] = *o;
             }
             if let Some(SynthParameterValue::OscillatorType(o)) =
-                params.get(&SynthParameterLabel::OscillatorType.with_index(3))
+                params.get(&SynthParameterLabel::OscillatorType.with_index(3).into())
             {
                 if osc_types.len() < 4 {
                     for _ in osc_types.len()..4 {
@@ -389,7 +394,7 @@ pub fn map_synth_type(
     }
 }
 
-pub fn map_parameter(name: &str) -> SynthParameterAddress {
+pub fn map_parameter(name: &str) -> ParameterAddress {
     let mut id_str = "".to_string();
     let mut idx_str = "".to_string();
 
@@ -469,7 +474,7 @@ pub fn map_parameter(name: &str) -> SynthParameterAddress {
         if idx > 0 {
             // we start counting at one in this case,
             // zero is the same as no index ...
-            label.with_index(idx - 1)
+            label.with_index(idx - 1).into()
         } else {
             label.into()
         }

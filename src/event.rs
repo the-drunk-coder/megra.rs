@@ -1,13 +1,15 @@
 use core::fmt;
 use ruffbox_synth::building_blocks::{
-    EnvelopeSegmentInfo, EnvelopeSegmentType, SynthParameterAddress, SynthParameterLabel,
-    SynthParameterValue, ValOp,
+    EnvelopeSegmentInfo, EnvelopeSegmentType, SynthParameterLabel, SynthParameterValue, ValOp,
 };
 use std::collections::{BTreeSet, HashMap, HashSet};
 use std::fmt::*;
 
 use crate::builtin_types::Command;
-use crate::parameter::{resolve_parameter, shake_parameter, DynVal, ParameterValue};
+use crate::parameter::{
+    address_applicable, resolve_parameter, shake_parameter, DynVal, ParameterAddress,
+    ParameterValue,
+};
 use crate::sample_set::SampleLookup;
 use crate::session::SyncContext;
 use crate::synth_parameter_value_arithmetic::*;
@@ -27,7 +29,7 @@ pub enum EventOperation {
 #[derive(Clone)]
 pub struct Event {
     pub name: String,
-    pub params: HashMap<SynthParameterAddress, ParameterValue>,
+    pub params: HashMap<ParameterAddress, ParameterValue>,
     pub tags: BTreeSet<String>,
     pub op: EventOperation,
     // sample lookup is handled apart from the
@@ -49,7 +51,7 @@ impl Debug for Event {
 #[derive(Clone, Debug)]
 pub struct StaticEvent {
     pub name: String,
-    pub params: HashMap<SynthParameterAddress, SynthParameterValue>,
+    pub params: HashMap<ParameterAddress, SynthParameterValue>,
     pub tags: BTreeSet<String>,
     pub op: EventOperation,
     pub sample_lookup: Option<SampleLookup>,
@@ -108,32 +110,17 @@ impl StaticEvent {
             let mut label_found = false;
 
             for (ks, vs) in self.params.iter_mut() {
-                // if the labels don't match, don't do anything
-                if ko.label == ks.label {
-                    // found label of incoming in current param map
-                    //
-                    // if the incoming event has an index specified,
-                    // apply if the index matches
-                    if let Some(idxo) = ko.idx {
-                        if let Some(idxs) = ks.idx {
-                            if idxs == idxo {
-                                *vs = calc_spv(vs, vo, other.op);
-                            }
-                        }
-                    } else {
-                        // if the incoming has no index specified,
-                        // apply to all self params that have the
-                        // same label
-                        *vs = calc_spv(vs, vo, other.op);
-                    }
-                    label_found = true;
+                let (applicable, lf) = address_applicable(ko, ks);
+                if applicable {
+                    *vs = calc_spv(vs, vo, other.op);
                 }
+                label_found = lf;
             }
 
             // if the label hasn't been found at all,
             // add the parameter
             if !label_found {
-                self.params.insert(*ko, vo.clone());
+                self.params.insert(ko.clone(), vo.clone());
             }
         }
 
@@ -390,19 +377,25 @@ impl Event {
     pub fn evaluate_parameters(
         &mut self,
         globals: &std::sync::Arc<GlobalVariables>,
-    ) -> HashMap<SynthParameterAddress, SynthParameterValue> {
+    ) -> HashMap<ParameterAddress, SynthParameterValue> {
         let mut map = HashMap::new();
 
         for (k, v) in self.params.iter_mut() {
-            map.insert(*k, resolve_parameter(k.label, v, globals));
+            map.insert(k.clone(), resolve_parameter(k, v, globals));
         }
 
         map
     }
 
-    pub fn shake(&mut self, factor: f32, keep: &HashSet<SynthParameterLabel>) {
+    pub fn shake(&mut self, factor: f32, keep: &HashSet<ParameterAddress>) {
         for (k, v) in self.params.iter_mut() {
-            if !keep.contains(&k.label) && k.label != SynthParameterLabel::SampleBufferNumber {
+            if let ParameterAddress::Ruffbox(rpa) = k {
+                if !keep.contains(&k) && rpa.label != SynthParameterLabel::SampleBufferNumber {
+                    shake_parameter(v, factor);
+                } else {
+                    shake_parameter(v, factor);
+                };
+            } else {
                 shake_parameter(v, factor);
             }
         }

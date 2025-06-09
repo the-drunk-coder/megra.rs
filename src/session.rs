@@ -264,6 +264,10 @@ fn eval_loop<const BUFSIZE: usize, const NCHAN: usize>(
                 ) {
                     // set parameters and trigger instance
                     for (addr, v) in s.params.iter() {
+                        let ParameterAddress::Ruffbox(addr) = addr else {
+                            println!("can't use mégra-only parameter {addr:?} for ruffbox synths");
+                            continue;
+                        };
                         // special handling for stereo param
                         match addr.label {
                             SynthParameterLabel::ChannelPosition => {

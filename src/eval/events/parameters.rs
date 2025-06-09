@@ -2,7 +2,7 @@ use crate::builtin_types::{Comparable, TypedEntity};
 use crate::eval::{EvaluatedExpr, FunctionMap};
 use crate::event::{Event, EventOperation};
 use crate::music_theory;
-use crate::parameter::{DynVal, ParameterValue};
+use crate::parameter::{DynVal, ParameterAddress, ParameterValue};
 use crate::sample_set::SampleLookup;
 use crate::{GlobalVariables, OutputMode, SampleAndWavematrixSet};
 
@@ -185,7 +185,11 @@ pub fn parameter(
                 EventOperation::Replace
             };
 
-            let param_key = crate::event_helpers::map_parameter(parts[0]);
+            let ParameterAddress::Ruffbox(param_key) =
+                crate::event_helpers::map_parameter(parts[0])
+            else {
+                bail!("custom event arithmetic not supported yet")
+            };
 
             if let Some(p) = tail_drain.next() {
                 let mut ev = Event::with_name_and_operation(parts[0].to_string(), op);
@@ -245,9 +249,9 @@ pub fn parameter(
                 if let Some(p) = par {
                     if let Some(i) = idx {
                         // set the index ...
-                        ev.params.insert(param_key.label.with_index(i), p);
+                        ev.params.insert(param_key.label.with_index(i).into(), p);
                     } else {
-                        ev.params.insert(param_key, p);
+                        ev.params.insert(param_key.into(), p);
                     }
                 }
 

@@ -117,7 +117,7 @@ pub enum Command {
     Bpm(f32),             // set default tempo in bpm
     DefaultDuration(f32), // set default duration in milliseconds
     GlobRes(f32),         // global resources for lifemodel algorithm
-    GlobalRuffboxParams(HashMap<SynthParameterLabel, ParameterValue>), // global ruffbox params
+    GlobalRuffboxParams(HashMap<ParameterAddress, ParameterValue>), // global ruffbox params
     LoadSampleAsWavematrix(String, String, String, (usize, usize), f32), // key, path, method, matrix size, start
     ImportSampleSet(SampleResource),
     LoadSample(String, Vec<String>, String, bool), // set (events), keyword, path, downmix_stereo

@@ -7,11 +7,67 @@ use std::boxed::Box;
 use std::fmt::*;
 
 use ruffbox_synth::building_blocks::{EnvelopeSegmentInfo, EnvelopeSegmentType, OscillatorType};
-use ruffbox_synth::building_blocks::{FilterType, SynthParameterLabel, SynthParameterValue, ValOp};
+use ruffbox_synth::building_blocks::{
+    FilterType, SynthParameterAddress, SynthParameterLabel, SynthParameterValue, ValOp,
+};
 
 use crate::builtin_types::{Comparable, LazyArithmetic};
 use crate::eval::resolver::resolve_lazy;
 use crate::{GlobalVariables, TypedEntity, VariableId};
+
+#[derive(Clone, Hash, PartialEq, Eq, Debug)]
+pub enum ParameterAddress {
+    // ruffbox address
+    Ruffbox(SynthParameterAddress),
+    // custom address
+    Custom(String),
+}
+
+// apply, label_found
+pub fn address_applicable(ko: &ParameterAddress, ks: &ParameterAddress) -> (bool, bool) {
+    match (ko, ks) {
+        (ParameterAddress::Ruffbox(ko_address), ParameterAddress::Ruffbox(ks_address)) => {
+            let mut applicable = false;
+            let mut label_found = false;
+
+            if ko_address.label == ks_address.label {
+                // found label of incoming in current param map
+                //
+                // if the incoming event has an index specified,
+                // apply if the index matches
+                if let Some(idxo) = ko_address.idx {
+                    if let Some(idxs) = ks_address.idx {
+                        if idxs == idxo {
+                            applicable = true
+                        }
+                    }
+                } else {
+                    // if the incoming has no index specified,
+                    // apply to all self params that have the
+                    // same label
+                    applicable = true;
+                }
+                label_found = true;
+            }
+            (applicable, label_found)
+        }
+        (ParameterAddress::Ruffbox(_), ParameterAddress::Custom(_)) => (false, false),
+        (ParameterAddress::Custom(_), ParameterAddress::Ruffbox(_)) => (false, false),
+        (ParameterAddress::Custom(a), ParameterAddress::Custom(b)) => (a == b, a != b),
+    }
+}
+
+impl From<SynthParameterLabel> for ParameterAddress {
+    fn from(label: SynthParameterLabel) -> Self {
+        ParameterAddress::Ruffbox(label.into())
+    }
+}
+
+impl From<SynthParameterAddress> for ParameterAddress {
+    fn from(addr: SynthParameterAddress) -> Self {
+        ParameterAddress::Ruffbox(addr)
+    }
+}
 
 #[derive(Clone, Debug)]
 #[rustfmt::skip]
@@ -209,7 +265,7 @@ pub fn translate_stereo(val: SynthParameterValue) -> SynthParameterValue {
 }
 
 pub fn resolve_parameter(
-    k: SynthParameterLabel,
+    k: &ParameterAddress,
     v: &mut ParameterValue,
     globals: &std::sync::Arc<GlobalVariables>,
 ) -> SynthParameterValue {
@@ -228,8 +284,12 @@ pub fn resolve_parameter(
         ParameterValue::OscillatorType(t) => SynthParameterValue::OscillatorType(*t),
         ParameterValue::BitcrusherMode(m) => SynthParameterValue::BitcrusherMode(*m),
         ParameterValue::Scalar(val) => {
-            if k == SynthParameterLabel::SampleBufferNumber {
-                val.evaluate_val_usize()
+            if let ParameterAddress::Ruffbox(rk) = k {
+                if rk.label == SynthParameterLabel::SampleBufferNumber {
+                    val.evaluate_val_usize()
+                } else {
+                    val.evaluate_val_f32()
+                }
             } else {
                 val.evaluate_val_f32()
             }
@@ -267,13 +327,13 @@ pub fn resolve_parameter(
         ParameterValue::Lfo(init, freq, eff_phase, amp, add, op) => SynthParameterValue::Lfo(
             init.evaluate_numerical(),
             Box::new(resolve_parameter(
-                SynthParameterLabel::PitchFrequency,
+                &SynthParameterLabel::PitchFrequency.into(),
                 freq,
                 globals,
             )),
             eff_phase.evaluate_numerical(),
             Box::new(resolve_parameter(
-                SynthParameterLabel::OscillatorAmplitude,
+                &SynthParameterLabel::OscillatorAmplitude.into(),
                 amp,
                 globals,
             )),
@@ -283,13 +343,13 @@ pub fn resolve_parameter(
         ParameterValue::LFSaw(init, freq, eff_phase, amp, add, op) => SynthParameterValue::LFSaw(
             init.evaluate_numerical(),
             Box::new(resolve_parameter(
-                SynthParameterLabel::PitchFrequency,
+                &SynthParameterLabel::PitchFrequency.into(),
                 freq,
                 globals,
             )),
             eff_phase.evaluate_numerical(),
             Box::new(resolve_parameter(
-                SynthParameterLabel::OscillatorAmplitude,
+                &SynthParameterLabel::OscillatorAmplitude.into(),
                 amp,
                 globals,
             )),
@@ -299,13 +359,13 @@ pub fn resolve_parameter(
         ParameterValue::LFRSaw(init, freq, eff_phase, amp, add, op) => SynthParameterValue::LFRSaw(
             init.evaluate_numerical(),
             Box::new(resolve_parameter(
-                SynthParameterLabel::PitchFrequency,
+                &SynthParameterLabel::PitchFrequency.into(),
                 freq,
                 globals,
             )),
             eff_phase.evaluate_numerical(),
             Box::new(resolve_parameter(
-                SynthParameterLabel::OscillatorAmplitude,
+                &SynthParameterLabel::OscillatorAmplitude.into(),
                 amp,
                 globals,
             )),
@@ -315,13 +375,13 @@ pub fn resolve_parameter(
         ParameterValue::LFTri(init, freq, eff_phase, amp, add, op) => SynthParameterValue::LFTri(
             init.evaluate_numerical(),
             Box::new(resolve_parameter(
-                SynthParameterLabel::PitchFrequency,
+                &SynthParameterLabel::PitchFrequency.into(),
                 freq,
                 globals,
             )),
             eff_phase.evaluate_numerical(),
             Box::new(resolve_parameter(
-                SynthParameterLabel::OscillatorAmplitude,
+                &SynthParameterLabel::OscillatorAmplitude.into(),
                 amp,
                 globals,
             )),
@@ -331,13 +391,13 @@ pub fn resolve_parameter(
         ParameterValue::LFSquare(init, freq, pw, amp, add, op) => SynthParameterValue::LFSquare(
             init.evaluate_numerical(),
             Box::new(resolve_parameter(
-                SynthParameterLabel::PitchFrequency,
+                &SynthParameterLabel::PitchFrequency.into(),
                 freq,
                 globals,
             )),
             pw.evaluate_numerical(),
             Box::new(resolve_parameter(
-                SynthParameterLabel::OscillatorAmplitude,
+                &SynthParameterLabel::OscillatorAmplitude.into(),
                 amp,
                 globals,
             )),

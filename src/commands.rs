@@ -735,10 +735,14 @@ pub fn set_global_lifemodel_resources(globals: &sync::Arc<GlobalVariables>, val:
 pub fn set_global_ruffbox_parameters<const BUFSIZE: usize, const NCHAN: usize>(
     ruffbox: &sync::Arc<RuffboxControls<BUFSIZE, NCHAN>>,
     globals: &sync::Arc<GlobalVariables>,
-    params: &mut HashMap<SynthParameterLabel, ParameterValue>,
+    params: &mut HashMap<ParameterAddress, ParameterValue>,
 ) {
     for (k, v) in params.iter_mut() {
-        ruffbox.set_master_parameter(*k, resolve_parameter(*k, v, globals))
+        let ParameterAddress::Ruffbox(addr) = k else {
+            println!("can't use mégra-only parameter {k:?} for ruffbox master params");
+            continue;
+        };
+        ruffbox.set_master_parameter(addr.label, resolve_parameter(k, v, globals))
     }
 }
 
@@ -918,6 +922,10 @@ pub fn once<const BUFSIZE: usize, const NCHAN: usize>(
         {
             // set parameters and trigger instance
             for (addr, v) in s.params.iter() {
+                let ParameterAddress::Ruffbox(addr) = addr else {
+                    println!("can't use mégra-only parameter {addr:?} for ruffbox synths");
+                    continue;
+                };
                 // special handling for stereo param
                 match addr.label {
                     SynthParameterLabel::ChannelPosition => {

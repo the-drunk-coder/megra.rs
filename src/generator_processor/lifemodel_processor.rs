@@ -2,8 +2,6 @@ use rand::seq::SliceRandom;
 use rand::Rng;
 use std::{collections::HashSet, sync::*};
 
-use ruffbox_synth::building_blocks::SynthParameterLabel;
-
 use crate::{
     builtin_types::{GlobalVariables, TypedEntity, VariableId},
     generator::modifier_functions_raw::*,
@@ -47,7 +45,7 @@ pub struct LifemodelProcessor {
     pub autophagia_regain: f32,
     pub durations: Vec<DynVal>,
     pub dont_let_die: bool,
-    pub keep_param: HashSet<SynthParameterLabel>,
+    pub keep_param: HashSet<ParameterAddress>,
     pub global_contrib: bool,
     pub solidify_chance: f32,
     pub solidify_len: usize,

@@ -3,13 +3,12 @@ use crate::{
     event::{Event, EventOperation, SourceEvent},
     generator::TimeMod,
     markov_sequence_generator::MarkovSequenceGenerator,
-    parameter::DynVal,
+    parameter::{DynVal, ParameterAddress},
     pfa_growth::*,
     pfa_reverse::*,
     GlobalVariables,
 };
 use rand::seq::SliceRandom;
-use ruffbox_synth::building_blocks::SynthParameterLabel;
 use std::collections::HashSet;
 
 pub fn haste_raw(time_mods: &mut Vec<TimeMod>, v: f32, n: usize) {
@@ -40,7 +39,7 @@ pub fn grown_raw(
     gen: &mut MarkovSequenceGenerator,
     m: &str, // method
     variance: f32,
-    keep: &HashSet<SynthParameterLabel>,
+    keep: &HashSet<ParameterAddress>,
     durations: &[DynVal],
     iterations: usize,
 ) {
@@ -53,7 +52,7 @@ pub fn grow_raw(
     gen: &mut MarkovSequenceGenerator,
     m: &str, // method
     variance: f32,
-    keep: &HashSet<SynthParameterLabel>,
+    keep: &HashSet<ParameterAddress>,
     durations: &[DynVal],
 ) {
     if let Some(result) = match m {
@@ -138,11 +137,7 @@ pub fn sharpen_raw(gen: &mut MarkovSequenceGenerator, factor: f32) {
     gen.set_modified();
 }
 
-pub fn shake_raw(
-    gen: &mut MarkovSequenceGenerator,
-    keep: &HashSet<SynthParameterLabel>,
-    factor: f32,
-) {
+pub fn shake_raw(gen: &mut MarkovSequenceGenerator, keep: &HashSet<ParameterAddress>, factor: f32) {
     gen.generator.blur(factor);
     for (_, (evs, _)) in gen.event_mapping.iter_mut() {
         for ev in evs {

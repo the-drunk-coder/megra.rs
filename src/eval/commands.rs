@@ -646,7 +646,7 @@ pub fn reverb(
                     )))) = tail_drain.next()
                     {
                         param_map.insert(
-                            SynthParameterLabel::ReverbDampening,
+                            SynthParameterLabel::ReverbDampening.into(),
                             ParameterValue::Scalar(DynVal::with_value(f)),
                         );
                     }
@@ -657,7 +657,7 @@ pub fn reverb(
                     )))) = tail_drain.next()
                     {
                         param_map.insert(
-                            SynthParameterLabel::ReverbMix,
+                            SynthParameterLabel::ReverbMix.into(),
                             ParameterValue::Scalar(DynVal::with_value(f.clamp(0.01, 0.99))),
                         );
                     }
@@ -668,7 +668,7 @@ pub fn reverb(
                     )))) = tail_drain.next()
                     {
                         param_map.insert(
-                            SynthParameterLabel::ReverbRoomsize,
+                            SynthParameterLabel::ReverbRoomsize.into(),
                             ParameterValue::Scalar(DynVal::with_value(f.clamp(0.01, 0.99))),
                         );
                     }
@@ -701,36 +701,36 @@ pub fn delay(
                 "damp-freq" => match tail_drain.next() {
                     Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f)))) => {
                         param_map.insert(
-                            SynthParameterLabel::DelayDampeningFrequency,
+                            SynthParameterLabel::DelayDampeningFrequency.into(),
                             ParameterValue::Scalar(DynVal::with_value(f.clamp(20.0, 18000.0))),
                         );
                     }
                     Some(EvaluatedExpr::Typed(TypedEntity::Parameter(p))) => {
                         param_map.insert(
-                            SynthParameterLabel::DelayDampeningFrequency,
+                            SynthParameterLabel::DelayDampeningFrequency.into(),
                             ParameterValue::Scalar(p),
                         );
                     }
                     Some(EvaluatedExpr::Typed(TypedEntity::ParameterValue(m))) => {
-                        param_map.insert(SynthParameterLabel::DelayDampeningFrequency, m);
+                        param_map.insert(SynthParameterLabel::DelayDampeningFrequency.into(), m);
                     }
                     _ => {}
                 },
                 "feedback" | "fb" => match tail_drain.next() {
                     Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f)))) => {
                         param_map.insert(
-                            SynthParameterLabel::DelayFeedback,
+                            SynthParameterLabel::DelayFeedback.into(),
                             ParameterValue::Scalar(DynVal::with_value(f.clamp(0.01, 0.99))),
                         );
                     }
                     Some(EvaluatedExpr::Typed(TypedEntity::Parameter(p))) => {
                         param_map.insert(
-                            SynthParameterLabel::DelayFeedback,
+                            SynthParameterLabel::DelayFeedback.into(),
                             ParameterValue::Scalar(p),
                         );
                     }
                     Some(EvaluatedExpr::Typed(TypedEntity::ParameterValue(m))) => {
-                        param_map.insert(SynthParameterLabel::DelayFeedback, m);
+                        param_map.insert(SynthParameterLabel::DelayFeedback.into(), m);
                     }
                     _ => {}
                 },
@@ -740,7 +740,7 @@ pub fn delay(
                     )))) = tail_drain.next()
                     {
                         param_map.insert(
-                            SynthParameterLabel::DelayMix,
+                            SynthParameterLabel::DelayMix.into(),
                             ParameterValue::Scalar(DynVal::with_value(f.clamp(0.01, 0.99))),
                         );
                     }
@@ -748,34 +748,40 @@ pub fn delay(
                 "time" | "t" => match tail_drain.next() {
                     Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f)))) => {
                         param_map.insert(
-                            SynthParameterLabel::DelayTime,
+                            SynthParameterLabel::DelayTime.into(),
                             ParameterValue::Scalar(DynVal::with_value(
                                 (f / 1000.0).clamp(0.01, 1.99),
                             )),
                         );
                     }
                     Some(EvaluatedExpr::Typed(TypedEntity::Parameter(p))) => {
-                        param_map.insert(SynthParameterLabel::DelayTime, ParameterValue::Scalar(p));
+                        param_map.insert(
+                            SynthParameterLabel::DelayTime.into(),
+                            ParameterValue::Scalar(p),
+                        );
                     }
                     Some(EvaluatedExpr::Typed(TypedEntity::ParameterValue(m))) => {
-                        param_map.insert(SynthParameterLabel::DelayTime, m);
+                        param_map.insert(SynthParameterLabel::DelayTime.into(), m);
                     }
                     _ => {}
                 },
                 "rate" | "r" => match tail_drain.next() {
                     Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(f)))) => {
                         param_map.insert(
-                            SynthParameterLabel::DelayRate,
+                            SynthParameterLabel::DelayRate.into(),
                             ParameterValue::Scalar(DynVal::with_value(
                                 (f / 1000.0).clamp(0.01, 1.99),
                             )),
                         );
                     }
                     Some(EvaluatedExpr::Typed(TypedEntity::Parameter(p))) => {
-                        param_map.insert(SynthParameterLabel::DelayRate, ParameterValue::Scalar(p));
+                        param_map.insert(
+                            SynthParameterLabel::DelayRate.into(),
+                            ParameterValue::Scalar(p),
+                        );
                     }
                     Some(EvaluatedExpr::Typed(TypedEntity::ParameterValue(m))) => {
-                        param_map.insert(SynthParameterLabel::DelayRate, m);
+                        param_map.insert(SynthParameterLabel::DelayRate.into(), m);
                     }
                     _ => {}
                 },

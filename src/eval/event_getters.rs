@@ -7,12 +7,13 @@ use crate::{
     eval::{EvaluatedExpr, FunctionMap},
     event::InterpretableEvent,
     event_helpers::map_parameter,
+    parameter::ParameterAddress,
     sample_set::SampleAndWavematrixSet,
     session::OutputMode,
     Comparable, GlobalVariables, TypedEntity,
 };
 
-use super::resolver::resolve_globals;
+use super::resolver::{resolve_globals, resolve_lazy};
 
 pub fn event_tag(
     _: &FunctionMap,
@@ -98,9 +99,9 @@ pub fn event_param(
                 _ => Err(anyhow!("can't extract event param")),
             }
         }
-        Some(EvaluatedExpr::Typed(TypedEntity::SoundEvent(mut ev))) => {
-            let stat_ev = ev.get_static(globals);
-            match stat_ev.params.get(&par_addr) {
+        Some(EvaluatedExpr::Typed(TypedEntity::SoundEvent(mut iev))) => {
+            let ev = iev.get_static(globals);
+            match ev.params.get(&par_addr) {
                 Some(SynthParameterValue::ScalarF32(n)) => Ok(EvaluatedExpr::Typed(
                     TypedEntity::Comparable(Comparable::Float(*n)),
                 )),
