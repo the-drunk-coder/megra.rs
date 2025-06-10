@@ -20,6 +20,12 @@
 (fun set-clef (voice clef)
   (ctrl (osc-send 'scoreviz "/voice/clef" voice clef)))
   
+(fun set-repeat (voice bars)
+  (ctrl (osc-send 'scoreviz "/voice/repeatmarks" voice bars)))
+
+(fun global-preview (bars)
+  (ctrl (osc-send 'scoreviz "/global/preview" bars)))
+
 (fun set-timesignature (voice upper lower)
   (ctrl (osc-send 'scoreviz "/voice/timesignature" voice upper lower)))
   
@@ -56,11 +62,11 @@
 (fun tbflash (id content x y flashtime)
   (ctrl (osc-send 'scoreviz "/textfield/put" id content x y 40 "000" "true" flashtime)))
 
+(fun img (id ref x y scale)
+  (ctrl (osc-send 'scoreviz "/image/put" id ref x y scale)))
 
-
-
-(fun img (id ref x y)
-  (ctrl (osc-send 'scoreviz "/image/put" id ref x y)))
+(fun clear-score () 
+  (ctrl (osc-send 'scoreviz "/clearall")))
 
 ;;define a player, will create the `to-<name>` function that 
 ;;can be used with `mapper`
@@ -82,7 +88,6 @@
           (ev-param :articulation event)) 
         ))))	
   
-
 (fun singer (name clef)
   (progn 
     (osc-send 'scoreviz "/voice/clef" name clef)
@@ -180,21 +185,21 @@
   (note (add 11 (mul oct 12)) dur :syl syl))
 
 
-(fun with-metro-4 (score)
-  (sx 'treble-cond #t   
+(fun with-metro-4 (cycdur metrox metroy score)
+  (sx 'cond-metro-12332123 #t   
     ;; visual metronome
-    (loop 'metrovis :dur (div 12000 16)
-      (tb "metro" "1" 100 800)
-      (tb "metro" "2" 140 800)
-      (tb "metro" "3" 180 800)
-      (tb "metro" "4" 220 770)
+    (loop 'metrovis :dur (div cycdur 4)
+      (tb "metro" "1" metrox metroy)
+      (tb "metro" "2" (add metrox 40) metroy)
+      (tb "metro" "3" (add metrox 80) metroy)
+      (tb "metro" "4" (add metrox 120) (sub metroy 30))
       )
     ;; fun
-    (loop 'conductor :dur (div 12000 16)
-      (tb "face" "o_o" 400 800)
-      (tb "face" "o_O" 400 800)
-      (tb "face" "O_O" 400 800)
-      (tb "face" "O_o" 400 800)
+    (loop 'conductor :dur (div cycdur 4)
+      (tb "face" "o_o" (add metrox 300) metroy)
+      (tb "face" "o_O" (add metrox 300) metroy)
+      (tb "face" "O_O" (add metrox 300) metroy)
+      (tb "face" "O_o" (add metrox 300) metroy)
       )
     score
     )

@@ -5,7 +5,9 @@
 * Language: change `match` behaviour
 * Language: something like error messages ...
 * DSP: glitch-free (or at least less glitchy) live-looping
-* Scoreviz Interface: articulations for Notes
+* Scoreviz Interface: articulations for notes
+* Scoreviz Interface: syllables for notes
+* Scoreviz Interface: repetition marks
 * Language: `keep-state` and `defpart` now define a variable that can contain stateful generators
 * Language: evaluate global variables in calls to user-defined functions
 * Internals: better duration handling for `infer` (duration suffix trees)
