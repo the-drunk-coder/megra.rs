@@ -7,13 +7,17 @@ use crate::builtin_types::*;
 use crate::eval::{EvaluatedExpr, FunctionMap};
 use crate::{OutputMode, SampleAndWavematrixSet};
 
+use super::resolver::resolve_globals;
+
 pub fn vec(
     _: &FunctionMap,
     tail: &mut Vec<EvaluatedExpr>,
-    _: &sync::Arc<GlobalVariables>,
+    globals: &sync::Arc<GlobalVariables>,
     _: SampleAndWavematrixSet,
     _: OutputMode,
 ) -> Result<EvaluatedExpr> {
+    resolve_globals(tail, globals);
+
     let tail_drain = tail.drain(..).skip(1);
 
     let mut pvec = Vec::new();

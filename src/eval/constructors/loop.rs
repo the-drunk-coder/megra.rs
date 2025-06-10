@@ -212,6 +212,11 @@ pub fn a_loop(
                         TypedEntity::ControlEvent(e) => {
                             ev_vecs.push((vec![SourceEvent::Control(e)], dur.clone()));
                         }
+                        TypedEntity::Comparable(Comparable::Float(f)) => {
+                            if !ev_vecs.is_empty() {
+                                ev_vecs.last_mut().unwrap().1 = DynVal::with_value(f);
+                            }
+                        }
                         TypedEntity::Vec(mut v2) => {
                             v2.retain(|x| {
                                 matches!(**x, TypedEntity::SoundEvent(_))
