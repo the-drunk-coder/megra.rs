@@ -1,0 +1,100 @@
+;; startup file - move this to your sketchbook folder
+
+;; some shorthands
+
+;; execute n times
+(fun x16 (a) (vec a a a a a a a a a a a a a a a a))
+
+(fun x15 (a) (vec a a a a a a a a a a a a a a a))
+
+(fun x14 (a) (vec a a a a a a a a a a a a a a))
+
+(fun x13 (a) (vec a a a a a a a a a a a a a))
+
+(fun x12 (a) (vec a a a a a a a a a a a a))
+
+(fun x11 (a) (vec a a a a a a a a a a a))
+
+(fun x10 (a) (vec a a a a a a a a a a))
+
+(fun x9 (a) (vec a a a a a a a a a))
+
+(fun x8 (a) (vec a a a a a a a a))
+
+(fun x7 (a) (vec a a a a a a a))
+
+(fun x6 (a) (vec a a a a a a))
+
+(fun x5 (a) (vec a a a a a))
+
+(fun x4 (a) (vec a a a a))
+
+(fun x3 (a) (vec a a a))
+
+(fun x2 (a) (vec a a))
+
+(fun fullhouse (a b) (vec a a a b b))
+
+(fun paradiddl (a b) (vec a b a a b a b b))
+
+(fun dstroke (a b) (vec a a b b))
+
+;; special constructors
+
+;; create a star shape
+(fun star (name prob)
+  (rep prob 2 (loop name @rest)))
+
+;; create a star-shaped cycle with even time scale 
+(fun starcyc (name prob)
+  (rep prob 2 (cyc name @rest)))
+
+;; a chord in a loop
+(fun chord #f
+  (vec (vec @rest)))
+
+
+;; some instruments, example for multi-oscillator synths
+
+;; moogy
+(fun fatsaw (freq sus)  
+  (mosc 
+    :osc1 'saw :osc2 'saw 
+    :freq1 freq :freq2 (lfo~ :r freq (mul freq 1.02) :f (div freq 5))
+    ;;:lpd 1
+    :amp1 (env~ :l 0.0 1 0.2 0.0 :t (div 1 1000) (div sus 1000) (div 300 1000))
+    :amp2 (env~ :l 0.0 1 0.6 0.0 :t (div 10 1000) (div (sub sus 9) 1000) (div 300 1000))
+    :lpf (linramp~ (max 20 (min 15000 (mul freq 30))) 100 :t 0.2)
+    ;;:lvl 0.5
+    :atk 1 :sus sus :rel 220
+    :tags 'fatsaw
+    ))
+
+;; fat squarewaves
+(fun fatsqr (freq sus) 
+  (mosc 
+    :osc1 'sqr :osc2 'sqr 
+    :freq1 freq :freq2 (lfo~ :r freq (mul freq 1.02) :f (div freq 5))
+    ;;:lpd 1
+    :amp1 (env~ :l 0.0 1 0.2 0.0 :t (div 1 1000) (div sus 1000) (div 300 1000))
+    :amp2 (env~ :l 0.0 1 0.6 0.0 :t (div 10 1000) (div (sub sus 9) 1000) (div 300 1000))
+    :lpf (linramp~ (max 20 (min 15000 (mul freq 30))) 100 :t 0.2)
+    ;;:lvl 0.5
+    :atk 1 :sus sus :rel 220
+    :tags 'fatsqr
+    ))
+
+;; triangle 
+(fun fatri (freq sus) 
+  (mosc 
+    :osc1 'tri :osc2 'tri 
+    :freq1 freq :freq2 (lfo~ :r freq (mul freq 1.02) :f (div freq 5))
+    ;;:lpd 1
+    :amp1 (env~ :l 0.0 1 0.2 0.2 0.0 :t (div 1 1000) (div sus 1000) 0.3 (div 300 1000))
+    :amp2 (env~ :l 0.0 1 0.6 0.6 0.0 :t (div 10 1000) (div (sub sus 9) 1000) 0.4 (div 300 1000))
+    :lpf (linramp~ (max 20 (min 15000 (mul freq 30))) 100 :t 0.8)
+    ;;:lvl 0.5
+    :atk 1 :sus sus :rel 220
+    :tags 'fatri
+    ))
+
