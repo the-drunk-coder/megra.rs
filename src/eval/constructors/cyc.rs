@@ -45,7 +45,7 @@ pub fn cyc(
     {
         DynVal::with_value(*d)
     } else {
-        bail!("cyc - global default duration not present");
+        bail!("cyc - global default time not present");
     };
 
     // chances for modifiers ...
@@ -119,7 +119,7 @@ pub fn cyc(
 
         match c {
             EvaluatedExpr::Keyword(k) => match k.as_str() {
-                "dur" => match tail_drain.next() {
+                "dur" | "time" => match tail_drain.next() {
                     Some(EvaluatedExpr::Typed(TypedEntity::Comparable(Comparable::Float(n)))) => {
                         dur = DynVal::with_value(n);
                     }
