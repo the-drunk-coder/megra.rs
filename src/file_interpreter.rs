@@ -73,7 +73,20 @@ pub fn parse_file<const BUFSIZE: usize, const NCHAN: usize>(
     session: &Session<BUFSIZE, NCHAN>,
     base_dir: String,
 ) {
-    let p = path::Path::new(&path);
+    let mut p = path::Path::new(&path);
+    let skpath = format!("{base_dir}/sketchbook/{path}");
+    // see if file exists
+    if !p.exists() {
+        println!("can't find file {path}, check whether it exists in sketchbook");
+        // if not, check if file exists in sketchbook
+
+        p = path::Path::new(&skpath);
+        if !p.exists() {
+            println!("can't find file {skpath} either, aborting");
+            return;
+        }
+    }
+
     match fs::read_to_string(p) {
         Ok(s) => {
             let expressions = segment_expressions(s);
@@ -95,7 +108,7 @@ pub fn parse_file<const BUFSIZE: usize, const NCHAN: usize>(
             }
         }
         Err(e) => {
-            println!("couldn't load file {e}");
+            println!("couldn't parse file {path:?} - {e}");
         }
     }
 }
