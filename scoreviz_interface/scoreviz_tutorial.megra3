@@ -40,13 +40,16 @@
 
 ;; you can sequence the movement
 ;; and change the content
-(sx 'purr #f
+(sx 'purr #t
   (loop 'hiss :dur 1000
     (tb 'cat "meow" 100 100)
     (tb 'cat "purr" 100 150)
     (tb 'cat "hiss" 100 200)
     (tb 'cat "mrow" 100 250)
     ))
+
+;; stop everything
+(clear)
 
 ;; there's more you can do with textboxes, we'll come to that later
 ;; first, let's clear the score
@@ -77,6 +80,12 @@
 ;; third argument is the duration
 ;; fourth argument is the expression, staccato, tenuto, marcato or nothing
 (once (send-note "cat" (mtovex 53) "4" "staccato"))
+
+;; reset
+(once (clear-score))
+
+;; after re-set you need to define the player again
+(player "cat" "treble")
 
 ;; now, this seems to be a bit tedious, but fear not! 
 ;; there's more effective and concise ways to generate scores,
@@ -155,7 +164,14 @@
 ;; short loops or patterns, so it makes sense to add repeat marks
 (once (set-repeat "cat" 2))
 
-;; it's also helpful for musicians to know what to expect
+;; for the next part, it makes sense if we start over ... 
+(clear)
+(once (clear-score))
+
+;; again, define our player 
+(player "cat" "treble")
+
+;; it's helpful for musicians to know what to expect
 ;; so we can add preview notes, in german you'd call it "stichnoten"
 ;; add 4 stichnoten
 (once (set-preview "cat" 4))
@@ -163,20 +179,34 @@
 ;; you can also do this globally
 (once (global-preview 4))
 
-;; now you have to add more notes to see the effect
-;; execute 4 times
-(step-part cat-voice)
-
-;; you can modify the number of notes to be displayed ads well:
+;; you can modify the number of notes to be displayed as well
+;; let's play 16 instead of 8
 (once (num-notes "cat" 16))
 
-;; again, fill up the score:
-;; execute 8 times 
-(step-part cat-voice)
+;; it would make sense to change the repeat marks to 2 bars
+(once (set-repeat "cat" 2))
 
-;; it would make sense to change the repeat marks
-;; to 4 bars
-(once (set-repeat "cat" 4))
+;; before we continue, let's change our score a little
+;; and add a bit of non-determininism, 
+;; change durations, and transpose
+;; try to change some parameters while the score is running
+;; and see what happens !
+(defpart cat-voice 
+  (cmp 
+    (mapper to-cat) ;; send to cat voice on score
+    (pear ;; pear works more or less the same as for sound events 
+      (midi-add 5) ;; transpose 5 semitones up (think midi notes)
+      (dur-mul 2) ;; multiply note value, turn quarters into eights
+      )
+    (rep 50 2) ;; 50 percent chance for repetitions
+    ;; note we replaced one note with a rest
+    (loop 'cat-cafe (c 4 4) (a 4 4) (f 4 4) (r 4))))
+
+;; now you have to add more notes to see the effect
+;; execute 4 times ... preview notes will only appear once 
+;; the total number of notes has been added, so you won't see
+;; them immediately
+(step-part cat-voice)
 
 ;; now, if we modify the pattern regularly, the musicians 
 ;; have a better idea on what's coming if we replace the 
@@ -185,6 +215,8 @@
 (sx 'cat-conductor #t
   (nuc 'cat-update :dur 12000 
     (x16 (ctrl (step-part cat-voice)))))
+
+(clear)
 
 ;; finally, it makes sense to add some form of timer
 ;; for that, we can place a visual metronome on the score
@@ -195,14 +227,52 @@
 ;; then place the update generator
 (with-metro-4 3000 300 300 
   (nuc 'cat-update :dur 12000 ;; update cycle time 12 sec
-    (x16 (ctrl (step-part cat-voice))))
-  )
+    (x16 (ctrl (step-part cat-voice)))))
 
 ;; the metronome time should be an even subdivison
 ;; of the update cycle time, in this case the 
 ;; - the update cycle time is 12000ms or 12 seconds
 ;; - the metronome cycle is 3000ms
 
+;; CAVEATS:
+;; - when changing the note values (i.e. from quarter to eigth) it's recommendable to 
+;;   also change the number of notes so they'll fit into the same space 
+;; - even note values work best if you want to keep the length of the snippet
+;; - currently triplets are not supported
+
+;; let's leave the topic of notes here for now.
+(clear)
+(once (clear-score))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;;; PART 3 - Images
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; besides text and notes, you can also display images
+
+;; it's best to specify a link to an image
+(let pica "https://upload.wikimedia.org/wikipedia/commons/5/50/01-Magpie.jpg")
+
+;; arguments:
+;; - image id
+;; - link/resource
+;; - pos x 
+;; - pos y
+;; - scale factor
+(once (img 'elster pica 500 200 0.2))
+
+;; images can be sequenced just as textboxes
+(sx 'birds #t
+  (loop 'magpie :dur 1000
+    (img 'elster pica 500 200 0.2)
+    (img 'elster pica 400 200 0.3)
+    (img 'elster pica 200 200 0.4)
+    (img 'elster pica 100 200 0.5)
+    ))
 
 ;; stop for now
 (clear)
