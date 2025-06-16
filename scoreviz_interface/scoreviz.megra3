@@ -30,8 +30,12 @@
   (ctrl (osc-send 'scoreviz "/voice/repeatmarks" voice bars)))
 
 ;; set the global number of preview notes, default is 0
-(fun global-preview (bars)
-  (ctrl (osc-send 'scoreviz "/global/preview" bars)))
+(fun global-preview (n)
+  (ctrl (osc-send 'scoreviz "/global/preview" n)))
+
+;; set the number of preview notes for a single voice, default is 0
+(fun set-preview (voice n)
+  (ctrl (osc-send 'scoreviz "/voice/previewnotes" voice n)))
 
 ;; set the time signature of a voice
 (fun set-timesignature (voice upper lower)

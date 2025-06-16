@@ -1,0 +1,228 @@
+;; Created Monday, 2025-06-16, 05:16:19 ... good luck!
+
+;; scoreviz tutorial
+
+;; find the scorviz interface definition here:
+
+;; https://raw.githubusercontent.com/the-drunk-coder/megra.rs/refs/heads/main/scoreviz_interface/scoreviz.megra3
+
+;; place it in your sketchbook folder if you haven't done so already
+
+;; now load the interface file 
+;; this will connect to scoreviz and load all the 
+;; necessary functions to use it. You can select the
+;; file from the dropdown above and read the documentation
+;; on the individual functions
+(load-file "scoreviz.megra3")
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; PART 1 - TEXTboxes 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+ 
+;; to see if it works, let's place a text on the screen
+;; tb is short for textbox
+(once (tb 'cat "meow" 100 100))
+
+;; as creating a textbox is a sequenceable event, we need to evaluate it 
+;; with once, just as we need to evaluate a sound event like saw
+(once (saw 100))
+
+;; let's check the arguments:
+;; the first argument is the name of the textbox
+;; the second argument is the content of the textbox
+;; the third argument is the x position in pixels
+;; the fourth argument is the y position in pixels
+(once (tb 'cat "meow" 100 100))
+
+;; you can sequence the movement
+;; and change the content
+(sx 'purr #f
+  (loop 'hiss :dur 1000
+    (tb 'cat "meow" 100 100)
+    (tb 'cat "purr" 100 150)
+    (tb 'cat "hiss" 100 200)
+    (tb 'cat "mrow" 100 250)
+    ))
+
+;; there's more you can do with textboxes, we'll come to that later
+;; first, let's clear the score
+(once (clear-score))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; PART 2 - NOTES
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; wait, wasn't scoreviz about notes and sheet music and stuff? 
+;; yes! that needs a bit more careful prepartion, though. 
+
+;; to display notes, we first need to define a player!
+;; defining a player is not sequenceable, so we don't need to use "once"
+;; first argument is the name
+;; second argument is the clef, either treble, alto, or bass 
+(player "cat" "treble")
+
+;; nothing happened so far, because we haven't added any notes yet to the score
+
+;; execute this to add a note to the cat voice ... play around with the values
+;; first argument is the voice,
+;; second argument is the pitch - mtovex converts a midi note to an internal format
+;; third argument is the duration
+;; fourth argument is the expression, staccato, tenuto, marcato or nothing
+(once (send-note "cat" (mtovex 53) "4" "staccato"))
+
+;; now, this seems to be a bit tedious, but fear not! 
+;; there's more effective and concise ways to generate scores,
+;; and plenty of shorthands to create notes
+
+;; first, we need to define a part ... let's name it cat-voice
+(defpart cat-voice 
+  ;; inside the part, we can define any Mégra sequence generator,
+  ;; but to generate scores we need something extra 
+  (cmp ;; use compose to map notes to their voice
+    ;; remember we defined a player called cat above?
+    ;; that created a mapper called to-cat, which will help us here
+    ;; to route the generic notes to the correct voice
+    (mapper to-cat)
+    ;; now we need a melody
+    ;; the note shorthands work like this, where:
+    ;;   - the function name specifies the note
+    ;;   - the first number the octave
+    ;;   - the second number the duration in note values, 
+    ;;     i.e. 4 is a quarter, 2 a half note, etc
+    (loop 'cat-cafe (c 4 4) (a 4 4) (f 4 4) (e 4 4))))
+
+;; here's what it looks like without the comments 
+(defpart cat-voice 
+  (cmp 
+    (mapper to-cat)
+    (loop 'cat-cafe (c 4 4) (a 4 4) (f 4 4) (e 4 4))))
+
+;; now you can step through the part, see how the notes change! 
+;; the notes will get pushed through the stave
+(step-part cat-voice)
+
+;; now, generating the score note by note is not only tedious, but also 
+;; hard to read even for the most proficient sight-reading musician
+;; that's why it is more effective to generate a bunch of notes at a time,
+;; and update the score regularly.
+
+;; step part is not sequencable by itself, but it can be wrapped in a "ctrl"
+;; event ... that way it becomes sequenceable ... that's not the way we'll use
+;; it, it's here just as a demonstration
+(once (ctrl (step-part cat-voice)))
+
+;; here we add a new note every 4 seconds
+(sx 'cat-conductor #t
+  (nuc 'cat-update :dur 4000 
+    (ctrl (step-part cat-voice))))
+
+;; if we want to add multiple notes at a time, the scoreviz interface defines 
+;; functions called xN, where N is defined from 2 to 16
+
+;; here we add 2 new notes every 8 seconds
+(sx 'cat-conductor #t
+  (nuc 'cat-update :dur 8000 
+    (x2 (ctrl (step-part cat-voice)))))
+
+;; replace the entire voice every 12 seconds
+(sx 'cat-conductor #t
+  (nuc 'cat-update :dur 12000 
+    (x8 (ctrl (step-part cat-voice)))))
+
+;; this won't look like much because of the regular pattern, but we'll come to 
+;; that later ... first let's see how we can make it easier to read ... or deliberately
+;; harder if you want
+
+;; we can set the position of the voice
+;; first argument - the voice name, 
+;; second argument - x pos
+;; third argument - y pos
+(once (set-pos "cat" 200 200))
+
+;; we can set the background color as well
+;; it's a hex string without the hastag prefix
+(once (set-bgcolor "cat" "f03"))
+
+;; in its current state, scoreviz is best suited to display
+;; short loops or patterns, so it makes sense to add repeat marks
+(once (set-repeat "cat" 2))
+
+;; it's also helpful for musicians to know what to expect
+;; so we can add preview notes, in german you'd call it "stichnoten"
+;; add 4 stichnoten
+(once (set-preview "cat" 4))
+
+;; you can also do this globally
+(once (global-preview 4))
+
+;; now you have to add more notes to see the effect
+;; execute 4 times
+(step-part cat-voice)
+
+;; you can modify the number of notes to be displayed ads well:
+(once (num-notes "cat" 16))
+
+;; again, fill up the score:
+;; execute 8 times 
+(step-part cat-voice)
+
+;; it would make sense to change the repeat marks
+;; to 4 bars
+(once (set-repeat "cat" 4))
+
+;; now, if we modify the pattern regularly, the musicians 
+;; have a better idea on what's coming if we replace the 
+;; entire voice
+;; add 16 notes every 12 seconds
+(sx 'cat-conductor #t
+  (nuc 'cat-update :dur 12000 
+    (x16 (ctrl (step-part cat-voice)))))
+
+;; finally, it makes sense to add some form of timer
+;; for that, we can place a visual metronome on the score
+;; with-metro-4 replaces sx ...
+;; first argument is the metronome time
+;; second argument is the x pos
+;; third argument is the y pos 
+;; then place the update generator
+(with-metro-4 3000 300 300 
+  (nuc 'cat-update :dur 12000 ;; update cycle time 12 sec
+    (x16 (ctrl (step-part cat-voice))))
+  )
+
+;; the metronome time should be an even subdivison
+;; of the update cycle time, in this case the 
+;; - the update cycle time is 12000ms or 12 seconds
+;; - the metronome cycle is 3000ms
+
+
+;; stop for now
+(clear)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
