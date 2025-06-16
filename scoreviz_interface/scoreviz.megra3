@@ -220,3 +220,34 @@
     score
     )
   )
+
+;; helper functions to execute something n times
+(fun x16 (a) (vec a a a a a a a a a a a a a a a a))
+
+(fun x15 (a) (vec a a a a a a a a a a a a a a a))
+
+(fun x14 (a) (vec a a a a a a a a a a a a a a))
+
+(fun x13 (a) (vec a a a a a a a a a a a a a))
+
+(fun x12 (a) (vec a a a a a a a a a a a a))
+
+(fun x11 (a) (vec a a a a a a a a a a a))
+
+(fun x10 (a) (vec a a a a a a a a a a))
+
+(fun x9 (a) (vec a a a a a a a a a))
+
+(fun x8 (a) (vec a a a a a a a a))
+
+(fun x7 (a) (vec a a a a a a a))
+
+(fun x6 (a) (vec a a a a a a))
+
+(fun x5 (a) (vec a a a a a))
+
+(fun x4 (a) (vec a a a a))
+
+(fun x3 (a) (vec a a a))
+
+(fun x2 (a) (vec a a))
