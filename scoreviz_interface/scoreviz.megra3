@@ -2,51 +2,62 @@
 
 ;; scoreviz interface
 
-;; connect
+;; connect to scoreviz
 (osc-sender 'scoreviz "127.0.0.1:57123")
-  
+
+;; send a whole note to scoreviz
 (fun send-whole (voice note)
   (ctrl (osc-send 'scoreviz "/voice/note/add" voice note 'w)))
-  
+
+;; send a note to scoreviz
 (fun send-note (voice note len articulation)
   (ctrl (osc-send 'scoreviz "/voice/note/add" voice note len articulation)))
 
+;; send a note with lyrics to scoreviz
 (fun send-text-note (voice note len articulation text)
   (ctrl (osc-send 'scoreviz "/voice/note/add" voice note len articulation text)))
-  
+
+;; set dynamics of a voice, i.e. pp, ff, etc
 (fun set-dyn (voice dyn)
   (ctrl (osc-send 'scoreviz "/voice/dyn" voice dyn)))
-  
+
+;; set the clef of a voice, possible values are treble, alto, or bass
 (fun set-clef (voice clef)
   (ctrl (osc-send 'scoreviz "/voice/clef" voice clef)))
-  
+
+;; add repeat marks to a voice
 (fun set-repeat (voice bars)
   (ctrl (osc-send 'scoreviz "/voice/repeatmarks" voice bars)))
 
+;; set the global number of preview notes, default is 0
 (fun global-preview (bars)
   (ctrl (osc-send 'scoreviz "/global/preview" bars)))
 
+;; set the time signature of a voice
 (fun set-timesignature (voice upper lower)
   (ctrl (osc-send 'scoreviz "/voice/timesignature" voice upper lower)))
-  
+
+;; pad mode, true or false (as string). If enabled, voice will be padded to a full bar with rest
 (fun set-pad (voice pad)
   (ctrl (osc-send 'scoreviz "/voice/pad" voice pad)))
-  
+
+;; set position of a voice
 (fun set-pos (voice x y)
   (ctrl (osc-send 'scoreviz "/voice/pos" voice x y)))
-  
+
+;; set background color of a voice
 (fun set-bgcolor (voice bgcol)
   (ctrl (osc-send 'scoreviz "/voice/bgcolor" voice bgcol)))
-  
+
+;; set label of a voice
 (fun set-label (voice label)
   (ctrl (osc-send 'scoreviz "/voice/label" voice label)))
-  
-(fun mark-current (voice val) 
-  (ctrl (osc-send 'scoreviz "/voice/markcurrent" voice val)))
-  
+
+;; set number of notes to be displayed in a voice  
 (fun num-notes (voice val) 
   (ctrl (osc-send 'scoreviz "/voice/numnotes" voice val)))
-  
+
+;; place a text box
 (fun textbox (id content x y)
   (ctrl (osc-send 'scoreviz "/textfield/put" id content x y 40 "000" "false" "0")))
   
@@ -62,14 +73,15 @@
 (fun tbflash (id content x y flashtime)
   (ctrl (osc-send 'scoreviz "/textfield/put" id content x y 40 "000" "true" flashtime)))
 
+;; place an image on the score
 (fun img (id ref x y scale)
   (ctrl (osc-send 'scoreviz "/image/put" id ref x y scale)))
 
+;; clear the score (you can also just reload the page in the browser)
 (fun clear-score () 
   (ctrl (osc-send 'scoreviz "/clearall")))
 
-;;define a player, will create the `to-<name>` function that 
-;;can be used with `mapper`
+;; define a player, will create the `to-<name>` function that can be used with `mapper`
 (fun player (name clef)
   (progn 
     (osc-send 'scoreviz "/voice/clef" name clef)
@@ -87,7 +99,8 @@
           (to-string (round (ev-param :dur event)))
           (ev-param :articulation event)) 
         ))))	
-  
+
+;; define a singer, same as player but will expect notes with syllables
 (fun singer (name clef)
   (progn 
     (osc-send 'scoreviz "/voice/clef" name clef)
@@ -108,6 +121,8 @@
         ))))	
 
 ;; note shorthands
+;; scoreviz currently can only do sharp notes, no flat notes
+
 (fun c (oct dur)
   (note (mul oct 12) dur))
 
@@ -144,6 +159,7 @@
 (fun b (oct dur)
   (note (add 11 (mul oct 12)) dur))
 
+;; rest shorthand
 (fun r (dur) 
   (note "rest" dur))
 
@@ -178,13 +194,13 @@
 (fun ly-a (oct dur syl)
   (note (add 9 (mul oct 12)) dur :syl syl))
 
-(fun lya-s (oct dur syl)
+(fun ly-as (oct dur syl)
   (note (add 10 (mul oct 12)) dur :syl syl))
 
 (fun ly-b (oct dur syl)
   (note (add 11 (mul oct 12)) dur :syl syl))
 
-
+;; execute with a visual metronome
 (fun with-metro-4 (cycdur metrox metroy score)
   (sx 'cond-metro-12332123 #t   
     ;; visual metronome
