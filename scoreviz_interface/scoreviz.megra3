@@ -61,6 +61,10 @@
 (fun num-notes (voice val) 
   (ctrl (osc-send 'scoreviz "/voice/numnotes" voice val)))
 
+;; clear notes in a voice
+(fun clear-notes (voice) 
+  (ctrl (osc-send 'scoreviz "/voice/clearnotes" voice)))
+
 ;; place a text box
 (fun textbox (id content x y)
   (ctrl (osc-send 'scoreviz "/textfield/put" id content x y 40 "000" "false" "0")))
