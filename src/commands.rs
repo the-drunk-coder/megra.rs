@@ -63,7 +63,7 @@ pub fn fetch_sample_set<const BUFSIZE: usize, const NCHAN: usize>(
     let (fname, checksum) = match resource {
         SampleResource::File(fpath, cs) => (std::path::Path::new(&fpath).to_path_buf(), cs),
         SampleResource::Url(url, cs) => {
-            println!("downlading sample set from {url}");
+            println!("downlading sample set from {url} with checksum {cs:?}");
             // tmp file for download ...
             let tmp_dl = temp_dir().join("download.zip");
             fetch_url(url, tmp_dl.display().to_string()).unwrap();

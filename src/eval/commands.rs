@@ -36,9 +36,9 @@ pub fn import_sample_set(
     {
         // hard-coded tutorial sample set with checksum ...
         if s.as_str() == "tutorial" {
-            url = Some("https://github.com/the-drunk-coder/megra-public-samples/archive/refs/heads/master.zip".to_string());
+            url = Some("https://parkellipsen.de/megra-tutorial-samples.zip".to_string());
             checksum = Some(
-                "7a339e8672511be64fa46961bbfdb3d6f797ebbd9572fc3adf551b737d3c4dcd".to_string(),
+                "ed0fb62bcd0ab1eee80ac80a013f01ed52c459c064f449129908739595cbdf94".to_string(),
             );
         }
     } else {
